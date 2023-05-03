@@ -144,14 +144,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\src\Blu.h" />
-    <ClInclude Include="engine\src\Blu\Application.h" />
-    <ClInclude Include="engine\src\Blu\Core.h" />
-    <ClInclude Include="engine\src\Blu\EntryPoint.h" />
-    <ClInclude Include="engine\src\Blu\Log.h" />
+    <ClInclude Include="engine\src\Blu\Core\Application.h" />
+    <ClInclude Include="engine\src\Blu\Core\Core.h" />
+    <ClInclude Include="engine\src\Blu\Core\EntryPoint.h" />
+    <ClInclude Include="engine\src\Blu\Core\Log.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\src\Blu\Application.cpp" />
-    <ClCompile Include="engine\src\Blu\Log.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
