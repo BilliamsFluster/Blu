@@ -2,7 +2,7 @@
 
 // for use by Blu Applications
 
-#include "Blu/Application.h"
-#include "Blu/Log.h"
+#include "Blu/Core/Application.h"
+#include "Blu/Core/Log.h"
 // -------------EntryPoint----------------
-#include "Blu/EntryPoint.h"
+#include "Blu/Core/EntryPoint.h"

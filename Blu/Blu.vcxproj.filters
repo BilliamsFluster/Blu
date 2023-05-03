@@ -4,28 +4,31 @@
     <Filter Include="Blu">
       <UniqueIdentifier>{08DA870B-74E3-877C-FD5E-9E7C6967937C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Blu\Core">
+      <UniqueIdentifier>{6083A2F2-4C50-FDFD-7569-EBA56195328C}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\src\Blu.h" />
-    <ClInclude Include="engine\src\Blu\Application.h">
-      <Filter>Blu</Filter>
+    <ClInclude Include="engine\src\Blu\Core\Application.h">
+      <Filter>Blu\Core</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Core.h">
-      <Filter>Blu</Filter>
+    <ClInclude Include="engine\src\Blu\Core\Core.h">
+      <Filter>Blu\Core</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\EntryPoint.h">
-      <Filter>Blu</Filter>
+    <ClInclude Include="engine\src\Blu\Core\EntryPoint.h">
+      <Filter>Blu\Core</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Log.h">
-      <Filter>Blu</Filter>
+    <ClInclude Include="engine\src\Blu\Core\Log.h">
+      <Filter>Blu\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\src\Blu\Application.cpp">
-      <Filter>Blu</Filter>
+    <ClCompile Include="engine\src\Blu\Core\Application.cpp">
+      <Filter>Blu\Core</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Log.cpp">
-      <Filter>Blu</Filter>
+    <ClCompile Include="engine\src\Blu\Core\Log.cpp">
+      <Filter>Blu\Core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
