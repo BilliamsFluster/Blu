@@ -1,0 +1,3 @@
+[submodule "Blu/ExternalDependencies/spdlog"]
+	path = Blu/ExternalDependencies/spdlog
+	url = https://github.com/gabime/spdlog

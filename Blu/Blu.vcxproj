@@ -59,6 +59,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>BLU_BUILD_DLL;BLU_PLATFORM_WINDOWS;BLU_BUILD_DLLBLU_BUILD_DLLBLU_BUILD_DLLBLU_PLATFORM_WINDOWS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -73,6 +75,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>BLU_BUILD_DLL;BLU_PLATFORM_WINDOWS;BLU_BUILD_DLLBLU_BUILD_DLLBLU_BUILD_DLLNDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -86,9 +89,11 @@
     <ClInclude Include="engine\src\Blu\Core.h" />
     <ClInclude Include="engine\src\Blu\Application.h" />
     <ClInclude Include="engine\src\Blu\EntryPoint.h" />
+    <ClInclude Include="engine\src\Blu\Log.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Application.cpp" />
+    <ClCompile Include="engine\src\Blu\Log.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
