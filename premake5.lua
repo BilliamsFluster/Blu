@@ -28,8 +28,13 @@ project "Blu"
 
 	includedirs 
 	{
-		"%{prj.name}/engine/ExternalDependencies/spdlog/include"
+		"$(SolutionDir)/Blu/engine/ExternalDependencies/spdlog/include",
+		"$(SolutionDir)Blu/engine/src",
+		"."
 	}
+	
+	buildoptions { "/wd4251" }
+
 
 	filter "system:windows"
 		cppdialect "C++20"
@@ -83,13 +88,16 @@ project "Azure"
 	includedirs 
 	{
 		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
-		"Blu/engine/src"
+		"$(SolutionDir)Blu/engine/src"
+		--"Blu/engine/src",
+		
 	}
 	
 	links
 	{
 		"Blu"
 	}
+	buildoptions { "/wd4251" }
 
 	filter "system:windows"
 		cppdialect "C++20"

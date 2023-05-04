@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "Blu/Core/Log.h"
 
 namespace Blu
 {
@@ -14,10 +15,12 @@ namespace Blu
 
 	void Application::Run()
 	{
+		
 		while (true)
 		{
 
 		}
+		
 
 	}
 }

@@ -19,7 +19,13 @@
     <ClInclude Include="engine\src\Blu\Core\EntryPoint.h">
       <Filter>Blu\Core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\KeyCodes.h">
+      <Filter>Blu\Core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Log.h">
+      <Filter>Blu\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\MouseCodes.h">
       <Filter>Blu\Core</Filter>
     </ClInclude>
   </ItemGroup>

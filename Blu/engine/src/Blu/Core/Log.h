@@ -43,7 +43,7 @@ namespace Blu
 
 // if dist build
 
-#define BLU_CORE_INFO 
+//#define BLU_CORE_INFO 
 
 
 
