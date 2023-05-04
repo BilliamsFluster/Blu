@@ -46,6 +46,8 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h">
       <Filter>Blu\Events</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\Window.h" />
+    <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
@@ -57,5 +59,7 @@
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp">
       <Filter>Blu\Events</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\Window.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
   </ItemGroup>
 </Project>
