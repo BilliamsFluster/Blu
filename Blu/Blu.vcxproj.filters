@@ -31,7 +31,13 @@
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h">
       <Filter>Blu\Core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\Window.h">
+      <Filter>Blu\Core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Events\Event.h">
+      <Filter>Blu\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Events\EventHandler.h">
       <Filter>Blu\Events</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Events\EventManager.h">
@@ -46,8 +52,7 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h">
       <Filter>Blu\Events</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Core\Window.h" />
-    <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
+    <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
@@ -56,10 +61,15 @@
     <ClCompile Include="engine\src\Blu\Core\Log.cpp">
       <Filter>Blu\Core</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\Window.cpp">
+      <Filter>Blu\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp">
+      <Filter>Blu\Events</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp">
       <Filter>Blu\Events</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Core\Window.cpp" />
-    <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
+    <ClCompile Include="engine\src\Blupch.cpp" />
   </ItemGroup>
 </Project>

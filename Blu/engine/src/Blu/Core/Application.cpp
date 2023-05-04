@@ -1,11 +1,15 @@
 #include "Application.h"
 #include "Blu/Core/Log.h"
 #include "Window.h"
+#include "Blupch.h"
+#include "Application.h"
 #include "Blu/Events/EventManager.h"
 #include "Blu/Events/Event.h"
 #include "Blu/Events/EventHandler.h"
 #include "Blu/Events/WindowEvent.h"
 #include "Blu/Events/MouseEvent.h"
+#include "Window.h"
+
 
 
 namespace Blu
