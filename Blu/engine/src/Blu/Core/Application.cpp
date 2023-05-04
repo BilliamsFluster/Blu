@@ -5,6 +5,8 @@
 #include "Blu/Events/Event.h"
 #include "Blu/Events/EventHandler.h"
 #include "Blu/Events/WindowEvent.h"
+#include "Blu/Events/MouseEvent.h"
+
 
 namespace Blu
 {
@@ -20,7 +22,7 @@ namespace Blu
 
 	void Application::Run()
 	{
-		Window window(...);
+		Window window(800,600,"Blu");
 
 		EventManager Manager;
 		WindowEventHandler Handler;
@@ -29,12 +31,8 @@ namespace Blu
 		
 		while (true)
 		{
-			WindowResizeEvent event(1280,720);
-			while (window.pollEvent(event))
-			{
-				// handle event
-				Manager.HandleEvent(event);
-			}
+			
+			
 		}
 
 		

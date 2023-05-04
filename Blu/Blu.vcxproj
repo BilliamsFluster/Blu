@@ -153,16 +153,20 @@
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\Log.h" />
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h" />
+    <ClInclude Include="engine\src\Blu\Core\Window.h" />
     <ClInclude Include="engine\src\Blu\Events\Event.h" />
     <ClInclude Include="engine\src\Blu\Events\EventManager.h" />
     <ClInclude Include="engine\src\Blu\Events\KeyEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\MouseEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
+    <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\Window.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
