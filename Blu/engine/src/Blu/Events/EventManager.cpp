@@ -1,3 +1,4 @@
+#include "Blupch.h"
 #include "EventManager.h"
 
 namespace Blu

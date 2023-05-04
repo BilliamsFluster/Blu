@@ -19,6 +19,9 @@ project "Blu"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
+	pchheader "Blupch.h"
+	pchsource "Blu/engine/src/Blupch.cpp"
+
 	files
 	{
 		"%{prj.name}/engine/src/**.h",

@@ -76,7 +76,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -97,7 +98,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -122,7 +124,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -155,18 +158,22 @@
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\Window.h" />
     <ClInclude Include="engine\src\Blu\Events\Event.h" />
+    <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
     <ClInclude Include="engine\src\Blu\Events\EventManager.h" />
     <ClInclude Include="engine\src\Blu\Events\KeyEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\MouseEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
-    <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
+    <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Window.cpp" />
-    <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />
+    <ClCompile Include="engine\src\Blupch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
