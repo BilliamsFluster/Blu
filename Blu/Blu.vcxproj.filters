@@ -10,6 +10,12 @@
     <Filter Include="Blu\Events">
       <UniqueIdentifier>{ECEC722A-D8A4-B477-41AC-8DD32D834F68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Blu\Platform">
+      <UniqueIdentifier>{5CDFFFAE-4842-8F53-F1C7-C709DD095BD6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blu\Platform\Windows">
+      <UniqueIdentifier>{96253507-82B4-BED0-2BD3-D2CB1741CF76}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\src\Blu.h" />
@@ -52,6 +58,9 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h">
       <Filter>Blu\Events</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h">
+      <Filter>Blu\Platform\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -61,14 +70,14 @@
     <ClCompile Include="engine\src\Blu\Core\Log.cpp">
       <Filter>Blu\Core</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Core\Window.cpp">
-      <Filter>Blu\Core</Filter>
-    </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp">
       <Filter>Blu\Events</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp">
       <Filter>Blu\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp">
+      <Filter>Blu\Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp" />
   </ItemGroup>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="$(SolutionDir)">
+      <UniqueIdentifier>{36EB0717-22B9-FB1C-0B4D-6C43F7B9D781}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(SolutionDir)\Blu\engine\src">
+      <UniqueIdentifier>{64C1BF83-D0D9-A6AD-9986-3647055E3B47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(SolutionDir)\Blu\engine\src\Blu">
+      <UniqueIdentifier>{56C0E4F6-C22E-3A76-0B18-F57577C52F12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(SolutionDir)\Blu\engine\src\Blu\Core">
+      <UniqueIdentifier>{6E8AF18F-5ADC-C87F-43FB-05902FECE168}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Azure.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
