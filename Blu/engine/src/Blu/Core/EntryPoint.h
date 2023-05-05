@@ -2,7 +2,7 @@
 
 
 #ifdef BLU_PLATFORM_WINDOWS
-extern Blu::Application* Blu::CreateApplication();
+extern  Blu::Application* Blu::CreateApplication();
 int main(int argc, char** argv)
 {
 	Blu::Log::Init();

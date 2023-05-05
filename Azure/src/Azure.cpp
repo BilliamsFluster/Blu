@@ -1,4 +1,5 @@
 #include <Blu.h>
+#include "Blu/Core/EntryPoint.h"
 
 class Azure : public Blu::Application
 {

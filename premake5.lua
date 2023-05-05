@@ -8,8 +8,16 @@ workspace "Blu"
 		"Release",
 		"Dist"
 	}
+	outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+	--Include directories relative to root folder(solutuin dir)
+	IncludeDir = {}
+	
+	IncludeDir["GLFW"] = "Blu/engine/ExternalDependencies/GLFW/include"
+	include "Blu/engine/ExternalDependencies/GLFW"
 
-outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.archetecture}"
+
+	
+
 
 project "Blu"
 	location "Blu"
@@ -33,7 +41,13 @@ project "Blu"
 	{
 		"$(SolutionDir)/Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/src",
-		"."
+		"%{IncludeDir.GLFW}"
+	}
+	
+	links
+	{
+		"GLFW",
+		"Opengl32.lib"
 	}
 	
 	buildoptions { "/wd4251" }
@@ -41,8 +55,10 @@ project "Blu"
 
 	filter "system:windows"
 		cppdialect "C++20"
-		staticruntime "On"
+		staticruntime "Off" 
 		systemversion "latest"
+
+		links { "GLFW", "opengl32", "gdi32", "dwmapi", "User32", "Dwmapi.lib" }
 
 		defines
 		{
@@ -58,6 +74,7 @@ project "Blu"
 	filter "configurations:Debug"
 		defines "BLU_RELEASE"
 		symbols "On"
+		linkoptions { "/NODEFAULTLIB:MSVCRT" }
 
 	filter "configurations:Release"
 		defines "BLU_DEBUG"
@@ -84,7 +101,8 @@ project "Azure"
 	{
 		"%{prj.name}/engine/src/**.h",
 		"%{prj.name}/engine/src/**.cpp",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
+		
 
 	}
 
@@ -92,19 +110,20 @@ project "Azure"
 	{
 		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/src"
-		--"Blu/engine/src",
+		
 		
 	}
 	
 	links
 	{
 		"Blu"
+
 	}
 	buildoptions { "/wd4251" }
 
 	filter "system:windows"
 		cppdialect "C++20"
-		staticruntime "On"
+		staticruntime "On" 
 		systemversion "latest"
 
 		defines

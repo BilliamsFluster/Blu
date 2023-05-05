@@ -8,7 +8,7 @@
 #include "Blu/Events/EventHandler.h"
 #include "Blu/Events/WindowEvent.h"
 #include "Blu/Events/MouseEvent.h"
-#include "Window.h"
+
 
 
 
@@ -16,7 +16,7 @@ namespace Blu
 {
 	Application::Application()
 	{
-
+		m_Window = std::unique_ptr<Window>(Window::Create());
 	}
 
 	Application::~Application()
@@ -26,16 +26,11 @@ namespace Blu
 
 	void Application::Run()
 	{
-		Window window(800,600,"Blu");
-
-		EventManager Manager;
-		WindowEventHandler Handler;
-
-		Manager.AddEventHandler(&Handler);
 		
-		while (true)
+		
+		while (m_Running)
 		{
-			
+			m_Window->OnUpdate();
 			
 		}
 
