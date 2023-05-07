@@ -1,8 +1,7 @@
-
-
 #include "Blupch.h"
 #include "WindowsWindow.h"
 #include "Blu.h"
+#include "Blu/Events/GLFWCallbacks.h"
 
 namespace Blu
 {
@@ -45,6 +44,12 @@ namespace Blu
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		glfwMakeContextCurrent(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
+
+		glfwSetKeyCallback(m_Window, GLFWCallbacks::KeyCallback);
+		glfwSetMouseButtonCallback(m_Window, GLFWCallbacks::MouseButtonCallback);
+		glfwSetWindowSizeCallback(m_Window, GLFWCallbacks::WindowSizeCallback);
+		glfwSetCursorPosCallback(m_Window, GLFWCallbacks::MouseMovedCallback);
+
 
 	}
 
