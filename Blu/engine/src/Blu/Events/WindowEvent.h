@@ -2,17 +2,22 @@
 #include "Event.h"
 namespace Blu
 {
-    class BLU_API WindowResizeEvent : public Event
+
+    namespace Events
     {
-    public:
-        WindowResizeEvent(int width, int height)
-            : m_Width(width), m_Height(height) {}
+        class BLU_API WindowResizeEvent : public Event
+        {
+        public:
+            WindowResizeEvent(int width, int height)
+                : m_Width(width), m_Height(height) {}
 
-        inline int getWidth() const { return m_Width; }
-        inline int getHeight() const { return m_Height; }
+            inline int getWidth() const { return m_Width; }
+            inline int getHeight() const { return m_Height; }
 
-        EVENT_CLASS_TYPE(WindowResize)
-    private:
-        int m_Width, m_Height;
-    };
+            EVENT_CLASS_TYPE(WindowResize)
+        private:
+            int m_Width, m_Height;
+        };
+    }
+    
 }

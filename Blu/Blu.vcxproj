@@ -164,11 +164,13 @@
     <ClInclude Include="engine\src\Blu\Events\Event.h" />
     <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
     <ClInclude Include="engine\src\Blu\Events\EventManager.h" />
+    <ClInclude Include="engine\src\Blu\Events\GLFWCallbacks.h" />
     <ClInclude Include="engine\src\Blu\Events\KeyEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\MouseEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="engine\src\Blupch.h" />
+    <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
@@ -179,6 +181,7 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">

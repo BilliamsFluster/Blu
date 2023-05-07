@@ -1,5 +1,6 @@
 #pragma once
 #include "Blu/Core/Window.h"
+#include "Blupch.h"
 #include <GLFW/glfw3.h>
 
 namespace Blu

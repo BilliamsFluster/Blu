@@ -62,6 +62,10 @@
       <Filter>Blu\Platform\Windows</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blupch.h" />
+    <ClInclude Include="engine\src\Blu\Events\GLFWCallbacks.h">
+      <Filter>Blu\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
@@ -80,5 +84,6 @@
       <Filter>Blu\Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
   </ItemGroup>
 </Project>

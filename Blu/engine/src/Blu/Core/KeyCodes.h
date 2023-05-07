@@ -1,4 +1,5 @@
 #pragma once
+#include "Blupch.h"
 
 
 
@@ -142,5 +143,163 @@ namespace Blu
 			RightSuper = 347,
 			Menu = 348
 		};
+		static std::map<KeyCode, std::string> KeyToString =
+		{
+			{Space, "Space"},
+			{Apostrophe, "Apostrophe"},
+			{Comma, "Comma"},
+			{Minus, "Minus"},
+			{Period, "Period"},
+			{Slash, "Slash"},
+			{D0, "D0"},
+			{D1, "D1"},
+			{D2, "D2"},
+			{D3, "D3"},
+			{D4, "D4"},
+			{D5, "D5"},
+			{D6, "D6"},
+			{D7, "D7"},
+			{D8, "D8"},
+			{D9, "D9"},
+			{Semicolon, "Semicolon"},
+			{Equal, "Equal"},
+			{A, "A"},
+			{B, "B"},
+			{C, "C"},
+			{D, "D"},
+			{E, "E"},
+			{F, "F"},
+			{G, "G"},
+			{H, "H"},
+			{I, "I"},
+			{J, "J"},
+			{K, "K"},
+			{L, "L"},
+			{M, "M"},
+			{N, "N"},
+			{O, "O"},
+			{P, "P"},
+			{Q, "Q"},
+			{R, "R"},
+			{S, "S"},
+			{T, "T"},
+			{U, "U"},
+			{V, "V"},
+			{W, "W"},
+			{X, "X"},
+			{Y, "Y"},
+			{Z, "Z"},
+			{LeftBracket, "LeftBracket"},
+			{Backslash, "Backslash"},
+			{RightBracket, "RightBracket"},
+			{GraveAccent, "GraveAccent"},
+			{World1, "World1"},
+			{World2, "World2"},
+			{Escape, "Escape"},
+			{Enter, "Enter"},
+			{Tab, "Tab"},
+			{Backspace, "Backspace"},
+			{Insert, "Insert"},
+			{Delete, "Delete"},
+			{Right, "Right"},
+			{Left, "Left"},
+			{Down, "Down"},
+			{Up, "Up"},
+			{PageUp, "PageUp"},
+			{PageDown, "PageDown"},
+			{Home, "Home"},
+			{End, "End"},
+			{CapsLock, "CapsLock"},
+			{ScrollLock, "ScrollLock"},
+			{NumLock, "NumLock"},
+			{PrintScreen, "PrintScreen"},
+			{Pause, "Pause"},
+			{F1, "F1"},
+			{F2, "F2"},
+			{F3, "F3"},
+			{F4, "F4"},
+			{F5, "F5"},
+			{F6, "F6"},
+			{F7, "F7"},
+			{F8, "F8"},
+			{F9, "F9"},
+			{F10, "F10"},
+			{F11, "F11"},
+			{F12, "F12"},
+			{F13, "F13"},
+			{F14, "F14"},
+			{F15, "F15"},
+			 {F16, "F16"},
+			{F17, "F17"},
+			{F18, "F18"},
+			{F19, "F19"},
+			{F20, "F20"},
+			{F21, "F21"},
+			{F22, "F22"},
+			{F23, "F23"},
+			{F24, "F24"},
+			{F25, "F25"},
+	// Keypad
+			{KP0, "KP0"},
+			{KP1, "KP1"},
+			{KP2, "KP2"}, 
+			{KP3, "KP3"},
+			{KP4, "KP4"},
+			{KP5, "KP5"},
+			{KP6, "KP6"},
+			{KP7, "KP7"},
+			{KP8, "KP8"},
+			{KP9, "KP9"},
+			{KPDecimal, "KPDecimal"},
+			{KPDivide, "KPDivide"},
+			{KPMultiply, "KPMultiply"},
+			{KPSubtract, "KPSubtract"},
+			{KPAdd, "KPAdd"},
+			{KPEnter, "KPEnter"},
+			{KPEqual, "KPEqual"},
+	// Other keys
+			{LeftShift, "LeftShift"},
+			{LeftControl, "LeftControl"},
+			{LeftAlt, "LeftAlt"},
+			{LeftSuper, "LeftSuper"},
+			{RightShift, "RightShift"}, 
+			{RightControl, "RightControl"},
+			{RightAlt, "RightAlt"},
+			{RightSuper, "RightSuper"},
+			{Menu, "Menu"}
+		};
+		
+		KeyCode FromValue(int value)
+		{
+			for (KeyCode code = 0; code <= 348; code++)
+			{
+				if ((int)code == value)
+				{
+					std::cout << code << std::endl;
+					
+				}
+					
+				
+			}
+
+			return 0;
+		}
+
+		KeyCode KeyString(int value)
+		{
+			for (auto it  = KeyToString.begin(); it != KeyToString.end(); it++)
+			{
+				if (it->first == value)
+				{
+					std::cout << it->second + " Pressed" << std::endl;
+					return 1;
+				}
+
+
+			}
+
+			return 0;
+		}
+
 	}
 }

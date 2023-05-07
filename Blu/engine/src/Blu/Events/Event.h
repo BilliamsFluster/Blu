@@ -1,27 +1,34 @@
 #pragma once
 #include "Blu/Core/Core.h"
 
+
 namespace Blu
 {
-	class  BLU_API Event
+	namespace Events
 	{
-	public:
-		/* Define Event Types*/
-		enum class Type
+		class  BLU_API Event
 		{
-			None = 0,
-			KeyPressed, KeyReleased,
-			MouseMoved, MouseButtonPressed, MouseButtonReleased, MouseScrolled,
-			WindowResize, WindowClose
-		};
+		public:
+			/* Define Event Types*/
+			enum class Type
+			{
+				None = 0,
+				KeyPressed, KeyReleased,
+				MouseMoved, MouseButtonPressed, MouseButtonReleased, MouseScrolled,
+				WindowResize, WindowClose
+			};
 
-		virtual Type GetType() const = 0;
-		virtual const char* GetName() const = 0;
-	};
+			virtual Type GetType() const = 0;
+
+
+			//virtual const char* GetName() const = 0;
+		};
+	}
+	
 
 #define EVENT_CLASS_TYPE(type) static Type GetStaticType(){return Type::type;}\
 														virtual Type GetType() const override {return GetStaticType();}\
-														virtual const char* GetName() const override { return #type; } 
+														//virtual const char* GetName() const override { return #type; } 
 
 
 	

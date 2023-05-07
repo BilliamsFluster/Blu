@@ -6,18 +6,22 @@
 
 namespace Blu
 {
-
-    class BLU_API EventManager
+    namespace Events
     {
-    public:
-        EventManager() = default;
+        class BLU_API EventManager
+        {
+        public:
+            EventManager() = default;
 
-        void AddEventHandler(EventHandler* handler);
-        void RemoveEventHandler(EventHandler* handler);
+            void AddEventHandler(EventHandler* handler);
+            void RemoveEventHandler(EventHandler* handler);
 
-        void HandleEvent(Event& event);
+            void HandleEvent(Event& event);
 
-    private:
-        std::vector<EventHandler*> m_EventHandlers;
-    };
+        private:
+            std::vector<EventHandler*> m_EventHandlers;
+        };
+    }
+
+   
 }
