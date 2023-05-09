@@ -16,34 +16,51 @@ namespace Blu
         {
             if (action == GLFW_PRESS)
             {
-                Events::KeyEvent keyEvent(key);
-                EventDispatcher.Dispatch(keyEvent);
+                
+                Events::KeyPressedEvent KeyEvent(key);
+                DISPATCH_EVENT(Events::KeyPressedEventHandler, KeyEvent);
+                
 
 
             }
             else if (action == GLFW_RELEASE)
             {
-
-
-
+                Events::KeyReleasedEvent KeyEvent(key);
+                DISPATCH_EVENT(Events::KeyReleasedEventHandler, KeyEvent);
             }
         }
 
-        void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+        static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         {
-            // Handle mouse button events here
+            if (action == GLFW_PRESS)
+            {
+                Events::MouseButtonPressedEvent MousePressedEvent(button, action, mods);
+                DISPATCH_EVENT(Events::MouseButtonPressedEventHandler, MousePressedEvent);
+            }
+            else if (action == GLFW_RELEASE)
+            {
+                Events::MouseButtonReleasedEvent MouseReleasedEvent(button, action, mods);
+                DISPATCH_EVENT(Events::MouseButtonReleasedEventHandler, MouseReleasedEvent);
+            }
+            
         }
 
-        void WindowSizeCallback(GLFWwindow* window, int width, int height)
+        static void MouseButtonScrolledCallback(GLFWwindow* window, double x_offset, double y_offset)
+        {
+            Events::MouseScrolledEvent ScrolledEvent(x_offset, y_offset);
+            DISPATCH_EVENT(Events:: MouseScrolledEventHandler, ScrolledEvent);
+
+        }
+        static void WindowSizeCallback(GLFWwindow* window, int width, int height)
         {
             // Handle window resize events here
         }
 
-        void MouseMovedCallback(GLFWwindow* window, double xpos, double ypos)
+        static void MouseMovedCallback(GLFWwindow* window, double xpos, double ypos)
         {
             Events::MouseMovedEvent MouseEvent(xpos, ypos);
             
-            EventDispatcher.Dispatch(MouseEvent);
+            DISPATCH_EVENT(Events::MouseMovedEventHandler,MouseEvent);
         }
     }
 }

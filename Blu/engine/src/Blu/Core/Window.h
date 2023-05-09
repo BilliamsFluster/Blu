@@ -29,9 +29,10 @@ namespace Blu
 		
 		
 		virtual ~Window() {}
+	public:
 
 		static Window* Create(const WindowProps& props = WindowProps());
-		
+		virtual bool ShouldClose() const = 0;
 
 	};
 	

@@ -19,7 +19,10 @@ namespace Blu
 		//Windows attributes
 	private:
 		virtual void Init(const WindowProps& props);
+	public:
 		virtual void Shutdown();
+	public:
+		 bool ShouldClose() const override;
 	private:
 		GLFWwindow* m_Window;
 
