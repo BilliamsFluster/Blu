@@ -9,6 +9,7 @@ namespace Blu
 	public:
 		Application();
 		virtual ~Application();
+		//void SetRunning(bool val) { m_Running = val; }
 
 		void Run();
 	private:
