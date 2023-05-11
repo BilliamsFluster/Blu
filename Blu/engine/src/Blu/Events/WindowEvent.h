@@ -14,7 +14,9 @@ namespace Blu
             inline int GetWidth() const { return m_Width; }
             inline int GetHeight() const { return m_Height; }
 
-            EVENT_CLASS_TYPE(WindowResize)
+            EVENT_CLASS_TYPE(WindowResize);
+
+            const char* GetName() const override { return " WindowResize"; }
         private:
             int m_Width, m_Height;
         };

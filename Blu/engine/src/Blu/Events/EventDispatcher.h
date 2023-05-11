@@ -1,5 +1,6 @@
 #pragma once
 #include "EventHandler.h"
+#include "Blu/Core/LayerStack.h"
 
 
 
@@ -10,20 +11,44 @@ namespace Blu
         class EventDispatcher
         {
         public:
-            template <typename HandlerType, typename EventType>
-            static void Dispatch(EventType& event)
+            static EventDispatcher& GetInstance()
             {
-                HandlerType Handler;
-                Handler.HandleTypedEvent<EventType>(event);
+                static EventDispatcher instance;
+                return instance;
             }
+
+            
+            void Dispatch(EventHandler& handler, Event& event, Layers::LayerStack& layerStack)
+            {
+                /*for (auto layer : layerStack)
+                {
+                    
+                    if (event.Handled)
+                        break;
+
+                    layer->OnEvent(handler, event);
+
+                    if (event.Handled)
+                        break;
+                }*/
+
+                for (auto it = layerStack.rbegin(); it != layerStack.rend(); ++it)
+                {
+                    (*it)->OnEvent(handler, event);
+                    if (event.Handled)
+                        break;
+                }
+            }
+
+            
+
+        private:
+           
         };
-        
-        
     }
-	
 }
 #define DISPATCH_EVENT(handler, event) \
     do { \
         auto& typedEvent = event; \
-        Blu::Events::EventDispatcher::Dispatch<handler, decltype(typedEvent)>(typedEvent); \
+        Blu::Application::Get().GetEventDispatcher().Dispatch(handler, event, Blu::Application::Get().GetLayerStack()); \
     } while (0)

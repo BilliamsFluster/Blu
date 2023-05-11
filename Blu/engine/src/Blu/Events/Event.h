@@ -19,9 +19,10 @@ namespace Blu
 			};
 
 			virtual Type GetType() const = 0;
+			bool Handled = false;
 
 
-			//virtual const char* GetName() const = 0;
+			virtual const char* GetName() const = 0;
 		};
 	}
 	
