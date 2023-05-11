@@ -1,6 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "Window.h"
+#include "Blu/Core/LayerStack.h"
 
 namespace Blu
 {
@@ -9,12 +10,13 @@ namespace Blu
 	public:
 		Application();
 		virtual ~Application();
-		//void SetRunning(bool val) { m_Running = val; }
-
+		void PushLayer(Layers::Layer* layer);
+		void PushOverlay(Layers::Layer* overlay);
 		void Run();
 	private:
 		std::unique_ptr<Window> m_Window;
 		bool m_Running = true;
+		Layers::LayerStack m_LayerStack;
 	};
 	
 	//needs to be defined in client

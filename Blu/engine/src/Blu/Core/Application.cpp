@@ -19,6 +19,16 @@ namespace Blu
 
 	}
 
+	void Application::PushLayer(Layers::Layer* layer)
+	{
+		m_LayerStack.PushLayer(layer);
+	}
+
+	void Application::PushOverlay(Layers::Layer* overlay)
+	{
+		m_LayerStack.PushOverlay(overlay);
+	}
+
 	void Application::Run()
 	{
 		
@@ -27,6 +37,10 @@ namespace Blu
 		{
 			m_Window->OnUpdate();
 			m_Running = !m_Window->ShouldClose();
+			for (Layers::Layer* layer : m_LayerStack)
+			{
+				layer->OnUpdate();
+			}
 		}
 
 		

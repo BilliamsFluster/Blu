@@ -21,13 +21,11 @@ namespace Blu
 			}
 		};
 
-		class BLU_API WindowEventHandler : public EventHandler
+		class BLU_API WindowResizeEventHandler : public EventHandler
 		{
 		public:
-			void HandleEvent(Event& event) override
-			{
-				// handle window event here...
-			}
+			void HandleEvent(Event& event) override;
+			
 		};
 
 		class BLU_API KeyPressedEventHandler : public EventHandler

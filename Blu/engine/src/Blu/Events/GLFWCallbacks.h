@@ -53,7 +53,8 @@ namespace Blu
         }
         static void WindowSizeCallback(GLFWwindow* window, int width, int height)
         {
-            // Handle window resize events here
+            Events::WindowResizeEvent WindowEvent(width, height);
+            DISPATCH_EVENT(Events::WindowResizeEventHandler, WindowEvent);
         }
 
         static void MouseMovedCallback(GLFWwindow* window, double xpos, double ypos)
