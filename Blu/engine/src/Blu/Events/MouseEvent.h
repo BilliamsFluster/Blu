@@ -14,6 +14,7 @@ namespace Blu
             inline double GetY() const { return m_MouseY; }
 
             virtual Type GetType() const override { return Type::MouseMoved; }
+            const char* GetName() const override { return " MouseMoved"; }
 
         private:
             double m_MouseX, m_MouseY;
@@ -30,7 +31,7 @@ namespace Blu
             inline int GetAction() const { return m_Action; }
             inline int GetMods() const { return m_Mods; }
             Type GetType() const override { return Type::MouseButtonPressed; }
-
+            const char* GetName() const override { return " MousePressed"; }
         private:
             int m_Button, m_Action, m_Mods;
         };
@@ -47,7 +48,7 @@ namespace Blu
             inline int GetMods() const { return m_Mods; }
 
             virtual Type GetType() const override { return Type::MouseButtonReleased; }
-
+            const char* GetName() const override { return " MouseReleased"; }
         private:
             int m_Button, m_Action, m_Mods;
         };
@@ -63,7 +64,7 @@ namespace Blu
             inline double GetYOffset() const { return m_YOffset; }
 
             virtual Type GetType() const override { return Type::MouseScrolled; }
-
+            const char* GetName() const override { return " MouseScrolled"; }
         private:
             double m_XOffset, m_YOffset;
         };

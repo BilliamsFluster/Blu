@@ -15,6 +15,7 @@ namespace Blu
             inline int GetKeyCode() const { return m_KeyCode; }
 
             Type GetType() const override { return Type::KeyPressed; }
+            const char* GetName() const override { return " KeyPressed"; }
 
         private:
             int m_KeyCode;
@@ -29,6 +30,7 @@ namespace Blu
             inline int GetKeyCode() const { return m_KeyCode; }
 
             Type GetType() const override { return Type::KeyReleased; }
+            const char* GetName() const override { return " KeyReleased"; }
 
         private:
             int m_KeyCode;

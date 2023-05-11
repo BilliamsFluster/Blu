@@ -5,20 +5,22 @@
 #include "EventHandler.h"
 #include "EventDispatcher.h"
 #include <GLFW/glfw3.h>
+#include "Blu/Core/Application.h"
 
 namespace Blu
 {
     namespace GLFWCallbacks
     {/*callback functions needs to be passed as function pointers to the GLFW library,
      it must have external linkage, which means it needs to be defined in a header file rather than a source file.*/
-        static Events::EventDispatcher EventDispatcher;
         static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
         {
             if (action == GLFW_PRESS)
             {
                 
                 Events::KeyPressedEvent KeyEvent(key);
-                DISPATCH_EVENT(Events::KeyPressedEventHandler, KeyEvent);
+                Events::KeyPressedEventHandler Handler;
+
+                DISPATCH_EVENT(Handler, KeyEvent);
                 
 
 
@@ -26,7 +28,8 @@ namespace Blu
             else if (action == GLFW_RELEASE)
             {
                 Events::KeyReleasedEvent KeyEvent(key);
-                DISPATCH_EVENT(Events::KeyReleasedEventHandler, KeyEvent);
+                Events::KeyReleasedEventHandler Handler;
+                DISPATCH_EVENT(Handler, KeyEvent);
             }
         }
 
@@ -35,12 +38,14 @@ namespace Blu
             if (action == GLFW_PRESS)
             {
                 Events::MouseButtonPressedEvent MousePressedEvent(button, action, mods);
-                DISPATCH_EVENT(Events::MouseButtonPressedEventHandler, MousePressedEvent);
+                Events::MouseButtonPressedEventHandler Handler;
+                DISPATCH_EVENT(Handler, MousePressedEvent);
             }
             else if (action == GLFW_RELEASE)
             {
                 Events::MouseButtonReleasedEvent MouseReleasedEvent(button, action, mods);
-                DISPATCH_EVENT(Events::MouseButtonReleasedEventHandler, MouseReleasedEvent);
+                Events::MouseButtonReleasedEventHandler Handler;
+                DISPATCH_EVENT(Handler, MouseReleasedEvent);
             }
             
         }
@@ -48,20 +53,22 @@ namespace Blu
         static void MouseButtonScrolledCallback(GLFWwindow* window, double x_offset, double y_offset)
         {
             Events::MouseScrolledEvent ScrolledEvent(x_offset, y_offset);
-            DISPATCH_EVENT(Events:: MouseScrolledEventHandler, ScrolledEvent);
+            Events::MouseScrolledEventHandler Handler;
+            DISPATCH_EVENT(Handler, ScrolledEvent);
 
         }
         static void WindowSizeCallback(GLFWwindow* window, int width, int height)
         {
             Events::WindowResizeEvent WindowEvent(width, height);
-            DISPATCH_EVENT(Events::WindowResizeEventHandler, WindowEvent);
+            Events::WindowResizeEventHandler Handler;
+            DISPATCH_EVENT(Handler, WindowEvent);
         }
 
         static void MouseMovedCallback(GLFWwindow* window, double xpos, double ypos)
         {
             Events::MouseMovedEvent MouseEvent(xpos, ypos);
-            
-            DISPATCH_EVENT(Events::MouseMovedEventHandler,MouseEvent);
+            Events::MouseMovedEventHandler Handler;
+            DISPATCH_EVENT(Handler, MouseEvent);
         }
     }
 }

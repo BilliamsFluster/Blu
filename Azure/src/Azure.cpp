@@ -12,12 +12,34 @@ public:
 	void OnUpdate() override
 
 	{
-		BLU_INFO("ExampleLayer::Update");
+		//BLU_INFO("ExampleLayer::Update");
 	} 
 
-	void OnEvent(Blu::Events::Event& event) override
+	void OnEvent(Blu::Events::EventHandler& handler, Blu::Events::Event& event) override
 	{
-		BLU_TRACE("{0}", event.GetType()); // causes an error 
+		handler.HandleEvent(event);
+		event.Handled = true;
+	}
+}; 
+
+
+class Example2Layer : public Blu::Layers::Layer
+{
+public:
+	Example2Layer()
+		:Layer("Example2")
+	{
+
+	}
+	void OnUpdate() override
+
+	{
+		
+	}
+
+	void OnEvent(Blu::Events::EventHandler& handler, Blu::Events::Event& event) override
+	{
+
 	}
 };
 
@@ -28,6 +50,8 @@ public:
 	Azure()
 	{
 		PushLayer(new ExampleLayer());
+		PushLayer(new Example2Layer());
+		
 
 	}
 	~Azure()
