@@ -4,7 +4,8 @@
 #include "MouseEvent.h"
 #include "EventHandler.h"
 #include "Blu/Core/KeyCodes.h"
-#include "Blu/Platform/Windows/WindowsWindow.h"
+#include "Blu/Events/WindowEvent.h"
+//#include "Blu/Platform/Windows/WindowsWindow.h"
 
 namespace Blu
 {
@@ -48,6 +49,11 @@ namespace Blu
 		{
 			KeyReleasedEvent MouseEvent = dynamic_cast<KeyReleasedEvent&>(event);
 			std::cout << "Key Released" << std::endl;
+		}
+		void WindowResizeEventHandler::HandleEvent(Event& event)
+		{
+			WindowResizeEvent WindowEvent = dynamic_cast<WindowResizeEvent&>(event);
+			std::cout << "Window Size: " << "Y: " << WindowEvent.GetHeight() << " X:" << WindowEvent.GetWidth() <<std::endl;
 		}
 	}
 	

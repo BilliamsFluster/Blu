@@ -4,4 +4,5 @@
 
 #include "Blu/Core/Application.h"
 #include "Blu/Core/Log.h"
+#include "Blu/Core/Layer.h"
 

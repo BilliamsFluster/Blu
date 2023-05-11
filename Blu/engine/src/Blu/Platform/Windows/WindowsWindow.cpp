@@ -54,6 +54,7 @@ namespace Blu
 		glfwSetWindowSizeCallback(m_Window, GLFWCallbacks::WindowSizeCallback);
 		glfwSetCursorPosCallback(m_Window, GLFWCallbacks::MouseMovedCallback);
 		glfwSetScrollCallback(m_Window, GLFWCallbacks::MouseButtonScrolledCallback);
+		glfwSetWindowSizeCallback(m_Window, GLFWCallbacks::WindowSizeCallback);
 		
 
 

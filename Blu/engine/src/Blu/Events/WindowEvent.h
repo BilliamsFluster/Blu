@@ -11,8 +11,8 @@ namespace Blu
             WindowResizeEvent(int width, int height)
                 : m_Width(width), m_Height(height) {}
 
-            inline int getWidth() const { return m_Width; }
-            inline int getHeight() const { return m_Height; }
+            inline int GetWidth() const { return m_Width; }
+            inline int GetHeight() const { return m_Height; }
 
             EVENT_CLASS_TYPE(WindowResize)
         private:

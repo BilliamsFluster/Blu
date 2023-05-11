@@ -171,6 +171,8 @@
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="engine\src\Blupch.h" />
     <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
+    <ClInclude Include="engine\src\Blu\Core\Layer.h" />
+    <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
@@ -182,6 +184,8 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">

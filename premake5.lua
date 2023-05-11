@@ -73,15 +73,18 @@ project "Blu"
 
 	filter "configurations:Debug"
 		defines "BLU_RELEASE"
+		buildoptions "/MDd"
 		symbols "On"
 		linkoptions { "/NODEFAULTLIB:MSVCRT" }
 
 	filter "configurations:Release"
 		defines "BLU_DEBUG"
+		buildoptions "/MD"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "BLU_DIST"
+		buildoptions "/MD"
 		optimize "On"
 	
 		--multithreaded 
