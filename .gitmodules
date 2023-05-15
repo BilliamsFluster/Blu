@@ -4,3 +4,6 @@
 [submodule "Blu/ExternalDependencies/GLFW"]
 	path = Blu/ExternalDependencies/GLFW
 	url = https://github.com/BilliamsFluster/glfw
+[submodule "Blu/engine/ExternalDependencies/imgui"]
+	path = Blu/engine/ExternalDependencies/imgui
+	url = https://github.com/BilliamsFluster/imgui

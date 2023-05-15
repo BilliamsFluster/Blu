@@ -2,17 +2,23 @@
 #include "Application.h"
 #include "Blu/Core/Log.h"
 #include "Window.h"
-#include "Application.h"
+
+#include <glad/glad.h>
 
 
 
 
 namespace Blu
 {
+	Application* Application::s_Instance = nullptr;
 	Application::Application()
 	{
+
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		s_Instance = this;
+		unsigned int id;
+
+		glGenVertexArrays(1, &id);
 		
 	}
 
@@ -24,11 +30,14 @@ namespace Blu
 	void Application::PushLayer(Layers::Layer* layer)
 	{
 		m_LayerStack.PushLayer(layer);
+		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layers::Layer* overlay)
 	{
 		m_LayerStack.PushOverlay(overlay);
+		overlay->OnAttach();
+
 	}
 
 	void Application::Run()
@@ -61,5 +70,5 @@ namespace Blu
 		//		break;
 		//}
 	}
-	Application* Application::s_Instance = nullptr;
+	
 }

@@ -79,12 +79,12 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalOptions>/wd4251 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4251 /MDd %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -103,15 +103,15 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalOptions>/wd4251 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4251 /MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -130,15 +130,15 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalOptions>/wd4251 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4251 /MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -158,36 +158,46 @@
     <ClInclude Include="engine\src\Blu\Core\Core.h" />
     <ClInclude Include="engine\src\Blu\Core\EntryPoint.h" />
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h" />
+    <ClInclude Include="engine\src\Blu\Core\Layer.h" />
+    <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
     <ClInclude Include="engine\src\Blu\Core\Log.h" />
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\Window.h" />
     <ClInclude Include="engine\src\Blu\Events\Event.h" />
+    <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
     <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
     <ClInclude Include="engine\src\Blu\Events\EventManager.h" />
     <ClInclude Include="engine\src\Blu\Events\GLFWCallbacks.h" />
     <ClInclude Include="engine\src\Blu\Events\KeyEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\MouseEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
+    <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="engine\src\Blupch.h" />
-    <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
-    <ClInclude Include="engine\src\Blu\Core\Layer.h" />
-    <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />
+    <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
-    <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
-    <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="engine\ExternalDependencies\Glad\Glad.vcxproj">
+      <Project>{BDD6857C-A90D-870D-52FA-6C103E10030F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="engine\ExternalDependencies\imgui\ImGui.vcxproj">
+      <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
+    </ProjectReference>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">
       <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
     </ProjectReference>

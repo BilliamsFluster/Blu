@@ -1,33 +1,31 @@
 #include <Blu.h>
 #include "Blu/Core/EntryPoint.h"
 
-class ExampleLayer : public Blu::Layers::Layer
+class Rendering : public Blu::Layers::Layer
 {
 public:
-	ExampleLayer()
-		:Layer("Example")
+	Rendering()
+		:Layer("Rendering")
 	{
 
 	}
 	void OnUpdate() override
-
 	{
-		//BLU_INFO("ExampleLayer::Update");
 	} 
 
 	void OnEvent(Blu::Events::EventHandler& handler, Blu::Events::Event& event) override
 	{
 		handler.HandleEvent(event);
-		event.Handled = true;
+		//event.Handled = true;
 	}
 }; 
 
 
-class Example2Layer : public Blu::Layers::Layer
+class Engine : public Blu::Layers::Layer
 {
 public:
-	Example2Layer()
-		:Layer("Example2")
+	Engine()
+		:Layer("Engine")
 	{
 
 	}
@@ -49,8 +47,9 @@ class Azure : public Blu::Application
 public:
 	Azure()
 	{
-		PushLayer(new ExampleLayer());
-		PushLayer(new Example2Layer());
+		PushLayer(new Rendering());//1st layer
+		PushLayer(new Engine()); //2nd layer 
+		PushOverlay(new Blu::Layers::ImGuiLayer());
 		
 
 	}

@@ -2,6 +2,7 @@
 #include "WindowsWindow.h"
 #include "Blu.h"
 #include "Blu/Events/GLFWCallbacks.h"
+#include <glad/glad.h>
 
 namespace Blu
 {
@@ -47,6 +48,9 @@ namespace Blu
 		}
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		glfwMakeContextCurrent(m_Window);
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		BLU_CORE_ASSERT(status, "Failed to init Glad");
+
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 
 		glfwSetKeyCallback(m_Window, GLFWCallbacks::KeyCallback);

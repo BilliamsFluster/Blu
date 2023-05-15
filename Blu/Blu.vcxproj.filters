@@ -10,8 +10,14 @@
     <Filter Include="Blu\Events">
       <UniqueIdentifier>{ECEC722A-D8A4-B477-41AC-8DD32D834F68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Blu\ImGui">
+      <UniqueIdentifier>{32B55D47-9E1F-12BE-E75D-C3635307F012}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Blu\Platform">
       <UniqueIdentifier>{5CDFFFAE-4842-8F53-F1C7-C709DD095BD6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blu\Platform\OpenGL">
+      <UniqueIdentifier>{1029941C-7C8A-712A-05F8-B7DC7158A8E9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Blu\Platform\Windows">
       <UniqueIdentifier>{96253507-82B4-BED0-2BD3-D2CB1741CF76}</UniqueIdentifier>
@@ -31,6 +37,12 @@
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h">
       <Filter>Blu\Core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\Layer.h">
+      <Filter>Blu\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\LayerStack.h">
+      <Filter>Blu\Core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Log.h">
       <Filter>Blu\Core</Filter>
     </ClInclude>
@@ -43,10 +55,16 @@
     <ClInclude Include="engine\src\Blu\Events\Event.h">
       <Filter>Blu\Events</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h">
+      <Filter>Blu\Events</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Events\EventHandler.h">
       <Filter>Blu\Events</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Events\EventManager.h">
+      <Filter>Blu\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Events\GLFWCallbacks.h">
       <Filter>Blu\Events</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Events\KeyEvent.h">
@@ -58,23 +76,32 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h">
       <Filter>Blu\Events</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h">
+      <Filter>Blu\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h">
+      <Filter>Blu\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h">
       <Filter>Blu\Platform\Windows</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blupch.h" />
-    <ClInclude Include="engine\src\Blu\Events\GLFWCallbacks.h">
-      <Filter>Blu\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
-    <ClInclude Include="engine\src\Blu\Core\Layer.h" />
-    <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
       <Filter>Blu\Core</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\Layer.cpp">
+      <Filter>Blu\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp">
+      <Filter>Blu\Core</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\Log.cpp">
       <Filter>Blu\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp">
+      <Filter>Blu\Events</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp">
       <Filter>Blu\Events</Filter>
@@ -82,12 +109,15 @@
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp">
       <Filter>Blu\Events</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp">
+      <Filter>Blu\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">
+      <Filter>Blu\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp">
       <Filter>Blu\Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp" />
-    <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
-    <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
-    <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
   </ItemGroup>
 </Project>

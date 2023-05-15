@@ -13,7 +13,16 @@ workspace "Blu"
 	IncludeDir = {}
 	
 	IncludeDir["GLFW"] = "Blu/engine/ExternalDependencies/GLFW/include"
+	IncludeDir["Glad"] = "Blu/engine/ExternalDependencies/Glad/include"
+	IncludeDir["ImGui"] = "Blu/engine/ExternalDependencies/imgui"
+
+
+	
 	include "Blu/engine/ExternalDependencies/GLFW"
+	include "Blu/engine/ExternalDependencies/Glad"
+	include "Blu/engine/ExternalDependencies/imgui"
+
+
 
 
 	
@@ -41,13 +50,19 @@ project "Blu"
 	{
 		"$(SolutionDir)/Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/src",
-		"%{IncludeDir.GLFW}"
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.Glad}",
+		"%{IncludeDir.ImGui}"
+
+
 	}
 	
 	links
 	{
 		"GLFW",
-		"Opengl32.lib"
+		"Glad",
+		"Opengl32.lib",
+		"ImGui"
 	}
 	
 	buildoptions { "/wd4251" }
@@ -63,7 +78,8 @@ project "Blu"
 		defines
 		{
 			"BLU_PLATFORM_WINDOWS",
-			"BLU_BUILD_DLL"
+			"BLU_BUILD_DLL",
+			"GLFW_INCLUDE_NONE"
 		}
 
 		postbuildcommands
