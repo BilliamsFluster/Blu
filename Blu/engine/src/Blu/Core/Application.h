@@ -11,10 +11,7 @@ namespace Blu
 	{
 	public:
 
-		static Application& Get()
-		{
-			return *s_Instance;
-		}
+		
 
 		Application();
 		
@@ -27,12 +24,16 @@ namespace Blu
 		Events::EventDispatcher& GetEventDispatcher() { return m_EventDispatcher; }
 		Layers::LayerStack& GetLayerStack() { return m_LayerStack; }
 
+		inline static Application& Get() { return *s_Instance; }
+		inline Window& GetWindow() { return *m_Window; }
+
 	private:
 		std::unique_ptr<Window> m_Window;
 		bool m_Running = true;
 		Layers::LayerStack m_LayerStack;
-		static Application* s_Instance;
 		Events::EventDispatcher m_EventDispatcher;
+	private:
+		static Application* s_Instance;
 		
 	};
 	
