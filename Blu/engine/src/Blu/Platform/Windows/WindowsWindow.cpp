@@ -15,7 +15,7 @@ namespace Blu
 
 	Blu::WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
-		Init(props);
+		Init(props); // called once
 	}
 	bool Blu::WindowsWindow::ShouldClose() const {
 		
@@ -59,7 +59,7 @@ namespace Blu
 		glfwSetCursorPosCallback(m_Window, GLFWCallbacks::MouseMovedCallback);
 		glfwSetScrollCallback(m_Window, GLFWCallbacks::MouseButtonScrolledCallback);
 		glfwSetWindowSizeCallback(m_Window, GLFWCallbacks::WindowSizeCallback);
-		
+		glfwSetCharCallback(m_Window, GLFWCallbacks::CharCallback);
 
 
 	}

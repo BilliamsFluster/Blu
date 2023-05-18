@@ -20,18 +20,6 @@ namespace Blu
             
             void Dispatch(EventHandler& handler, Event& event, Layers::LayerStack& layerStack)
             {
-                /*for (auto layer : layerStack)
-                {
-                    
-                    if (event.Handled)
-                        break;
-
-                    layer->OnEvent(handler, event);
-
-                    if (event.Handled)
-                        break;
-                }*/
-
                 for (auto it = layerStack.rbegin(); it != layerStack.rend(); ++it)
                 {
                     (*it)->OnEvent(handler, event);

@@ -50,6 +50,14 @@ namespace Blu
             
         }
 
+        static void CharCallback(GLFWwindow* window, unsigned int keycode)
+        {
+            Events::KeyTypedEvent KeyEvent(keycode);
+            Events::KeyTypedEventHandler Handler;
+
+            DISPATCH_EVENT(Handler, KeyEvent);
+        }
+
         static void MouseButtonScrolledCallback(GLFWwindow* window, double x_offset, double y_offset)
         {
             Events::MouseScrolledEvent ScrolledEvent(x_offset, y_offset);

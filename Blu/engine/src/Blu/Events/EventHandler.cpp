@@ -55,6 +55,10 @@ namespace Blu
 			WindowResizeEvent WindowEvent = dynamic_cast<WindowResizeEvent&>(event);
 			std::cout << "Window Size: " << "Y: " << WindowEvent.GetHeight() << " X:" << WindowEvent.GetWidth() <<std::endl;
 		}
+		void KeyTypedEventHandler::HandleEvent(Event& event)
+		{
+			std::cout << "KeyTyped" << std::endl;
+		}
 	}
 	
 
