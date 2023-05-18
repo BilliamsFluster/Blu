@@ -1,5 +1,5 @@
 #include <Blu.h>
-#include "Blu/Core/EntryPoint.h"
+
 
 class Rendering : public Blu::Layers::Layer
 {
