@@ -1,6 +1,6 @@
 #include "Blupch.h"
 #include "WindowsWindow.h"
-#include "Blu.h"
+#include "Blu/Core/Log.h"
 #include "Blu/Events/GLFWCallbacks.h"
 #include <glad/glad.h>
 
