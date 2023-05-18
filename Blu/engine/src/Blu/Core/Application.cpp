@@ -56,19 +56,15 @@ namespace Blu
 
 		
 	}
-	void Application::OnEvent(Blu::Events::Event& event)
+	void Application::OnEvent(Events::Event& event)
 	{
-		////m_EventDispatcher.Dispatch(event); // dispatch event
-		//// Iterate over all layers from top to bottom (assuming topmost layer is at the end of the list)
-		//for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
-		//{
-		//	// Pass the event to the current layer
-		//	(*it)->OnEvent(event);
+		//// Dispatch the event to the layer stack
+		//m_EventDispatcher.Dispatch(*this, event);
 
-		//	// If the event was handled by the layer, stop propagation to lower layers
-		//	if (event.Handled)
-		//		break;
-		//}
+		//// If the event is a window close event, stop the application
+		//if (event.GetType() == Events::Event::Type::WindowClose)
+		//	m_Running = false;
 	}
+
 	
 }

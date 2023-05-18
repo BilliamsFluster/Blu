@@ -16,7 +16,7 @@ public:
 	void OnEvent(Blu::Events::EventHandler& handler, Blu::Events::Event& event) override
 	{
 		handler.HandleEvent(event);
-		//event.Handled = true;
+		event.Handled = true;
 	}
 }; 
 

@@ -13,7 +13,7 @@ namespace Blu
 			enum class Type
 			{
 				None = 0,
-				KeyPressed, KeyReleased,
+				KeyPressed, KeyReleased, KeyTyped,
 				MouseMoved, MouseButtonPressed, MouseButtonReleased, MouseScrolled,
 				WindowResize, WindowClose
 			};

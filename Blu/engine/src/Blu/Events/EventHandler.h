@@ -40,6 +40,12 @@ namespace Blu
 			void HandleEvent(Event& event) override;
 		};
 
+		class BLU_API KeyTypedEventHandler : public EventHandler
+		{
+		public:
+			void HandleEvent(Event& event) override;
+		};
+
 		class BLU_API MouseMovedEventHandler : public EventHandler
 		{
 		public:
