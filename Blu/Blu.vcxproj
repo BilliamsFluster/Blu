@@ -157,6 +157,7 @@
     <ClInclude Include="engine\src\Blu\Core\Application.h" />
     <ClInclude Include="engine\src\Blu\Core\Core.h" />
     <ClInclude Include="engine\src\Blu\Core\EntryPoint.h" />
+    <ClInclude Include="engine\src\Blu\Core\Input.h" />
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\Layer.h" />
     <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
@@ -173,6 +174,7 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
+    <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
@@ -186,6 +188,7 @@
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

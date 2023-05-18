@@ -57,8 +57,7 @@ namespace Blu
 			glfwGetWindowSize(window, &WindowWidth, &WindowHeight);
 
 			io.DisplaySize = ImVec2((float)FrameBufferWidth, (float)FrameBufferHeight);
-			BLU_CORE_ERROR(WindowWidth);
-			BLU_CORE_ERROR(WindowHeight);
+			
 			float time = (float)glfwGetTime();
 			io.DeltaTime = m_Time > 0.0 ? (time - m_Time) : (1.00f / 60.f);
 			m_Time = time;

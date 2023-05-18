@@ -2,7 +2,7 @@
 #include "Application.h"
 #include "Blu/Core/Log.h"
 #include "Window.h"
-
+#include "Input.h"
 #include <glad/glad.h>
 
 
@@ -52,6 +52,9 @@ namespace Blu
 			{
 				layer->OnUpdate();
 			}
+			auto [x, y] = WindowInput::Input::GetMousePosition();
+
+			BLU_CORE_ERROR("{0}, {1}", x, y);
 		}
 
 		
