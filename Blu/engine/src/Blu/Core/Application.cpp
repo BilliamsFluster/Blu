@@ -8,6 +8,7 @@
 
 
 
+
 namespace Blu
 {
 	Application* Application::s_Instance = nullptr;

@@ -15,6 +15,8 @@ workspace "Blu"
 	IncludeDir["GLFW"] = "Blu/engine/ExternalDependencies/GLFW/include"
 	IncludeDir["Glad"] = "Blu/engine/ExternalDependencies/Glad/include"
 	IncludeDir["ImGui"] = "Blu/engine/ExternalDependencies/imgui"
+	IncludeDir["glm"] = "Blu/engine/ExternalDependencies/glm/glm"
+
 
 
 	
@@ -43,6 +45,9 @@ project "Blu"
 	{
 		"%{prj.name}/engine/src/**.h",
 		"%{prj.name}/engine/src/**.cpp",
+		"%{prj.name}/engine/ExternalDependencies/glm/**.hpp",
+		"%{prj.name}/engine/ExternalDependencies/glm/**.inl"
+
 
 	}
 
@@ -52,7 +57,9 @@ project "Blu"
 		"$(SolutionDir)Blu/engine/src",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
-		"%{IncludeDir.ImGui}"
+		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.glm}"
+
 
 
 	}
@@ -63,6 +70,7 @@ project "Blu"
 		"Glad",
 		"Opengl32.lib",
 		"ImGui"
+		
 	}
 	
 	buildoptions { "/wd4251" }
@@ -128,7 +136,10 @@ project "Azure"
 	includedirs 
 	{
 		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
+
 		"$(SolutionDir)Blu/engine/src"
+
 		
 		
 	}

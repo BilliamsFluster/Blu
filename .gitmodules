@@ -7,3 +7,9 @@
 [submodule "Blu/engine/ExternalDependencies/imgui"]
 	path = Blu/engine/ExternalDependencies/imgui
 	url = https://github.com/BilliamsFluster/imgui
+[submodule "Blu/engine/ExternalDependencies/gln"]
+	path = Blu/engine/ExternalDependencies/gln
+	url = https://github.com/THUDM/GLM
+[submodule "Blu/engine/ExternalDependencies/glm"]
+	path = Blu/engine/ExternalDependencies/glm
+	url = https://github.com/g-truc/glm
