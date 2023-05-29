@@ -8,17 +8,19 @@ namespace Blu
         class BLU_API WindowResizeEvent : public Event
         {
         public:
-            WindowResizeEvent(int width, int height)
+            WindowResizeEvent(float width, float height)
                 : m_Width(width), m_Height(height) {}
 
-            inline int GetWidth() const { return m_Width; }
-            inline int GetHeight() const { return m_Height; }
+            inline float GetWidth() const { return m_Width; }
+            inline float GetHeight() const { return m_Height; }
 
-            EVENT_CLASS_TYPE(WindowResize);
+            virtual Type GetType() const override { return Type::WindowResize; }
+
+           // EVENT_CLASS_TYPE(WindowResize);
 
             const char* GetName() const override { return " WindowResize"; }
         private:
-            int m_Width, m_Height;
+            float m_Width, m_Height;
         };
     }
     

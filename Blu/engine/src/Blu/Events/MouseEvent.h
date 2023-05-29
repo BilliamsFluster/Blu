@@ -7,17 +7,17 @@ namespace Blu
         class BLU_API MouseMovedEvent : public Event
         {
         public:
-            MouseMovedEvent(double x, double y)
+            MouseMovedEvent(float x, float y)
                 : m_MouseX(x), m_MouseY(y) {}
 
-            inline double GetX() const { return m_MouseX; }
-            inline double GetY() const { return m_MouseY; }
+            inline float GetX() const { return m_MouseX; }
+            inline float GetY() const { return m_MouseY; }
 
             virtual Type GetType() const override { return Type::MouseMoved; }
             const char* GetName() const override { return " MouseMoved"; }
 
         private:
-            double m_MouseX, m_MouseY;
+            float m_MouseX, m_MouseY;
         };
 
 
@@ -57,16 +57,16 @@ namespace Blu
         class BLU_API MouseScrolledEvent : public Event
         {
         public:
-            MouseScrolledEvent(double x_offset, double y_offset)
+            MouseScrolledEvent(float x_offset, float y_offset)
                 : m_XOffset(x_offset), m_YOffset(y_offset) {}
 
-            inline double GetXOffset() const { return m_XOffset; }
-            inline double GetYOffset() const { return m_YOffset; }
+            inline float GetXOffset() const { return m_XOffset; }
+            inline float GetYOffset() const { return m_YOffset; }
 
             virtual Type GetType() const override { return Type::MouseScrolled; }
             const char* GetName() const override { return " MouseScrolled"; }
         private:
-            double m_XOffset, m_YOffset;
+            float m_XOffset, m_YOffset;
         };
     }
     

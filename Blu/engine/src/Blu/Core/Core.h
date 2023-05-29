@@ -1,11 +1,15 @@
 #pragma once
 
 #ifdef BLU_PLATFORM_WINDOWS
+#if BLU_DYNAMIC_LINK
 	#ifdef BLU_BUILD_DLL
 		#define BLU_API __declspec(dllexport)
 	#else
 		#define BLU_API __declspec(dllimport)
 	#endif
+#else
+	#define BLU_API
+#endif
 #else
 	#error Blu only supports windows
 #endif 

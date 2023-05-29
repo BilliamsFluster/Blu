@@ -1391,6 +1391,9 @@
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp">
       <Filter>src\Blu\Events</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp">
+      <Filter>src\Blu\ImGui</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp">
       <Filter>src\Blu\ImGui</Filter>
     </ClCompile>

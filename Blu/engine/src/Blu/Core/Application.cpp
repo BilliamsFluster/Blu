@@ -55,9 +55,8 @@ namespace Blu
 			}
 			auto [x, y] = WindowInput::Input::GetMousePosition();
 
-			BLU_CORE_ERROR("{0}, {1}", x, y);
 		}
-
+		
 		
 	}
 	void Application::OnEvent(Events::Event& event)

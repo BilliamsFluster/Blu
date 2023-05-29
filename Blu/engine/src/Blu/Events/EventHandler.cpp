@@ -5,7 +5,6 @@
 #include "EventHandler.h"
 #include "Blu/Core/KeyCodes.h"
 #include "Blu/Events/WindowEvent.h"
-//#include "Blu/Platform/Windows/WindowsWindow.h"
 
 namespace Blu
 {
@@ -16,7 +15,6 @@ namespace Blu
 
 			KeyPressedEvent& keyEvent = dynamic_cast<KeyPressedEvent&>(event);
 			
-			Key::KeyString(keyEvent.GetKeyCode());
 		}
 
 		void MouseMovedEventHandler::HandleEvent(Event& event)

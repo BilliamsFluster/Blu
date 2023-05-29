@@ -32,8 +32,10 @@ workspace "Blu"
 
 project "Blu"
 	location "Blu"
-	kind "SharedLib"
+	kind "StaticLib"
 	language "C++"
+	cppdialect "C++20"
+	staticruntime "on"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -68,8 +70,9 @@ project "Blu"
 	{
 		"GLFW",
 		"Glad",
-		"Opengl32.lib",
-		"ImGui"
+		"opengl32",
+		"ImGui",
+		"dwmapi"
 		
 	}
 	
@@ -77,12 +80,10 @@ project "Blu"
 
 
 	filter "system:windows"
-		cppdialect "C++20"
-		staticruntime "Off" 
 		systemversion "latest"
 
-		links { "GLFW", "opengl32", "gdi32", "dwmapi", "User32", "Dwmapi.lib" }
-
+	--links {"gdi32", "dwmapi", "User32" }
+		--"opengl32.lib"
 		defines
 		{
 			"BLU_PLATFORM_WINDOWS",
@@ -90,26 +91,23 @@ project "Blu"
 			"GLFW_INCLUDE_NONE"
 		}
 
-		postbuildcommands
-		{
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" ..outputdir.. "/Azure")
-		}
+		
 
 	filter "configurations:Debug"
-		defines "BLU_RELEASE"
-		buildoptions "/MDd"
-		symbols "On"
+		defines "BLU_DEBUG"
+		buildoptions "/MTd"
+		symbols "on"
 		linkoptions { "/NODEFAULTLIB:MSVCRT" }
 
 	filter "configurations:Release"
-		defines "BLU_DEBUG"
-		buildoptions "/MD"
-		optimize "On"
+		defines "BLU_RELEASE"
+		buildoptions "/MT"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "BLU_DIST"
-		buildoptions "/MD"
-		optimize "On"
+		buildoptions "/MT"
+		optimize "on"
 	
 		--multithreaded 
 		-- refer to premake wiki on more info
@@ -120,6 +118,9 @@ project "Azure"
 	location "Azure"
 	kind "ConsoleApp"
 	language "C++"
+	cppdialect "C++20"
+	staticruntime "on" 
+
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -127,7 +128,7 @@ project "Azure"
 	files
 	{
 		"%{prj.name}/engine/src/**.h",
-		"%{prj.name}/engine/src/**.cpp",
+		"%{prj.name}/engine/src/**.cpp", 
 		"%{prj.name}/src/**.cpp",
 		
 
@@ -137,7 +138,6 @@ project "Azure"
 	{
 		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
-
 		"$(SolutionDir)Blu/engine/src"
 
 		
@@ -152,8 +152,6 @@ project "Azure"
 	buildoptions { "/wd4251" }
 
 	filter "system:windows"
-		cppdialect "C++20"
-		staticruntime "On" 
 		systemversion "latest"
 
 		defines
@@ -162,14 +160,14 @@ project "Azure"
 		}
 
 	filter "configurations:Debug"
-		defines "BLU_RELEASE"
-		symbols "On"
+		defines "BLU_DEBUG"
+		symbols "on"
 
 	filter "configurations:Release"
-		defines "BLU_DEBUG"
-		optimize "On"
+		defines "BLU_RELEASE"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "BLU_DIST"
-		optimize "On"
+		optimize "on"
 
