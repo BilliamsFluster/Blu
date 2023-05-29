@@ -2,6 +2,7 @@
 #include "WindowsWindow.h"
 #include "Blu/Core/Log.h"
 #include "Blu/Events/GLFWCallbacks.h"
+#include "Blu/Platform/OpenGL/OpenGLContext.h"
 #include <glad/glad.h>
 
 namespace Blu
@@ -30,7 +31,7 @@ namespace Blu
 	void Blu::WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_Context->SwapBuffers();
 	}
 
 	void Blu::WindowsWindow::Init(const WindowProps& props)
@@ -47,8 +48,9 @@ namespace Blu
 			s_GLFWInitialized = true;
 		}
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		m_Context = new OpenGLContext(m_Window);
+		m_Context->Init();
+		
 		BLU_CORE_ASSERT(status, "Failed to init Glad");
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
