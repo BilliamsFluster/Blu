@@ -16,7 +16,7 @@ namespace Blu
                 static EventDispatcher instance;
                 return instance;
             }
-
+            
             
             void Dispatch(EventHandler& handler, Event& event, Layers::LayerStack& layerStack)
             {
