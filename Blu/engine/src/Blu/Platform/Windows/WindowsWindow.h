@@ -1,8 +1,9 @@
 #pragma once
 #include "Blu/Core/Window.h"
 #include "Blupch.h"
-#include <GLFW/glfw3.h>
+#include "Blu/Rendering/GraphicsContext.h"
 
+struct GLFWwindow;
 namespace Blu
 {
 	class BLU_API WindowsWindow : public Window
@@ -27,6 +28,7 @@ namespace Blu
 		 bool ShouldClose() const override;
 	private:
 		GLFWwindow* m_Window;
+		GraphicsContext* m_Context;
 
 		struct WindowData
 		{
