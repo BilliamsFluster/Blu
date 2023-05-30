@@ -76,7 +76,7 @@ project "Blu"
 		
 	}
 	
-	buildoptions { "/wd4251" }
+	--buildoptions { "/wd4251" } for dll
 
 
 	filter "system:windows"
@@ -149,7 +149,7 @@ project "Azure"
 		"Blu"
 
 	}
-	buildoptions { "/wd4251" }
+	--buildoptions { "/wd4251" } for dll
 
 	filter "system:windows"
 		systemversion "latest"
