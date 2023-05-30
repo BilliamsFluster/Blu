@@ -32,6 +32,9 @@ namespace Blu
 		bool m_Running = true;
 		Layers::LayerStack m_LayerStack;
 		Events::EventDispatcher m_EventDispatcher;
+	public: // dont make public
+
+		unsigned int m_VertexArray, m_VertexBuffer, m_IndexBuffer, m_Texture, m_FrameBufferObject;
 	private:
 		static Application* s_Instance;
 		
