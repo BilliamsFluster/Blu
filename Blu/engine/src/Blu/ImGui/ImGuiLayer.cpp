@@ -67,7 +67,7 @@ namespace Blu
 
 			
 			RenderGui();
-			ImGui::ShowDemoWindow();
+			//ImGui::ShowDemoWindow();
 
 				
 			
@@ -250,8 +250,11 @@ namespace Blu
 			ImGui::SetNextWindowPos(ImVec2(0, toolbarHeight));
 			ImGui::SetNextWindowSize(ImVec2(displaySize.x - 200, viewportHeight));
 			ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoDecoration);
-			// Render your 3D scene or image here
+			// Render the 3D scene or image here
 			ImGui::Text("Viewport content");
+			Application& app = Application::Get();
+			ImTextureID textureID = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(app.m_Texture));
+			ImGui::Image(textureID, ImVec2(displaySize.x - 200, viewportHeight));
 			ImGui::End();
 
 			// Window 4: Outliner

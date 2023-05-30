@@ -21,7 +21,7 @@ namespace Blu
 		{
 			MouseMovedEvent& MouseEvent = dynamic_cast<MouseMovedEvent&>(event);
 
-			std::cout << "Mouse Pos X: "<<  MouseEvent.GetX() <<" Mouse Pos Y: "<< MouseEvent.GetY() <<std::endl;
+			//std::cout << "Mouse Pos X: "<<  MouseEvent.GetX() <<" Mouse Pos Y: "<< MouseEvent.GetY() <<std::endl;
 
 
 		}
