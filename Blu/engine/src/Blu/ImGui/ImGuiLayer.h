@@ -1,6 +1,5 @@
 #pragma once
 #include "Blu/Core/Layer.h"
-
 #include "Blu/Events/Event.h"
 #include "Blu/Events/EventHandler.h"
 #include "Blu/Events/MouseEvent.h"

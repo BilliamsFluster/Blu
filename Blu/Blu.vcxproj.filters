@@ -46,6 +46,9 @@
     <Filter Include="src\Blu\Platform\Windows">
       <UniqueIdentifier>{0D537411-F977-C391-22C3-A8210E47C2AF}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Rendering">
+      <UniqueIdentifier>{AC42AF3C-1859-ADD2-61D0-38F4CD257E5A}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\ExternalDependencies\glm\glm\common.hpp">
@@ -1359,17 +1362,24 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.h">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.h">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsInput.h">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
-    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
@@ -1402,6 +1412,12 @@
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.cpp">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.cpp">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClCompile>
@@ -1411,6 +1427,5 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.cpp" />
   </ItemGroup>
 </Project>

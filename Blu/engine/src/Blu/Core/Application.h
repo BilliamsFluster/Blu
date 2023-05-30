@@ -3,8 +3,12 @@
 #include "Window.h"
 #include "Blu/Core/LayerStack.h"
 #include "Blu/Events/EventDispatcher.h"
+#include "Blu/Platform/OpenGL/OpenGLShader.h"
 
-
+struct Vec4
+{
+	float x, y, z, w;
+};
 namespace Blu
 {
 	class BLU_API Application
@@ -35,6 +39,8 @@ namespace Blu
 	public: // dont make public
 
 		unsigned int m_VertexArray, m_VertexBuffer, m_IndexBuffer, m_Texture, m_FrameBufferObject;
+		std::unique_ptr<OpenGLShader> m_Shader;
+		Vec4 m_Color;
 	private:
 		static Application* s_Instance;
 		

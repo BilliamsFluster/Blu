@@ -279,6 +279,7 @@ namespace Blu
 
 			static ImVec4 clearColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);  // Default clear color (dark gray)
 			static bool showColorPicker = false;
+			static bool showTriangleColorPicker = false;
 
 			// Window 6: File
 			ImGui::SetNextWindowPos(ImVec2(displaySize.x - outlinerWidth, toolbarHeight));
@@ -293,6 +294,21 @@ namespace Blu
 				showColorPicker = !showColorPicker;
 			}
 
+			if (ImGui::Button("Change Triangle Color"))
+			{
+				// Toggle the flag to show/hide the color picker
+				showTriangleColorPicker = !showTriangleColorPicker;
+			}
+			
+			// Option to change triangle color
+			if (showTriangleColorPicker)
+			{
+				if (ImGui::ColorEdit4("Color Picker", (float*)&app.m_Color))
+				{
+					// Set the clear color for the window
+					glClearColor(app.m_Color.x, app.m_Color.y, app.m_Color.z, app.m_Color.w);
+				}
+			}
 			// Option to change window color
 			if (showColorPicker)
 			{

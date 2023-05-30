@@ -4,6 +4,7 @@
 #include "Window.h"
 #include "Input.h"
 #include <glad/glad.h>
+#include "imgui.h"
 
 
 
@@ -11,10 +12,12 @@
 
 namespace Blu
 {
+	
+
 	Application* Application::s_Instance = nullptr;
 	Application::Application()
 	{
-
+		m_Color = { 1,1,1,1 };
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		s_Instance = this;
 		unsigned int id;
@@ -26,9 +29,9 @@ namespace Blu
 		glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
 
 		float vertices[3 * 3] = {
-			-0.8f, -0.1f, 0.0f,
-			-0.1f, -0.1f, 0.0f,
-			-0.4f, -1.f, 0.0f
+			-0.8f, -0.3f, 0.0f,
+			-0.4f, -0.8f, 0.0f,
+			-0.1f, -0.3f, 0.0f
 		};
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
@@ -63,6 +66,39 @@ namespace Blu
 
 		// Unbind to reset to default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		std::string vertexSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) in vec3 a_Position;
+			out vec3 v_Position;
+
+			void main()
+			{
+				gl_Position = vec4(a_Position, 1.0);	
+				v_Position = a_Position;
+			}
+
+
+
+		)";
+
+		std::string fragmentSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) out vec4 o_color;
+			in vec3 v_Position;
+			uniform vec4 u_Color;
+
+
+			void main()
+			{
+				o_color = u_Color;
+			}
+
+
+
+		)";
+		m_Shader.reset(new OpenGLShader(vertexSrc, fragmentSrc));
 	}
 
 	Application::~Application()
@@ -89,12 +125,16 @@ namespace Blu
 		
 		while (m_Running)
 		{
+
 			m_Window->OnUpdate();
 			m_Running = !m_Window->ShouldClose();
+			m_Shader->Bind();
 			glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferObject);
 			glBindVertexArray(m_VertexArray);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			m_Shader->SetUniform4f("u_Color", m_Color.x, m_Color.y, m_Color.z, m_Color.w);
+
 			for (Layers::Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate();
