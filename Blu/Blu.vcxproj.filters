@@ -1380,6 +1380,9 @@
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Renderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
@@ -1427,5 +1430,8 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp" />
   </ItemGroup>
 </Project>
