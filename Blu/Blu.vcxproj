@@ -581,12 +581,15 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blupch.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Renderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
@@ -599,6 +602,7 @@
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp" />
@@ -606,6 +610,8 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">
