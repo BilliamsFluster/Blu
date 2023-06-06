@@ -6,6 +6,8 @@
 #include <glad/glad.h>
 #include "imgui.h"
 #include "Blu/Rendering/Buffer.h"
+#include "Blu/Rendering/VertexArray.h"
+#include "Blu/Rendering/Renderer.h"
 
 
 
@@ -16,24 +18,7 @@ namespace Blu
 	
 
 	Application* Application::s_Instance = nullptr;
-	static GLenum ShaderDataTypeToOpenGlBaseType(ShaderDataType type)
-	{
-		switch (type)
-		{
-		case ShaderDataType::Float:		return	GL_FLOAT;
-		case ShaderDataType::Float2:	return  GL_FLOAT;
-		case ShaderDataType::Float3:	return  GL_FLOAT;
-		case ShaderDataType::Float4:	return  GL_FLOAT;
-		case ShaderDataType::Mat3:		return  GL_FLOAT;
-		case ShaderDataType::Mat4:		return  GL_FLOAT;
-		case ShaderDataType::Int:		return	GL_INT;
-		case ShaderDataType::Int2:		return	GL_INT;
-		case ShaderDataType::Int3:		return	GL_INT;
-		case ShaderDataType::Int4:		return	GL_INT;
-		case ShaderDataType::Bool:		return	GL_BOOL;
-		}
-		return 0;
-	}
+	
 	Application::Application()
 	{
 		m_Color = { 1,1,1,1 };
@@ -41,8 +26,7 @@ namespace Blu
 		s_Instance = this;
 		unsigned int id;
 
-		glGenVertexArrays(1, &m_VertexArray);
-		glBindVertexArray(m_VertexArray);
+		m_VertexArray.reset(VertexArray::Create());
 
 		
 		float vertices[3 * 7] = {
@@ -51,26 +35,14 @@ namespace Blu
 			-0.1f, -0.3f, 0.0f, 0.3f, 0.8f, 0.2f, 1.0f
 		};
 		m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
-		{
-			BufferLayout layout = {
+		
+		BufferLayout layout = {
 			{ShaderDataType::Float3, "a_Position"},
 			{ShaderDataType::Float4, "a_Color"}
-			//{ShaderDataType::Float3, "a_Normal", true}
-			};
-			m_VertexBuffer->SetLayout(layout);
-		}
+		};
+		m_VertexBuffer->SetLayout(layout);
+		m_VertexArray->AddVertexBuffer(m_VertexBuffer);
 		
-
-		uint32_t index = 0;
-		for (const auto& element : m_VertexBuffer->GetLayout())
-		{
-			glEnableVertexAttribArray(index);
-			glVertexAttribPointer(index, element.GetComponentCount(),
-				ShaderDataTypeToOpenGlBaseType(element.Type),
-				element.Normalized ? GL_TRUE : GL_FALSE, m_VertexBuffer->GetLayout().GetStride(),
-				(const void*)element.Offset);
-			index++;
-		}
 
 		
 
@@ -79,6 +51,38 @@ namespace Blu
 		uint32_t indices[3] = { 0, 1, 2 };
 
 		m_IndexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		m_VertexArray->AddIndexBuffer(m_IndexBuffer);
+
+
+		float squareVertices[3 * 4] = {
+			-0.5f, -0.5f, 0.0f,
+			 0.5f, -0.5f, 0.0f,
+			 0.5f,  0.5f, 0.0f,
+			-0.5f,  0.5f, 0.5f
+		};
+
+		
+
+		m_SquareVertexArray.reset(VertexArray::Create());
+		std::shared_ptr<VertexBuffer> squareVertexBuffer;
+		squareVertexBuffer.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+
+		BufferLayout squareLayout = {
+			{ShaderDataType::Float3, "a_Position"},
+			{ShaderDataType::Float4, "a_Color"}
+		};
+		m_VertexBuffer->SetLayout(squareLayout);
+		m_SquareVertexArray->AddVertexBuffer(squareVertexBuffer);
+
+
+		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
+
+		std::shared_ptr<IndexBuffer> squareIndexBuffer;
+		squareIndexBuffer.reset(IndexBuffer::Create(squareIndices, sizeof(squareIndices)));
+
+		squareIndexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		m_SquareVertexArray->AddIndexBuffer(squareIndexBuffer);
+
 		// Create a framebuffer
 		glGenFramebuffers(1, &m_FrameBufferObject);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferObject);
@@ -171,14 +175,18 @@ namespace Blu
 
 			m_Window->OnUpdate();
 			m_Running = !m_Window->ShouldClose();
-			std::cout << "OpenGl Error: " << glGetError() << std::endl; // Error 1281
-
-			m_Shader->Bind();
-
+			m_SquareVertexArray->Bind();
+			
+			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+			RenderCommand::Clear();
 			glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferObject);
-			glBindVertexArray(m_VertexArray);
-			glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
+			Renderer::BeginScene();
+			m_Shader->Bind();
+			Renderer::Submit(m_VertexArray);
+			Renderer::EndScene();
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
 			//m_Shader->SetUniform4f("u_Color", m_Color.x, m_Color.y, m_Color.z, m_Color.w); // set color of triangle 
 
 			for (Layers::Layer* layer : m_LayerStack)

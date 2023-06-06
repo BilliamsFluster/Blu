@@ -38,10 +38,15 @@ namespace Blu
 		Events::EventDispatcher m_EventDispatcher;
 	public: // dont make public
 
-		unsigned int m_VertexArray, m_Texture, m_FrameBufferObject;
-		std::unique_ptr<OpenGLShader> m_Shader;
-		std::unique_ptr<class IndexBuffer> m_IndexBuffer;
-		std::unique_ptr<class VertexBuffer> m_VertexBuffer;
+		unsigned int m_Texture, m_FrameBufferObject;
+		std::shared_ptr<OpenGLShader> m_Shader;
+		std::shared_ptr<class IndexBuffer> m_IndexBuffer;
+		std::shared_ptr<class VertexBuffer> m_VertexBuffer;
+		std::shared_ptr<class VertexArray> m_VertexArray;
+
+		std::shared_ptr<VertexArray> m_SquareVertexArray;
+
+
 		Vec4 m_Color;
 	private:
 		static Application* s_Instance;
