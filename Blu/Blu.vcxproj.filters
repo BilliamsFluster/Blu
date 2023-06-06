@@ -1383,6 +1383,11 @@
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\RenderCommand.h" />
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
@@ -1433,5 +1438,10 @@
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.cpp" />
   </ItemGroup>
 </Project>
