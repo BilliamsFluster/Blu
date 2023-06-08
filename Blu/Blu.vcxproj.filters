@@ -1362,10 +1362,19 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.h">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.h">
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.h">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsInput.h">
@@ -1374,20 +1383,30 @@
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Buffer.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\RenderCommand.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Renderer.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
-    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Renderer.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
-    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\RenderCommand.h" />
-    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
@@ -1420,10 +1439,19 @@
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.cpp">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.cpp">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp">
@@ -1432,16 +1460,26 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
-    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp" />
-    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp" />
-    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.cpp" />
   </ItemGroup>
 </Project>

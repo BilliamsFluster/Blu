@@ -20,6 +20,7 @@ namespace Blu
 	Application* Application::s_Instance = nullptr;
 	
 	Application::Application()
+		:m_Camera({-1.0f, 1.0f, -1.0f, 1.0f})
 	{
 		m_Color = { 1,1,1,1 };
 		m_Window = std::unique_ptr<Window>(Window::Create());
@@ -30,9 +31,9 @@ namespace Blu
 
 		
 		float vertices[3 * 7] = {
-			-0.8f, -0.3f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
-			-0.4f, -0.8f, 0.0f, 0.2f, 0.3f, 0.6f, 1.0f,
-			-0.1f, -0.3f, 0.0f, 0.3f, 0.8f, 0.2f, 1.0f
+			-0.5f, -0.5f, 0.0f, 1.f, 0.2f, 0.8f, 1.0f,
+			0.5f, 0.5f, 0.0f, 0.2f, 0.3f, 0.6f, 1.0f,
+			0.5f, -0.5f, 0.0f, 0.3f, 0.8f, 0.2f, 1.0f
 		};
 		m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 		
@@ -83,30 +84,30 @@ namespace Blu
 		squareIndexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_SquareVertexArray->AddIndexBuffer(squareIndexBuffer);
 
-		// Create a framebuffer
-		glGenFramebuffers(1, &m_FrameBufferObject);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferObject);
+		//// Create a framebuffer
+		//glGenFramebuffers(1, &m_FrameBufferObject);
+		//glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferObject);
 
-		// Create a texture
-		glGenTextures(1, &m_Texture);
-		glBindTexture(GL_TEXTURE_2D, m_Texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr); // change 800x600 to your window size
+		//// Create a texture
+		//glGenTextures(1, &m_Texture);
+		//glBindTexture(GL_TEXTURE_2D, m_Texture);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr); // change 800x600 to your window size
 
-		// Set texture parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//// Set texture parameters
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		// Attach it to the framebuffer
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture, 0);
+		//// Attach it to the framebuffer
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture, 0);
 
-		// Check if framebuffer is complete
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		//// Check if framebuffer is complete
+		//if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		//	std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 
-		// Unbind to reset to default framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//// Unbind to reset to default framebuffer
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		std::cout << "OpenGl Error: " << glGetError() << std::endl;
+		//std::cout << "OpenGl Error: " << glGetError() << std::endl;
 		// no 1281 error here but error 0 here
 
 		std::string vertexSrc = R"(
@@ -114,13 +115,15 @@ namespace Blu
 			
 			layout(location = 0) in vec3 a_Position;
 			layout(location = 1) in vec4 a_Color;
+			
+			uniform mat4 u_ViewProjectionMatrix;
 			out vec3 v_Position;
 			out vec4 v_Color;
 
 			void main()
 			{
 				v_Position = a_Position;
-				gl_Position = vec4(a_Position, 1.0);	
+				gl_Position = u_ViewProjectionMatrix * vec4(a_Position, 1.0);	
 				v_Color = a_Color;
 			}
 
@@ -175,14 +178,16 @@ namespace Blu
 
 			m_Window->OnUpdate();
 			m_Running = !m_Window->ShouldClose();
-			m_SquareVertexArray->Bind();
 			
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
 			glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferObject);
-			Renderer::BeginScene();
-			m_Shader->Bind();
-			Renderer::Submit(m_VertexArray);
+			// Clear the framebuffer
+			//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			//glClear(GL_COLOR_BUFFER_BIT);
+			Renderer::BeginScene(m_Camera);
+			
+			Renderer::Submit(m_VertexArray, m_Shader);
 			Renderer::EndScene();
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

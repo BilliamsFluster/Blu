@@ -2,6 +2,7 @@
 #include "OpenGLShader.h"
 #include <glad/glad.h>
 #include "Blu/Core/Log.h"
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Blu
 {
@@ -127,6 +128,14 @@ namespace Blu
 		glUniform4f(GetUniformLocation(name), v0, v1, v2, v3);
 
 	}
+
+	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
+	{
+		GLint location = GetUniformLocation(name);
+		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+	}
+
+
 	int OpenGLShader::GetUniformLocation(const std::string& name)
 	{
 		if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())

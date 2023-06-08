@@ -4,6 +4,8 @@
 #include "Blu/Core/LayerStack.h"
 #include "Blu/Events/EventDispatcher.h"
 #include "Blu/Platform/OpenGL/OpenGLShader.h"
+#include "Blu/Rendering/OrthographicCamera.h"
+
 
 struct Vec4
 {
@@ -45,7 +47,7 @@ namespace Blu
 		std::shared_ptr<class VertexArray> m_VertexArray;
 
 		std::shared_ptr<VertexArray> m_SquareVertexArray;
-
+		OrthographicCamera m_Camera;
 
 		Vec4 m_Color;
 	private:

@@ -176,6 +176,8 @@ namespace Blu
 			io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
 			io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
 			io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+			
+			
 			return false;
 
 		}
@@ -245,17 +247,17 @@ namespace Blu
 			ImGui::Text("Toolbar content");
 			ImGui::End();
 
-			// Window 3: Viewport
-			float viewportHeight = displaySize.y - toolbarHeight - 200;
-			ImGui::SetNextWindowPos(ImVec2(0, toolbarHeight));
-			ImGui::SetNextWindowSize(ImVec2(displaySize.x - 200, viewportHeight));
-			ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoDecoration);
-			// Render the 3D scene or image here
-			ImGui::Text("Viewport content");
-			Application& app = Application::Get();
-			ImTextureID textureID = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(app.m_Texture));
-			ImGui::Image(textureID, ImVec2(displaySize.x - 200, viewportHeight));
-			ImGui::End();
+			//// Window 3: Viewport
+			//float viewportHeight = displaySize.y - toolbarHeight - 200;
+			//ImGui::SetNextWindowPos(ImVec2(0, toolbarHeight));
+			//ImGui::SetNextWindowSize(ImVec2(displaySize.x - 200, viewportHeight));
+			//ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoDecoration);
+			//// Render the 3D scene or image here
+			//ImGui::Text("Viewport content");
+			//Application& app = Application::Get();
+			////ImTextureID textureID = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(app.m_Texture));
+			////ImGui::Image(textureID, ImVec2(displaySize.x - 200, viewportHeight));
+			//ImGui::End();
 
 			// Window 4: Outliner
 			float outlinerWidth = 200.0f;
@@ -280,11 +282,13 @@ namespace Blu
 			static ImVec4 clearColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);  // Default clear color (dark gray)
 			static bool showColorPicker = false;
 			static bool showTriangleColorPicker = false;
+			
+
 
 			// Window 6: File
 			ImGui::SetNextWindowPos(ImVec2(displaySize.x - outlinerWidth, toolbarHeight));
 			ImGui::SetNextWindowSize(ImVec2(outlinerWidth, outlinerHeight));
-			ImGui::Begin("File");
+			ImGui::Begin("Options");
 
 			// ... Previous file window content ...
 
@@ -294,21 +298,23 @@ namespace Blu
 				showColorPicker = !showColorPicker;
 			}
 
+			
+
 			if (ImGui::Button("Change Triangle Color"))
 			{
 				// Toggle the flag to show/hide the color picker
 				showTriangleColorPicker = !showTriangleColorPicker;
 			}
 			
-			// Option to change triangle color
-			if (showTriangleColorPicker)
-			{
-				if (ImGui::ColorEdit4("Color Picker", (float*)&app.m_Color))
-				{
-					// Set the clear color for the window
-					glClearColor(app.m_Color.x, app.m_Color.y, app.m_Color.z, app.m_Color.w);
-				}
-			}
+			//// Option to change triangle color
+			//if (showTriangleColorPicker)
+			//{
+			//	if (ImGui::ColorEdit4("Color Picker", (float*)&app.m_Color))
+			//	{
+			//		// Set the clear color for the window
+			//		glClearColor(app.m_Color.x, app.m_Color.y, app.m_Color.z, app.m_Color.w);
+			//	}
+			//}
 			// Option to change window color
 			if (showColorPicker)
 			{
@@ -318,12 +324,12 @@ namespace Blu
 					glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
 				}
 			}
-
+			
 			ImGui::End();
 
 			// Clear the buffers with the selected color
-			glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
-			glClear(GL_COLOR_BUFFER_BIT);
+			//glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+			//glClear(GL_COLOR_BUFFER_BIT);
 
 		}
 	}
