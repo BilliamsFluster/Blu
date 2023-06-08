@@ -15,7 +15,7 @@ workspace "Blu"
 	IncludeDir["GLFW"] = "Blu/engine/ExternalDependencies/GLFW/include"
 	IncludeDir["Glad"] = "Blu/engine/ExternalDependencies/Glad/include"
 	IncludeDir["ImGui"] = "Blu/engine/ExternalDependencies/imgui"
-	IncludeDir["glm"] = "Blu/engine/ExternalDependencies/glm/glm"
+	IncludeDir["glm"] = "Blu/engine/ExternalDependencies/glm"
 
 
 
