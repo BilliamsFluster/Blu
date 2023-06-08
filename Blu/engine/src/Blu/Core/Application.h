@@ -38,16 +38,13 @@ namespace Blu
 		bool m_Running = true;
 		Layers::LayerStack m_LayerStack;
 		Events::EventDispatcher m_EventDispatcher;
-	public: // dont make public
+	private: // dont make public
 
 		unsigned int m_Texture, m_FrameBufferObject;
-		std::shared_ptr<OpenGLShader> m_Shader;
-		std::shared_ptr<class IndexBuffer> m_IndexBuffer;
-		std::shared_ptr<class VertexBuffer> m_VertexBuffer;
-		std::shared_ptr<class VertexArray> m_VertexArray;
+		
+		
+		
 
-		std::shared_ptr<VertexArray> m_SquareVertexArray;
-		OrthographicCamera m_Camera;
 
 		Vec4 m_Color;
 	private:
