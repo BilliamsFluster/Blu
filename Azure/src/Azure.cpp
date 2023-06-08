@@ -98,6 +98,7 @@ public:
 		
 
 	}
+	
 	void OnUpdate() override
 	{
 
@@ -109,7 +110,6 @@ public:
 		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_DOWN))
 		{
 			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y + 0.01, 0.0f });
-
 		}
 		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT))
 		{
@@ -123,17 +123,17 @@ public:
 
 		}
 
-		/*if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT))
+		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT))
 		{
-			m_Camera.SetRotation(m_Camera.GetRotation() - 10.f);
+			m_Camera.SetRotation(m_Camera.GetRotation() + 1.f);
 
 		}
 
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_RIGHT))
+		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL))
 		{
-			m_Camera.SetRotation(m_Camera.GetRotation() + 10.f);
+			m_Camera.SetRotation(m_Camera.GetRotation() - 1.f);
 
-		}*/
+		}
 
 		Blu::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Blu::RenderCommand::Clear();
@@ -152,8 +152,15 @@ public:
 		if (event.GetType() == Blu::Events::Event::Type::KeyPressed)
 		{
 			Blu::Events::KeyPressedEvent& keyEvent = dynamic_cast<Blu::Events::KeyPressedEvent&>(event);
-			std::cout << keyEvent.GetKeyCode() << std::endl;
+			BLU_CORE_WARN("KeyPresed: {0}", keyEvent.GetKeyCode());
+			key = keyEvent.GetKeyCode();
+
 		}
+		if (event.GetType() == Blu::Events::Event::Type::KeyReleased)
+		{
+			key = 0;
+		}
+		
 		
 		handler.HandleEvent(event);
 		event.Handled = true;
@@ -166,6 +173,7 @@ private:
 	
 	std::shared_ptr< Blu::IndexBuffer> m_IndexBuffer;
 	std::shared_ptr< Blu::VertexBuffer> m_VertexBuffer;
+	int key = 0;
 
 };
 
