@@ -3,6 +3,7 @@
 #include "KeyEvent.h"
 #include "MouseEvent.h"
 #include "EventHandler.h"
+#include "Blu/Core/Log.h"
 #include "Blu/Core/KeyCodes.h"
 #include "Blu/Events/WindowEvent.h"
 #include "Blu/Core/Application.h"
@@ -13,7 +14,7 @@ namespace Blu
 	{
 		void KeyPressedEventHandler::HandleEvent(Event& event)
 		{
-			std::cout << "KeyPressed";
+			BLU_CORE_TRACE("KeyPressed");
 			KeyPressedEvent& keyEvent = dynamic_cast<KeyPressedEvent&>(event);
 			
 			
@@ -32,13 +33,13 @@ namespace Blu
 		void MouseScrolledEventHandler::HandleEvent(Event& event)
 		{
 			MouseScrolledEvent MouseEvent = dynamic_cast<MouseScrolledEvent&>(event);
-			std::cout << " Mouse X Offset: " << MouseEvent.GetXOffset() <<   " Mouse Y Offset:" << MouseEvent.GetYOffset()  << std::endl;
+			BLU_CORE_TRACE(" Mouse X Offset:{0} Mouse Y Offset: {1} ", MouseEvent.GetXOffset(), MouseEvent.GetYOffset());
 		}
 		
 		void MouseButtonPressedEventHandler::HandleEvent(Event& event)
 		{
 			MouseButtonPressedEvent MouseEvent = dynamic_cast<MouseButtonPressedEvent&>(event);
-			std::cout << "Mouse Pressed" << std::endl;
+			BLU_CORE_TRACE("Mouse Pressed");
 
 			
 			
@@ -48,22 +49,22 @@ namespace Blu
 		void MouseButtonReleasedEventHandler::HandleEvent(Event& event)
 		{
 			MouseButtonReleasedEvent MouseEvent = dynamic_cast<MouseButtonReleasedEvent&>(event);
-			std::cout << "Mouse Released" << std::endl;
+			BLU_CORE_TRACE("Mouse Released");
 
 		}
 		void KeyReleasedEventHandler::HandleEvent(Event& event)
 		{
 			KeyReleasedEvent MouseEvent = dynamic_cast<KeyReleasedEvent&>(event);
-			std::cout << "Key Released" << std::endl;
+			BLU_CORE_TRACE("Key Released");
 		}
 		void WindowResizeEventHandler::HandleEvent(Event& event)
 		{
 			WindowResizeEvent WindowEvent = dynamic_cast<WindowResizeEvent&>(event);
-			std::cout << "Window Size: " << "Y: " << WindowEvent.GetHeight() << " X:" << WindowEvent.GetWidth() <<std::endl;
+			BLU_CORE_TRACE("Window Size Y: {0} X: {1} ",WindowEvent.GetHeight(), WindowEvent.GetWidth());
 		}
 		void KeyTypedEventHandler::HandleEvent(Event& event)
 		{
-			std::cout << "KeyTyped" << std::endl;
+			BLU_CORE_TRACE("KeyTyped");;
 		}
 	}
 	
