@@ -15,37 +15,7 @@ namespace Blu
 		{
 			std::cout << "KeyPressed";
 			KeyPressedEvent& keyEvent = dynamic_cast<KeyPressedEvent&>(event);
-			auto& camera = Application::Get().m_Camera;
-			//camera.SetPosition({ camera.GetPosition().x + 0.1, camera.GetPosition().y + 0.1, 0.0f});
 			
-			if( keyEvent.GetKeyCode() == BLU_KEY_W)
-			{
-				camera.SetPosition({ camera.GetPosition().x, camera.GetPosition().y - 0.1, 0.0f});
-			}
-			else if (keyEvent.GetKeyCode() == BLU_KEY_S)
-			{
-				camera.SetPosition({ camera.GetPosition().x, camera.GetPosition().y + 0.1, 0.0f });
-
-			}
-			else if (keyEvent.GetKeyCode() == BLU_KEY_A)
-			{
-				camera.SetPosition({camera.GetPosition().x + 0.1, camera.GetPosition().y, 0.0f });
-
-			}
-			else if (keyEvent.GetKeyCode() == BLU_KEY_D)
-			{
-				camera.SetPosition({ camera.GetPosition().x - 0.1, camera.GetPosition().y, 0.0f });
-
-			}
-			else if (keyEvent.GetKeyCode() == BLU_KEY_LEFT)
-			{
-				camera.SetRotation(camera.GetRotation() - 10.f);
-			}
-			else if (keyEvent.GetKeyCode() == BLU_KEY_RIGHT)
-			{
-				camera.SetRotation(camera.GetRotation() + 10.f);
-
-			}
 			
 		
 			
