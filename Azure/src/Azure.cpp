@@ -9,7 +9,7 @@ public:
 	{
 
 	}
-	void OnUpdate() override
+	void OnUpdate(Blu::Timestep deltaTime) override
 	{
 	} 
 
@@ -99,39 +99,40 @@ public:
 
 	}
 	
-	void OnUpdate() override
+	void OnUpdate(Blu::Timestep deltaTime) override
 	{
+		//BLU_CORE_WARN("delta time: {0}s ({1}ms) ", deltaTime.GetSeconds(), deltaTime.GetMilliseconds());
 
 		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_UP))
 		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y - 0.01, 0.0f });
+			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y - 1.f * deltaTime, 0.0f });
 		}
 
 		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_DOWN))
 		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y + 0.01, 0.0f });
+			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y + 1.f * deltaTime, 0.0f });
 		}
 		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT))
 		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x + 0.01, m_Camera.GetPosition().y, 0.0f });
+			m_Camera.SetPosition({ m_Camera.GetPosition().x + 1.f * deltaTime, m_Camera.GetPosition().y, 0.0f });
 
 		}
 
 		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_RIGHT))
 		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x - 0.01, m_Camera.GetPosition().y, 0.0f });
+			m_Camera.SetPosition({ m_Camera.GetPosition().x - 1.f * deltaTime, m_Camera.GetPosition().y, 0.0f });
 
 		}
 
 		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT))
 		{
-			m_Camera.SetRotation(m_Camera.GetRotation() + 1.f);
+			m_Camera.SetRotation(m_Camera.GetRotation() + 1.f * deltaTime);
 
 		}
 
 		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL))
 		{
-			m_Camera.SetRotation(m_Camera.GetRotation() - 1.f);
+			m_Camera.SetRotation(m_Camera.GetRotation() - 1.f * deltaTime);
 
 		}
 

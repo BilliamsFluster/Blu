@@ -10,6 +10,7 @@
 #include "Blu/Core/MouseCodes.h"
 #include "Blu/Core/KeyCodes.h"
 #include "Blu/Events/KeyEvent.h"
+#include "Blu/Core/Timestep.h"
 
 // --------- Rendering --------
 

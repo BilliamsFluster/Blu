@@ -8,6 +8,8 @@
 #include "Blu/Rendering/Buffer.h"
 #include "Blu/Rendering/VertexArray.h"
 #include "Blu/Rendering/Renderer.h"
+#include "Blu/Core/Timestep.h"
+#include <GLFW/glfw3.h>
 
 
 
@@ -80,7 +82,9 @@ namespace Blu
 
 	void Application::Run()
 	{
-		
+		float time = glfwGetTime(); // need platform class Platform::GetTime()
+		Timestep timestep = time - m_LastFrameTime; // get delta time
+		m_LastFrameTime = time;
 		
 		while (m_Running)
 		{
@@ -92,7 +96,7 @@ namespace Blu
 
 			for (Layers::Layer* layer : m_LayerStack)
 			{
-				layer->OnUpdate();
+				layer->OnUpdate(timestep);
 			}
 			auto [x, y] = WindowInput::Input::GetMousePosition();
 			

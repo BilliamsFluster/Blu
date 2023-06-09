@@ -570,6 +570,7 @@
     <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
     <ClInclude Include="engine\src\Blu\Core\Log.h" />
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h" />
+    <ClInclude Include="engine\src\Blu\Core\Timestep.h" />
     <ClInclude Include="engine\src\Blu\Core\Window.h" />
     <ClInclude Include="engine\src\Blu\Events\Event.h" />
     <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
