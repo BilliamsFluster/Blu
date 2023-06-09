@@ -2,6 +2,7 @@
 #include "Blu/Core/Core.h"
 #include "Blu/Events/Event.h"
 #include "Blu/Events/EventHandler.h"
+#include "Blu/Core/Timestep.h"
 
 namespace Blu
 {
@@ -14,7 +15,7 @@ namespace Blu
 			virtual ~Layer();
 			virtual void OnAttach(){}
 			virtual void OnDetatch() {}
-			virtual void OnUpdate() {}
+			virtual void OnUpdate(Timestep deltaTime) {}
 			virtual void OnEvent(Events::EventHandler& handler, Blu::Events::Event& event) {}
 
 			inline const std::string& GetName() const { return m_DebugName;}

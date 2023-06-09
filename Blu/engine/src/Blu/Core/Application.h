@@ -7,6 +7,7 @@
 #include "Blu/Rendering/OrthographicCamera.h"
 
 
+
 struct Vec4
 {
 	float x, y, z, w;
@@ -38,15 +39,10 @@ namespace Blu
 		bool m_Running = true;
 		Layers::LayerStack m_LayerStack;
 		Events::EventDispatcher m_EventDispatcher;
-	private: // dont make public
-
 		unsigned int m_Texture, m_FrameBufferObject;
-		
-		
-		
-
-
 		Vec4 m_Color;
+
+		float m_LastFrameTime = 0.0f;
 	private:
 		static Application* s_Instance;
 		
