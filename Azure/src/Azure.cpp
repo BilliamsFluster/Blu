@@ -1,6 +1,6 @@
 #include <Blu.h>
 #include "glm/glm.hpp"
-
+#include <glm/gtc/matrix_transform.hpp>
 class Rendering : public Blu::Layers::Layer
 {
 public:
@@ -24,7 +24,7 @@ class Engine : public Blu::Layers::Layer
 {
 public:
 	Engine()
-		:Layer("Engine"), m_Camera({ -1.0f, 1.0f, -1.0f, 1.0f })
+		:Layer("Engine"), m_Camera({ -1.0f, 1.0f, -1.0f, 1.0f }), m_TrianglePosition(0.0f)
 	{
 		m_VertexArray.reset(Blu::VertexArray::Create());
 
@@ -61,13 +61,14 @@ public:
 			layout(location = 1) in vec4 a_Color;
 			
 			uniform mat4 u_ViewProjectionMatrix;
+			uniform mat4 u_Transform;
 			out vec3 v_Position;
 			out vec4 v_Color;
 
 			void main()
 			{
 				v_Position = a_Position;
-				gl_Position = u_ViewProjectionMatrix * vec4(a_Position, 1.0);	
+				gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);	
 				v_Color = a_Color;
 			}
 
@@ -136,14 +137,19 @@ public:
 
 		}
 
+
 		Blu::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Blu::RenderCommand::Clear();
 		// Clear the framebuffer
 		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		//glClear(GL_COLOR_BUFFER_BIT);
 		Blu::Renderer::BeginScene(m_Camera);
-
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_TrianglePosition);
 		Blu::Renderer::Submit(m_VertexArray, m_Shader);
+
+		Blu::Renderer::Submit(m_VertexArray, m_Shader, transform); //for another triangle
+		m_Shader->SetUniformFloat4("u_Color", m_Color.x, m_Color.y, m_Color.z, m_Color.w); // set color of triangle 
+
 		Blu::Renderer::EndScene();
 
 	}
@@ -154,12 +160,10 @@ public:
 		{
 			Blu::Events::KeyPressedEvent& keyEvent = dynamic_cast<Blu::Events::KeyPressedEvent&>(event);
 			BLU_CORE_WARN("KeyPresed: {0}", keyEvent.GetKeyCode());
-			key = keyEvent.GetKeyCode();
 
 		}
 		if (event.GetType() == Blu::Events::Event::Type::KeyReleased)
 		{
-			key = 0;
 		}
 		
 		
@@ -174,8 +178,8 @@ private:
 	
 	std::shared_ptr< Blu::IndexBuffer> m_IndexBuffer;
 	std::shared_ptr< Blu::VertexBuffer> m_VertexBuffer;
-	int key = 0;
-
+	glm::vec4 m_Color;
+	glm::vec3 m_TrianglePosition;
 };
 
 

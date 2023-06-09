@@ -92,7 +92,6 @@ namespace Blu
 			m_Running = !m_Window->ShouldClose();
 
 
-			//m_Shader->SetUniform4f("u_Color", m_Color.x, m_Color.y, m_Color.z, m_Color.w); // set color of triangle 
 
 			for (Layers::Layer* layer : m_LayerStack)
 			{
