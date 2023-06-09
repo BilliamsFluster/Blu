@@ -597,6 +597,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h" />
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
     <ClInclude Include="engine\src\Blupch.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
@@ -625,6 +626,7 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">

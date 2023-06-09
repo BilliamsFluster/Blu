@@ -1,5 +1,6 @@
 #include "Blupch.h"
 #include "Renderer.h"
+#include "Blu/Rendering/Shader.h"
 #include "Blu/Platform/OpenGL/OpenGLShader.h"
 
 namespace Blu
@@ -12,10 +13,13 @@ namespace Blu
 	void Renderer::EndScene()
 	{
 	}
-	void Renderer::Submit(const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<OpenGLShader>& shader)
+	void Renderer::Submit(const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Shader>& shader, const glm::mat4& transform)
 	{
 		shader->Bind();
-		shader->UploadUniformMat4("u_ViewProjectionMatrix", m_SceneData->ViewProjectionMatrix);
+		// wouldnt cast with multiple API's its ok for only one atm
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->SetUniformMat4("u_ViewProjectionMatrix", m_SceneData->ViewProjectionMatrix);
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->SetUniformMat4("u_Transform", transform); // aka model matrix
+
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
 	}

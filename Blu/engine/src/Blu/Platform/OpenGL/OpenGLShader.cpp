@@ -123,13 +123,35 @@ namespace Blu
 	{
 		glUseProgram(0);
 	}
-	void OpenGLShader::SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
+	void OpenGLShader::SetUniformInt(const std::string& name, int value)
 	{
-		glUniform4f(GetUniformLocation(name), v0, v1, v2, v3);
+		GLint location = GetUniformLocation(name);
+		glUniform1i(location, value);
+	}
+	void OpenGLShader::SetUniformFloat2(const std::string& name, const glm::vec2& value)
+	{
+		GLint location = GetUniformLocation(name);
+		glUniform2f(location, value.x, value.y);
+	}
+	void OpenGLShader::SetUniformFloat3(const std::string& name, const glm::vec3& value)
+	{
+		GLint location = GetUniformLocation(name);
+		glUniform3f(location, value.x, value.y, value.z);
+	}
+	void OpenGLShader::SetUniformFloat4(const std::string& name, float v0, float v1, float v2, float v3)
+	{
+		GLint location = GetUniformLocation(name);
+		glUniform4f(location, v0, v1, v2, v3);
 
 	}
 
-	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
+	void OpenGLShader::SetUniformMat3(const std::string& name, const glm::mat3& matrix)
+	{
+		GLint location = GetUniformLocation(name);
+		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+	}
+
+	void OpenGLShader::SetUniformMat4(const std::string& name, const glm::mat4& matrix)
 	{
 		GLint location = GetUniformLocation(name);
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
