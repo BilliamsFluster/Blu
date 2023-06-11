@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #ifdef BLU_PLATFORM_WINDOWS
 #if BLU_DYNAMIC_LINK
@@ -24,3 +25,12 @@
 
 #define BIT(x) (1 << x)
 #define BLU_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
+namespace Blu
+{
+	template<typename T>
+	using Unique = std::unique_ptr<T>;
+
+	template<typename T>
+	using Shared = std::shared_ptr<T>;
+}

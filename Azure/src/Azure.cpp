@@ -172,12 +172,12 @@ public:
 		
 	}
 private:
-	std::shared_ptr<Blu::VertexArray> m_VertexArray;
-	std::shared_ptr<Blu::OpenGLShader> m_Shader;
+	Blu::Shared<Blu::VertexArray> m_VertexArray;
+	Blu::Shared<Blu::OpenGLShader> m_Shader;
 	Blu::OrthographicCamera m_Camera;
 	
-	std::shared_ptr< Blu::IndexBuffer> m_IndexBuffer;
-	std::shared_ptr< Blu::VertexBuffer> m_VertexBuffer;
+	Blu::Shared< Blu::IndexBuffer> m_IndexBuffer;
+	Blu::Shared< Blu::VertexBuffer> m_VertexBuffer;
 	glm::vec4 m_Color;
 	glm::vec3 m_TrianglePosition;
 };

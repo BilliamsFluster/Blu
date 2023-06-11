@@ -44,7 +44,7 @@ namespace Blu
 
 	}
 
-	void OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer)
+	void OpenGLVertexArray::AddVertexBuffer(const Shared<VertexBuffer>& vertexBuffer)
 	{
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
@@ -62,7 +62,7 @@ namespace Blu
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
 
-	void OpenGLVertexArray::AddIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer)
+	void OpenGLVertexArray::AddIndexBuffer(const Shared<IndexBuffer>& indexBuffer)
 	{
 		glBindVertexArray(m_RendererID);
 		indexBuffer->Bind();

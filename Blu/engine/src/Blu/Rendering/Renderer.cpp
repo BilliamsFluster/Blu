@@ -13,7 +13,7 @@ namespace Blu
 	void Renderer::EndScene()
 	{
 	}
-	void Renderer::Submit(const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Shader>& shader, const glm::mat4& transform)
+	void Renderer::Submit(const Shared<VertexArray>& vertexArray, const Shared<Shader>& shader, const glm::mat4& transform)
 	{
 		shader->Bind();
 		// wouldnt cast with multiple API's its ok for only one atm
