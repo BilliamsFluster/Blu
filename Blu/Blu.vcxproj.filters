@@ -22,6 +22,12 @@
     <Filter Include="ExternalDependencies\glm\glm\gtx">
       <UniqueIdentifier>{EF125D3F-DB63-4881-04C8-3643F077DBEA}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ExternalDependencies\glm\glm\simd">
+      <UniqueIdentifier>{89D5052B-F543-5BAA-3E2D-16AAAADA5046}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ExternalDependencies\stb_image">
+      <UniqueIdentifier>{49CD6FEB-35F3-3952-1E39-BF1D0AFE5E1E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
@@ -1284,6 +1290,36 @@
     <ClInclude Include="engine\ExternalDependencies\glm\glm\packing.hpp">
       <Filter>ExternalDependencies\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\common.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\exponential.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\geometric.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\integer.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\matrix.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\neon.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\packing.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\platform.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\trigonometric.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\glm\glm\simd\vector_relational.h">
+      <Filter>ExternalDependencies\glm\glm\simd</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ExternalDependencies\glm\glm\trigonometric.hpp">
       <Filter>ExternalDependencies\glm\glm</Filter>
     </ClInclude>
@@ -1298,6 +1334,9 @@
     </ClInclude>
     <ClInclude Include="engine\ExternalDependencies\glm\glm\vector_relational.hpp">
       <Filter>ExternalDependencies\glm\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\stb_image\stb_image.h">
+      <Filter>ExternalDependencies\stb_image</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu.h">
       <Filter>src</Filter>
@@ -1327,6 +1366,9 @@
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h">
+      <Filter>src\Blu\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\Timestep.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Window.h">
@@ -1362,9 +1404,6 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.h">
-      <Filter>src\Blu\Platform\OpenGL</Filter>
-    </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
@@ -1372,6 +1411,12 @@
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.h">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.h">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h">
@@ -1401,16 +1446,23 @@
     <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Shader.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Texture.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Core\Timestep.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
+      <Filter>ExternalDependencies\stb_image</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
       <Filter>src\Blu\Core</Filter>
     </ClCompile>
@@ -1453,6 +1505,9 @@
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.cpp">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
@@ -1477,12 +1532,17 @@
     <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
   </ItemGroup>
 </Project>

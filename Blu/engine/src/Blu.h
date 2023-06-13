@@ -19,6 +19,7 @@
 #include "Blu/Platform/OpenGL/OpenGLShader.h"
 #include "Blu/Rendering/VertexArray.h"
 #include "Blu/Rendering/OrthographicCamera.h"
+#include "Blu/Rendering/Texture.h"
 
 
 // --------- Entry Point -------
