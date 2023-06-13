@@ -16,6 +16,8 @@ workspace "Blu"
 	IncludeDir["Glad"] = "Blu/engine/ExternalDependencies/Glad/include"
 	IncludeDir["ImGui"] = "Blu/engine/ExternalDependencies/imgui"
 	IncludeDir["glm"] = "Blu/engine/ExternalDependencies/glm"
+	IncludeDir["stb_image"] = "Blu/engine/ExternalDependencies/stb_image"
+
 
 
 
@@ -47,11 +49,15 @@ project "Blu"
 	{
 		"%{prj.name}/engine/src/**.h",
 		"%{prj.name}/engine/src/**.cpp",
+		"%{prj.name}/engine/ExternalDependencies/stb_image/**.cpp",
+		"%{prj.name}/engine/ExternalDependencies/glm/**.h",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.hpp",
-		"%{prj.name}/engine/ExternalDependencies/glm/**.inl"
+		"%{prj.name}/engine/ExternalDependencies/glm/**.inl",
+		"%{prj.name}/engine/ExternalDependencies/stb_image/**.h"
 
 
-	}
+
+	}   
 
 	includedirs 
 	{
@@ -60,7 +66,10 @@ project "Blu"
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.stb_image}"
+
+
 
 
 
