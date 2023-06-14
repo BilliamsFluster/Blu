@@ -28,6 +28,8 @@ namespace Blu
 			dataFormat = GL_RGB;
 		}
 
+		BLU_CORE_ASSERT(internalFormat & dataFormat, "Format not supported");
+
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
 

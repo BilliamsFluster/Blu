@@ -9,6 +9,7 @@ namespace Blu
 		virtual void SetClearColor(const glm::vec4& color) override;
 		virtual void DrawIndexed(const Shared<VertexArray>& vertexArray) override;
 		virtual void Clear() override;
+		virtual void Init() override;
 	};
 
 }
