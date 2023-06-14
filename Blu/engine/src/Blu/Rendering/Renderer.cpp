@@ -13,6 +13,10 @@ namespace Blu
 	void Renderer::EndScene()
 	{
 	}
+	void Renderer::Init()
+	{
+		RenderCommand::Init();
+	}
 	void Renderer::Submit(const Shared<VertexArray>& vertexArray, const Shared<Shader>& shader, const glm::mat4& transform)
 	{
 		shader->Bind();

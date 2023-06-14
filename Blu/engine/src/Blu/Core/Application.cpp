@@ -27,7 +27,8 @@ namespace Blu
 		m_Color = { 1,1,1,1 };
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		s_Instance = this;
-		unsigned int id;
+
+		Renderer::Init();
 
 		
 
