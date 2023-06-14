@@ -63,7 +63,7 @@ public:
 			layout(location = 1) in vec4 a_Color;
 			
 			uniform mat4 u_ViewProjectionMatrix;
-			uniform mat4 u_Transform;
+			uniform mat4 u_Transform; 
 			out vec3 v_Position;
 			out vec4 v_Color;
 
@@ -93,46 +93,11 @@ public:
 
 
 		)";
-
-		std::string textureVertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec2 a_TexCoord;
-			
-			uniform mat4 u_ViewProjectionMatrix;
-			uniform mat4 u_Transform;
-
-			out vec2 v_TexCoord;
-			void main()
-			{
-
-				v_TexCoord = a_TexCoord;
-				gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);	
-			}
+		
+		m_Shader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create(vertexSrc, fragmentSrc));
+		m_TextureShader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create("assets/shaders/Texture.glsl"));
 
 
-
-		)";
-
-		std::string textureFragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 o_color;
-			
-			uniform sampler2D u_Texture;
-			in vec2 v_TexCoord;
-
-			void main()
-			{
-				o_color = texture(u_Texture, v_TexCoord);
-			}
-
-
-
-		)";
-		m_Shader.reset(new Blu::OpenGLShader(vertexSrc, fragmentSrc));
-		m_TextureShader.reset(new Blu::OpenGLShader(textureVertexSrc, textureFragmentSrc));
 		m_Texture = (Blu::Texture2D::Create("assets/textures/Wallpaper.png"));
 
 		std::dynamic_pointer_cast<Blu::OpenGLShader>(m_TextureShader)->Bind();

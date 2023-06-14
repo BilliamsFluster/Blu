@@ -4,12 +4,13 @@
 #include <glm/glm.hpp>
 #include "Blu/Rendering/Shader.h"
  
-
+typedef unsigned int GLenum;
 namespace Blu
 {
 	class OpenGLShader: public Shader
 	{
 	public:
+		OpenGLShader(const std::string&filepath);
 		OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc);
 		~OpenGLShader() override;
 
@@ -24,10 +25,14 @@ namespace Blu
 		void SetUniformMat4(const std::string& name, const glm::mat4& matrix);
 		int GetUniformLocation(const std::string& name);
 
-
+	private:
+		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
+		std::string ReadFile(const std::string& filepath);
+		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 	private:
 		uint32_t m_RendererID;
 		std::unordered_map<std::string, int> m_UniformLocationCache;
+		
 
 
 	};
