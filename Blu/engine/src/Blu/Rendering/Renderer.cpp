@@ -1,10 +1,11 @@
 #include "Blupch.h"
 #include "Renderer.h"
 #include "Blu/Rendering/Shader.h"
-#include "Blu/Platform/OpenGL/OpenGLShader.h"
 
 namespace Blu
 {
+	ShaderLibrary* Renderer::m_ShaderLibrary = new ShaderLibrary();
+
 	Renderer::SceneData* Renderer::m_SceneData = new Renderer::SceneData();
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{

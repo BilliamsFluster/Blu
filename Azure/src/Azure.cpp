@@ -1,6 +1,7 @@
 #include <Blu.h>
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+
 class Rendering : public Blu::Layers::Layer
 {
 public:
@@ -94,13 +95,15 @@ public:
 
 		)";
 		
-		m_Shader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create(vertexSrc, fragmentSrc));
-		m_TextureShader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create("assets/shaders/Texture.glsl"));
-
+		m_Shader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc));
+		//m_TextureShader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create("assets/shaders/Texture.glsl"));
+		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
+		m_TextureShader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Renderer::GetShaderLibrary()->Get("Texture"));
 
 		m_Texture = (Blu::Texture2D::Create("assets/textures/Wallpaper.png"));
 
-		std::dynamic_pointer_cast<Blu::OpenGLShader>(m_TextureShader)->Bind();
+		m_TextureShader->Bind();
+		//std::dynamic_pointer_cast<Blu::OpenGLShader>(textureShader)->Bind();
 		std::dynamic_pointer_cast<Blu::OpenGLShader>(m_TextureShader)->SetUniformInt("u_Texture", 0);
 
 
@@ -186,6 +189,7 @@ public:
 		
 	}
 private:
+	Blu::ShaderLibrary m_ShaderLibrary;
 	Blu::Shared<Blu::VertexArray> m_VertexArray;
 	Blu::Shared<Blu::OpenGLShader> m_Shader, m_TextureShader;
 	Blu::OrthographicCamera m_Camera;
