@@ -4,6 +4,7 @@
 #include "Blu/Platform/OpenGL/OpenGLShader.h"
 #include "Blu/Core/Core.h"
 
+
 namespace Blu
 {
 	
@@ -18,6 +19,8 @@ namespace Blu
 		static void Submit(const Shared<VertexArray>& vertexArray, const Shared<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
 
 		inline static const RendererAPI::API GetAPI()  { return RendererAPI::GetAPI(); }
+		inline static  ShaderLibrary* GetShaderLibrary() { return m_ShaderLibrary; }
+		
 		
 	private:
 		struct SceneData
@@ -26,6 +29,7 @@ namespace Blu
 		};
 
 		static SceneData* m_SceneData;
+		static ShaderLibrary* m_ShaderLibrary;
 	};
 
 }
