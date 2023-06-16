@@ -1458,6 +1458,7 @@
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1544,5 +1545,6 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
   </ItemGroup>
 </Project>

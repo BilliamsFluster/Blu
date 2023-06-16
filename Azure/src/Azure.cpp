@@ -25,7 +25,7 @@ class Engine : public Blu::Layers::Layer
 {
 public:
 	Engine()
-		:Layer("Engine"), m_Camera({ -1.0f, 1.0f, -1.0f, 1.0f }), m_TrianglePosition(0.0f)
+		:Layer("Engine"),m_CameraController(1280.0f / 720.0f)
 	{
 		m_VertexArray.reset(Blu::VertexArray::Create());
 
@@ -96,7 +96,6 @@ public:
 		)";
 		
 		m_Shader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc));
-		//m_TextureShader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create("assets/shaders/Texture.glsl"));
 		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
 		m_TextureShader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Renderer::GetShaderLibrary()->Get("Texture"));
 
@@ -117,39 +116,8 @@ public:
 	void OnUpdate(Blu::Timestep deltaTime) override
 	{
 		//BLU_CORE_WARN("delta time: {0}s ({1}ms) ", deltaTime.GetSeconds(), deltaTime.GetMilliseconds());
-
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_UP))
-		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y - 1.f * deltaTime, 0.0f });
-		}
-
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_DOWN))
-		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y + 1.f * deltaTime, 0.0f });
-		}
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT))
-		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x + 1.f * deltaTime, m_Camera.GetPosition().y, 0.0f });
-
-		}
-
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_RIGHT))
-		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x - 1.f * deltaTime, m_Camera.GetPosition().y, 0.0f });
-
-		}
-
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT))
-		{
-			m_Camera.SetRotation(m_Camera.GetRotation() + 1.f * deltaTime);
-
-		}
-
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL))
-		{
-			m_Camera.SetRotation(m_Camera.GetRotation() - 1.f * deltaTime);
-
-		}
+		m_CameraController.OnUpdate(deltaTime);
+		
 
 
 		Blu::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
@@ -157,9 +125,9 @@ public:
 		// Clear the framebuffer
 		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		//glClear(GL_COLOR_BUFFER_BIT);
-		Blu::Renderer::BeginScene(m_Camera);
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_TrianglePosition);
-		glm::mat4 viewProjectionMatrix = m_Camera.GetViewProjectionMatrix();
+		Blu::Renderer::BeginScene(m_CameraController.GetCamera());
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, 0.0f });
+		glm::mat4 viewProjectionMatrix = m_CameraController.GetCamera().GetViewProjectionMatrix();
 		m_Shader->SetUniformMat4("u_ViewProjectionMatrix", viewProjectionMatrix);
 
 		Blu::Renderer::Submit(m_VertexArray, m_Shader);
@@ -173,16 +141,7 @@ public:
 
 	void OnEvent(Blu::Events::EventHandler& handler, Blu::Events::Event& event) override
 	{
-		if (event.GetType() == Blu::Events::Event::Type::KeyPressed)
-		{
-			Blu::Events::KeyPressedEvent& keyEvent = dynamic_cast<Blu::Events::KeyPressedEvent&>(event);
-			BLU_CORE_WARN("KeyPresed: {0}", keyEvent.GetKeyCode());
-
-		}
-		if (event.GetType() == Blu::Events::Event::Type::KeyReleased)
-		{
-		}
-		
+		m_CameraController.OnEvent(handler, event);
 		
 		handler.HandleEvent(event);
 		event.Handled = true;
@@ -192,7 +151,7 @@ private:
 	Blu::ShaderLibrary m_ShaderLibrary;
 	Blu::Shared<Blu::VertexArray> m_VertexArray;
 	Blu::Shared<Blu::OpenGLShader> m_Shader, m_TextureShader;
-	Blu::OrthographicCamera m_Camera;
+	Blu::OrthographicCameraController m_CameraController;
 	Blu::Shared<Blu::Texture2D> m_Texture;
 	
 	Blu::Shared< Blu::IndexBuffer> m_IndexBuffer;
