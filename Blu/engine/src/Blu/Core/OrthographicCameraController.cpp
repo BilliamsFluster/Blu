@@ -58,10 +58,14 @@ namespace Blu
 			case Events::Event::Type::MouseScrolled :
 			{
 				OnMouseScrolled(static_cast<Events::MouseScrolledEvent&>(event));
+				break;
+
 			}
-			case Events::Event::Type::WindowResize:
+			case Events::Event::Type::WindowResize :
 			{
 				OnWindowResize(static_cast<Events::WindowResizeEvent&>(event));
+				break;
+
 			}
 		}
 	}
