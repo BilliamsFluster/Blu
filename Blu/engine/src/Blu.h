@@ -11,6 +11,8 @@
 #include "Blu/Core/KeyCodes.h"
 #include "Blu/Events/KeyEvent.h"
 #include "Blu/Core/Timestep.h"
+#include "Blu/Core/OrthographicCameraController.h"
+
 
 // --------- Rendering --------
 

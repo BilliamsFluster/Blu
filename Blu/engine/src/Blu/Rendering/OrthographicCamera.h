@@ -16,6 +16,7 @@ namespace Blu
 	public:
 		OrthographicCamera(const OrthographicCameraBounds& bounds);
 			
+		void SetProjection(const OrthographicCameraBounds& bounds);
 
 		const glm::vec3& GetPosition() const { return m_Position; }
 		float GetRotation() const { return m_Rotation; }
