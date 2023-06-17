@@ -145,9 +145,10 @@ public:
 	void OnEvent(Blu::Events::Event& event) override
 	{
 		m_CameraController.OnEvent(event);
-		Blu::Events::EventHandler handler;
+		/*Blu::Events::EventHandler handler;
+		
 		event.Accept(handler);
-		event.Handled = true;
+		event.Handled = true;*/
 		
 	}
 private:
