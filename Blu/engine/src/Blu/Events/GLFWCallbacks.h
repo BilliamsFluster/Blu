@@ -18,9 +18,8 @@ namespace Blu
             {
                 
                 Events::KeyPressedEvent KeyEvent(key);
-                Events::KeyPressedEventHandler Handler;
 
-                DISPATCH_EVENT(Handler, KeyEvent);
+                DISPATCH_EVENT(KeyEvent);
                 
 
 
@@ -28,8 +27,7 @@ namespace Blu
             else if (action == GLFW_RELEASE)
             {
                 Events::KeyReleasedEvent KeyEvent(key);
-                Events::KeyReleasedEventHandler Handler;
-                DISPATCH_EVENT(Handler, KeyEvent);
+                DISPATCH_EVENT(KeyEvent);
             }
         }
 
@@ -38,14 +36,12 @@ namespace Blu
             if (action == GLFW_PRESS)
             {
                 Events::MouseButtonPressedEvent MousePressedEvent(button, action, mods);
-                Events::MouseButtonPressedEventHandler Handler;
-                DISPATCH_EVENT(Handler, MousePressedEvent);
+                DISPATCH_EVENT(MousePressedEvent);
             }
             else if (action == GLFW_RELEASE)
             {
                 Events::MouseButtonReleasedEvent MouseReleasedEvent(button, action, mods);
-                Events::MouseButtonReleasedEventHandler Handler;
-                DISPATCH_EVENT(Handler, MouseReleasedEvent);
+                DISPATCH_EVENT(MouseReleasedEvent);
             }
             
         }
@@ -53,30 +49,27 @@ namespace Blu
         static void CharCallback(GLFWwindow* window, unsigned int keycode)
         {
             Events::KeyTypedEvent KeyEvent(keycode);
-            Events::KeyTypedEventHandler Handler;
 
-            DISPATCH_EVENT(Handler, KeyEvent);
+            DISPATCH_EVENT(KeyEvent);
         }
 
         static void MouseButtonScrolledCallback(GLFWwindow* window, double x_offset, double y_offset)
         {
             Events::MouseScrolledEvent ScrolledEvent(x_offset, y_offset);
-            Events::MouseScrolledEventHandler Handler;
-            DISPATCH_EVENT(Handler, ScrolledEvent);
+            DISPATCH_EVENT(ScrolledEvent);
 
         }
         static void WindowSizeCallback(GLFWwindow* window, int width, int height)
         {
             Events::WindowResizeEvent WindowEvent(width, height);
-            Events::WindowResizeEventHandler Handler;
-            DISPATCH_EVENT(Handler, WindowEvent);
+
+            DISPATCH_EVENT(WindowEvent);
         }
 
         static void MouseMovedCallback(GLFWwindow* window, double xpos, double ypos)
         {
             Events::MouseMovedEvent MouseEvent(xpos, ypos);
-            Events::MouseMovedEventHandler Handler;
-            DISPATCH_EVENT(Handler, MouseEvent);
+            DISPATCH_EVENT(MouseEvent);
         }
     }
 }

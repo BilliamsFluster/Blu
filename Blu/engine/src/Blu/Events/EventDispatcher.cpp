@@ -12,7 +12,7 @@ namespace Blu
 {
     namespace Events
     {
-        
+        EventDispatcher* m_Instance = new EventDispatcher();
         
     }
     

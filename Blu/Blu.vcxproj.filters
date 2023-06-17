@@ -1546,5 +1546,8 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp" />
   </ItemGroup>
 </Project>

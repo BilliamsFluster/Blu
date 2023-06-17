@@ -75,7 +75,7 @@ namespace Blu
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
-		void ImGuiLayer::OnEvent(Events::EventHandler& handler, Events::Event& event)
+		void ImGuiLayer::OnEvent(Events::Event& event)
 		{
 			ImGuiIO& io = ImGui::GetIO();
 
@@ -201,21 +201,7 @@ namespace Blu
 
 		}
 
-		bool ImGuiLayer::OnWindowResizedEvent(Events::WindowResizeEvent& event)
-		{
-			ImGuiIO& io = ImGui::GetIO();
-			//GLFWwindow* window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-			
-			// Update the display size
-			io.DisplaySize = ImVec2(event.GetWidth(), event.GetHeight());
-			
-			io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f); // Assuming no scale here
-			
-			// Update the viewport
-			glViewport(0, 0, event.GetWidth(), event.GetHeight());
-
-			return false;
-		}
+		
 		void ImGuiLayer::RenderGui()
 		{
 			

@@ -15,6 +15,8 @@ namespace Blu
 
             virtual Type GetType() const override { return Type::MouseMoved; }
             const char* GetName() const override { return " MouseMoved"; }
+            virtual void Accept(EventHandler& handler) override;
+
 
         private:
             float m_MouseX, m_MouseY;
@@ -32,6 +34,8 @@ namespace Blu
             inline int GetMods() const { return m_Mods; }
             Type GetType() const override { return Type::MouseButtonPressed; }
             const char* GetName() const override { return " MousePressed"; }
+            virtual void Accept(EventHandler& handler) override;
+
         private:
             int m_Button, m_Action, m_Mods;
         };
@@ -46,6 +50,7 @@ namespace Blu
             inline int GetButton() const { return m_Button; }
             inline int GetAction() const { return m_Action; }
             inline int GetMods() const { return m_Mods; }
+            virtual void Accept(EventHandler& handler) override;
 
             virtual Type GetType() const override { return Type::MouseButtonReleased; }
             const char* GetName() const override { return " MouseReleased"; }
@@ -62,6 +67,7 @@ namespace Blu
 
             inline float GetXOffset() const { return m_XOffset; }
             inline float GetYOffset() const { return m_YOffset; }
+            virtual void Accept(EventHandler& handler) override;
 
             virtual Type GetType() const override { return Type::MouseScrolled; }
             const char* GetName() const override { return " MouseScrolled"; }

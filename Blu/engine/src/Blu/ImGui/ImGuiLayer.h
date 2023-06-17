@@ -19,7 +19,7 @@ namespace Blu
 			void OnAttach() override;
 			void OnDetatch() override;
 			void OnUpdate(Timestep deltaTime) override;
-			void OnEvent(Events::EventHandler& handler, Events::Event& event);
+			void OnEvent(Events::Event& event);
 
 		private:
 		private:
@@ -30,8 +30,7 @@ namespace Blu
 			bool OnKeyPressedEvent(Events::KeyPressedEvent& event);
 			bool OnKeyReleasedEvent(Events::KeyReleasedEvent& event);
 			bool OnKeyTypedEvent(Events::KeyTypedEvent& event);
-			bool OnWindowResizedEvent(Events::WindowResizeEvent& event);
-
+			
 			void RenderGui();
 			float m_Time = 0.0f;
 		};

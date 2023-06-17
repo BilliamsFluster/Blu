@@ -13,7 +13,7 @@ namespace Blu
 		OrthographicCameraController(float aspectRatio, bool rotation = false);
 
 		void OnUpdate(Timestep deltaTime);
-		void OnEvent(Events::EventHandler& handler, Events::Event& event);
+		void OnEvent(Events::Event& event);
 		OrthographicCamera& GetCamera() { return m_Camera; }
 		const OrthographicCamera& GetCamera() const  { return m_Camera; }
 	private:
@@ -24,7 +24,7 @@ namespace Blu
 		float m_ZoomLevel = 1.0f;
 		bool m_Rotation = 0.0f;
 		float m_CameraRotation = 0.0f;
-		float m_CameraTranslationSpeed = 1.0f;
+		float m_CameraTranslationSpeed = 0.1f;
 		float m_CameraRotationSpeed = 1.0f;
 		glm::vec3 m_CameraPosition = { 0.0f, 0.0f, 0.0f };
 		OrthographicCamera m_Camera;

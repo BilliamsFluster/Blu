@@ -16,7 +16,7 @@ namespace Blu
 			virtual void OnAttach(){}
 			virtual void OnDetatch() {}
 			virtual void OnUpdate(Timestep deltaTime) {}
-			virtual void OnEvent(Events::EventHandler& handler, Blu::Events::Event& event) {}
+			virtual void OnEvent(Blu::Events::Event& event) {}
 
 			inline const std::string& GetName() const { return m_DebugName;}
 		private:

@@ -13,6 +13,7 @@ namespace Blu
                 : m_KeyCode(keycode) {}
 
             inline int GetKeyCode() const { return m_KeyCode; }
+            virtual void  Accept(EventHandler& handler) override;
 
             Type GetType() const override { return Type::KeyPressed; }
             const char* GetName() const override { return " KeyPressed"; }
@@ -28,6 +29,7 @@ namespace Blu
                 : m_KeyCode(keycode) {}
 
             inline int GetKeyCode() const { return m_KeyCode; }
+            virtual void Accept(EventHandler& handler) override;
 
             Type GetType() const override { return Type::KeyReleased; }
             const char* GetName() const override { return " KeyReleased"; }
@@ -43,6 +45,7 @@ namespace Blu
                 : m_KeyCode(keycode) {}
 
             inline int GetKeyCode() const { return m_KeyCode; }
+            virtual void Accept(EventHandler& handler) override;
 
             Type GetType() const override { return Type::KeyTyped; }
             const char* GetName() const override { return " KeyTyped"; }
