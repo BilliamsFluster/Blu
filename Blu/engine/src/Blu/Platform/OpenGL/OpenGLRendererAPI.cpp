@@ -2,6 +2,7 @@
 #include "OpenGLRendererAPI.h"
 #include <glad/glad.h>
 
+
 namespace Blu
 {
 	void OpenGLRendererAPI::SetClearColor(const glm::vec4& color)
