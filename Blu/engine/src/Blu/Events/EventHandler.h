@@ -1,5 +1,5 @@
 #pragma once
-#include "Event.h"
+#include "Blu/Core/Core.h"
 
 
 namespace Blu
@@ -9,67 +9,32 @@ namespace Blu
 		class BLU_API EventHandler
 		{
 		public:
-			virtual void HandleEvent(Event& event)
-			{
 
-			}
-
-			template <typename EventType>
+			template<typename EventType>
 			void HandleTypedEvent(EventType& event)
 			{
-				HandleEvent(static_cast<EventType&>(event));
+				HandleEvent(event);
 			}
-		};
+			void HandleEvent(class KeyPressedEvent& event);
 
-		class BLU_API WindowResizeEventHandler : public EventHandler
-		{
-		public:
-			void HandleEvent(Event& event) override;
+
+			void HandleEvent(class MouseMovedEvent & event);
+			
+			void HandleEvent(class MouseScrolledEvent& event);
+			
+
+			void HandleEvent(class MouseButtonPressedEvent& event);
+			
+			void HandleEvent(class MouseButtonReleasedEvent& event);
+			
+			void HandleEvent(class KeyReleasedEvent& event);
+
+			void HandleEvent(class WindowResizeEvent& event);
+			
+			void HandleEvent(class KeyTypedEvent& event);
 			
 		};
 
-		class BLU_API KeyPressedEventHandler : public EventHandler
-		{
-		public:
-			void HandleEvent(Event& event) override;
-		};
-
-		class BLU_API KeyReleasedEventHandler : public EventHandler
-		{
-		public:
-			void HandleEvent(Event& event) override;
-		};
-
-		class BLU_API KeyTypedEventHandler : public EventHandler
-		{
-		public:
-			void HandleEvent(Event& event) override;
-		};
-
-		class BLU_API MouseMovedEventHandler : public EventHandler
-		{
-		public:
-			void HandleEvent(Event& event) override;
-			
-		};
-		class BLU_API MouseScrolledEventHandler : public EventHandler
-		{
-		public:
-			void HandleEvent(Event& event) override;
-
-		};
-		class BLU_API MouseButtonPressedEventHandler : public EventHandler
-		{
-		public:
-			void HandleEvent(Event& event) override;
-
-		};
-		class BLU_API MouseButtonReleasedEventHandler : public EventHandler
-		{
-		public:
-			void HandleEvent(Event& event) override;
-
-		};
 	}
 
 	

@@ -14,18 +14,21 @@ public:
 	{
 	} 
 
-	void OnEvent(Blu::Events::EventHandler& handler, Blu::Events::Event& event) override
+	void OnEvent(Blu::Events::Event& event) override
 	{
 		
 	}
 }; 
+class Render : public Blu::Layers::Layer
+{
 
+};
 
 class Engine : public Blu::Layers::Layer
 {
 public:
 	Engine()
-		:Layer("Engine"),m_CameraController(1280.0f / 720.0f)
+		:Layer("Engine"),m_CameraController(1280.0f / 720.0f, true)
 	{
 		m_VertexArray.reset(Blu::VertexArray::Create());
 
@@ -139,11 +142,11 @@ public:
 
 	}
 
-	void OnEvent(Blu::Events::EventHandler& handler, Blu::Events::Event& event) override
+	void OnEvent(Blu::Events::Event& event) override
 	{
-		m_CameraController.OnEvent(handler, event);
-		
-		handler.HandleEvent(event);
+		m_CameraController.OnEvent(event);
+		Blu::Events::EventHandler handler;
+		event.Accept(handler);
 		event.Handled = true;
 		
 	}

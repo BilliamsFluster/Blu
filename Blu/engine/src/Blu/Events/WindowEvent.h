@@ -15,6 +15,8 @@ namespace Blu
             inline float GetHeight() const { return m_Height; }
 
             virtual Type GetType() const override { return Type::WindowResize; }
+            virtual void Accept(EventHandler& handler) override;
+
 
            // EVENT_CLASS_TYPE(WindowResize);
 

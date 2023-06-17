@@ -622,6 +622,9 @@
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp" />
+    <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />

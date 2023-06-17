@@ -10,6 +10,8 @@
 #include "Blu/Rendering/Renderer.h"
 #include "Blu/Core/Timestep.h"
 #include <GLFW/glfw3.h>
+#include "Blu/Events/WindowEvent.h"
+
 
 
 
@@ -106,12 +108,9 @@ namespace Blu
 	}
 	void Application::OnEvent(Events::Event& event)
 	{
-		//// Dispatch the event to the layer stack
-		//m_EventDispatcher.Dispatch(*this, event);
-
-		//// If the event is a window close event, stop the application
-		//if (event.GetType() == Events::Event::Type::WindowClose)
-		//	m_Running = false;
+		Events::EventHandler handler;
+		event.Accept(handler);
+		
 	}
 
 	

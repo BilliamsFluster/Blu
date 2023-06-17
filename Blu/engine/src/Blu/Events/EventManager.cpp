@@ -21,7 +21,7 @@ namespace Blu
         {
             for (auto handler : m_EventHandlers)
             {
-                handler->HandleEvent(event);
+                event.Accept(*handler);
             }
         }
     }

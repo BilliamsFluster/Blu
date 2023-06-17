@@ -13,16 +13,16 @@ namespace Blu
         public:
             static EventDispatcher& GetInstance()
             {
-                static EventDispatcher instance;
-                return instance;
+                
+                return *m_Instance;
             }
             
             
-            void Dispatch(EventHandler& handler, Event& event, Layers::LayerStack& layerStack)
+            void Dispatch(Event& event, Layers::LayerStack& layerStack)
             {
                 for (auto it = layerStack.rbegin(); it != layerStack.rend(); ++it)
                 {
-                    (*it)->OnEvent(handler, event);
+                    (*it)->OnEvent(event);
                     if (event.Handled)
                         break;
                 }
@@ -31,12 +31,12 @@ namespace Blu
             
 
         private:
-           
+            static EventDispatcher* m_Instance;
         };
     }
 }
-#define DISPATCH_EVENT(handler, event) \
+#define DISPATCH_EVENT(event) \
     do { \
         auto& typedEvent = event; \
-        Blu::Application::Get().GetEventDispatcher().Dispatch(handler, event, Blu::Application::Get().GetLayerStack()); \
+        Blu::Application::Get().GetEventDispatcher().Dispatch(event, Blu::Application::Get().GetLayerStack()); \
     } while (0)

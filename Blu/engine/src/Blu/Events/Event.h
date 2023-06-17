@@ -1,5 +1,7 @@
 #pragma once
 #include "Blu/Core/Core.h"
+#include "EventHandler.h"
+
 
 
 namespace Blu
@@ -19,6 +21,7 @@ namespace Blu
 			};
 
 			virtual Type GetType() const  = 0;
+			virtual void Accept(EventHandler& handler) = 0;
 			bool Handled = false;
 
 
@@ -27,9 +30,6 @@ namespace Blu
 	}
 	
 
-//#define EVENT_CLASS_TYPE(type) static Type GetStaticType(){return Type::type;}\
-														virtual Type GetType() const override {return GetStaticType();}\
-														//virtual const char* GetName() const override { return #type; } 
 
 
 	

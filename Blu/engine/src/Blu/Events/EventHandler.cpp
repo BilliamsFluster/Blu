@@ -7,12 +7,13 @@
 #include "Blu/Core/KeyCodes.h"
 #include "Blu/Events/WindowEvent.h"
 #include "Blu/Core/Application.h"
+#include "Blu/Rendering/Renderer.h"
 
 namespace Blu
 {
 	namespace Events
 	{
-		void KeyPressedEventHandler::HandleEvent(Event& event)
+		void EventHandler::HandleEvent(KeyPressedEvent& event)
 		{
 			BLU_CORE_TRACE("KeyPressed");
 			KeyPressedEvent& keyEvent = dynamic_cast<KeyPressedEvent&>(event);
@@ -22,7 +23,7 @@ namespace Blu
 			
 		}
 
-		void MouseMovedEventHandler::HandleEvent(Event& event)
+		void EventHandler::HandleEvent(MouseMovedEvent& event)
 		{
 			MouseMovedEvent& MouseEvent = dynamic_cast<MouseMovedEvent&>(event);
 
@@ -30,13 +31,13 @@ namespace Blu
 
 
 		}
-		void MouseScrolledEventHandler::HandleEvent(Event& event)
+		void EventHandler::HandleEvent(MouseScrolledEvent& event)
 		{
 			MouseScrolledEvent MouseEvent = dynamic_cast<MouseScrolledEvent&>(event);
 			BLU_CORE_TRACE(" Mouse X Offset:{0} Mouse Y Offset: {1} ", MouseEvent.GetXOffset(), MouseEvent.GetYOffset());
 		}
 		
-		void MouseButtonPressedEventHandler::HandleEvent(Event& event)
+		void EventHandler::HandleEvent(MouseButtonPressedEvent& event)
 		{
 			MouseButtonPressedEvent MouseEvent = dynamic_cast<MouseButtonPressedEvent&>(event);
 			BLU_CORE_TRACE("Mouse Pressed");
@@ -46,23 +47,23 @@ namespace Blu
 			
 			
 		}
-		void MouseButtonReleasedEventHandler::HandleEvent(Event& event)
+		void EventHandler::HandleEvent(MouseButtonReleasedEvent& event)
 		{
 			MouseButtonReleasedEvent MouseEvent = dynamic_cast<MouseButtonReleasedEvent&>(event);
 			BLU_CORE_TRACE("Mouse Released");
 
 		}
-		void KeyReleasedEventHandler::HandleEvent(Event& event)
+		void EventHandler::HandleEvent(KeyReleasedEvent& event)
 		{
 			KeyReleasedEvent MouseEvent = dynamic_cast<KeyReleasedEvent&>(event);
 			BLU_CORE_TRACE("Key Released");
 		}
-		void WindowResizeEventHandler::HandleEvent(Event& event)
+		void EventHandler::HandleEvent(WindowResizeEvent& event)
 		{
-			WindowResizeEvent WindowEvent = dynamic_cast<WindowResizeEvent&>(event);
-			BLU_CORE_TRACE("Window Size Y: {0} X: {1} ",WindowEvent.GetHeight(), WindowEvent.GetWidth());
+			
+			Renderer::OnWindowResize(event.GetWidth(), event.GetHeight());
 		}
-		void KeyTypedEventHandler::HandleEvent(Event& event)
+		void EventHandler::HandleEvent(KeyTypedEvent& event)
 		{
 			BLU_CORE_TRACE("KeyTyped");;
 		}

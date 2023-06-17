@@ -42,7 +42,7 @@ namespace Blu
 
 			if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_RIGHT))
 			{
-				m_CameraRotation -= (m_CameraRotationSpeed * deltaTime);
+				m_CameraRotation += (m_CameraRotationSpeed * deltaTime);
 
 			}
 			m_Camera.SetRotation(m_CameraRotation);
@@ -51,7 +51,7 @@ namespace Blu
 		m_CameraTranslationSpeed = m_ZoomLevel;
 		
 	}
-	void OrthographicCameraController::OnEvent(Events::EventHandler& handler, Events::Event& event)
+	void OrthographicCameraController::OnEvent(Events::Event& event)
 	{
 		switch (event.GetType())
 		{
