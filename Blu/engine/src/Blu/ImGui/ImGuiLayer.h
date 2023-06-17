@@ -17,7 +17,7 @@ namespace Blu
 			ImGuiLayer();
 			~ImGuiLayer();
 			void OnAttach() override;
-			void OnDetatch() override;
+			void OnDetach() override;
 			void OnUpdate(Timestep deltaTime) override;
 			void OnEvent(Events::Event& event);
 

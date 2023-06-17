@@ -35,7 +35,7 @@ namespace Blu
 			ImGui_ImplOpenGL3_Init("#version 410");
 
 		}
-		void ImGuiLayer::OnDetatch()
+		void ImGuiLayer::OnDetach()
 		{
 			ImGui_ImplOpenGL3_Shutdown();
 			ImGui::DestroyContext();

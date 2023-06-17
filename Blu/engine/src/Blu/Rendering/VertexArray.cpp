@@ -5,7 +5,7 @@
 
 namespace Blu
 {
-	VertexArray* VertexArray::Create()
+	Shared<VertexArray> VertexArray::Create()
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -15,7 +15,7 @@ namespace Blu
 		}
 		case RendererAPI::API::OpenGL:
 		{
-			return new OpenGLVertexArray();
+			return std::make_shared<OpenGLVertexArray>();
 		}
 		}
 		return nullptr;

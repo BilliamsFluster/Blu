@@ -4,9 +4,6 @@
     <Filter Include="$(SolutionDir)">
       <UniqueIdentifier>{36EB0717-22B9-FB1C-0B4D-6C43F7B9D781}</UniqueIdentifier>
     </Filter>
-    <Filter Include="$(SolutionDir)\Blu\engine\src\Blu">
-      <UniqueIdentifier>{56C0E4F6-C22E-3A76-0B18-F57577C52F12}</UniqueIdentifier>
-    </Filter>
     <Filter Include="$(SolutionDir)\Blu\engine\src\Blu\Core">
       <UniqueIdentifier>{6E8AF18F-5ADC-C87F-43FB-05902FECE168}</UniqueIdentifier>
     </Filter>
@@ -18,8 +15,13 @@
     <ClCompile Include="src\Azure.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Azure2D.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="imgui.ini" />
+    <None Include="assets\shaders\Texture.glsl" />
+    <None Include="assets\shaders\FlatColor.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Azure2D.h" />
   </ItemGroup>
 </Project>

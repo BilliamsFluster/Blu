@@ -107,7 +107,7 @@ namespace Blu
 		
 	}
 	void Application::OnEvent(Events::Event& event)
-	{
+	{ 
 		Events::EventHandler handler;
 		event.Accept(handler);
 		

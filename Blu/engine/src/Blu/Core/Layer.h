@@ -14,7 +14,7 @@ namespace Blu
 			Layer(const std::string& name = "Layer");
 			virtual ~Layer();
 			virtual void OnAttach(){}
-			virtual void OnDetatch() {}
+			virtual void OnDetach() {}
 			virtual void OnUpdate(Timestep deltaTime) {}
 			virtual void OnEvent(Blu::Events::Event& event) {}
 
