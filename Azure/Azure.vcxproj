@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Azure2D.cpp" />
     <ClCompile Include="src\Azure.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -139,7 +140,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\shaders\FlatColor.glsl" />
     <None Include="assets\shaders\Texture.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Azure2D.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

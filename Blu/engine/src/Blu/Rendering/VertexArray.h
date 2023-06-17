@@ -19,7 +19,7 @@ namespace Blu
 		virtual const Shared<IndexBuffer>& GetIndexBuffer() const = 0;
 
 
-		static VertexArray* Create();
+		static Shared<VertexArray>Create();
 	};
 
 }

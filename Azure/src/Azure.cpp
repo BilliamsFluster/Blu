@@ -1,28 +1,11 @@
 #include <Blu.h>
+#include <Blu/Core/EntryPoint.h>
+
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include "Azure2D.h"
 
-class Rendering : public Blu::Layers::Layer
-{
-public:
-	Rendering()
-		:Layer("Rendering")
-	{
 
-	}
-	void OnUpdate(Blu::Timestep deltaTime) override
-	{
-	} 
-
-	void OnEvent(Blu::Events::Event& event) override
-	{
-		
-	}
-}; 
-class Render : public Blu::Layers::Layer
-{
-
-};
 
 class Engine : public Blu::Layers::Layer
 {
@@ -30,7 +13,7 @@ public:
 	Engine()
 		:Layer("Engine"),m_CameraController(1280.0f / 720.0f, true)
 	{
-		m_VertexArray.reset(Blu::VertexArray::Create());
+		m_VertexArray = Blu::VertexArray::Create();
 
 		float vertices[5 * 4] = {
 			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // Bottom left corner
@@ -40,7 +23,7 @@ public:
 		};
 
 
-		m_VertexBuffer.reset(Blu::VertexBuffer::Create(vertices, sizeof(vertices)));
+		m_VertexBuffer = Blu::VertexBuffer::Create(vertices, sizeof(vertices));
 
 		Blu::BufferLayout layout = {
 			{Blu::ShaderDataType::Float3, "a_Position"},
@@ -56,7 +39,7 @@ public:
 
 		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0 };
 
-		m_IndexBuffer.reset(Blu::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		m_IndexBuffer = Blu::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
 		m_VertexArray->AddIndexBuffer(m_IndexBuffer);
 
 
@@ -170,8 +153,8 @@ class Azure : public Blu::Application
 public:
 	Azure()
 	{
-		PushLayer(new Rendering());//1st layer
-		PushLayer(new Engine()); //2nd layer 
+		//PushLayer(new Engine());
+		PushLayer(new Azure2D());
 		PushOverlay(new Blu::Layers::ImGuiLayer());
 		
 		

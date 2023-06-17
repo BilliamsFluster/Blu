@@ -24,6 +24,3 @@
 #include "Blu/Rendering/OrthographicCamera.h"
 #include "Blu/Rendering/Texture.h"
 
-
-// --------- Entry Point -------
-#include "Blu/Core/EntryPoint.h"
