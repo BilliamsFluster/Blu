@@ -612,6 +612,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
     <ClInclude Include="engine\src\Blupch.h" />
     <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
@@ -648,6 +649,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">
