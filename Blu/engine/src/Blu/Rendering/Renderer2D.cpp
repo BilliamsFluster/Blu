@@ -24,18 +24,21 @@ namespace Blu
 		s_RendererData = new Renderer2DStorage();
 
 		s_RendererData->QuadVertexArray = Blu::VertexArray::Create();
-		float vertices[5 * 3] = {
-			-0.5f, -0.5f, 0.0f, //0.0f, 0.0f, // Bottom left corner
-			 0.5f, -0.5f, 0.0f, //1.0f, 0.0f, // Bottom right corner
-			 0.5f,  0.5f, 0.0f, //1.0f, 1.0f, // Top right corner
-			-0.5f,  0.5f, 0.0f //0.0f, 1.0f  // Top left corner
+		float vertices[5 * 4] = {
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // Bottom left corner
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // Bottom right corner
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // Top right corner
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // Top left corner
 		};
 
 
 		s_RendererData->QuadVertexBuffer = Blu::VertexBuffer::Create(vertices, sizeof(vertices));
 
 		Blu::BufferLayout layout = {
-			{Blu::ShaderDataType::Float3, "a_Position"}
+			{Blu::ShaderDataType::Float3, "a_Position"},
+			{Blu::ShaderDataType::Float2, "a_TexCoord"}
+
+
 		};
 		s_RendererData->QuadVertexBuffer->SetLayout(layout);
 		s_RendererData->QuadVertexArray->AddVertexBuffer(s_RendererData->QuadVertexBuffer);
@@ -56,6 +59,8 @@ namespace Blu
 
 		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
 		s_RendererData->TextureShader = Blu::Renderer::GetShaderLibrary()->Get("Texture");
+		s_RendererData->TextureShader->Bind();
+		s_RendererData->TextureShader->SetUniformInt("u_Texture", 0);
 
 		
 		
@@ -69,6 +74,11 @@ namespace Blu
 	{
 		s_RendererData->FlatColorShader->Bind();
 		s_RendererData->FlatColorShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+
+		s_RendererData->TextureShader->Bind();
+		s_RendererData->TextureShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+
+
 	}
 	void Renderer2D::EndScene()
 	{
@@ -89,4 +99,27 @@ namespace Blu
 		s_RendererData->QuadVertexArray->Bind();
 		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);
 	}
+
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture)
+	{
+		s_RendererData->TextureShader->Bind();
+
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) // * rotation
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		s_RendererData->TextureShader->SetUniformMat4("u_Transform", transform);
+
+		texture->Bind();
+
+
+
+		s_RendererData->QuadVertexArray->Bind();
+		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture)
+	{
+		DrawQuad({ position.x, position.y, 0.0f }, size, texture);
+
+	}
+
 }
