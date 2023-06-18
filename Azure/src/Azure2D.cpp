@@ -12,10 +12,7 @@ Azure2D::Azure2D()
 
 void Azure2D::OnAttach()
 {
-	
-
-
-
+	m_Texture = Blu::Texture2D::Create("assets/textures/StickMan.png");
 
 
 }
@@ -31,7 +28,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	Blu::RenderCommand::Clear();
 	
 	Blu::Renderer2D::BeginScene(m_CameraController.GetCamera());
-	Blu::Renderer2D::DrawQuad({ 0, 0 }, { 1, 1 }, { 1, 0, 0, 1 });
+	/*Blu::Renderer2D::DrawQuad({ 0, 0 }, { 1, 1 }, { 1, 0, 0, 1 });
 	Blu::Renderer2D::DrawQuad({ 2, 0 }, { 1, 1 }, { 1, 0, 0, 1 });
 	Blu::Renderer2D::DrawQuad({ 0, 1 }, { 1, 1 }, { 1, 0, 0, 1 });
 	Blu::Renderer2D::DrawQuad({ 2, 1 }, { 1, 1 }, { 1, 0, 0, 1 });
@@ -43,11 +40,11 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	Blu::Renderer2D::DrawQuad({ 1, 2}, { 1, 1 }, { 1, 0, 0, 1 });
 	Blu::Renderer2D::DrawQuad({ 1, 3}, { 1, 1 }, { 1, 1, 0, 1 });
 
-	Blu::Renderer2D::DrawQuad({ -1, 2 }, { 1, 1 }, { 1, 0, 0, 1 });
-	Blu::Renderer2D::DrawQuad({ 3, 2 }, { 1, 1 }, { 1, 0, 0, 1 });
+	Blu::Renderer2D::DrawQuad({ -1, 2 }, { 1, 1 }, { 1, 0, 0, 1 });*/
+	Blu::Renderer2D::DrawQuad({ 0, 0 }, { 1, 1 }, m_Texture);
 	
-	Blu::Renderer2D::DrawQuad({ 3, 3 }, { 0.5, 1 }, { 128, 128, 128, 1 });
-	Blu::Renderer2D::DrawQuad({ 3, 4 }, { 0.5, 1 }, { 128, 128, 128, 1 });
+	/*Blu::Renderer2D::DrawQuad({ 3, 3 }, { 0.5, 1 }, { 128, 128, 128, 1 });
+	Blu::Renderer2D::DrawQuad({ 3, 4 }, { 0.5, 1 }, { 128, 128, 128, 1 });*/
 	
 	
 

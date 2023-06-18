@@ -1,5 +1,7 @@
 #pragma once
 #include "OrthographicCamera.h"
+#include "Blu/Rendering/Texture.h"
+#include "Blu/Core/Core.h"
 
 namespace Blu
 {
@@ -15,6 +17,8 @@ namespace Blu
 
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
+		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture);
+		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture);
 	};
 
 }
