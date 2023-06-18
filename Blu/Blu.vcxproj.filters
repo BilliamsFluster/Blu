@@ -1459,6 +1459,7 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1549,5 +1550,6 @@
     <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
   </ItemGroup>
 </Project>

@@ -243,10 +243,10 @@ namespace Blu
 		GLint location = GetUniformLocation(name);
 		glUniform3f(location, value.x, value.y, value.z);
 	}
-	void OpenGLShader::SetUniformFloat4(const std::string& name, float v0, float v1, float v2, float v3)
+	void OpenGLShader::SetUniformFloat4(const std::string& name, const glm::vec4& color)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniform4f(location, v0, v1, v2, v3);
+		glUniform4f(location, color.x, color.y, color.z, color.w);
 
 	}
 

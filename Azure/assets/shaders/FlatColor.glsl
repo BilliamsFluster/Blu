@@ -21,10 +21,10 @@ void main()
 #version 330 core
 			
 layout(location = 0) out vec4 o_color;
-uniform vec4 u_color;		
+uniform vec4 u_Color;		
 
 
 void main()
 {
-	o_color = u_color;
+	o_color = u_Color;
 }
