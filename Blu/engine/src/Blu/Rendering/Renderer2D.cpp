@@ -22,6 +22,8 @@ namespace Blu
 	static Renderer2DStorage* s_RendererData;
 	void Renderer2D::Init()
 	{
+		BLU_PROFILE_FUNCTION();
+
 		s_RendererData = new Renderer2DStorage();
 
 		s_RendererData->QuadVertexArray = Blu::VertexArray::Create();
@@ -75,6 +77,7 @@ namespace Blu
 	}
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
+		BLU_PROFILE_FUNCTION();
 
 		s_RendererData->TextureShader->Bind();
 		s_RendererData->TextureShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
@@ -83,6 +86,8 @@ namespace Blu
 	}
 	void Renderer2D::EndScene()
 	{
+		BLU_PROFILE_FUNCTION();
+
 	}
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 	{

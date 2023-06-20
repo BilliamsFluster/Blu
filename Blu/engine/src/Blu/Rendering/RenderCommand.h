@@ -7,6 +7,8 @@ namespace Blu
 	public:
 		inline static void Init()
 		{
+			BLU_PROFILE_FUNCTION();
+
 			s_RendererAPI->Init();
 		}
 		inline static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)

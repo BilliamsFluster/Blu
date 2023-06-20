@@ -128,7 +128,7 @@ namespace Blu
 #define BLU_PROFILE_BEGIN_SESSION(name, filepath) ::Blu::Instrumentor::Get().BeginSession(name, filepath)
 #define BLU_PROFILE_END_SESSION() ::Blu::Instrumentor::Get().EndSession()
 #define BLU_PROFILE_SCOPE(name) ::Blu::InstrumentationTimer timer##__LINE__(name);
-#define BLIU_PROFILE_FUNCTION() BLU_PROFILE_SCOPE(__FUNCSIG__) 
+#define BLU_PROFILE_FUNCTION() BLU_PROFILE_SCOPE(__FUNCSIG__) 
 #else
 #define BLU_PROFILE_BEGIN_SESSION(name, filepath)
 #define BLU_PROFILE_END_SESSION()

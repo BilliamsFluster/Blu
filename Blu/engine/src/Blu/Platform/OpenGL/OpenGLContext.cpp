@@ -13,6 +13,8 @@ namespace Blu
 	}
 	void OpenGLContext::Init()
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
@@ -23,6 +25,7 @@ namespace Blu
 	}
 	void OpenGLContext::SwapBuffers()
 	{
+		BLU_PROFILE_FUNCTION();
 		glfwSwapBuffers(m_WindowHandle);
 
 	}

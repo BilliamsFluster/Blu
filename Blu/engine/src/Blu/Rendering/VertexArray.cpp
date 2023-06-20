@@ -7,6 +7,7 @@ namespace Blu
 {
 	Shared<VertexArray> VertexArray::Create()
 	{
+
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
