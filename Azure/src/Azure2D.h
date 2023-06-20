@@ -19,6 +19,6 @@ private:
 	Blu::Shared<Blu::OpenGLShader> m_FlatColorShader, m_TextureShader;
 	
 
-
+	
 };
 

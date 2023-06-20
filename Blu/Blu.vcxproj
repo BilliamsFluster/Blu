@@ -583,6 +583,7 @@
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\Timestep.h" />
     <ClInclude Include="engine\src\Blu\Core\Window.h" />
+    <ClInclude Include="engine\src\Blu\Debug\Instrumentor.h" />
     <ClInclude Include="engine\src\Blu\Events\Event.h" />
     <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
     <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
