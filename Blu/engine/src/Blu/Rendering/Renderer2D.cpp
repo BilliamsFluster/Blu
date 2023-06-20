@@ -89,15 +89,17 @@ namespace Blu
 		BLU_PROFILE_FUNCTION();
 
 	}
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor)
 	{
-		DrawQuad({ position.x, position.y, 0.0f }, size, color);
+		DrawQuad({ position.x, position.y, 0.0f }, size, color, tilingFactor);
 	}
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor)
 	{
 		s_RendererData->TextureShader->Bind();
 		s_RendererData->WhiteTexture->Bind();
 		s_RendererData->TextureShader->SetUniformFloat4("u_Color", color);
+		s_RendererData->TextureShader->SetUniformFloat("u_TilingFactor", tilingFactor);
+		
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) // * rotation
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 		s_RendererData->TextureShader->SetUniformMat4("u_Transform", transform);
@@ -107,10 +109,12 @@ namespace Blu
 		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture)
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)
 	{
 		s_RendererData->TextureShader->Bind();
 		s_RendererData->TextureShader->SetUniformFloat4("u_Color", glm::vec4(1.0f));
+		s_RendererData->TextureShader->SetUniformFloat("u_TilingFactor", tilingFactor);
+
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) // * rotation
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -124,9 +128,9 @@ namespace Blu
 		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture)
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)
 	{
-		DrawQuad({ position.x, position.y, 0.0f }, size, texture);
+		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor);
 
 	}
 

@@ -71,7 +71,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	
 	Blu::Renderer2D::BeginScene(m_CameraController.GetCamera());
 	
-	Blu::Renderer2D::DrawQuad({ 0, 0 }, { 1, 1 }, m_Texture);
+	Blu::Renderer2D::DrawQuad({ 0, 0 }, { 1, 1 }, m_Texture, );
 	
 	
 

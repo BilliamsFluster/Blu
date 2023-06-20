@@ -247,6 +247,12 @@ namespace Blu
 		GLint location = GetUniformLocation(name);
 		glUniform1i(location, value);
 	}
+	void OpenGLShader::SetUniformFloat(const std::string& name, float value)
+	{
+		GLint location = GetUniformLocation(name);
+		glUniform1f(location, value);
+
+	}
 	void OpenGLShader::SetUniformFloat2(const std::string& name, const glm::vec2& value)
 	{
 		GLint location = GetUniformLocation(name);

@@ -19,6 +19,7 @@ namespace Blu
 		void Bind() const override;
 		void UnBind() const override;
 		void SetUniformInt(const std::string& name, int value);
+		void SetUniformFloat(const std::string& name, float value);
 		void SetUniformFloat2(const std::string& name, const glm::vec2& value);
 		void SetUniformFloat3(const std::string& name, const glm::vec3& value);
 		void SetUniformFloat4(const std::string& name, const glm::vec4& color);
