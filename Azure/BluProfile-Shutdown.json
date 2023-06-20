@@ -1,1 +1,1 @@
-{"otherData": {},"traceEvents":[]}
+{"otherData": {},"traceEvents":[{"cat":"function","dur":2,"name":"__cdecl Blu::OpenGLTexture2D::~OpenGLTexture2D(void)","ph":"X","pid":0,"tid":3077914517,"ts":484068355551},{"cat":"function","dur":9061,"name":"void __cdecl Blu::WindowsWindow::Shutdown(void)","ph":"X","pid":0,"tid":3077914517,"ts":484068355593}]}

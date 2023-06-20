@@ -18,7 +18,7 @@ namespace Blu
 	}
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
-
+		BLU_PROFILE_FUNCTION();
 		std::string src = ReadFile(filepath);
 		auto shaderSources = PreProcess(src);
 		Compile(shaderSources);
@@ -35,6 +35,8 @@ namespace Blu
 	}
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
+		BLU_PROFILE_FUNCTION();
+
 		GLuint program = glCreateProgram();
 		BLU_CORE_ASSERT(shaderSources.size() <= 2, "We only support 2 shaders");
 		std::array < GLenum, 2> glShaderIDs;
@@ -128,6 +130,8 @@ namespace Blu
 
 	std::string OpenGLShader::ReadFile(const std::string& filepath)
 	{
+		BLU_PROFILE_FUNCTION();
+
 		// Initialize an empty string to hold the file contents
 		std::string result;
 
@@ -165,6 +169,8 @@ namespace Blu
 	// Define the OpenGLShader class method PreProcess, which takes a string of source code as input
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
+		BLU_PROFILE_FUNCTION();
+
 		// Initialize an unordered map to hold the shader types and their corresponding source code
 		std::unordered_map<GLenum, std::string> shaderSources;
 
@@ -208,6 +214,8 @@ namespace Blu
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		:m_Name(name)
 	{
+		BLU_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
 		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
@@ -218,14 +226,20 @@ namespace Blu
 	
 	OpenGLShader::~OpenGLShader()
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glDeleteProgram(m_RendererID);
 	}
 	void OpenGLShader::Bind() const
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glUseProgram(m_RendererID);
 	}
 	void OpenGLShader::UnBind() const
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glUseProgram(0);
 	}
 	void OpenGLShader::SetUniformInt(const std::string& name, int value)

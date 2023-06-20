@@ -16,6 +16,7 @@ namespace Blu
 
 	Blu::WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
+		BLU_PROFILE_FUNCTION();
 		Init(props); // called once
 	}
 	bool Blu::WindowsWindow::ShouldClose() const {
@@ -30,12 +31,15 @@ namespace Blu
 
 	void Blu::WindowsWindow::OnUpdate()
 	{
+		BLU_PROFILE_FUNCTION();
 		glfwPollEvents();
 		m_Context->SwapBuffers();
 	}
 
 	void Blu::WindowsWindow::Init(const WindowProps& props)
 	{
+		BLU_PROFILE_FUNCTION();
+
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
@@ -68,6 +72,7 @@ namespace Blu
 
 	void Blu::WindowsWindow::Shutdown()
 	{
+		BLU_PROFILE_FUNCTION();
 		glfwDestroyWindow(m_Window);
 	}
 

@@ -60,7 +60,7 @@ void Azure2D::OnDetach()
 
 void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 {
-	BLIU_PROFILE_FUNCTION();
+	BLU_PROFILE_FUNCTION();
 	{
 
 		BLU_PROFILE_SCOPE("Azure2D::OnUpdate: ")

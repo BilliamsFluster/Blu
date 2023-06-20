@@ -25,6 +25,8 @@ namespace Blu
 		}
 		void ImGuiLayer::OnAttach()
 		{
+			BLU_PROFILE_FUNCTION();
+
 			ImGui::CreateContext();
 			ImGui::StyleColorsDark();
 
@@ -42,6 +44,8 @@ namespace Blu
 		}
 		void ImGuiLayer::OnUpdate(Timestep deltaTime)
 		{
+			BLU_PROFILE_FUNCTION();
+
 			//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			//glClear(GL_COLOR_BUFFER_BIT);
 
@@ -67,16 +71,25 @@ namespace Blu
 
 			
 			RenderGui();
-			//ImGui::ShowDemoWindow();
+			
 
 				
 			
+			{
+				BLU_PROFILE_SCOPE("ImGui::Render");
+				ImGui::Render();
+			}
+			{
+				BLU_PROFILE_SCOPE("RenderDrawData");
 
-			ImGui::Render();
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+			}
 		}
 		bool ImGuiLayer::OnWindowResizedEvent(Events::WindowResizeEvent& event)
 		{
+			BLU_PROFILE_FUNCTION();
+
 			ImGuiIO& io = ImGui::GetIO();
 			//GLFWwindow* window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
 
@@ -92,6 +105,8 @@ namespace Blu
 		}
 		void ImGuiLayer::OnEvent(Events::Event& event)
 		{
+			BLU_PROFILE_FUNCTION();
+
 			ImGuiIO& io = ImGui::GetIO();
 			Events::EventHandler handler;
 			event.Accept(handler);
@@ -220,7 +235,8 @@ namespace Blu
 		
 		void ImGuiLayer::RenderGui()
 		{
-			
+			BLU_PROFILE_FUNCTION();
+
 			
 			// Get the current display size
 			ImVec2 displaySize = ImGui::GetIO().DisplaySize;

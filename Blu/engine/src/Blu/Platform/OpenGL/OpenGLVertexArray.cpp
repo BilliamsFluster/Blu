@@ -30,22 +30,30 @@ namespace Blu
 
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
 	void OpenGLVertexArray::Bind() const
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_RendererID);
 	}
 
 	void OpenGLVertexArray::UnBind() const
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glBindVertexArray(0);
 
 	}
 
 	void OpenGLVertexArray::AddVertexBuffer(const Shared<VertexBuffer>& vertexBuffer)
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
 
@@ -64,6 +72,8 @@ namespace Blu
 
 	void OpenGLVertexArray::AddIndexBuffer(const Shared<IndexBuffer>& indexBuffer)
 	{
+		BLU_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_RendererID);
 		indexBuffer->Bind();
 

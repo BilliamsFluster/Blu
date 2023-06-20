@@ -26,6 +26,7 @@ namespace Blu
 	Application::Application()
 		
 	{
+		BLU_PROFILE_FUNCTION();
 		m_Color = { 1,1,1,1 };
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		s_Instance = this;
@@ -85,12 +86,15 @@ namespace Blu
 
 	void Application::Run()
 	{
+		BLU_PROFILE_FUNCTION();
+
 		float time = glfwGetTime(); // need platform class Platform::GetTime()
 		Timestep timestep = time - m_LastFrameTime; // get delta time
 		m_LastFrameTime = time;
 		
 		while (m_Running)
 		{
+			BLU_PROFILE_SCOPE("RunLoop");
 			m_Window->OnUpdate();
 			m_Running = !m_Window->ShouldClose();
 
@@ -98,7 +102,10 @@ namespace Blu
 
 			for (Layers::Layer* layer : m_LayerStack)
 			{
-				layer->OnUpdate(timestep);
+				{
+					BLU_PROFILE_SCOPE("LayerStack OnUpdates");
+					layer->OnUpdate(timestep);
+				}
 			}
 			auto [x, y] = WindowInput::Input::GetMousePosition();
 			

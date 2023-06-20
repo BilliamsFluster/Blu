@@ -17,6 +17,8 @@ namespace Blu
 	}
 	void Renderer::Init()
 	{
+		BLU_PROFILE_FUNCTION();
+
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}
