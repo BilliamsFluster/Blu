@@ -49,7 +49,7 @@ Azure2D::Azure2D()
 
 void Azure2D::OnAttach()
 {
-	m_Texture = Blu::Texture2D::Create("assets/textures/StickMan.png");
+	m_Texture = Blu::Texture2D::Create("assets/textures/Wallpaper.png");
 
 
 }
@@ -71,8 +71,11 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	
 	Blu::Renderer2D::BeginScene(m_CameraController.GetCamera());
 	
-	Blu::Renderer2D::DrawQuad({ 0, 0 }, { 1, 1 }, m_Texture, );
-	
+	Blu::Renderer2D::DrawRotatedQuad({ 0, 0 }, { 1, 1 }, glm::radians(-45.0f), { 1.0f ,1.0f ,0.0f ,1.0f });
+
+	Blu::Renderer2D::DrawQuad({ 1.0f, 1.0f }, { 1.0f, 1.0f }, { 1.0f ,1.0f ,1.0f ,1.0f });
+
+
 	
 
 	Blu::Renderer2D::EndScene();
