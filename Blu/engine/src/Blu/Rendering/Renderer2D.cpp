@@ -64,7 +64,7 @@ namespace Blu
 		s_RendererData->TextureShader->Bind();
 		s_RendererData->TextureShader->SetUniformInt("u_Texture", 0);
 		s_RendererData->WhiteTexture = Texture2D::Create(1, 1);
-		uint32_t whiteTextureData = 0xffffff;
+		uint32_t whiteTextureData = 0xffffffff;
 		s_RendererData->WhiteTexture->SetData(&whiteTextureData, sizeof(whiteTextureData));
 
 		
@@ -96,9 +96,9 @@ namespace Blu
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor)
 	{
 		s_RendererData->TextureShader->Bind();
-		s_RendererData->WhiteTexture->Bind();
 		s_RendererData->TextureShader->SetUniformFloat4("u_Color", color);
 		s_RendererData->TextureShader->SetUniformFloat("u_TilingFactor", tilingFactor);
+		s_RendererData->WhiteTexture->Bind();
 		
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) // * rotation
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -131,6 +131,55 @@ namespace Blu
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor);
+
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, const float rotation, const glm::vec4& color, float tilingFactor)
+	{
+		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, color, tilingFactor);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const float rotation, const glm::vec4& color, float tilingFactor)
+	{
+
+		s_RendererData->TextureShader->Bind();
+		s_RendererData->TextureShader->SetUniformFloat4("u_Color", color);
+		s_RendererData->TextureShader->SetUniformFloat("u_TilingFactor", tilingFactor);
+		s_RendererData->WhiteTexture->Bind();
+		
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) 
+			*glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f)) 
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		s_RendererData->TextureShader->SetUniformMat4("u_Transform", transform);
+
+
+		s_RendererData->QuadVertexArray->Bind();
+		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);
+		
+		
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, const float rotation, const Shared<Texture2D>& texture, float tilingFactor)
+	{
+		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor);
+
+	}
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const float rotation, const Shared<Texture2D>& texture, float tilingFactor)
+	{
+		s_RendererData->TextureShader->Bind();
+		s_RendererData->TextureShader->SetUniformFloat4("u_Color", glm::vec4(1.0f));
+		s_RendererData->TextureShader->SetUniformFloat("u_TilingFactor", tilingFactor);
+		
+
+
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f)) 
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		s_RendererData->TextureShader->SetUniformMat4("u_Transform", transform);
+		texture->Bind();
+
+		s_RendererData->QuadVertexArray->Bind();
+		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);
 
 	}
 
