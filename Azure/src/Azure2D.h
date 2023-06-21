@@ -1,4 +1,5 @@
 #include <Blu.h>
+
 #pragma once
 
 class Azure2D: public Blu::Layers::Layer
@@ -10,8 +11,13 @@ public:
 	virtual void OnDetach() override;
 	void OnUpdate(Blu::Timestep deltaTime) override;
 	void OnEvent(Blu::Events::Event& event) override;
+	void OnMouseMoved(Blu::Events::Event& event);
 private:
 	Blu::OrthographicCameraController m_CameraController;
+	
+	Blu::ParticleSystem m_ParticleSystem;
+	Blu::ParticleProps m_ParticleProps;
+	float m_MousePosX, m_MousePosY;
 	Blu::Shared<Blu::Texture2D> m_Texture;
 	Blu::Shared<Blu::VertexArray> m_VertexArray;
 	Blu::Shared< Blu::IndexBuffer> m_IndexBuffer;

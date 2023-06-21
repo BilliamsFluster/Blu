@@ -2,44 +2,9 @@
 #include "Blu/Rendering/Renderer2D.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
+#include "Blu/Events/MouseEvent.h"
 
-//template<typename Fn>
-//class Timer
-//{
-//public:
-//	Timer(const char* name, Fn&& func)
-//		:m_Name(name), m_Stopped(false), m_Func(func)
-//	{
-//		m_StartTimepoint = std::chrono::high_resolution_clock::now();
-//
-//	}
-//	~Timer()
-//	{
-//		if (!m_Stopped)
-//		{
-//			Stop();
-//		}
-//	}
-//	void Stop()
-//	{
-//		auto endTimepoint = std::chrono::high_resolution_clock::now();
-//		long long start = std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
-//		long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
-//
-//		m_Stopped = true;
-//		float duration = (end - start) * 0.001f;
-//		std::cout << m_Name << duration << std::endl;
-//		 
-//		m_Func({ m_Name, duration });
-//	}
-//
-//private:
-//	const char* m_Name;
-//	std::chrono::time_point<std::chrono::steady_clock> m_StartTimepoint;
-//	bool m_Stopped;
-//	Fn m_Func;
-//};
-//#define PROFILE_SCOPE(name) Timer timer##__LINE__(name, [&](ProfileResult profileResult) {m_ProfileResults.push_back(profileResult);})
+
 
 
 Azure2D::Azure2D()
@@ -50,7 +15,15 @@ Azure2D::Azure2D()
 void Azure2D::OnAttach()
 {
 	m_Texture = Blu::Texture2D::Create("assets/textures/Wallpaper.png");
-
+	
+	m_ParticleProps.Position = glm::vec2(0.0f, 0.0f);
+	m_ParticleProps.Velocity = glm::vec2(1.0f, 0.0f);
+	m_ParticleProps.ColorBegin = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); // red
+	m_ParticleProps.ColorEnd = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); // blue
+	m_ParticleProps.SizeBegin = 1.0f;
+	m_ParticleProps.SizeEnd = 0.0f;
+	m_ParticleProps.SizeVariation = 0.5f; 
+	m_ParticleProps.LifeTime = 10.0f;
 
 }
 
@@ -66,14 +39,24 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 		BLU_PROFILE_SCOPE("Azure2D::OnUpdate: ")
 		m_CameraController.OnUpdate(deltaTime);
 	}
+	
 	Blu::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 	Blu::RenderCommand::Clear();
 	
 	Blu::Renderer2D::BeginScene(m_CameraController.GetCamera());
 	
-	Blu::Renderer2D::DrawRotatedQuad({ 0, 0 }, { 1, 1 }, glm::radians(-45.0f), { 1.0f ,1.0f ,0.0f ,1.0f });
+	m_ParticleProps.Position = glm::vec2( (m_MousePosX/ 100.f) -5 , -m_MousePosY /100.0f);
 
-	Blu::Renderer2D::DrawQuad({ 1.0f, 1.0f }, { 1.0f, 1.0f }, { 1.0f ,1.0f ,1.0f ,1.0f });
+	m_ParticleSystem.Emit(m_ParticleProps);
+	
+
+	m_ParticleSystem.OnUpdate(deltaTime);
+	m_ParticleSystem.OnRender();
+	
+
+	//Blu::Renderer2D::DrawRotatedQuad({ 0, 0 }, { 1, 1 }, glm::radians(-45.0f), { 1.0f ,1.0f ,0.0f ,1.0f });
+
+	//Blu::Renderer2D::DrawQuad({ 1.0f, 1.0f }, { 1.0f, 1.0f }, { 1.0f ,1.0f ,1.0f ,1.0f });
 
 
 	
@@ -84,4 +67,15 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 void Azure2D::OnEvent(Blu::Events::Event& event)
 {
 	m_CameraController.OnEvent(event);
+	if (event.GetType() == Blu::Events::Event::Type::MouseMoved)
+	{
+		OnMouseMoved(event);
+	}
+}
+
+void Azure2D::OnMouseMoved(Blu::Events::Event& event)
+{
+	Blu::Events::MouseMovedEvent& MouseEvent = dynamic_cast<Blu::Events::MouseMovedEvent&>(event);
+	m_MousePosX = MouseEvent.GetX();
+	m_MousePosY = MouseEvent.GetY();
 }

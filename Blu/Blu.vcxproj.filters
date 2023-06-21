@@ -1461,6 +1461,7 @@
     <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
     <ClInclude Include="engine\src\Blu\Debug\Instrumentor.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1552,5 +1553,6 @@
     <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
   </ItemGroup>
 </Project>
