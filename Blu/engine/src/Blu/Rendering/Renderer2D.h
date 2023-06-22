@@ -11,6 +11,7 @@ namespace Blu
 		static void Init();
 		static void Shutdown();
 		static void BeginScene(const OrthographicCamera& camera);
+		static void Flush();
 		static void EndScene();
 
 		//primitives

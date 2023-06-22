@@ -20,6 +20,21 @@ namespace Blu
 		}
 		return nullptr;
 	}
+	Shared<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	{
+		switch (Renderer::GetAPI())
+		{
+		case RendererAPI::API::None:
+		{
+			return nullptr;
+		}
+		case RendererAPI::API::OpenGL:
+		{
+			return std::make_shared<OpenGLVertexBuffer>(size);
+		}
+		}
+		return nullptr;
+	}
 	Shared<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
