@@ -9,10 +9,10 @@ namespace Blu
 	{
 		glClearColor(color.r, color.g, color.b, color.a);
 	}
-	void OpenGLRendererAPI::DrawIndexed(const Shared<VertexArray>& vertexArray)
+	void OpenGLRendererAPI::DrawIndexed(const Shared<VertexArray>& vertexArray, uint32_t indexCount)
 	{
-		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-		//std::cout << vertexArray->GetIndexBuffer()->GetCount() << "IS vertex count" << std::endl;
+		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 	}
 	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 	{

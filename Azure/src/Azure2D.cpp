@@ -22,7 +22,7 @@ void Azure2D::OnAttach()
 	m_ParticleProps.ColorEnd = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); // blue
 	m_ParticleProps.SizeBegin = 1.0f;
 	m_ParticleProps.SizeEnd = 0.0f;
-	m_ParticleProps.SizeVariation = 0.5f; 
+	m_ParticleProps.SizeVariation = 0.5f;  
 	m_ParticleProps.LifeTime = 10.0f;
 
 }
@@ -56,7 +56,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 
 	//Blu::Renderer2D::DrawRotatedQuad({ 0, 0 }, { 1, 1 }, glm::radians(-45.0f), { 1.0f ,1.0f ,0.0f ,1.0f });
 
-	//Blu::Renderer2D::DrawQuad({ 1.0f, 1.0f }, { 1.0f, 1.0f }, { 1.0f ,1.0f ,1.0f ,1.0f });
+	Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f ,0.0f ,1.0f ,1.0f });
 
 
 	
