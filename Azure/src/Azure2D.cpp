@@ -14,7 +14,7 @@ Azure2D::Azure2D()
 
 void Azure2D::OnAttach()
 {
-	m_Texture = Blu::Texture2D::Create("assets/textures/Wallpaper.png");
+	m_Texture = Blu::Texture2D::Create("assets/textures/StickMan.png");
 	
 	m_ParticleProps.Position = glm::vec2(0.0f, 0.0f);
 	m_ParticleProps.Velocity = glm::vec2(1.0f, 0.0f);
@@ -43,7 +43,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	Blu::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 	Blu::RenderCommand::Clear();
 	
-	Blu::Renderer2D::BeginScene(m_CameraController.GetCamera());
+	Blu::Renderer2D::BeginScene(m_CameraController.GetCamera()); // causes error
 	
 	m_ParticleProps.Position = glm::vec2( (m_MousePosX/ 100.f) -5 , -m_MousePosY /100.0f);
 
@@ -53,10 +53,11 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	m_ParticleSystem.OnUpdate(deltaTime);
 	m_ParticleSystem.OnRender();
 	
-
+	
 	//Blu::Renderer2D::DrawRotatedQuad({ 0, 0 }, { 1, 1 }, glm::radians(-45.0f), { 1.0f ,1.0f ,0.0f ,1.0f });
 
-	Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f ,0.0f ,1.0f ,1.0f });
+	Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
+	//Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, { 1,0,1,1 });
 
 
 	
