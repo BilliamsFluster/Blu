@@ -1,1 +1,1 @@
-{"otherData": {},"traceEvents":[{"cat":"function","dur":2,"name":"__cdecl Blu::OpenGLTexture2D::~OpenGLTexture2D(void)","ph":"X","pid":0,"tid":2533469977,"ts":578552638994},{"cat":"function","dur":10639,"name":"void __cdecl Blu::WindowsWindow::Shutdown(void)","ph":"X","pid":0,"tid":2533469977,"ts":578552639647}]}
+{"otherData": {},"traceEvents":[{"cat":"function","dur":13628,"name":"void __cdecl Blu::WindowsWindow::Shutdown(void)","ph":"X","pid":0,"tid":3856506400,"ts":834205980003}]}
