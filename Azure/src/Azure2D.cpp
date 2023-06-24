@@ -53,8 +53,9 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	m_ParticleSystem.OnUpdate(deltaTime);
 	m_ParticleSystem.OnRender();
 	
-	
-	//Blu::Renderer2D::DrawRotatedQuad({ 0, 0 }, { 1, 1 }, glm::radians(-45.0f), { 1.0f ,1.0f ,0.0f ,1.0f });
+	static float rotation = 0.0f;
+	rotation += deltaTime * 150.0f;
+	Blu::Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
 
 	Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
 	//Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, { 1,0,1,1 });
