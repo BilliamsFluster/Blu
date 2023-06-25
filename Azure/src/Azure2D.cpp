@@ -17,6 +17,7 @@ Azure2D::Azure2D()
 void Azure2D::OnAttach()
 {
 	m_Texture = Blu::Texture2D::Create("assets/textures/StickMan.png");
+	m_WallpaperTexture = Blu::Texture2D::Create("assets/textures/Wallpaper.png");
 	
 	m_ParticleProps.Position = glm::vec2(-0.5f, 1.0f);
 	m_ParticleProps.Velocity = glm::vec2(1.0f, 0.0f);
@@ -61,6 +62,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	Blu::Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
 
 	Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
+	Blu::Renderer2D::DrawQuad({ 0.5f, 1.0f }, { 2.0f, 1.0f }, m_WallpaperTexture);
 	//Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, { 1,0,1,1 });
 
 
@@ -77,13 +79,21 @@ void Azure2D::OnEvent(Blu::Events::Event& event)
 	{
 		OnMouseMoved(event);
 	}
+	if (event.GetType() == Blu::Events::Event::Type::MouseButtonPressed)
+	{
+		OnMousePressed(event);
+	}
+	if (event.GetType() == Blu::Events::Event::Type::MouseButtonReleased)
+	{
+		OnMouseButtonReleased(event);
+	}
 }
 
 void Azure2D::OnGuiDraw()
 {
 
 	Blu::GuiManager::Begin("Options");
-	// Add a dropdown to display Renderer2D stats
+	
 	if (Blu::GuiManager::BeginMenu("Renderer2D Statistics"))
 	{
 		Blu::GuiManager::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls);
@@ -100,6 +110,27 @@ void Azure2D::OnMouseMoved(Blu::Events::Event& event)
 	Blu::Events::MouseMovedEvent& MouseEvent = dynamic_cast<Blu::Events::MouseMovedEvent&>(event);
 	m_MousePosX = MouseEvent.GetX();
 	m_MousePosY = MouseEvent.GetY();
-	
+	Blu::GuiManager::OnMouseMovedEvent(MouseEvent);
+	MouseEvent.Handled = true;
 
 }
+
+
+void Azure2D::OnMouseButtonReleased(Blu::Events::Event& event)
+{
+	Blu::Events::MouseButtonReleasedEvent& MouseEvent = dynamic_cast<Blu::Events::MouseButtonReleasedEvent&>(event);
+
+	Blu::GuiManager::OnMouseButtonReleased(MouseEvent);
+	MouseEvent.Handled = true;
+
+}
+
+
+void Azure2D::OnMousePressed(Blu::Events::Event& event)
+{
+	Blu::Events::MouseButtonPressedEvent& MouseEvent = dynamic_cast<Blu::Events::MouseButtonPressedEvent&>(event);
+	Blu::GuiManager::OnMouseButtonPressed(MouseEvent);
+	MouseEvent.Handled = true;
+
+}
+
