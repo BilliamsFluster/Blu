@@ -24,4 +24,6 @@
 #include "Blu/Rendering/OrthographicCamera.h"
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Rendering/ParticleSystem.h"
+#include "Blu/ImGui/GuiManager.h"
+
 

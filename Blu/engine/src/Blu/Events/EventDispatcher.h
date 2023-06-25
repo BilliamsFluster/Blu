@@ -40,3 +40,6 @@ namespace Blu
         auto& typedEvent = event; \
         Blu::Application::Get().GetEventDispatcher().Dispatch(event, Blu::Application::Get().GetLayerStack()); \
     } while (0)
+
+#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1) // for use for the newly refactored event system
+

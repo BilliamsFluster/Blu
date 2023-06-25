@@ -615,6 +615,7 @@
     <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h" />
+    <ClInclude Include="engine\src\Blu\ImGui\GuiManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
@@ -653,6 +654,7 @@
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
+    <ClCompile Include="engine\src\Blu\ImGui\GuiManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">
