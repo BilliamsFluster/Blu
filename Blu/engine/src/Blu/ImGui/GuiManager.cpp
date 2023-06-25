@@ -5,6 +5,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Blu/Core/Application.h"
+#include "Blu/Events/MouseEvent.h"
+#include "Blu/Events/KeyEvent.h"
+
 
 namespace Blu
 {
@@ -96,5 +99,52 @@ namespace Blu
 	void GuiManager::EndMenu()
 	{
 		ImGui::EndMenu();
+	}
+
+	bool GuiManager::OnMouseMovedEvent(Events::MouseMovedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MousePos = ImVec2(event.GetX(), event.GetY());
+		return false;
+	}
+
+	bool GuiManager::OnKeyPressedEvent(Events::KeyPressedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.KeysDown[event.GetKeyCode()] = true;
+		io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+		io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
+		io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
+		io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+
+
+		return false;
+
+	}
+
+	bool GuiManager::OnMouseButtonPressed(Events::MouseButtonPressedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseDown[event.GetButton()] = true;
+		return false;
+
+
+
+	}
+	bool GuiManager::OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseDown[event.GetButton()] = false;
+		return false;
+
+
+	}
+	bool GuiManager::OnMouseScrolledEvent(Events::MouseScrolledEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseWheel = event.GetYOffset();
+		io.MouseWheelH = event.GetXOffset();
+		return false;
+
 	}
 }

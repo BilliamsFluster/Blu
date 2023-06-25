@@ -41,8 +41,8 @@ namespace Blu
 		}
 		void ImGuiLayer::OnDetach()
 		{
-			ImGui_ImplOpenGL3_Shutdown();
-			ImGui::DestroyContext();
+			/*ImGui_ImplOpenGL3_Shutdown();
+			ImGui::DestroyContext();*/
 		}
 		void ImGuiLayer::OnUpdate(Timestep deltaTime)
 		{
@@ -171,6 +171,7 @@ namespace Blu
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			io.MouseDown[event.GetButton()] = true;
+			event.Handled = true;
 			return false;
 
 
@@ -180,6 +181,7 @@ namespace Blu
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			io.MouseDown[event.GetButton()] = false;
+			event.Handled = true;
 			return false;
 
 
@@ -189,6 +191,7 @@ namespace Blu
 			ImGuiIO& io = ImGui::GetIO();
 			io.MouseWheel = event.GetYOffset();
 			io.MouseWheelH = event.GetXOffset();
+			event.Handled = true;
 			return false;
 
 		}
@@ -196,6 +199,7 @@ namespace Blu
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			io.MousePos = ImVec2(event.GetX(), event.GetY());
+			event.Handled = true;
 			return false;
 		}
 
@@ -208,7 +212,7 @@ namespace Blu
 			io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
 			io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
 			
-			
+			event.Handled = true;
 			return false;
 
 		}
@@ -217,7 +221,9 @@ namespace Blu
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			io.KeysDown[event.GetKeyCode()] = false;
+			event.Handled = true;
 			return false;
+
 		}
 
 		bool ImGuiLayer::OnKeyTypedEvent(Events::KeyTypedEvent& event)
@@ -228,6 +234,7 @@ namespace Blu
 			{
 				io.AddInputCharacter((unsigned short)KeyCode);
 			}
+			event.Handled = true;
 			return false;
 
 		}
