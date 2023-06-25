@@ -21,9 +21,9 @@ namespace Blu
 
 	struct Renderer2DStorage
 	{
-		const uint32_t MaxQuads = 10000;
-		const uint32_t MaxVertices = (MaxQuads * 4);
-		const uint32_t MaxIndices = (MaxQuads * 6);
+		static const uint32_t MaxQuads = 10000;
+		static const uint32_t MaxVertices = (MaxQuads * 4);
+		static const uint32_t MaxIndices = (MaxQuads * 6);
 		static const uint32_t MaxTextureSlots = 32;
 		Shared<VertexArray> QuadVertexArray;
 		Shared<VertexBuffer> QuadVertexBuffer;
@@ -38,6 +38,8 @@ namespace Blu
 		uint32_t TextureSlotIndex = 1; // 0 = WhiteTexture
 		glm::vec4 QuadVertexPositions[4];
 
+		Renderer2D::Statistics Stats;
+		
 	};
 
 	static Renderer2DStorage* s_RendererData;
@@ -112,9 +114,9 @@ namespace Blu
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		BLU_PROFILE_FUNCTION();
-		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->TextureShader->Bind();
 		s_RendererData->TextureShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
 	}
@@ -125,9 +127,15 @@ namespace Blu
 			s_RendererData->TextureSlots[i]->Bind(i);
 		}
 		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray, s_RendererData->QuadIndexCount);
-		BLU_CORE_ERROR(glGetError());
+		s_RendererData->Stats.DrawCalls++;
 	}
-
+	void Renderer2D::FlushAndReset()
+	{
+		EndScene();
+		s_RendererData->QuadIndexCount = 0;
+		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
+		s_RendererData->TextureSlotIndex = 1;
+	}
 	void Renderer2D::EndScene()
 	{
 		BLU_PROFILE_FUNCTION();
@@ -141,10 +149,16 @@ namespace Blu
 	}
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor)
 	{
+		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
+		{
+			FlushAndReset();
+		}
 		float textureIndex = 0.0f;
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		
 		std::array<glm::vec2, 4> texCoords = { { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} } };
+		
 		for (int i = 0; i < 4; i++) {
 			s_RendererData->QuadVertexBufferPtr->Position = transform * s_RendererData->QuadVertexPositions[i];
 			s_RendererData->QuadVertexBufferPtr->Color = color;
@@ -156,15 +170,19 @@ namespace Blu
 
 		s_RendererData->QuadIndexCount += 6;
 
-		s_RendererData->TextureShader->Bind();
+		/*s_RendererData->TextureShader->Bind();
 		s_RendererData->TextureShader->SetUniformFloat("u_TilingFactor", tilingFactor);
-		s_RendererData->WhiteTexture->Bind();
+		s_RendererData->WhiteTexture->Bind();*/
 		
 		
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)
 	{
+		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
+		{
+			FlushAndReset();
+		}
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 		float textureIndex = 0.0f;
@@ -198,6 +216,8 @@ namespace Blu
 		}
 
 		s_RendererData->QuadIndexCount += 6;
+		s_RendererData->Stats.QuadCount++;
+
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)
@@ -205,7 +225,6 @@ namespace Blu
 		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor);
 
 	}
-
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, const float rotation, const glm::vec4& color, float tilingFactor)
 	{
 		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, color, tilingFactor);
@@ -213,6 +232,10 @@ namespace Blu
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const float rotation, const glm::vec4& color, float tilingFactor)
 	{
+		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
+		{
+			FlushAndReset();
+		}
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f))
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -230,11 +253,9 @@ namespace Blu
 		}
 
 		s_RendererData->QuadIndexCount += 6;
+		s_RendererData->Stats.QuadCount++;
 
-		/*s_RendererData->QuadVertexArray->Bind();
-		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);*/
-		
-		
+
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, const float rotation, const Shared<Texture2D>& texture, float tilingFactor)
@@ -244,6 +265,10 @@ namespace Blu
 	}
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const float rotation, const Shared<Texture2D>& texture, float tilingFactor)
 	{
+		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
+		{
+			FlushAndReset();
+		}
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 		float textureIndex = 0.0f;
@@ -277,8 +302,17 @@ namespace Blu
 		}
 
 		s_RendererData->QuadIndexCount += 6;
+		s_RendererData->Stats.QuadCount++;
 		
+	}
 
+	Renderer2D::Statistics Renderer2D::GetStats()
+	{
+		return s_RendererData->Stats;
+	}
+	void Renderer2D::ResetStats()
+	{
+		s_RendererData->Stats.reset();
 	}
 
 }

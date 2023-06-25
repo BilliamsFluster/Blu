@@ -10,6 +10,7 @@
 Azure2D::Azure2D()
 	:Layer("TestRenderingLayer"), m_CameraController(1280.0f / 720.0f, true)
 {
+
 }
 
 void Azure2D::OnAttach()
@@ -18,8 +19,8 @@ void Azure2D::OnAttach()
 	
 	m_ParticleProps.Position = glm::vec2(0.0f, 0.0f);
 	m_ParticleProps.Velocity = glm::vec2(1.0f, 0.0f);
-	m_ParticleProps.ColorBegin = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); // red
-	m_ParticleProps.ColorEnd = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); // blue
+	m_ParticleProps.ColorBegin = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // red
+	m_ParticleProps.ColorEnd = glm::vec4(0.0f, 0.0f, 0.5f, 1.0f); // blue
 	m_ParticleProps.SizeBegin = 1.0f;
 	m_ParticleProps.SizeEnd = 0.0f;
 	m_ParticleProps.SizeVariation = 0.5f;  
@@ -33,6 +34,7 @@ void Azure2D::OnDetach()
 
 void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 {
+	Blu::Renderer2D::ResetStats();
 	BLU_PROFILE_FUNCTION();
 	{
 
@@ -47,12 +49,14 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	
 	m_ParticleProps.Position = glm::vec2( (m_MousePosX/ 100.f) -5 , -m_MousePosY /100.0f);
 
-	m_ParticleSystem.Emit(m_ParticleProps);
-	
 
+	m_ParticleSystem.Emit(m_ParticleProps);
 	m_ParticleSystem.OnUpdate(deltaTime);
+
 	m_ParticleSystem.OnRender();
 	
+	BLU_CORE_ERROR("Draw Calls are {0}", Blu::Renderer2D::GetStats().DrawCalls);
+	BLU_CORE_ERROR("Vertices are {0}", Blu::Renderer2D::GetStats().GetTotalVertexCount());
 	static float rotation = 0.0f;
 	rotation += deltaTime * 150.0f;
 	Blu::Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
@@ -80,4 +84,6 @@ void Azure2D::OnMouseMoved(Blu::Events::Event& event)
 	Blu::Events::MouseMovedEvent& MouseEvent = dynamic_cast<Blu::Events::MouseMovedEvent&>(event);
 	m_MousePosX = MouseEvent.GetX();
 	m_MousePosY = MouseEvent.GetY();
+	
+
 }
