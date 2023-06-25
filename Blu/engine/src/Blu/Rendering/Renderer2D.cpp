@@ -170,15 +170,15 @@ namespace Blu
 
 		s_RendererData->QuadIndexCount += 6;
 
-		/*s_RendererData->TextureShader->Bind();
-		s_RendererData->TextureShader->SetUniformFloat("u_TilingFactor", tilingFactor);
-		s_RendererData->WhiteTexture->Bind();*/
+		
 		
 		
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)
 	{
+		
+		
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
 			FlushAndReset();
