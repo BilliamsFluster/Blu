@@ -11,6 +11,7 @@ public:
 	virtual void OnDetach() override;
 	void OnUpdate(Blu::Timestep deltaTime) override;
 	void OnEvent(Blu::Events::Event& event) override;
+	virtual void OnGuiDraw() override;
 	void OnMouseMoved(Blu::Events::Event& event);
 private:
 	Blu::OrthographicCameraController m_CameraController;

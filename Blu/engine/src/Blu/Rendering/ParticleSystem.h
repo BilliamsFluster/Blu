@@ -30,7 +30,7 @@ namespace Blu
     class ParticleSystem
     {
     public:
-        ParticleSystem(uint32_t maxParticles = 100000);
+        ParticleSystem(uint32_t maxParticles = 10000);
 
         void OnUpdate( Blu::Timestep ts);
         void OnRender();

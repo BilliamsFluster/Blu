@@ -11,6 +11,8 @@
 #include "Blu/Core/Timestep.h"
 #include <GLFW/glfw3.h>
 #include "Blu/Events/WindowEvent.h"
+#include "Blu/ImGui/GuiManager.h"
+
 
 
 
@@ -32,43 +34,16 @@ namespace Blu
 		s_Instance = this;
 
 		Renderer::Init();
+		GuiManager::Initialize();
 
 		
-
-
-
-		//// Create a framebuffer
-		//glGenFramebuffers(1, &m_FrameBufferObject);
-		//glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferObject);
-
-		//// Create a texture
-		//glGenTextures(1, &m_Texture);
-		//glBindTexture(GL_TEXTURE_2D, m_Texture);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr); // change 800x600 to your window size
-
-		//// Set texture parameters
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		//// Attach it to the framebuffer
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture, 0);
-
-		//// Check if framebuffer is complete
-		//if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		//	std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-
-		//// Unbind to reset to default framebuffer
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		//std::cout << "OpenGl Error: " << glGetError() << std::endl;
-		// no 1281 error here but error 0 here
-
 		
+
 	}
 	
 	Application::~Application()
 	{
-
+		GuiManager::Shutdown();
 	}
 
 	void Application::PushLayer(Layers::Layer* layer)
@@ -97,17 +72,19 @@ namespace Blu
 			BLU_PROFILE_SCOPE("RunLoop");
 			m_Window->OnUpdate();
 			m_Running = !m_Window->ShouldClose();
-
-
+			GuiManager::BeginFrame();
 
 			for (Layers::Layer* layer : m_LayerStack)
 			{
 				{
 					BLU_PROFILE_SCOPE("LayerStack OnUpdates");
 					layer->OnUpdate(timestep);
+					layer->OnGuiDraw();
 				}
 			}
+			GuiManager::EndFrame();
 			auto [x, y] = WindowInput::Input::GetMousePosition();
+
 			
 		}
 		

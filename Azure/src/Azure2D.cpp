@@ -7,6 +7,7 @@
 
 
 
+
 Azure2D::Azure2D()
 	:Layer("TestRenderingLayer"), m_CameraController(1280.0f / 720.0f, true)
 {
@@ -17,10 +18,10 @@ void Azure2D::OnAttach()
 {
 	m_Texture = Blu::Texture2D::Create("assets/textures/StickMan.png");
 	
-	m_ParticleProps.Position = glm::vec2(0.0f, 0.0f);
+	m_ParticleProps.Position = glm::vec2(-0.5f, 1.0f);
 	m_ParticleProps.Velocity = glm::vec2(1.0f, 0.0f);
-	m_ParticleProps.ColorBegin = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // red
-	m_ParticleProps.ColorEnd = glm::vec4(0.0f, 0.0f, 0.5f, 1.0f); // blue
+	m_ParticleProps.ColorBegin = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); 
+	m_ParticleProps.ColorEnd = glm::vec4(0.0f, 0.0f, 0.5f, 1.0f); 
 	m_ParticleProps.SizeBegin = 1.0f;
 	m_ParticleProps.SizeEnd = 0.0f;
 	m_ParticleProps.SizeVariation = 0.5f;  
@@ -47,7 +48,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	
 	Blu::Renderer2D::BeginScene(m_CameraController.GetCamera()); // causes error
 	
-	m_ParticleProps.Position = glm::vec2( (m_MousePosX/ 100.f) -5 , -m_MousePosY /100.0f);
+	m_ParticleProps.Position = glm::vec2( (m_MousePosX/ 100.f) -8 , -m_MousePosY /100.0f + 5);
 
 
 	m_ParticleSystem.Emit(m_ParticleProps);
@@ -55,8 +56,6 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 
 	m_ParticleSystem.OnRender();
 	
-	BLU_CORE_ERROR("Draw Calls are {0}", Blu::Renderer2D::GetStats().DrawCalls);
-	BLU_CORE_ERROR("Vertices are {0}", Blu::Renderer2D::GetStats().GetTotalVertexCount());
 	static float rotation = 0.0f;
 	rotation += deltaTime * 150.0f;
 	Blu::Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
@@ -68,6 +67,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	
 
 	Blu::Renderer2D::EndScene();
+	
 }
 
 void Azure2D::OnEvent(Blu::Events::Event& event)
@@ -77,6 +77,22 @@ void Azure2D::OnEvent(Blu::Events::Event& event)
 	{
 		OnMouseMoved(event);
 	}
+}
+
+void Azure2D::OnGuiDraw()
+{
+
+	Blu::GuiManager::Begin("Options");
+	// Add a dropdown to display Renderer2D stats
+	if (Blu::GuiManager::BeginMenu("Renderer2D Statistics"))
+	{
+		Blu::GuiManager::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls);
+		Blu::GuiManager::Text("Index Count: %d", Blu::Renderer2D::GetStats().GetTotalIndexCount());
+		Blu::GuiManager::Text("Vertex Count: %d", Blu::Renderer2D::GetStats().GetTotalVertexCount());
+		Blu::GuiManager::Text("Quad Count: %d", Blu::Renderer2D::GetStats().QuadCount);
+		Blu::GuiManager::EndMenu();
+	}
+	Blu::GuiManager::End();
 }
 
 void Azure2D::OnMouseMoved(Blu::Events::Event& event)

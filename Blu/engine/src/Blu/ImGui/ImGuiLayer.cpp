@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "Blu/Core/Application.h"
 #include "Blu/Events/EventDispatcher.h"
+#include "Blu/Rendering/Renderer2D.h"
 
 //Temporary
 
@@ -16,6 +17,7 @@ namespace Blu
 {
 	namespace Layers
 	{
+		
 		ImGuiLayer::ImGuiLayer()
 			:Layer("ImGuiLayer")
 		{
@@ -27,14 +29,14 @@ namespace Blu
 		{
 			BLU_PROFILE_FUNCTION();
 
-			ImGui::CreateContext();
+			/*ImGui::CreateContext();
 			ImGui::StyleColorsDark();
 
 			ImGuiIO& io = ImGui::GetIO();
 			io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 			io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
-			ImGui_ImplOpenGL3_Init("#version 410");
+			ImGui_ImplOpenGL3_Init("#version 410");*/
 
 		}
 		void ImGuiLayer::OnDetach()
@@ -49,33 +51,31 @@ namespace Blu
 			//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			//glClear(GL_COLOR_BUFFER_BIT);
 
-			ImGuiIO& io = ImGui::GetIO();
-			Application& app = Application::Get();
-			GLFWwindow* window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-			// Get the framebuffer size
-			int FrameBufferWidth, FrameBufferHeight;
-			glfwGetFramebufferSize(window, &FrameBufferWidth, &FrameBufferHeight);
+			//ImGuiIO& io = ImGui::GetIO();
+			//Application& app = Application::Get();
+			//GLFWwindow* window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+			//// Get the framebuffer size
+			//int FrameBufferWidth, FrameBufferHeight;
+			//glfwGetFramebufferSize(window, &FrameBufferWidth, &FrameBufferHeight);
 
-			// Get the window size
-			int WindowWidth, WindowHeight;
-			glfwGetWindowSize(window, &WindowWidth, &WindowHeight);
+			//// Get the window size
+			//int WindowWidth, WindowHeight;
+			//glfwGetWindowSize(window, &WindowWidth, &WindowHeight);
 
-			io.DisplaySize = ImVec2((float)FrameBufferWidth, (float)FrameBufferHeight);
-			
-			float time = (float)glfwGetTime();
-			io.DeltaTime = m_Time > 0.0 ? (time - m_Time) : (1.00f / 60.f);
-			m_Time = time;
+			//io.DisplaySize = ImVec2((float)FrameBufferWidth, (float)FrameBufferHeight);
+			//
+			//float time = (float)glfwGetTime();
+			//io.DeltaTime = m_Time > 0.0 ? (time - m_Time) : (1.00f / 60.f);
+			//m_Time = time;
 
-			ImGui_ImplOpenGL3_NewFrame();
-			ImGui::NewFrame();
+			//ImGui_ImplOpenGL3_NewFrame();
+			//ImGui::NewFrame();
 
 			
 			RenderGui();
+	
 			
-
-				
-			
-			{
+			/*{
 				BLU_PROFILE_SCOPE("ImGui::Render");
 				ImGui::Render();
 			}
@@ -84,7 +84,7 @@ namespace Blu
 
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-			}
+			}*/
 		}
 		bool ImGuiLayer::OnWindowResizedEvent(Events::WindowResizeEvent& event)
 		{
@@ -240,7 +240,10 @@ namespace Blu
 			
 			// Get the current display size
 			ImVec2 displaySize = ImGui::GetIO().DisplaySize;
-
+			ImGuiStyle& style = ImGui::GetStyle();
+			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f); // Change window background to dark
+			style.Colors[ImGuiCol_Button] = ImVec4(0.4f, 0.7f, 0.0f, 0.7f); // Change button color to green
+			style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.4f, 0.7f, 0.0f, 1.0f); // Change button color when hovered
 			// Window 1: Main Menu
 			ImGui::SetNextWindowPos(ImVec2(0, 0));
 			ImGui::SetNextWindowSize(ImVec2(displaySize.x, 20));
@@ -316,24 +319,25 @@ namespace Blu
 				showColorPicker = !showColorPicker;
 			}
 
-			
-
 			if (ImGui::Button("Change Triangle Color"))
 			{
 				// Toggle the flag to show/hide the color picker
 				showTriangleColorPicker = !showTriangleColorPicker;
 			}
+
+			// Add a dropdown to display Renderer2D stats
+			if (ImGui::BeginMenu("Renderer2D Statistics"))
+			{
+				
+
+				ImGui::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls);
+				ImGui::Text("Index Count: %d", Blu::Renderer2D::GetStats().GetTotalIndexCount());
+				ImGui::Text("Vertex Count: %d", Blu::Renderer2D::GetStats().GetTotalVertexCount());
+				ImGui::Text("Quad Count: %d", Blu::Renderer2D::GetStats().QuadCount);
+				ImGui::EndMenu();
+			}
 			
-			//// Option to change triangle color
-			//if (showTriangleColorPicker)
-			//{
-			//	if (ImGui::ColorEdit4("Color Picker", (float*)&app.m_Color))
-			//	{
-			//		// Set the clear color for the window
-			//		glClearColor(app.m_Color.x, app.m_Color.y, app.m_Color.z, app.m_Color.w);
-			//	}
-			//}
-			// Option to change window color
+			
 			if (showColorPicker)
 			{
 				if (ImGui::ColorEdit3("Color", (float*)&clearColor))
