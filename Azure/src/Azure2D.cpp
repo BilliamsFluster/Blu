@@ -29,6 +29,11 @@ void Azure2D::OnAttach()
 	m_ParticleProps.SizeVariation = 0.5f;  
 	m_ParticleProps.LifeTime = 10.0f;
 
+	Blu::FrameBufferSpecifications fbSpec;
+	fbSpec.Width = 1280;
+	fbSpec.Height = 720;
+	m_FrameBuffer = Blu::FrameBuffer::Create(fbSpec);
+
 }
 
 void Azure2D::OnDetach()
@@ -38,6 +43,7 @@ void Azure2D::OnDetach()
 void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 {
 	Blu::Renderer2D::ResetStats();
+	m_FrameBuffer->Bind();
 	BLU_PROFILE_FUNCTION();
 	{
 
@@ -68,7 +74,8 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	
 
 	Blu::Renderer2D::EndScene();
-	
+	m_FrameBuffer->UnBind();
+
 	 
 
 }
@@ -93,7 +100,8 @@ void Azure2D::OnEvent(Blu::Events::Event& event)
 void Azure2D::OnGuiDraw()
 {
 	
-	
+	uint32_t textureID = m_FrameBuffer->GetColorAttachment();
+	Blu::GuiManager::Image(textureID, { 1280.0f, 720.0f });
 	if (Blu::GuiManager::BeginMenu("Renderer2D Statistics"))
 	{
 		Blu::GuiManager::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls);

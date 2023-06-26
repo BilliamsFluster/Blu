@@ -598,6 +598,7 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.h" />
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLFrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.h" />
@@ -605,6 +606,7 @@
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h" />
@@ -636,6 +638,7 @@
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLFrameBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.cpp" />
@@ -643,6 +646,7 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp" />
