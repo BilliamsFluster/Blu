@@ -4,7 +4,10 @@
 
 
 
-struct ImVec2;
+struct Vec2
+{
+    float x, y;
+};
 
 namespace Blu
 {
@@ -26,10 +29,12 @@ namespace Blu
         static void Text(const char* fmt, ...);
 
         // Call ImGui::Button with the given parameters
-        static bool Button(const std::string& label, const  ImVec2& size);
+        static bool Button(const std::string& label, const Vec2& size);
         
         // Call ImGui::BeginMenu with the given parameters
         static bool BeginMenu(const std::string& label, bool enabled = true);
+
+        static void Image(unsigned int texture, const Vec2& size);
 
         // Call ImGui::EndMenu
         static void EndMenu();
@@ -45,6 +50,7 @@ namespace Blu
         static bool OnKeyPressedEvent(class Events::KeyPressedEvent& event);
         
         static void ShowDockSpace(bool* p_open);
+
         
         
     };

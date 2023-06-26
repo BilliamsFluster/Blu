@@ -29,6 +29,7 @@ private:
 	Blu::Shared< Blu::IndexBuffer> m_IndexBuffer;
 	Blu::Shared< Blu::VertexBuffer> m_VertexBuffer;
 	Blu::Shared<Blu::OpenGLShader> m_FlatColorShader, m_TextureShader;
+	Blu::Shared<Blu::FrameBuffer> m_FrameBuffer;
 	
 
 	

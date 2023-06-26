@@ -35,6 +35,7 @@ namespace Blu
 		// Destroy the ImGui context
 		ImGui::DestroyContext();
 	}
+
 	void GuiManager::BeginFrame()
 	{
 		ImGuiIO& io = ImGui::GetIO();
@@ -78,6 +79,11 @@ namespace Blu
 	{
 		ImGui::End();
 	}
+
+	void GuiManager::Image(unsigned int texture, const Vec2& size) {
+		ImVec2 imguiSize(size.x, size.y);
+		ImGui::Image((ImTextureID)(intptr_t)texture, imguiSize);
+	}
 	// Call ImGui::Text with the given parameters
 	void GuiManager::Text(const char* fmt, ...)
 	{
@@ -86,9 +92,10 @@ namespace Blu
 		ImGui::TextV(fmt, args);
 		va_end(args);
 	}
-	bool GuiManager::Button(const std::string& label, const ImVec2& size)
+	bool GuiManager::Button(const std::string& label, const Vec2& size)
 	{
-		return ImGui::Button(label.c_str(), size);
+		ImVec2 imguiSize(size.x, size.y);
+		return ImGui::Button(label.c_str(), imguiSize);
 
 	}
 	bool GuiManager::BeginMenu(const std::string& label, bool enabled)
