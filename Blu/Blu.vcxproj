@@ -581,6 +581,7 @@
     <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
     <ClInclude Include="engine\src\Blu\Core\Log.h" />
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h" />
+    <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
     <ClInclude Include="engine\src\Blu\Core\Timestep.h" />
     <ClInclude Include="engine\src\Blu\Core\Window.h" />
     <ClInclude Include="engine\src\Blu\Debug\Instrumentor.h" />
@@ -592,6 +593,7 @@
     <ClInclude Include="engine\src\Blu\Events\KeyEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\MouseEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
+    <ClInclude Include="engine\src\Blu\ImGui\GuiManager.h" />
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
@@ -605,17 +607,15 @@
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\RenderCommand.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
     <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h" />
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
     <ClInclude Include="engine\src\Blupch.h" />
-    <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h" />
-    <ClInclude Include="engine\src\Blu\ImGui\GuiManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
@@ -623,12 +623,14 @@
     <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
     <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />
     <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp" />
+    <ClCompile Include="engine\src\Blu\ImGui\GuiManager.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
@@ -642,8 +644,10 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp" />
@@ -651,10 +655,6 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
-    <ClCompile Include="engine\src\Blu\ImGui\GuiManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">

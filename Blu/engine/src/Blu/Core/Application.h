@@ -5,6 +5,7 @@
 #include "Blu/Events/EventDispatcher.h"
 #include "Blu/Platform/OpenGL/OpenGLShader.h"
 #include "Blu/Rendering/OrthographicCamera.h"
+#include "Blu/ImGui/ImGuiLayer.h"
 
 
 
@@ -23,8 +24,8 @@ namespace Blu
 		Application();
 		
 		virtual ~Application();
-		void PushLayer(Layers::Layer* layer);
-		void PushOverlay(Layers::Layer* overlay);
+		void PushLayer(Shared<Layers::Layer> layer);
+		void PushOverlay(Shared<Layers::Layer> overlay);
 		void Run();
 		void OnEvent(Events::Event& event);
 
@@ -35,7 +36,8 @@ namespace Blu
 		inline Window& GetWindow() { return *m_Window; }
 
 	private:
-		std::unique_ptr<Window> m_Window;
+		Unique<Window> m_Window;
+		Shared<Layers::ImGuiLayer> m_ImGuiLayer;
 		bool m_Running = true;
 		Layers::LayerStack m_LayerStack;
 		Events::EventDispatcher m_EventDispatcher;

@@ -37,6 +37,9 @@
     <Filter Include="src\Blu\Core">
       <UniqueIdentifier>{57861C23-43E9-ABC7-EC6E-E47DD8B0774A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Debug">
+      <UniqueIdentifier>{55ACB986-C16C-35BD-8AA7-7E3AF6267A99}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Blu\Events">
       <UniqueIdentifier>{A3897961-8F57-6D67-78EB-DD8D645849CC}</UniqueIdentifier>
     </Filter>
@@ -1368,11 +1371,17 @@
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h">
+      <Filter>src\Blu\Core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Timestep.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Window.h">
       <Filter>src\Blu\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Debug\Instrumentor.h">
+      <Filter>src\Blu\Debug</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Events\Event.h">
       <Filter>src\Blu\Events</Filter>
@@ -1397,6 +1406,9 @@
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h">
       <Filter>src\Blu\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\ImGui\GuiManager.h">
+      <Filter>src\Blu\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h">
       <Filter>src\Blu\ImGui</Filter>
@@ -1437,10 +1449,16 @@
     <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\RenderCommand.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Renderer.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h">
@@ -1458,11 +1476,6 @@
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
-    <ClInclude Include="engine\src\Blu\Debug\Instrumentor.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h" />
-    <ClInclude Include="engine\src\Blu\ImGui\GuiManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1480,6 +1493,9 @@
     <ClCompile Include="engine\src\Blu\Core\Log.cpp">
       <Filter>src\Blu\Core</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp">
+      <Filter>src\Blu\Core</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp">
       <Filter>src\Blu\Events</Filter>
     </ClCompile>
@@ -1488,6 +1504,18 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp">
       <Filter>src\Blu\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp">
+      <Filter>src\Blu\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp">
+      <Filter>src\Blu\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp">
+      <Filter>src\Blu\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\ImGui\GuiManager.cpp">
+      <Filter>src\Blu\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp">
       <Filter>src\Blu\ImGui</Filter>
@@ -1528,10 +1556,16 @@
     <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp">
@@ -1549,12 +1583,5 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
-    <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp" />
-    <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp" />
-    <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
-    <ClCompile Include="engine\src\Blu\ImGui\GuiManager.cpp" />
   </ItemGroup>
 </Project>

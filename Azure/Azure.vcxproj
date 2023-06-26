@@ -131,20 +131,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Azure2D.cpp" />
     <ClCompile Include="src\Azure.cpp" />
+    <ClCompile Include="src\Azure2D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Blu\Blu.vcxproj">
       <Project>{08DA870B-74E3-877C-FD5E-9E7C6967937C}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\shaders\FlatColor.glsl" />
-    <None Include="assets\shaders\Texture.glsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\Azure2D.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
