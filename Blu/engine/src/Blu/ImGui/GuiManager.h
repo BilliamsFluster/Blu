@@ -44,6 +44,7 @@ namespace Blu
         
         static bool OnKeyPressedEvent(class Events::KeyPressedEvent& event);
         
+        static void ShowDockSpace(bool* p_open);
         
         
     };

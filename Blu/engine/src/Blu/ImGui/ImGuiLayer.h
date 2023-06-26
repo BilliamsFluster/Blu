@@ -18,20 +18,26 @@ namespace Blu
 			~ImGuiLayer();
 			void OnAttach() override;
 			void OnDetach() override;
-			void OnUpdate(Timestep deltaTime) override;
+			//void OnUpdate(Timestep deltaTime) override;
 			void OnEvent(Events::Event& event);
+			virtual void OnGuiDraw() override;
+			void UpdateWindowSize();
+
+			void Begin();
+			void End();
+
 
 		private:
 		private:
-			bool OnMouseButtonPressed(Events::MouseButtonPressedEvent& event);
-			bool OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event);
-			bool OnMouseScrolledEvent(Events::MouseScrolledEvent& event);
-			bool OnMouseMovedEvent(Events::MouseMovedEvent& event);
+			bool OnWindowResizedEvent(Events::WindowResizeEvent& event);
 			bool OnKeyPressedEvent(Events::KeyPressedEvent& event);
 			bool OnKeyReleasedEvent(Events::KeyReleasedEvent& event);
 			bool OnKeyTypedEvent(Events::KeyTypedEvent& event);
-			bool OnWindowResizedEvent(Events::WindowResizeEvent& event);
-			
+			/*bool OnMouseButtonPressed(Events::MouseButtonPressedEvent& event);
+			bool OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event);
+			bool OnMouseScrolledEvent(Events::MouseScrolledEvent& event);
+			bool OnMouseMovedEvent(Events::MouseMovedEvent& event);
+			*/
 			void RenderGui();
 			float m_Time = 0.0f;
 		};

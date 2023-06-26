@@ -8,6 +8,7 @@
 
 
 
+
 Azure2D::Azure2D()
 	:Layer("TestRenderingLayer"), m_CameraController(1280.0f / 720.0f, true)
 {
@@ -91,8 +92,7 @@ void Azure2D::OnEvent(Blu::Events::Event& event)
 
 void Azure2D::OnGuiDraw()
 {
-
-	Blu::GuiManager::Begin("Options");
+	
 	
 	if (Blu::GuiManager::BeginMenu("Renderer2D Statistics"))
 	{
@@ -102,7 +102,8 @@ void Azure2D::OnGuiDraw()
 		Blu::GuiManager::Text("Quad Count: %d", Blu::Renderer2D::GetStats().QuadCount);
 		Blu::GuiManager::EndMenu();
 	}
-	Blu::GuiManager::End();
+	static bool open = true;
+	Blu::GuiManager::ShowDockSpace(&open);
 }
 
 void Azure2D::OnMouseMoved(Blu::Events::Event& event)

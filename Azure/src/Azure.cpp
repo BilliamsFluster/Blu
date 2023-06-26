@@ -154,9 +154,7 @@ public:
 	Azure()
 	{
 		//PushLayer(new Engine());
-		PushLayer(new Azure2D());
-		//PushOverlay(new Blu::Layers::ImGuiLayer());
-		//PushOverlay(new Blu::Layers::ImGuiLayer());
+		PushLayer(std::make_shared<Azure2D>());
 
 		
 		
