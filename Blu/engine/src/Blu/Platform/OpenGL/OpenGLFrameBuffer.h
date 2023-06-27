@@ -12,7 +12,7 @@ namespace Blu
 		virtual uint32_t GetColorAttachment() const override { return m_ColorAttachment; }
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
-		virtual ~OpenGLFrameBuffer();
+		virtual ~OpenGLFrameBuffer() override;
 		
 		virtual void Bind() override;
 		virtual void UnBind() override;

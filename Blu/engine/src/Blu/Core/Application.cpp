@@ -96,7 +96,7 @@ namespace Blu
 
 			
 			
-			auto [x, y] = WindowInput::Input::GetMousePosition();
+			auto [x, y] = Blu::Input::GetMousePosition();
 
 			
 		}

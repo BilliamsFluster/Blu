@@ -106,8 +106,7 @@ namespace Blu
 		ImGui::Begin("Renderer2D Statistics");
 		if (Blu::GuiManager::BeginMenu("Renderer2D Statistics"))
 		{
-			Blu::GuiManager::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls);
-			Blu::GuiManager::Text("Index Count: %d", Blu::Renderer2D::GetStats().GetTotalIndexCount());
+			Blu::GuiManager::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls); 
 			Blu::GuiManager::Text("Vertex Count: %d", Blu::Renderer2D::GetStats().GetTotalVertexCount());
 			Blu::GuiManager::Text("Quad Count: %d", Blu::Renderer2D::GetStats().QuadCount);
 			Blu::GuiManager::EndMenu();

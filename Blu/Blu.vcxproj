@@ -603,7 +603,6 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLShader.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h" />
-    <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
