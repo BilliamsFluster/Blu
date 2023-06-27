@@ -4,6 +4,8 @@
 #include <chrono>
 #include "Blu/Events/MouseEvent.h"
 #include "imgui.h"
+#include <glad/glad.h>
+#include "GLFW/glfw3.h"
 
 
 
@@ -50,8 +52,11 @@ namespace Blu
 		BLU_PROFILE_FUNCTION();
 		{
 
-			BLU_PROFILE_SCOPE("Azure2D::OnUpdate: ")
+			BLU_PROFILE_SCOPE("Azure2D::OnUpdate: ");
+			if (m_ViewPortFocused)
+			{
 				m_CameraController.OnUpdate(deltaTime);
+			}
 		}
 
 		Blu::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
@@ -88,22 +93,45 @@ namespace Blu
 		m_CameraController.OnEvent(event);
 		if (event.GetType() == Blu::Events::Event::Type::MouseMoved)
 		{
-			OnMouseMoved(event);
+			Events::MouseMovedEvent& e = static_cast<Events::MouseMovedEvent&>(event);
+
+			OnMouseMovedEvent(e);
 		}
 		if (event.GetType() == Blu::Events::Event::Type::MouseButtonPressed)
 		{
-			OnMousePressed(event);
+			
+			Events::MouseButtonPressedEvent& e = static_cast<Events::MouseButtonPressedEvent&>(event);
+			OnMouseButtonPressed(e);
 		}
 		if (event.GetType() == Blu::Events::Event::Type::MouseButtonReleased)
 		{
-			OnMouseButtonReleased(event);
+			Events::MouseButtonReleasedEvent& e = static_cast<Events::MouseButtonReleasedEvent&>(event);
+			
+			OnMouseButtonReleased(e);
+		}
+		if (event.GetType() == Blu::Events::Event::Type::KeyPressed)
+		{
+			Events::KeyPressedEvent& e = static_cast<Events::KeyPressedEvent&>(event);
+			OnKeyPressedEvent(e);
+		}
+		if (event.GetType() == Blu::Events::Event::Type::KeyPressed)
+		{
+			Events::KeyReleasedEvent& e = static_cast<Events::KeyReleasedEvent&>(event);
+			OnKeyReleasedEvent(e);
+		}
+		if (event.GetType() == Blu::Events::Event::Type::KeyPressed)
+		{
+			Events::KeyTypedEvent& e = static_cast<Events::KeyTypedEvent&>(event);
+			OnKeyTypedEvent(e);
 		}
 	}
 
 	void BluEditorLayer::OnGuiDraw()
 	{
+		
 
 		ImGui::Begin("Renderer2D Statistics");
+		
 		if (Blu::GuiManager::BeginMenu("Renderer2D Statistics"))
 		{
 			Blu::GuiManager::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls); 
@@ -116,6 +144,10 @@ namespace Blu
 		Blu::GuiManager::ClearColor();
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
+		m_ViewPortFocused = ImGui::IsWindowFocused();
+	
+		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewPortFocused);
+	
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 		if (m_ViewportSize != *(glm::vec2*)&viewportSize)
 		{
@@ -132,33 +164,79 @@ namespace Blu
 		
 	}
 
-	void BluEditorLayer::OnMouseMoved(Blu::Events::Event& event)
+	bool BluEditorLayer::OnMouseButtonPressed(Events::MouseButtonPressedEvent& event)
 	{
-		Blu::Events::MouseMovedEvent& MouseEvent = dynamic_cast<Blu::Events::MouseMovedEvent&>(event);
-		m_MousePosX = MouseEvent.GetX();
-		m_MousePosY = MouseEvent.GetY();
-		Blu::GuiManager::OnMouseMovedEvent(MouseEvent);
-		MouseEvent.Handled = true;
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseDown[event.GetButton()] = true;
+		event.Handled = true;
+
+		return false;
+
+
+
+	}
+	bool BluEditorLayer::OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseDown[event.GetButton()] = false;
+		event.Handled = true;
+		return false;
+
+
+	}
+	bool BluEditorLayer::OnMouseScrolledEvent(Events::MouseScrolledEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseWheel = event.GetYOffset();
+		io.MouseWheelH = event.GetXOffset();
+		event.Handled = true;
+		return false;
+
+	}
+	bool BluEditorLayer::OnMouseMovedEvent(Events::MouseMovedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MousePos = ImVec2(event.GetX(), event.GetY());
+		event.Handled = true;
+		return false;
+	}
+
+	bool BluEditorLayer::OnKeyPressedEvent(Events::KeyPressedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.KeysDown[event.GetKeyCode()] = true;
+		io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+		io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
+		io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
+		io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+
+		event.Handled = true;
+		return false;
 
 	}
 
-
-	void BluEditorLayer::OnMouseButtonReleased(Blu::Events::Event& event)
+	bool BluEditorLayer::OnKeyReleasedEvent(Events::KeyReleasedEvent& event)
 	{
-		Blu::Events::MouseButtonReleasedEvent& MouseEvent = dynamic_cast<Blu::Events::MouseButtonReleasedEvent&>(event);
-
-		Blu::GuiManager::OnMouseButtonReleased(MouseEvent);
-		MouseEvent.Handled = true;
+		ImGuiIO& io = ImGui::GetIO();
+		io.KeysDown[event.GetKeyCode()] = false;
+		event.Handled = true;
+		return false;
 
 	}
 
-
-	void BluEditorLayer::OnMousePressed(Blu::Events::Event& event)
+	bool BluEditorLayer::OnKeyTypedEvent(Events::KeyTypedEvent& event)
 	{
-		Blu::Events::MouseButtonPressedEvent& MouseEvent = dynamic_cast<Blu::Events::MouseButtonPressedEvent&>(event);
-		Blu::GuiManager::OnMouseButtonPressed(MouseEvent);
-		MouseEvent.Handled = true;
+		ImGuiIO& io = ImGui::GetIO();
+		int KeyCode = event.GetKeyCode();
+		if (KeyCode > 0 && KeyCode < 0x10000)
+		{
+			io.AddInputCharacter((unsigned short)KeyCode);
+		}
+		event.Handled = true;
+		return false;
 
 	}
+
+	
 
 }

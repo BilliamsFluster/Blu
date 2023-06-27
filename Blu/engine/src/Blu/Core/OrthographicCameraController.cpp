@@ -2,6 +2,7 @@
 #include "OrthographicCameraController.h"
 #include "Blu/Core/Input.h"
 #include "Blu/Core/KeyCodes.h"
+#include "Blu/Core/MouseCodes.h"
 
 namespace Blu
 {
@@ -12,41 +13,46 @@ namespace Blu
 	}
 	void OrthographicCameraController::OnUpdate(Timestep deltaTime)
 	{
-		if (Blu::Input::IsKeyPressed(BLU_KEY_W))
+		
+		if (Blu::Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_RIGHT))
 		{
-			m_CameraPosition.y -= (m_CameraTranslationSpeed * deltaTime);
-		}
-
-		if (Blu::Input::IsKeyPressed(BLU_KEY_S))
-		{
-			m_CameraPosition.y += (m_CameraTranslationSpeed * deltaTime);
-		}
-		if (Blu::Input::IsKeyPressed(BLU_KEY_A))
-		{
-			m_CameraPosition.x += (m_CameraTranslationSpeed * deltaTime);
-
-		}
-
-		if (Blu::Input::IsKeyPressed(BLU_KEY_D))
-		{
-			m_CameraPosition.x -= (m_CameraTranslationSpeed * deltaTime);
-
-		}
-		if (m_Rotation)
-		{
-			if (Blu::Input::IsKeyPressed(BLU_KEY_LEFT))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_W))
 			{
-				m_CameraRotation -= (m_CameraRotationSpeed * deltaTime);
+				m_CameraPosition.y -= (m_CameraTranslationSpeed * deltaTime);
+			}
+
+			if (Blu::Input::IsKeyPressed(BLU_KEY_S))
+			{
+				m_CameraPosition.y += (m_CameraTranslationSpeed * deltaTime);
+			}
+			if (Blu::Input::IsKeyPressed(BLU_KEY_A))
+			{
+				m_CameraPosition.x += (m_CameraTranslationSpeed * deltaTime);
 
 			}
 
-			if (Blu::Input::IsKeyPressed(BLU_KEY_RIGHT))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_D))
 			{
-				m_CameraRotation += (m_CameraRotationSpeed * deltaTime);
+				m_CameraPosition.x -= (m_CameraTranslationSpeed * deltaTime);
 
 			}
-			m_Camera.SetRotation(m_CameraRotation);
+			if (m_Rotation)
+			{
+				if (Blu::Input::IsKeyPressed(BLU_KEY_LEFT))
+				{
+					m_CameraRotation -= (m_CameraRotationSpeed * deltaTime);
+
+				}
+
+				if (Blu::Input::IsKeyPressed(BLU_KEY_RIGHT))
+				{
+					m_CameraRotation += (m_CameraRotationSpeed * deltaTime);
+
+				}
+				m_Camera.SetRotation(m_CameraRotation);
+			}
 		}
+		
 		m_Camera.SetPosition(m_CameraPosition);
 		m_CameraTranslationSpeed = m_ZoomLevel; //---------------------------------------------------------
 		

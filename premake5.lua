@@ -12,8 +12,8 @@ workspace "Blu"
 	--Include directories relative to root folder(solutuin dir)
 	IncludeDir = {}
 	
-	IncludeDir["GLFW"] = "Blu/engine/ExternalDependencies/GLFW/include"
 	IncludeDir["Glad"] = "Blu/engine/ExternalDependencies/Glad/include"
+	IncludeDir["GLFW"] = "Blu/engine/ExternalDependencies/GLFW/include"
 	IncludeDir["ImGui"] = "Blu/engine/ExternalDependencies/imgui"
 	IncludeDir["glm"] = "Blu/engine/ExternalDependencies/glm"
 	IncludeDir["stb_image"] = "Blu/engine/ExternalDependencies/stb_image"
@@ -197,7 +197,9 @@ project "Blu-Editor"
 		"%{prj.name}/engine/src/**.cpp", 
 		"%{prj.name}/src/**.cpp",
 		"%{prj.name}/engine/ExternalDependencies/imgui/**.cpp",
-		"%{prj.name}/engine/ExternalDependencies/imgui/**.h"
+		"%{prj.name}/engine/ExternalDependencies/imgui/**.h",
+		"%{prj.name}/engine/ExternalDependencies/GLFW/**.cpp",
+		"%{prj.name}/engine/ExternalDependencies/Glad/**.h"
 
 	}
 
@@ -206,7 +208,10 @@ project "Blu-Editor"
 		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
 		"$(SolutionDir)Blu/engine/src",
-		"$(SolutionDir)Blu/engine/ExternalDependencies/imgui"
+		"$(SolutionDir)Blu/engine/ExternalDependencies/imgui",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include"
+
 
 
 		
@@ -216,7 +221,9 @@ project "Blu-Editor"
 	links
 	{
 		"Blu",
-		"ImGui"
+		"ImGui",
+		"GLFW",
+		"Glad"
 
 
 	}
