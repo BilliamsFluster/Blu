@@ -21,7 +21,7 @@ namespace Blu
 
 		
 
-		Application();
+		Application(const std::string& name = "Blu Engine");
 		
 		virtual ~Application();
 		void PushLayer(Shared<Layers::Layer> layer);

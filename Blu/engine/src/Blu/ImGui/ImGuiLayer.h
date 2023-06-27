@@ -21,6 +21,8 @@ namespace Blu
 			//void OnUpdate(Timestep deltaTime) override;
 			void OnEvent(Events::Event& event);
 			virtual void OnGuiDraw() override;
+			void DrawDockspace();
+
 			void UpdateWindowSize();
 
 			void Begin();
@@ -38,7 +40,6 @@ namespace Blu
 			bool OnMouseScrolledEvent(Events::MouseScrolledEvent& event);
 			bool OnMouseMovedEvent(Events::MouseMovedEvent& event);
 			*/
-			void RenderGui();
 			float m_Time = 0.0f;
 		};
 	}

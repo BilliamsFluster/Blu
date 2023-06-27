@@ -180,3 +180,64 @@ project "Azure"
 		defines "BLU_DIST"
 		optimize "on"
 
+project "Blu-Editor"
+	location "Blu-Editor"
+	kind "ConsoleApp"
+	language "C++"
+	cppdialect "C++20"
+	staticruntime "on" 
+
+
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files
+	{
+		"%{prj.name}/engine/src/**.h",
+		"%{prj.name}/engine/src/**.cpp", 
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/engine/ExternalDependencies/imgui/**.cpp",
+		"%{prj.name}/engine/ExternalDependencies/imgui/**.h"
+
+	}
+
+	includedirs 
+	{
+		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
+		"$(SolutionDir)Blu/engine/src",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/imgui"
+
+
+		
+		
+	}
+	
+	links
+	{
+		"Blu",
+		"ImGui"
+
+
+	}
+	--buildoptions { "/wd4251" } for dll
+
+	filter "system:windows"
+		systemversion "latest"
+
+		defines
+		{
+			"BLU_PLATFORM_WINDOWS"
+		}
+
+	filter "configurations:Debug"
+		defines "BLU_DEBUG"
+		symbols "on"
+
+	filter "configurations:Release"
+		defines "BLU_RELEASE"
+		optimize "on"
+
+	filter "configurations:Dist"
+		defines "BLU_DIST"
+		optimize "on"

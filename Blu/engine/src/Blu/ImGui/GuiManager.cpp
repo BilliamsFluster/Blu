@@ -70,6 +70,12 @@ namespace Blu
 		// Render ImGui draw data using OpenGL
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
+	void GuiManager::ClearColor()
+	{
+		static ImVec4 clearColor = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
 	bool GuiManager::Begin(const std::string& name, bool* open )
 	{
 		

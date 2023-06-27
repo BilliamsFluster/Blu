@@ -9,14 +9,22 @@ namespace Blu
 	{
 		Invalidate();
 	}
+	void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
+	{
+		m_Specification.Width = width;
+		m_Specification.Height = height;
+		Invalidate();
+	}
 	OpenGLFrameBuffer::~OpenGLFrameBuffer()
 	{
-		glCreateFramebuffers(0, &m_RendererID);
+		glDeleteFramebuffers(1, &m_RendererID);
+		glDeleteTextures(1, &m_ColorAttachment);
+		glDeleteTextures(1, &m_DepthAttachment);
 	}
 	void OpenGLFrameBuffer::Bind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-
+		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
 	}
 	void OpenGLFrameBuffer::UnBind()
 	{
@@ -25,6 +33,13 @@ namespace Blu
 	}
 	void OpenGLFrameBuffer::Invalidate()
 	{
+		if (m_RendererID)
+		{
+			glDeleteFramebuffers(1, &m_RendererID);
+			glDeleteTextures(1, &m_ColorAttachment);
+			glDeleteTextures(1, &m_DepthAttachment);
+		}
+
 		glCreateFramebuffers(1, &m_RendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_ColorAttachment);
@@ -47,7 +62,6 @@ namespace Blu
 		BLU_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is complete");
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		std::cout<< glGetError() <<std::endl;
 
 	}
 }

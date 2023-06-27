@@ -24,6 +24,8 @@ namespace Blu
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix; // needs to be in this order for it to work
 
 	}
+
+	
 	
 	void OrthographicCamera::RecalculateViewMatrix()
 	{
