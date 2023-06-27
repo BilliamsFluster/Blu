@@ -14,10 +14,13 @@ namespace Blu
 		void OnUpdate(Blu::Timestep deltaTime) override;
 		void OnEvent(Blu::Events::Event& event) override;
 		virtual void OnGuiDraw() override;
-		void OnMouseMoved(Blu::Events::Event& event);
-		void OnMousePressed(Blu::Events::Event& event);
-		void OnMouseButtonReleased(Blu::Events::Event& event);
-
+		bool OnKeyPressedEvent(Events::KeyPressedEvent& event);
+		bool OnKeyReleasedEvent(Events::KeyReleasedEvent& event);
+		bool OnKeyTypedEvent(Events::KeyTypedEvent& event);
+		bool OnMouseButtonPressed(Events::MouseButtonPressedEvent& event);
+		bool OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event);
+		bool OnMouseScrolledEvent(Events::MouseScrolledEvent& event);
+		bool OnMouseMovedEvent(Events::MouseMovedEvent& event);
 
 	private:
 		Blu::OrthographicCameraController m_CameraController;
@@ -33,6 +36,7 @@ namespace Blu
 		Blu::Shared<Blu::OpenGLShader> m_FlatColorShader, m_TextureShader;
 		Blu::Shared<Blu::FrameBuffer> m_FrameBuffer;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+		bool m_ViewPortFocused = false;
 	};
 }
 

@@ -128,11 +128,18 @@ namespace Blu
 		}
 		void ImGuiLayer::OnEvent(Events::Event& event)
 		{
+			
 			BLU_PROFILE_FUNCTION();
 
 			ImGuiIO& io = ImGui::GetIO();
 			Events::EventHandler handler;
 			event.Accept(handler);
+			if (m_BlockEvents) {
+				return;
+			}
+			
+				
+			
 			switch (event.GetType())
 			{
 
@@ -140,50 +147,64 @@ namespace Blu
 			{
 				Events::WindowResizeEvent& e = static_cast<Events::WindowResizeEvent&>(event);
 				OnWindowResizedEvent(e);
+				break;
 
 				
+			}
+			case Events::Event::Type::KeyPressed:
+			{
+				Events::KeyPressedEvent& e = static_cast<Events::KeyPressedEvent&>(event);
+				//OnKeyPressedEvent(e);
+				break;
+
+			}
+			case Events::Event::Type::MouseButtonPressed:
+			{
+				Events::MouseButtonPressedEvent& e = static_cast<Events::MouseButtonPressedEvent&>(event);
+				OnMouseButtonPressed(e);
+				break;
 			}
 			}
 		}
 
-		//	// Indicate that the event has been handled if ImGui wants to capture the mouse or keyboard
-		//	event.Handled = io.WantCaptureMouse || io.WantCaptureKeyboard;
-		//}
-		//bool ImGuiLayer::OnMouseButtonPressed(Events::MouseButtonPressedEvent& event)
-		//{
-		//	ImGuiIO& io = ImGui::GetIO();
-		//	io.MouseDown[event.GetButton()] = true;
-		//	event.Handled = true;
-		//	return false;
+			
+
+		bool ImGuiLayer::OnMouseButtonPressed(Events::MouseButtonPressedEvent& event)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.MouseDown[event.GetButton()] = true;
+			event.Handled = true;
+
+			return false;
 
 
 
-		//}
-		//bool ImGuiLayer::OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event)
-		//{
-		//	ImGuiIO& io = ImGui::GetIO();
-		//	io.MouseDown[event.GetButton()] = false;
-		//	event.Handled = true;
-		//	return false;
+		}
+		bool ImGuiLayer::OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.MouseDown[event.GetButton()] = false;
+			event.Handled = true;
+			return false;
 
 
-		//}
-		//bool ImGuiLayer::OnMouseScrolledEvent(Events::MouseScrolledEvent& event)
-		//{
-		//	ImGuiIO& io = ImGui::GetIO();
-		//	io.MouseWheel = event.GetYOffset();
-		//	io.MouseWheelH = event.GetXOffset();
-		//	event.Handled = true;
-		//	return false;
+		}
+		bool ImGuiLayer::OnMouseScrolledEvent(Events::MouseScrolledEvent& event)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.MouseWheel = event.GetYOffset();
+			io.MouseWheelH = event.GetXOffset();
+			event.Handled = true;
+			return false;
 
-		//}
-		//bool ImGuiLayer::OnMouseMovedEvent(Events::MouseMovedEvent& event)
-		//{
-		//	ImGuiIO& io = ImGui::GetIO();
-		//	io.MousePos = ImVec2(event.GetX(), event.GetY());
-		//	event.Handled = true;
-		//	return false;
-		//}
+		}
+		bool ImGuiLayer::OnMouseMovedEvent(Events::MouseMovedEvent& event)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.MousePos = ImVec2(event.GetX(), event.GetY());
+			event.Handled = true;
+			return false;
+		}
 
 		bool ImGuiLayer::OnKeyPressedEvent(Events::KeyPressedEvent& event)
 		{
