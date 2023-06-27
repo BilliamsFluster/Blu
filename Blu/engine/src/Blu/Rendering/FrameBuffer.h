@@ -13,6 +13,7 @@ namespace Blu
 	{
 	public:
 		virtual const FrameBufferSpecifications& GetSpecification() const = 0;
+		virtual ~FrameBuffer() = default;
 		//virtual FrameBufferSpecifications& GetSpecification() = 0;
 		virtual void Bind() = 0;
 		virtual void UnBind() = 0;

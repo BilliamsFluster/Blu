@@ -1437,9 +1437,6 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsInput.h">
-      <Filter>src\Blu\Platform\Windows</Filter>
-    </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClInclude>
@@ -1553,9 +1550,6 @@
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp">
-      <Filter>src\Blu\Platform\Windows</Filter>
-    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClCompile>
@@ -1594,6 +1588,9 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp">
+      <Filter>src\Blu\Platform\Windows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

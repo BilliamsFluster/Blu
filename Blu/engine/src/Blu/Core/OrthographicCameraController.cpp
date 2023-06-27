@@ -12,35 +12,35 @@ namespace Blu
 	}
 	void OrthographicCameraController::OnUpdate(Timestep deltaTime)
 	{
-		if (WindowInput::Input::IsKeyPressed(BLU_KEY_W))
+		if (Blu::Input::IsKeyPressed(BLU_KEY_W))
 		{
 			m_CameraPosition.y -= (m_CameraTranslationSpeed * deltaTime);
 		}
 
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_S))
+		if (Blu::Input::IsKeyPressed(BLU_KEY_S))
 		{
 			m_CameraPosition.y += (m_CameraTranslationSpeed * deltaTime);
 		}
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_A))
+		if (Blu::Input::IsKeyPressed(BLU_KEY_A))
 		{
 			m_CameraPosition.x += (m_CameraTranslationSpeed * deltaTime);
 
 		}
 
-		if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_D))
+		if (Blu::Input::IsKeyPressed(BLU_KEY_D))
 		{
 			m_CameraPosition.x -= (m_CameraTranslationSpeed * deltaTime);
 
 		}
 		if (m_Rotation)
 		{
-			if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_LEFT))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_LEFT))
 			{
 				m_CameraRotation -= (m_CameraRotationSpeed * deltaTime);
 
 			}
 
-			if (Blu::WindowInput::Input::IsKeyPressed(BLU_KEY_RIGHT))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_RIGHT))
 			{
 				m_CameraRotation += (m_CameraRotationSpeed * deltaTime);
 
