@@ -30,7 +30,7 @@ namespace Blu
 
         // Call ImGui::Button with the given parameters
         static bool Button(const std::string& label, const Vec2& size);
-        
+        static void ClearColor();
         // Call ImGui::BeginMenu with the given parameters
         static bool BeginMenu(const std::string& label, bool enabled = true);
 

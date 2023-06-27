@@ -69,6 +69,11 @@ namespace Blu
 			}
 		}
 	}
+	void OrthographicCameraController::ResizeCamera(float width, float height)
+	{
+		m_AspectRatio = width / height;
+		m_Camera.SetProjection({ -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel });
+	}
 	bool OrthographicCameraController::OnMouseScrolled(Events::MouseScrolledEvent& event)
 	{
 		m_ZoomLevel -= event.GetYOffset() * 0.5f;
@@ -78,8 +83,7 @@ namespace Blu
 	}
 	bool OrthographicCameraController::OnWindowResize(Events::WindowResizeEvent& event)
 	{
-		m_ZoomLevel -= event.GetWidth() / event.GetHeight();
-		m_Camera.SetProjection({ -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel });
+		ResizeCamera(event.GetWidth(), event.GetHeight());
 		return false;
 
 	}

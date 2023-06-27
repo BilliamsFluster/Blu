@@ -10,6 +10,7 @@ namespace Blu
 		OpenGLFrameBuffer(const FrameBufferSpecifications& spec);
 		virtual const FrameBufferSpecifications& GetSpecification() const override { return m_Specification; }
 		virtual uint32_t GetColorAttachment() const override { return m_ColorAttachment; }
+		virtual void Resize(uint32_t width, uint32_t height) override;
 
 		virtual ~OpenGLFrameBuffer();
 		
@@ -20,7 +21,7 @@ namespace Blu
 		void Invalidate();
 	private:
 		uint32_t m_RendererID;
-		uint32_t m_ColorAttachment, m_DepthAttachment;
+		uint32_t m_ColorAttachment = 0, m_DepthAttachment = 0;
 		FrameBufferSpecifications m_Specification;
 	};
 }

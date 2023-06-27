@@ -12,8 +12,8 @@ namespace Blu
 		uint32_t Height;
 
 		WindowProps(const std::string& title = "Blu Engine",
-			uint32_t width = 1600,
-			uint32_t height = 900)
+			uint32_t width = 1280,
+			uint32_t height = 720)
 			: Title(title), Width(width), Height(height)
 		{
 		}
@@ -21,8 +21,8 @@ namespace Blu
 	class BLU_API Window
 	{
 	public:
-		virtual unsigned int GetWidth() const = 0;
-		virtual unsigned int GetHeight() const = 0;
+		virtual uint32_t GetWidth() const = 0;
+		virtual uint32_t GetHeight() const = 0;
 
 		virtual void OnUpdate() = 0;
 		virtual void* GetNativeWindow() const = 0;

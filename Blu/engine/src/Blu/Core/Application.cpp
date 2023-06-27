@@ -25,17 +25,18 @@ namespace Blu
 
 	Application* Application::s_Instance = nullptr;
 	
-	Application::Application()
+	Application::Application(const std::string& name)
 		
 	{
 		BLU_PROFILE_FUNCTION();
 		m_Color = { 1,1,1,1 };
-		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(name)));
 		m_ImGuiLayer = std::make_shared<Layers::ImGuiLayer>();
 		s_Instance = this;
 
-		PushOverlay(m_ImGuiLayer);
+		
 		Renderer::Init();
+		PushOverlay(m_ImGuiLayer);
 
 		
 		
@@ -82,11 +83,12 @@ namespace Blu
 				}
 			}
 			m_ImGuiLayer->Begin();
-
+			m_ImGuiLayer->DrawDockspace();
 			for (Shared<Layers::Layer> layer : m_LayerStack)
 			{
 				{
 					BLU_PROFILE_SCOPE("LayerStack OnUpdates");
+					
 					layer->OnGuiDraw();
 				}
 			}

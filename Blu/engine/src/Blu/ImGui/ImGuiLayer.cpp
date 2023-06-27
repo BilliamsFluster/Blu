@@ -122,8 +122,7 @@ namespace Blu
 
 			io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f); // Assuming no scale here
 
-			// Update the viewport
-			glViewport(0, 0, event.GetWidth(), event.GetHeight());
+			
 
 			return false;
 		}
@@ -142,7 +141,7 @@ namespace Blu
 				Events::WindowResizeEvent& e = static_cast<Events::WindowResizeEvent&>(event);
 				OnWindowResizedEvent(e);
 
-				ImGui::ShowDemoWindow();
+				
 			}
 			}
 		}
@@ -221,128 +220,47 @@ namespace Blu
 			return false;
 
 		}
-
-		
-		void ImGuiLayer::RenderGui()
+		void ImGuiLayer::DrawDockspace()
 		{
-			BLU_PROFILE_FUNCTION();
+			static bool dockspaceOpen = true;
+			static bool opt_fullscreen = true;
+			static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
-			
-			// Get the current display size
-			ImVec2 displaySize = ImGui::GetIO().DisplaySize;
-			ImGuiStyle& style = ImGui::GetStyle();
-			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f); // Change window background to dark
-			style.Colors[ImGuiCol_Button] = ImVec4(0.4f, 0.7f, 0.0f, 0.7f); // Change button color to green
-			style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.4f, 0.7f, 0.0f, 1.0f); // Change button color when hovered
-			// Window 1: Main Menu
-			ImGui::SetNextWindowPos(ImVec2(0, 0));
-			ImGui::SetNextWindowSize(ImVec2(displaySize.x, 20));
-			ImGui::Begin("Main Menu", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-			if (ImGui::BeginMenu("File"))
+			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+			if (opt_fullscreen)
 			{
-				// File menu options
-				ImGui::MenuItem("New");
-				ImGui::MenuItem("Open");
-				ImGui::MenuItem("Save");
-				ImGui::EndMenu();
-			}
-			// Add more menu items as needed
-			ImGui::End();
-
-			// Window 2: Toolbar
-			float toolbarHeight = 80.0f;
-			ImGui::SetNextWindowPos(ImVec2(0, 20));
-			ImGui::SetNextWindowSize(ImVec2(displaySize.x, toolbarHeight));
-			ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoResize);
-			// Add toolbar buttons, icons, etc.
-			ImGui::Text("Toolbar content");
-			ImGui::End();
-
-			//// Window 3: Viewport
-			//float viewportHeight = displaySize.y - toolbarHeight - 200;
-			//ImGui::SetNextWindowPos(ImVec2(0, toolbarHeight));
-			//ImGui::SetNextWindowSize(ImVec2(displaySize.x - 200, viewportHeight));
-			//ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoDecoration);
-			//// Render the 3D scene or image here
-			//ImGui::Text("Viewport content");
-			//Application& app = Application::Get();
-			////ImTextureID textureID = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(app.m_Texture));
-			////ImGui::Image(textureID, ImVec2(displaySize.x - 200, viewportHeight));
-			//ImGui::End();
-
-			// Window 4: Outliner
-			float outlinerWidth = 200.0f;
-			float outlinerHeight = displaySize.y - toolbarHeight;
-			ImGui::SetNextWindowPos(ImVec2(displaySize.x - outlinerWidth, toolbarHeight));
-			ImGui::SetNextWindowSize(ImVec2(outlinerWidth, outlinerHeight));
-			ImGui::Begin("Outliner");
-			// Show hierarchical view of objects, scene graph, etc.
-			ImGui::Text("Outliner content");
-			ImGui::End();
-
-			// Window 5: Content Browser
-			float contentBrowserHeight = 200.0f;
-			ImGui::SetNextWindowPos(ImVec2(0, displaySize.y - contentBrowserHeight));
-			ImGui::SetNextWindowSize(ImVec2(displaySize.x - outlinerWidth, contentBrowserHeight));
-			ImGui::Begin("Content Browser");
-			// Show file/folder tree view, assets, etc.
-			ImGui::Text("Content Browser content");
-			ImGui::End();
-
-
-			static ImVec4 clearColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);  // Default clear color (dark gray)
-			static bool showColorPicker = false;
-			static bool showTriangleColorPicker = false;
-			
-
-
-			// Window 6: File
-			ImGui::SetNextWindowPos(ImVec2(displaySize.x - outlinerWidth, toolbarHeight));
-			ImGui::SetNextWindowSize(ImVec2(outlinerWidth, outlinerHeight));
-			ImGui::Begin("Options");
-
-			// ... Previous file window content ...
-
-			if (ImGui::Button("Change Window Color"))
-			{
-				// Toggle the flag to show/hide the color picker
-				showColorPicker = !showColorPicker;
+				ImGuiViewport* viewport = ImGui::GetMainViewport();
+				ImGui::SetNextWindowPos(viewport->Pos);
+				ImGui::SetNextWindowSize(viewport->Size);
+				ImGui::SetNextWindowViewport(viewport->ID);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+				window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+				window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 			}
 
-			if (ImGui::Button("Change Triangle Color"))
+			if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+				window_flags |= ImGuiWindowFlags_NoBackground;
+
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+			ImGui::Begin("Blu Dockspace", &dockspaceOpen, window_flags);
+			ImGui::PopStyleVar();
+
+			if (opt_fullscreen)
+				ImGui::PopStyleVar(2);
+
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 			{
-				// Toggle the flag to show/hide the color picker
-				showTriangleColorPicker = !showTriangleColorPicker;
+				ImGuiID dockspace_id = ImGui::GetID("BluDockspace");
+				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 			}
 
-			// Add a dropdown to display Renderer2D stats
-			if (ImGui::BeginMenu("Renderer2D Statistics"))
-			{
-				
+			// Other ImGui code here...
 
-				ImGui::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls);
-				ImGui::Text("Index Count: %d", Blu::Renderer2D::GetStats().GetTotalIndexCount());
-				ImGui::Text("Vertex Count: %d", Blu::Renderer2D::GetStats().GetTotalVertexCount());
-				ImGui::Text("Quad Count: %d", Blu::Renderer2D::GetStats().QuadCount);
-				ImGui::EndMenu();
-			}
-			
-			
-			if (showColorPicker)
-			{
-				if (ImGui::ColorEdit3("Color", (float*)&clearColor))
-				{
-					// Set the clear color for the window
-					glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
-				}
-			}
-			
 			ImGui::End();
-
-			// Clear the buffers with the selected color
-			//glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
-			//glClear(GL_COLOR_BUFFER_BIT);
-
 		}
+
+
 	}
 }
