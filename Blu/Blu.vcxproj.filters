@@ -58,6 +58,9 @@
     <Filter Include="src\Blu\Rendering">
       <UniqueIdentifier>{AC42AF3C-1859-ADD2-61D0-38F4CD257E5A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Scene">
+      <UniqueIdentifier>{FC0EC887-68CF-43BE-310A-8D3B9D89889A}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\ExternalDependencies\glm\glm\common.hpp">
@@ -1476,9 +1479,13 @@
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\Scene.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\Component.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1589,8 +1596,12 @@
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scene\Scene.cpp">
+      <Filter>src\Blu\Scene</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
   </ItemGroup>
 </Project>

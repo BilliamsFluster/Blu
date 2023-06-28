@@ -17,6 +17,7 @@ workspace "Blu"
 	IncludeDir["ImGui"] = "Blu/engine/ExternalDependencies/imgui"
 	IncludeDir["glm"] = "Blu/engine/ExternalDependencies/glm"
 	IncludeDir["stb_image"] = "Blu/engine/ExternalDependencies/stb_image"
+	IncludeDir["entt"] = "Blu/engine/ExternalDependencies/entt/include"
 
 
 
@@ -25,6 +26,7 @@ workspace "Blu"
 	include "Blu/engine/ExternalDependencies/GLFW"
 	include "Blu/engine/ExternalDependencies/Glad"
 	include "Blu/engine/ExternalDependencies/imgui"
+	
 
 
 
@@ -67,7 +69,8 @@ project "Blu"
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.stb_image}"
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.entt}"
 
 
 
@@ -97,7 +100,8 @@ project "Blu"
 		{
 			"BLU_PLATFORM_WINDOWS",
 			"BLU_BUILD_DLL",
-			"GLFW_INCLUDE_NONE"
+			"GLFW_INCLUDE_NONE",
+			"NOMINMAX"
 		}
 
 		
@@ -147,7 +151,9 @@ project "Azure"
 	{
 		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
-		"$(SolutionDir)Blu/engine/src"
+		"$(SolutionDir)Blu/engine/src",
+		"%{IncludeDir.entt}"
+
 
 		
 		
@@ -210,7 +216,9 @@ project "Blu-Editor"
 		"$(SolutionDir)Blu/engine/src",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/imgui",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/include",
-		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include"
+		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include",
+		"%{IncludeDir.entt}"
+
 
 
 

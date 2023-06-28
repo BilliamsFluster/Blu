@@ -76,8 +76,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -98,8 +98,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -123,8 +123,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -616,6 +616,8 @@
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h" />
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
+    <ClInclude Include="engine\src\Blu\Scene\Component.h" />
+    <ClInclude Include="engine\src\Blu\Scene\Scene.h" />
     <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -655,6 +657,8 @@
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\Scene.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
