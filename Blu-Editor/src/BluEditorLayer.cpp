@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
+#include <glm/gtc/type_ptr.hpp>
 
 
 
@@ -21,8 +22,9 @@ namespace Blu
 
 	void BluEditorLayer::OnAttach()
 	{
-		m_Texture = Blu::Texture2D::Create("assets/textures/StickMan.png");
-		m_WallpaperTexture = Blu::Texture2D::Create("assets/spriteSheets/blockPack_spritesheet@2.png");
+		m_ActiveScene = std::make_shared<Scene>();
+		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
+		m_WallpaperTexture = Texture2D::Create("assets/spriteSheets/blockPack_spritesheet@2.png");
 
 		m_ParticleProps.Position = glm::vec2(-0.5f, 1.0f);
 		m_ParticleProps.Velocity = glm::vec2(1.0f, 0.0f);
@@ -33,22 +35,56 @@ namespace Blu
 		m_ParticleProps.SizeVariation = 0.5f;
 		m_ParticleProps.LifeTime = 10.0f;
 
-		Blu::FrameBufferSpecifications fbSpec;
+		FrameBufferSpecifications fbSpec;
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
-		m_FrameBuffer = Blu::FrameBuffer::Create(fbSpec);
+		m_FrameBuffer = FrameBuffer::Create(fbSpec);
+		ImGuiIO& io = ImGui::GetIO();
 
+		// Key map setup
+		io.KeyMap[ImGuiKey_Tab] = BLU_KEY_TAB; // And so on for all other keys...
+		io.KeyMap[ImGuiKey_LeftArrow] = BLU_KEY_LEFT;
+		io.KeyMap[ImGuiKey_RightArrow] = BLU_KEY_RIGHT;
+		io.KeyMap[ImGuiKey_UpArrow] = BLU_KEY_UP;
+		io.KeyMap[ImGuiKey_DownArrow] = BLU_KEY_DOWN;
+		io.KeyMap[ImGuiKey_PageUp] = BLU_KEY_PAGE_UP;
+		io.KeyMap[ImGuiKey_PageDown] = BLU_KEY_PAGE_DOWN;
+		io.KeyMap[ImGuiKey_Home] = BLU_KEY_HOME;
+		io.KeyMap[ImGuiKey_End] = BLU_KEY_END;
+		io.KeyMap[ImGuiKey_Insert] = BLU_KEY_INSERT;
+		io.KeyMap[ImGuiKey_Delete] = BLU_KEY_DELETE;
+		io.KeyMap[ImGuiKey_Backspace] = BLU_KEY_BACKSPACE;
+		io.KeyMap[ImGuiKey_Space] = BLU_KEY_SPACE;
+		io.KeyMap[ImGuiKey_Enter] = BLU_KEY_ENTER;
+		io.KeyMap[ImGuiKey_Escape] = BLU_KEY_ESCAPE;
+		io.KeyMap[ImGuiKey_A] = BLU_KEY_A;
+		io.KeyMap[ImGuiKey_C] = BLU_KEY_C;
+		io.KeyMap[ImGuiKey_V] = BLU_KEY_V;
+		io.KeyMap[ImGuiKey_X] = BLU_KEY_X;
+		io.KeyMap[ImGuiKey_Y] = BLU_KEY_Y;
+		io.KeyMap[ImGuiKey_Z] = BLU_KEY_Z;
+		auto square = m_ActiveScene->CreateEntity();
+		m_ActiveScene->Reg().emplace<TransformComponent>(square);
+		m_ActiveScene->Reg().emplace<SpriteRendererComponent>(square, glm::vec4{ 0, 1, 1, 1 });
+		m_SquareEntity = square;
 	}
 
 	void BluEditorLayer::OnDetach()
 	{
 	}
 
-	void BluEditorLayer::OnUpdate(Blu::Timestep deltaTime)
+	void BluEditorLayer::OnUpdate(Timestep deltaTime)
 	{
-		Blu::Renderer2D::ResetStats();
-		m_FrameBuffer->Bind();
 		
+		
+		
+		Renderer2D::ResetStats();
+		{
+			BLU_PROFILE_SCOPE("Renderer2D::ResetStats: ");
+			m_FrameBuffer->Bind();
+			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+			RenderCommand::Clear();
+		}
 		BLU_PROFILE_FUNCTION();
 		{
 
@@ -59,71 +95,98 @@ namespace Blu
 			}
 		}
 
-		Blu::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-		Blu::RenderCommand::Clear();
-
-		Blu::Renderer2D::BeginScene(m_CameraController.GetCamera());
+		Renderer2D::BeginScene(m_CameraController.GetCamera());
+		m_ActiveScene->OnUpdate(deltaTime);
 
 		m_ParticleProps.Position = glm::vec2((m_MousePosX / 100.f) - 8, -m_MousePosY / 100.0f + 5);
 
 
 		m_ParticleSystem.Emit(m_ParticleProps);
+		std::cout << glGetError() << std::endl;
 		m_ParticleSystem.OnUpdate(deltaTime);
 
 		m_ParticleSystem.OnRender();
 
 		static float rotation = 0.0f;
 		rotation += deltaTime * 150.0f;
-		Blu::Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
+		Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
 
-		Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
-
-
+		Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
 
 
-		Blu::Renderer2D::EndScene();
+
+
+		Renderer2D::EndScene();
 		m_FrameBuffer->UnBind();
 
 
 
 	}
 
-	void BluEditorLayer::OnEvent(Blu::Events::Event& event)
+	void BluEditorLayer::OnEvent(Events::Event& event)
 	{
 		m_CameraController.OnEvent(event);
-		if (event.GetType() == Blu::Events::Event::Type::MouseMoved)
+		switch (event.GetType())
 		{
-			Events::MouseMovedEvent& e = static_cast<Events::MouseMovedEvent&>(event);
+			case Events::Event::Type::MouseMoved:
+			{
+				Events::MouseMovedEvent& e = static_cast<Events::MouseMovedEvent&>(event);
+				OnMouseMovedEvent(e);
+				break;
+			}
+		
+			case Events::Event::Type::MouseButtonPressed:
+			{
+				Events::MouseButtonPressedEvent& e = static_cast<Events::MouseButtonPressedEvent&>(event);
+				OnMouseButtonPressed(e);
+				break;
+			}
+			case Events::Event::Type::MouseButtonReleased:
+			{
+				Events::MouseButtonReleasedEvent& e = static_cast<Events::MouseButtonReleasedEvent&>(event);
+				OnMouseButtonReleased(e);
+				break;
+			}
+			case Events::Event::Type::KeyPressed:
+			{
+				Events::KeyPressedEvent& e = static_cast<Events::KeyPressedEvent&>(event);
+				OnKeyPressedEvent(e);
+				break;
+			}
+			case Events::Event::Type::KeyReleased:
+			{
+				Events::KeyReleasedEvent& e = static_cast<Events::KeyReleasedEvent&>(event);
+				OnKeyReleasedEvent(e);
+				break;
+			}
+			case Events::Event::Type::KeyTyped:
+			{
+				Events::KeyTypedEvent& e = static_cast<Events::KeyTypedEvent&>(event);
+				OnKeyTypedEvent(e);
+				break;
+			}
+			case Events::Event::Type::WindowResize:
+			{
+				Events::WindowResizeEvent& e = static_cast<Events::WindowResizeEvent&>(event);
+				OnWindowResizedEvent(e);
+				break;
 
-			OnMouseMovedEvent(e);
+
+			}
 		}
-		if (event.GetType() == Blu::Events::Event::Type::MouseButtonPressed)
-		{
-			
-			Events::MouseButtonPressedEvent& e = static_cast<Events::MouseButtonPressedEvent&>(event);
-			OnMouseButtonPressed(e);
-		}
-		if (event.GetType() == Blu::Events::Event::Type::MouseButtonReleased)
-		{
-			Events::MouseButtonReleasedEvent& e = static_cast<Events::MouseButtonReleasedEvent&>(event);
-			
-			OnMouseButtonReleased(e);
-		}
-		if (event.GetType() == Blu::Events::Event::Type::KeyPressed)
-		{
-			Events::KeyPressedEvent& e = static_cast<Events::KeyPressedEvent&>(event);
-			OnKeyPressedEvent(e);
-		}
-		if (event.GetType() == Blu::Events::Event::Type::KeyPressed)
-		{
-			Events::KeyReleasedEvent& e = static_cast<Events::KeyReleasedEvent&>(event);
-			OnKeyReleasedEvent(e);
-		}
-		if (event.GetType() == Blu::Events::Event::Type::KeyPressed)
-		{
-			Events::KeyTypedEvent& e = static_cast<Events::KeyTypedEvent&>(event);
-			OnKeyTypedEvent(e);
-		}
+	}
+		
+		
+		
+	bool BluEditorLayer::OnWindowResizedEvent(Events::WindowResizeEvent& event)
+	{
+		BLU_PROFILE_FUNCTION();
+		ImGuiIO& io = ImGui::GetIO();
+		// Update the display size
+		io.DisplaySize = ImVec2(event.GetWidth(), event.GetHeight());
+		io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f); // Assuming no scale here
+
+		return false;
 	}
 
 	void BluEditorLayer::OnGuiDraw()
@@ -132,16 +195,19 @@ namespace Blu
 
 		ImGui::Begin("Renderer2D Statistics");
 		
-		if (Blu::GuiManager::BeginMenu("Renderer2D Statistics"))
+		if (GuiManager::BeginMenu("Renderer2D Statistics"))
 		{
-			Blu::GuiManager::Text("Draw Calls: %d", Blu::Renderer2D::GetStats().DrawCalls); 
-			Blu::GuiManager::Text("Vertex Count: %d", Blu::Renderer2D::GetStats().GetTotalVertexCount());
-			Blu::GuiManager::Text("Quad Count: %d", Blu::Renderer2D::GetStats().QuadCount);
-			Blu::GuiManager::EndMenu();
+			GuiManager::Text("Draw Calls: %d", Renderer2D::GetStats().DrawCalls); 
+			GuiManager::Text("Vertex Count: %d", Renderer2D::GetStats().GetTotalVertexCount());
+			GuiManager::Text("Quad Count: %d", Renderer2D::GetStats().QuadCount);
+			GuiManager::EndMenu();
 		}
+		auto& squareColor = m_ActiveScene->Reg().get<SpriteRendererComponent>(m_SquareEntity).Color;
+		ImGui::ColorEdit4("Square Color: ", glm::value_ptr(squareColor));
+
 		ImGui::End();
 		
-		Blu::GuiManager::ClearColor();
+		GuiManager::ClearColor();
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
 		m_ViewPortFocused = ImGui::IsWindowFocused();
@@ -175,6 +241,7 @@ namespace Blu
 
 
 	}
+
 	bool BluEditorLayer::OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event)
 	{
 		ImGuiIO& io = ImGui::GetIO();
@@ -205,10 +272,10 @@ namespace Blu
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		io.KeysDown[event.GetKeyCode()] = true;
-		io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
-		io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
-		io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
-		io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+		io.KeyCtrl = io.KeysDown[BLU_KEY_LEFT_CONTROL] || io.KeysDown[BLU_KEY_RIGHT_CONTROL];
+		io.KeyShift = io.KeysDown[BLU_KEY_LEFT_SHIFT] || io.KeysDown[BLU_KEY_RIGHT_SHIFT];
+		io.KeyAlt = io.KeysDown[BLU_KEY_LEFT_ALT] || io.KeysDown[BLU_KEY_RIGHT_ALT];
+		io.KeySuper = io.KeysDown[BLU_KEY_LEFT_SUPER] || io.KeysDown[BLU_KEY_RIGHT_SUPER];
 
 		event.Handled = true;
 		return false;
@@ -233,8 +300,8 @@ namespace Blu
 			io.AddInputCharacter((unsigned short)KeyCode);
 		}
 		event.Handled = true;
-		return false;
 
+		return false;
 	}
 
 	

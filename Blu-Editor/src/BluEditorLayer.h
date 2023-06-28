@@ -21,6 +21,7 @@ namespace Blu
 		bool OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event);
 		bool OnMouseScrolledEvent(Events::MouseScrolledEvent& event);
 		bool OnMouseMovedEvent(Events::MouseMovedEvent& event);
+		bool OnWindowResizedEvent(Events::WindowResizeEvent& event);
 
 	private:
 		Blu::OrthographicCameraController m_CameraController;
@@ -36,7 +37,9 @@ namespace Blu
 		Blu::Shared<Blu::OpenGLShader> m_FlatColorShader, m_TextureShader;
 		Blu::Shared<Blu::FrameBuffer> m_FrameBuffer;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+		entt::entity m_SquareEntity;
 		bool m_ViewPortFocused = false;
+		Blu::Shared<Scene> m_ActiveScene;
 	};
 }
 
