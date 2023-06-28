@@ -63,9 +63,10 @@ namespace Blu
 		io.KeyMap[ImGuiKey_X] = BLU_KEY_X;
 		io.KeyMap[ImGuiKey_Y] = BLU_KEY_Y;
 		io.KeyMap[ImGuiKey_Z] = BLU_KEY_Z;
-		auto square = m_ActiveScene->CreateEntity();
-		m_ActiveScene->Reg().emplace<TransformComponent>(square);
-		m_ActiveScene->Reg().emplace<SpriteRendererComponent>(square, glm::vec4{ 0, 1, 1, 1 });
+		auto square = m_ActiveScene->CreateEntity("Square");
+		square.HasComponent<TransformComponent>();
+		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0, 1, 1, 1 });
+	
 		m_SquareEntity = square;
 	}
 
@@ -202,8 +203,15 @@ namespace Blu
 			GuiManager::Text("Quad Count: %d", Renderer2D::GetStats().QuadCount);
 			GuiManager::EndMenu();
 		}
-		auto& squareColor = m_ActiveScene->Reg().get<SpriteRendererComponent>(m_SquareEntity).Color;
-		ImGui::ColorEdit4("Square Color: ", glm::value_ptr(squareColor));
+		if (m_SquareEntity)
+		{
+			ImGui::Separator();
+			auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
+			ImGui::Text("%s", tag.c_str());
+			auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
+			ImGui::ColorEdit4("Square Color: ", glm::value_ptr(squareColor));
+		}
+		
 
 		ImGui::End();
 		

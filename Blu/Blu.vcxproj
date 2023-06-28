@@ -617,6 +617,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h" />
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
     <ClInclude Include="engine\src\Blu\Scene\Component.h" />
+    <ClInclude Include="engine\src\Blu\Scene\Entity.h" />
     <ClInclude Include="engine\src\Blu\Scene\Scene.h" />
     <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
@@ -658,6 +659,7 @@
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\Entity.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Scene.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
