@@ -15,6 +15,7 @@
 #include "Blu/Events/EventHandler.h"
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Component.h"
+#include "Blu/Scene/Entity.h"
 
 
 // --------- Rendering --------

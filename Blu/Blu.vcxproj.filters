@@ -1486,6 +1486,7 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Scene\Component.h" />
+    <ClInclude Include="engine\src\Blu\Scene\Entity.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1603,5 +1604,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\Entity.cpp" />
   </ItemGroup>
 </Project>
