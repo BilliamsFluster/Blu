@@ -1,6 +1,7 @@
 #include "Blupch.h"
 #include "Scene.h"
 #include "Blu/Rendering/Renderer2D.h"
+#include "Blu/Scene/ScriptableEntity.h"
 #include "Entity.h"
 
 namespace Blu
@@ -25,6 +26,19 @@ namespace Blu
 	}
 	void Scene::OnUpdate(Timestep deltaTime)
 	{
+		{
+			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+				{
+					
+					if (!nsc.Instance)
+					{
+						nsc.Instance = nsc.InstantiateScript();
+						nsc.Instance->m_Entity = Entity{ entity, this };
+						nsc.Instance->OnCreate();
+					}
+					nsc.Instance->OnUpdate(deltaTime);
+				});
+		}
 		Camera* mainCamera = nullptr;
 		glm::mat4* cameraTransform = nullptr;
 		auto view = m_Registry.view<CameraComponent, TransformComponent>();

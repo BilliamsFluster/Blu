@@ -144,6 +144,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="engine\src\Blu\Scene\CameraController.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\common.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\detail\_features.hpp" />
@@ -622,8 +623,10 @@
     <ClInclude Include="engine\src\Blu\Scene\Scene.h" />
     <ClInclude Include="engine\src\Blupch.h" />
     <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h" />
+    <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\src\Blu\Scene\CameraController.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
@@ -668,6 +671,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">

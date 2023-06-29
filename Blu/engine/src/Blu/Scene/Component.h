@@ -1,9 +1,12 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "Blu/Scene/SceneCamera.h"
+#include "Blu/Core/Timestep.h"
 
 namespace Blu
 {
+	class ScriptableEntity;
+
 	struct TransformComponent
 	{
 		glm::mat4 Transform{ 1.0f };
@@ -51,5 +54,21 @@ namespace Blu
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 		
+	};
+	struct NativeScriptComponent
+	{
+
+		ScriptableEntity* Instance = nullptr;
+		
+		ScriptableEntity*(*InstantiateScript)();
+		void (*DestroyScript)(NativeScriptComponent*);
+
+		
+		template<typename T>
+		void Bind()
+		{
+			InstantiateScript = []() {return static_cast<ScriptableEntity*>(new T()); };
+			DestroyScript = [](NativeScriptComponent* nsc) {delete nsc->Instance; nsc->Instance = nullptr; };
+		}
 	};
 }

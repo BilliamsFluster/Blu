@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene.h"
 #include "entt.hpp"
+#include "Blu/Core/Log.h"
 
 namespace Blu
 {
@@ -42,4 +43,5 @@ namespace Blu
 		entt::entity m_EntityHandle = entt::null;
 		Scene* m_Scene = nullptr;
 	};
+	
 }
