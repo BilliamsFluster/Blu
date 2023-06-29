@@ -68,7 +68,8 @@ namespace Blu
 		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0, 1, 1, 1 });
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
-		m_CameraEntity.AddComponent<CameraComponent>(glm::ortho(-16.0f, 16.0f, -9.0f, 9.0f, -1.0f, 1.0f)).Primary = true;
+		m_CameraEntity.AddComponent<CameraComponent>();
+		m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
 	
 		m_SquareEntity = square;
 	}
@@ -89,6 +90,7 @@ namespace Blu
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
 		}
+
 		BLU_PROFILE_FUNCTION();
 		{
 
@@ -98,14 +100,12 @@ namespace Blu
 				m_CameraController.OnUpdate(deltaTime);
 			}
 		}
-
+		
 		m_ActiveScene->OnUpdate(deltaTime);
-
 		m_ParticleProps.Position = glm::vec2((m_MousePosX / 100.f) - 8, -m_MousePosY / 100.0f + 5);
 
 
 		m_ParticleSystem.Emit(m_ParticleProps);
-		std::cout << glGetError() << std::endl;
 		m_ParticleSystem.OnUpdate(deltaTime);
 
 		m_ParticleSystem.OnRender();
@@ -115,7 +115,6 @@ namespace Blu
 		Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
 
 		Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
-
 
 
 
@@ -220,18 +219,21 @@ namespace Blu
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
 		m_ViewPortFocused = ImGui::IsWindowFocused();
-	
-		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewPortFocused);
-	
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 		if (m_ViewportSize != *(glm::vec2*)&viewportSize)
 		{
+			m_ViewportSize = { viewportSize.x, viewportSize.y };
 			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_ViewportSize = { viewportSize.x, viewportSize.y };	
-			m_CameraController.ResizeCamera(viewportSize.x, viewportSize.y);
+			m_CameraController.ResizeCamera(m_ViewportSize.x, m_ViewportSize.y);
+			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+			BLU_CORE_ERROR("ViewportSize x: {0}, viewport size y: {1}", m_ViewportSize.x, m_ViewportSize.y);
+
 
 
 		}
+		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewPortFocused);
+	
+		
 		uint32_t textureID = m_FrameBuffer->GetColorAttachment();
 		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::PopStyleVar();

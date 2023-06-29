@@ -27,10 +27,10 @@ namespace Blu
 	{
 		Camera* mainCamera = nullptr;
 		glm::mat4* cameraTransform = nullptr;
-		auto group = m_Registry.view<CameraComponent, TransformComponent>();
-		for (auto& entity : group)
+		auto view = m_Registry.view<CameraComponent, TransformComponent>();
+		for (auto& entity : view)
 		{
-			auto [camera, transform] = group.get<CameraComponent, TransformComponent>(entity);
+			auto [camera, transform] = view.get<CameraComponent, TransformComponent>(entity);
 			if (camera.Primary)
 			{
 				mainCamera = &camera.Camera;
@@ -51,5 +51,21 @@ namespace Blu
 			}
 			Renderer2D::EndScene();
 		}
+	}
+	void Scene::OnViewportResize(float width, float height)
+	{
+		m_ViewportWidth = width;
+		m_ViewportHeight = height;
+
+		auto view = m_Registry.view<CameraComponent>();
+		for (auto entity : view)
+		{
+			auto& cameraComponent = view.get<CameraComponent>(entity);
+			if (!cameraComponent.FixedAspectRatio)
+			{
+				cameraComponent.Camera.SetViewportSize(width, height);
+			}
+		}
+
 	}
 }
