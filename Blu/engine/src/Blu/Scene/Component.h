@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "Blu/Rendering/Camera.h"
 
 namespace Blu
 {
@@ -39,5 +40,16 @@ namespace Blu
 		TagComponent(const std::string& tag)
 			:Tag(tag) {}
 
+	};
+
+	struct CameraComponent
+	{
+		Blu::Camera Camera;
+		bool Primary = false;
+		
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent&) = default;
+		CameraComponent(const glm::mat4& camera)
+			:Camera(camera) {}
 	};
 }

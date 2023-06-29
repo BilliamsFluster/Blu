@@ -2,15 +2,18 @@
 #include "OrthographicCamera.h"
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Core/Core.h"
+#include "Blu/Rendering/Camera.h"
 
 namespace Blu
 {
+	
 	class Renderer2D
 	{
 	public:
 		static void Init();
 		static void Shutdown();
 		static void BeginScene(const OrthographicCamera& camera);
+		static void BeginScene(const Camera& camera, const glm::mat4& transform);
 		static void Flush();
 		static void EndScene();
 
