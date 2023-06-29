@@ -70,6 +70,7 @@ namespace Blu
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<CameraComponent>();
 		m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
+		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 	
 		m_SquareEntity = square;
 	}

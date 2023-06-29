@@ -1489,6 +1489,8 @@
     <ClInclude Include="engine\src\Blu\Scene\Entity.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
     <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h" />
+    <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h" />
+    <ClInclude Include="engine\src\Blu\Scene\CameraController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1609,5 +1611,7 @@
     <ClCompile Include="engine\src\Blu\Scene\Entity.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\CameraController.cpp" />
   </ItemGroup>
 </Project>

@@ -13,9 +13,14 @@
 #include "Blu/Core/Timestep.h"
 #include "Blu/Core/OrthographicCameraController.h"
 #include "Blu/Events/EventHandler.h"
+
+// --------- Scene --------
+
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Entity.h"
+#include "Blu/Scene/ScriptableEntity.h"
+#include "Blu/Scene/CameraController.h"
 
 
 // --------- Rendering --------
