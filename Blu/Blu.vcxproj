@@ -144,6 +144,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\common.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\detail\_features.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\detail\_fixes.hpp" />
@@ -622,6 +623,7 @@
     <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />

@@ -66,6 +66,9 @@ namespace Blu
 		auto square = m_ActiveScene->CreateEntity("Square");
 		square.HasComponent<TransformComponent>();
 		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0, 1, 1, 1 });
+
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
+		m_CameraEntity.AddComponent<CameraComponent>(glm::ortho(-16.0f, 16.0f, -9.0f, 9.0f, -1.0f, 1.0f)).Primary = true;
 	
 		m_SquareEntity = square;
 	}
@@ -96,7 +99,6 @@ namespace Blu
 			}
 		}
 
-		Renderer2D::BeginScene(m_CameraController.GetCamera());
 		m_ActiveScene->OnUpdate(deltaTime);
 
 		m_ParticleProps.Position = glm::vec2((m_MousePosX / 100.f) - 8, -m_MousePosY / 100.0f + 5);
@@ -117,7 +119,6 @@ namespace Blu
 
 
 
-		Renderer2D::EndScene();
 		m_FrameBuffer->UnBind();
 
 

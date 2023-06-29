@@ -120,6 +120,18 @@ namespace Blu
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
 	}
+	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		BLU_PROFILE_FUNCTION();
+
+		glm::mat4 viewProj = camera.GetProjectionMatrix() * glm::inverse(transform);
+		s_RendererData->TextureShader->Bind();
+		s_RendererData->TextureShader->SetUniformMat4("u_ViewProjectionMatrix", viewProj);
+		s_RendererData->QuadIndexCount = 0;
+		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
+		s_RendererData->TextureSlotIndex = 1;
+	}
+
 	void Renderer2D::Flush()
 	{
 		for (uint32_t i = 0; i < s_RendererData->TextureSlotIndex; i++)

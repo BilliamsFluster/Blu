@@ -1487,6 +1487,7 @@
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Scene\Component.h" />
     <ClInclude Include="engine\src\Blu\Scene\Entity.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1605,5 +1606,6 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Entity.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
   </ItemGroup>
 </Project>

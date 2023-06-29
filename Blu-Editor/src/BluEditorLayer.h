@@ -38,6 +38,7 @@ namespace Blu
 		Blu::Shared<Blu::FrameBuffer> m_FrameBuffer;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		Entity m_SquareEntity;
+		Entity m_CameraEntity;
 		bool m_ViewPortFocused = false;
 		Blu::Shared<Scene> m_ActiveScene;
 	};
