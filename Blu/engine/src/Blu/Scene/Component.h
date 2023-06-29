@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "Blu/Rendering/Camera.h"
+#include "Blu/Scene/SceneCamera.h"
 
 namespace Blu
 {
@@ -44,12 +44,12 @@ namespace Blu
 
 	struct CameraComponent
 	{
-		Blu::Camera Camera;
+		Blu::SceneCamera Camera;
 		bool Primary = false;
-		
+		bool FixedAspectRatio = false;
+
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
-		CameraComponent(const glm::mat4& camera)
-			:Camera(camera) {}
+		
 	};
 }
