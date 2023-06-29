@@ -18,5 +18,6 @@ namespace Blu
 		entt::registry m_Registry; // container for all of our entt components
 		float m_ViewportWidth = 0.0f, m_ViewportHeight = 0.0f;
 		friend class Entity;
+		friend class SceneHierarchyPanel;
 	};
 }
