@@ -1,4 +1,6 @@
 #include <Blu.h>
+#include "Panels/SceneHierarchyPanel.h"
+
 
 #pragma once
 
@@ -41,6 +43,10 @@ namespace Blu
 		Entity m_CameraEntity;
 		bool m_ViewPortFocused = false;
 		Blu::Shared<Scene> m_ActiveScene;
+		
+		/*Scene Panels */
+
+		Shared<SceneHierarchyPanel> m_SceneHierarchyPanel;
 	};
 }
 

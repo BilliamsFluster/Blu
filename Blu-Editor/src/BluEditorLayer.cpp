@@ -23,6 +23,7 @@ namespace Blu
 	void BluEditorLayer::OnAttach()
 	{
 		m_ActiveScene = std::make_shared<Scene>();
+		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
 		m_WallpaperTexture = Texture2D::Create("assets/spriteSheets/blockPack_spritesheet@2.png");
 
@@ -73,6 +74,7 @@ namespace Blu
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 	
 		m_SquareEntity = square;
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
 	void BluEditorLayer::OnDetach()
@@ -194,7 +196,7 @@ namespace Blu
 	void BluEditorLayer::OnGuiDraw()
 	{
 		
-
+		m_SceneHierarchyPanel->OnImGuiRender();
 		ImGui::Begin("Renderer2D Statistics");
 		
 		if (GuiManager::BeginMenu("Renderer2D Statistics"))
