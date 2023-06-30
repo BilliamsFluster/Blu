@@ -15,6 +15,7 @@ namespace Blu
 		void OnImGuiRender();
 	private:
 		void DrawEntityNode(Entity entity);
+		void DrawEntityComponents(Entity entity);
 	private:
 		Shared<Scene> m_Context;
 		Entity m_SelectedEntity;
