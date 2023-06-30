@@ -126,7 +126,7 @@ namespace Blu
 		m_ParticleSystem.OnUpdate(deltaTime);
 
 		m_ParticleSystem.OnRender();
-
+		
 		static float rotation = 0.0f;
 		rotation += deltaTime * 150.0f;
 		Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
