@@ -43,6 +43,7 @@ namespace Blu
 		Entity m_CameraEntity;
 		bool m_ViewPortFocused = false;
 		Blu::Shared<Scene> m_ActiveScene;
+		std::vector<Entity> Entities;
 		
 		/*Scene Panels */
 
