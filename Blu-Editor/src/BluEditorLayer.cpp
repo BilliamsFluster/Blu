@@ -19,7 +19,10 @@ namespace Blu
 	{
 
 	}
-
+	float lerp(float a, float b, float t)
+	{
+		return a + t * (b - a);
+	}
 	void BluEditorLayer::OnAttach()
 	{
 		m_ActiveScene = std::make_shared<Scene>();
@@ -72,7 +75,18 @@ namespace Blu
 		m_CameraEntity.AddComponent<CameraComponent>();
 		m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-	
+		
+		
+
+		for (int i = 0; i <= 10; i++)
+		{
+			std::string entityName = fmt::format("Square {}", i);
+			auto entityID = m_ActiveScene->CreateEntity(entityName);
+			
+			Entities.emplace_back(std::move(entityID));
+			Entities[i].AddComponent<SpriteRendererComponent>(glm::vec4{.1,0,.1,1.0f });
+			
+		}
 		m_SquareEntity = square;
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
@@ -206,14 +220,7 @@ namespace Blu
 			GuiManager::Text("Quad Count: %d", Renderer2D::GetStats().QuadCount);
 			GuiManager::EndMenu();
 		}
-		if (m_SquareEntity)
-		{
-			ImGui::Separator();
-			auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
-			ImGui::Text("%s", tag.c_str());
-			auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
-			ImGui::ColorEdit4("Square Color: ", glm::value_ptr(squareColor));
-		}
+		
 		
 
 		ImGui::End();
