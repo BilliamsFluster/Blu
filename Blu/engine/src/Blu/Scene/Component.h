@@ -7,7 +7,8 @@
 namespace Blu
 {
 	class ScriptableEntity;
-
+	class Entity;
+	
 	struct TransformComponent
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
@@ -31,7 +32,7 @@ namespace Blu
 		
 	};
 
-	struct SpriteRendererComponent
+	struct SpriteRendererComponent 
 	{
 		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -42,12 +43,12 @@ namespace Blu
 		
 	};
 
-	struct MeshComponent
+	struct MeshComponent 
 	{
 
 	};
 
-	struct TagComponent
+	struct TagComponent 
 	{
 		std::string Tag;
 		TagComponent() = default;
@@ -57,7 +58,7 @@ namespace Blu
 
 	};
 
-	struct CameraComponent
+	struct CameraComponent 
 	{
 		Blu::SceneCamera Camera;
 		bool Primary = false;
@@ -67,7 +68,7 @@ namespace Blu
 		CameraComponent(const CameraComponent&) = default;
 		
 	};
-	struct NativeScriptComponent
+	struct NativeScriptComponent 
 	{
 
 		ScriptableEntity* Instance = nullptr;

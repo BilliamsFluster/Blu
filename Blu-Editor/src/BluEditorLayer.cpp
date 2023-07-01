@@ -67,9 +67,7 @@ namespace Blu
 		io.KeyMap[ImGuiKey_X] = BLU_KEY_X;
 		io.KeyMap[ImGuiKey_Y] = BLU_KEY_Y;
 		io.KeyMap[ImGuiKey_Z] = BLU_KEY_Z;
-		auto square = m_ActiveScene->CreateEntity("Square");
-		square.HasComponent<TransformComponent>();
-		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0, 1, 1, 1 });
+		
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<CameraComponent>();
@@ -78,16 +76,7 @@ namespace Blu
 		
 		
 
-		for (int i = 0; i <= 10; i++)
-		{
-			std::string entityName = fmt::format("Square {}", i);
-			auto entityID = m_ActiveScene->CreateEntity(entityName);
-			
-			Entities.emplace_back(std::move(entityID));
-			Entities[i].AddComponent<SpriteRendererComponent>(glm::vec4{.1,0,.1,1.0f });
-			
-		}
-		m_SquareEntity = square;
+		
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
