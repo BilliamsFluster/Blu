@@ -33,6 +33,7 @@ namespace Blu
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
 			ImGui::StyleColorsDark();
+			
 
 			ImGuiIO& io = ImGui::GetIO();
 			Application& app = Application::Get();
@@ -50,7 +51,7 @@ namespace Blu
 			static float m_Time = 0.0f;
 			io.DeltaTime = m_Time > 0.0 ? (time - m_Time) : (1.00f / 60.f);
 			m_Time = time;
-
+			io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/opensans/static/OpenSans-Light.ttf", 18.0f);
 			
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
