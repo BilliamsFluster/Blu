@@ -148,6 +148,12 @@ namespace Blu
 				OnMouseButtonReleased(e);
 				break;
 			}
+			case Events::Event::Type::MouseScrolled:
+			{
+				Events::MouseScrolledEvent& e = static_cast<Events::MouseScrolledEvent&>(event);
+				OnMouseScrolledEvent(e);
+				break;
+			}
 			case Events::Event::Type::KeyPressed:
 			{
 				Events::KeyPressedEvent& e = static_cast<Events::KeyPressedEvent&>(event);
@@ -225,7 +231,6 @@ namespace Blu
 
 
 		}
-		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewPortFocused);
 	
 		
 		uint32_t textureID = m_FrameBuffer->GetColorAttachment();
