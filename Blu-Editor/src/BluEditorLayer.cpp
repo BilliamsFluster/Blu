@@ -19,10 +19,7 @@ namespace Blu
 	{
 
 	}
-	float lerp(float a, float b, float t)
-	{
-		return a + t * (b - a);
-	}
+
 	void BluEditorLayer::OnAttach()
 	{
 		m_ActiveScene = std::make_shared<Scene>();
@@ -73,10 +70,7 @@ namespace Blu
 		m_CameraEntity.AddComponent<CameraComponent>();
 		m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-		
-		
 
-		
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
@@ -215,6 +209,7 @@ namespace Blu
 		ImGui::End();
 		
 		GuiManager::ClearColor();
+		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
 		m_ViewPortFocused = ImGui::IsWindowFocused();

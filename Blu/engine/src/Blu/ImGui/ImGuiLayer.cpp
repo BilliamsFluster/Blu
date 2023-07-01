@@ -32,8 +32,9 @@ namespace Blu
 			BLU_PROFILE_FUNCTION();
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
-			ImGui::StyleColorsDark();
-			
+			//ImGui::StyleColorsDark();
+			SetDarkColors();
+
 
 			ImGuiIO& io = ImGui::GetIO();
 			Application& app = Application::Get();
@@ -51,6 +52,8 @@ namespace Blu
 			static float m_Time = 0.0f;
 			io.DeltaTime = m_Time > 0.0 ? (time - m_Time) : (1.00f / 60.f);
 			m_Time = time;
+			io.Fonts->AddFontFromFileTTF("assets/fonts/opensans/static/OpenSans-Bold.ttf", 18.0f);
+
 			io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/opensans/static/OpenSans-Light.ttf", 18.0f);
 			
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -87,8 +90,48 @@ namespace Blu
 			ImGui::ShowDemoWindow(&show);
 		}
 
-		//	}*/
-		//}
+		void ImGuiLayer::SetDarkColors()
+		{
+			auto& colors = ImGui::GetStyle().Colors;
+			colors[ImGuiCol_WindowBg] =				ImVec4{0.05f, 0.055f, 0.05f, 1.0f};
+			
+			/* Header */
+			colors[ImGuiCol_Header] =				ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
+			colors[ImGuiCol_HeaderHovered] =		ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
+			colors[ImGuiCol_HeaderActive] =			ImVec4{0.08f, 0.088f, 0.08f, 1.0f};
+			
+			/* Button */
+			colors[ImGuiCol_Button] =				ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
+			colors[ImGuiCol_ButtonHovered] =		ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
+			colors[ImGuiCol_ButtonActive] =			ImVec4{0.08f, 0.088f, 0.08f, 1.0f};
+			
+			/* Frame */
+			colors[ImGuiCol_FrameBg] =				ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
+			colors[ImGuiCol_FrameBgHovered] =		ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
+			colors[ImGuiCol_FrameBgActive] =		ImVec4{0.08f, 0.088f, 0.08f, 1.0f};
+			
+			/* Tab */
+			colors[ImGuiCol_Tab] =					ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
+			colors[ImGuiCol_TabHovered] =			ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
+			colors[ImGuiCol_TabActive] =			ImVec4{ 0.1f, 0.1f, 0.1f, 1.0f };
+			colors[ImGuiCol_TabUnfocused] =			ImVec4{0.068f, 0.068f, 0.068f, 1.0f};
+			colors[ImGuiCol_TabUnfocusedActive] =	ImVec4{0.078f, 0.078f, 0.078f, 1.0f};
+			
+			/* Title */
+			colors[ImGuiCol_TitleBg] =				ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
+			colors[ImGuiCol_TitleBgActive] =		ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
+			colors[ImGuiCol_TitleBgCollapsed] =		ImVec4{0.06f, 0.066f, 0.06f, 0.8f};
+						
+			/* Text */
+			colors[ImGuiCol_Text] =					ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f }; 
+			colors[ImGuiCol_Border] =				ImVec4{0.14f, 0.16f, 0.15f, 0.88f};
+			colors[ImGuiCol_ScrollbarBg] =			ImVec4{0.02f, 0.02f, 0.02f, 0.8f};
+														  
+		}												  
+
+		
+
+		
 		void ImGuiLayer::Begin()
 		{
 			ImGui_ImplOpenGL3_NewFrame();
@@ -244,6 +287,7 @@ namespace Blu
 		}
 		void ImGuiLayer::DrawDockspace()
 		{
+			
 			static bool dockspaceOpen = true;
 			static bool opt_fullscreen = true;
 			static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -271,6 +315,9 @@ namespace Blu
 			if (opt_fullscreen)
 				ImGui::PopStyleVar(2);
 
+			ImGuiStyle& style = ImGui::GetStyle();
+			float minWinSizeX = style.WindowMinSize.x;
+			style.WindowMinSize.x = 270.0f;
 			ImGuiIO& io = ImGui::GetIO();
 			if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 			{
@@ -278,7 +325,7 @@ namespace Blu
 				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 			}
 
-			// Other ImGui code here...
+			style.WindowMinSize.x = minWinSizeX;
 
 			ImGui::End();
 		}
