@@ -19,6 +19,7 @@ namespace Blu
 	private:
 		Shared<Scene> m_Context;
 		Entity m_SelectedEntity;
+		bool m_EntityHovered = false;
 	};
 
 }
