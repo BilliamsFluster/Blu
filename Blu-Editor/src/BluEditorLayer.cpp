@@ -102,19 +102,19 @@ namespace Blu
 		}
 		
 		m_ActiveScene->OnUpdate(deltaTime);
-		m_ParticleProps.Position = glm::vec2((m_MousePosX / 100.f) - 8, -m_MousePosY / 100.0f + 5);
+		/*m_ParticleProps.Position = glm::vec2((m_MousePosX / 100.f) - 8, -m_MousePosY / 100.0f + 5);
 
 
 		m_ParticleSystem.Emit(m_ParticleProps);
 		m_ParticleSystem.OnUpdate(deltaTime);
 
-		m_ParticleSystem.OnRender();
+		m_ParticleSystem.OnRender();*/
 		
-		static float rotation = 0.0f;
+		/*static float rotation = 0.0f;
 		rotation += deltaTime * 150.0f;
 		Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
 
-		Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
+		Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);*/
 
 
 

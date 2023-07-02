@@ -1,6 +1,7 @@
 #include "Blupch.h"
 #include "OpenGLRendererAPI.h"
 #include <glad/glad.h>
+#include "Blu/Core/Log.h"
 
 
 namespace Blu
@@ -11,8 +12,15 @@ namespace Blu
 	}
 	void OpenGLRendererAPI::DrawIndexed(const Shared<VertexArray>& vertexArray, uint32_t indexCount)
 	{
+		if (indexCount == 0)
+		{
+			// No indices to draw, so return early
+			return;
+		}
+
 		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+		BLU_CORE_ERROR("Drawing Quad");
 	}
 	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 	{
