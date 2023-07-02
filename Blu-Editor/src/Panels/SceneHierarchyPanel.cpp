@@ -232,6 +232,11 @@ namespace Blu
 				m_SelectedEntity.AddComponent<SpriteRendererComponent>();
 				ImGui::CloseCurrentPopup();
 			}
+			if (ImGui::MenuItem("Particle System"))
+			{
+				m_SelectedEntity.AddComponent<ParticleSystemComponent>();
+				ImGui::CloseCurrentPopup();
+			}
 			ImGui::EndPopup();
 		}
 		
@@ -246,6 +251,38 @@ namespace Blu
 				ImGui::Spacing();
 				DrawVec3Control("Scale", component.Scale);
 			});
+
+		DrawComponent<ParticleSystemComponent>("Particle System", entity, [](auto& component)
+			{
+				static const char* particle_systems[] = { "ParticleSystem1", "ParticleSystem2", "ParticleSystem3" }; // Add more as needed
+				static int current_particle_system = 0;
+
+				ImGui::Combo("Particle System", &current_particle_system, particle_systems, IM_ARRAYSIZE(particle_systems));
+
+
+				if (ImGui::CollapsingHeader("Particle Attributes"))
+				{
+					DrawVec3Control("Position", component.ParticleSystemProps.Position);
+					DrawVec3Control("Velocity", component.ParticleSystemProps.Velocity);
+					
+					ImGui::Text("Color Begin");
+					ImGui::ColorEdit4("Color Begin", glm::value_ptr(component.ParticleSystemProps.ColorBegin));
+
+					ImGui::Text("Color End");
+					ImGui::ColorEdit4("Color End", glm::value_ptr(component.ParticleSystemProps.ColorEnd));
+					DrawVec3Control("Rotation", component.ParticleAttributes.Rotation);
+					
+					ImGui::Text("Size Begin");
+					ImGui::SliderFloat("Size Begin", &component.ParticleSystemProps.SizeBegin, 0.0f, 5.0f);
+					ImGui::Text("Size End");
+					ImGui::SliderFloat("Size End", &component.ParticleSystemProps.SizeEnd, 0.0f, 5.0f);
+					ImGui::Text("Size Variation");
+					ImGui::SliderFloat("Size Variation", &component.ParticleSystemProps.SizeVariation, 0.0f, 1.0f);
+					ImGui::Text("Life Time");
+					ImGui::SliderFloat("Life Time", &component.ParticleSystemProps.LifeTime, 0.0f, 10.0f);
+				}
+			});
+
 		
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
 			{

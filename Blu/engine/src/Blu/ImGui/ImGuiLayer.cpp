@@ -96,19 +96,19 @@ namespace Blu
 			colors[ImGuiCol_WindowBg] =				ImVec4{0.05f, 0.055f, 0.05f, 1.0f};
 			
 			/* Header */
-			colors[ImGuiCol_Header] =				ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
-			colors[ImGuiCol_HeaderHovered] =		ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
-			colors[ImGuiCol_HeaderActive] =			ImVec4{0.08f, 0.088f, 0.08f, 1.0f};
+			colors[ImGuiCol_Header] =				ImVec4{ 0.2f, 0.2f, 0.2f, 1.0f };
+			colors[ImGuiCol_HeaderHovered] =		ImVec4{ 0.3f, 0.3f, 0.3f, 1.0f };
+			colors[ImGuiCol_HeaderActive] =			ImVec4{ 0.25f, 0.25f, 0.25f, 1.0f };
 			
 			/* Button */
-			colors[ImGuiCol_Button] =				ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
-			colors[ImGuiCol_ButtonHovered] =		ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
-			colors[ImGuiCol_ButtonActive] =			ImVec4{0.08f, 0.088f, 0.08f, 1.0f};
+			colors[ImGuiCol_Button] =				ImVec4{0.15f, 0.15f, 0.15f, 1.0f};
+			colors[ImGuiCol_ButtonHovered] =		ImVec4{0.25f, 0.25f, 0.25f, 1.0f};
+			colors[ImGuiCol_ButtonActive] =			ImVec4{0.2f, 0.2f, 0.2f, 1.0f};
 			
 			/* Frame */
-			colors[ImGuiCol_FrameBg] =				ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
-			colors[ImGuiCol_FrameBgHovered] =		ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
-			colors[ImGuiCol_FrameBgActive] =		ImVec4{0.08f, 0.088f, 0.08f, 1.0f};
+			colors[ImGuiCol_FrameBg] =				ImVec4{ 0.1f, 0.1f, 0.1f, 1.0f };
+			colors[ImGuiCol_FrameBgHovered] =		ImVec4{ 0.2f, 0.2f, 0.2f, 1.0f };
+			colors[ImGuiCol_FrameBgActive] =		ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
 			
 			/* Tab */
 			colors[ImGuiCol_Tab] =					ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
@@ -118,9 +118,9 @@ namespace Blu
 			colors[ImGuiCol_TabUnfocusedActive] =	ImVec4{0.078f, 0.078f, 0.078f, 1.0f};
 			
 			/* Title */
-			colors[ImGuiCol_TitleBg] =				ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
-			colors[ImGuiCol_TitleBgActive] =		ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
-			colors[ImGuiCol_TitleBgCollapsed] =		ImVec4{0.06f, 0.066f, 0.06f, 0.8f};
+			colors[ImGuiCol_TitleBg] =				ImVec4{ 0.1f, 0.1f, 0.1f, 1.0f };
+			colors[ImGuiCol_TitleBgActive] =		ImVec4{ 0.2f, 0.2f, 0.2f, 1.0f };
+			colors[ImGuiCol_TitleBgCollapsed] =		ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
 						
 			/* Text */
 			colors[ImGuiCol_Text] =					ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f }; 
@@ -189,7 +189,7 @@ namespace Blu
 
 			ImGuiStyle& style = ImGui::GetStyle();
 			float minWinSizeX = style.WindowMinSize.x;
-			style.WindowMinSize.x = 270.0f;
+			style.WindowMinSize.x = 350.0f;
 			ImGuiIO& io = ImGui::GetIO();
 			if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 			{

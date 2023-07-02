@@ -6,20 +6,20 @@ namespace Blu
 {
     struct ParticleProps
     {
-        glm::vec2 Position;
-        glm::vec2 Velocity;
-        glm::vec4 ColorBegin, ColorEnd;
-        float SizeBegin, SizeEnd, SizeVariation;
+        glm::vec3 Position;
+        glm::vec3 Velocity;
+        glm::vec4 ColorBegin = { 1.0f, 0.0f, 0.0f, 1.0f }, ColorEnd = { 1.0f, 0.0f, 1.0f, 1.0f };
+        float SizeBegin = 1, SizeEnd = 0, SizeVariation = 0.5;
         float LifeTime = 1.0f;
     };
 
     // A single particle
     struct Particle
     {
-        glm::vec2 Position;
-        glm::vec2 Velocity;
-        glm::vec4 ColorBegin, ColorEnd;
-        float Rotation = 0.0f;
+        glm::vec3 Position;
+        glm::vec3 Velocity;
+        glm::vec4 ColorBegin = { 1.0f, 1.0f, 1.0f, 1.0f }, ColorEnd = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
         float SizeBegin, SizeEnd, SizeVariation;
         float LifeTime = 1.0f;
         float LifeRemaining = 0.0f;

@@ -27,14 +27,6 @@ namespace Blu
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
 		m_WallpaperTexture = Texture2D::Create("assets/spriteSheets/blockPack_spritesheet@2.png");
 
-		m_ParticleProps.Position = glm::vec2(-0.5f, 1.0f);
-		m_ParticleProps.Velocity = glm::vec2(1.0f, 0.0f);
-		m_ParticleProps.ColorBegin = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
-		m_ParticleProps.ColorEnd = glm::vec4(0.0f, 0.0f, 0.5f, 1.0f);
-		m_ParticleProps.SizeBegin = 1.0f;
-		m_ParticleProps.SizeEnd = 0.0f;
-		m_ParticleProps.SizeVariation = 0.5f;
-		m_ParticleProps.LifeTime = 10.0f;
 
 		FrameBufferSpecifications fbSpec;
 		fbSpec.Width = 1280;

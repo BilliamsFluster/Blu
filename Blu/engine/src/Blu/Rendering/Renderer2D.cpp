@@ -130,7 +130,6 @@ namespace Blu
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
-		BLU_CORE_INFO("QUad vertexBaseBuffer is {0}", s_RendererData->QuadVertexBufferBase->Color.x);
 	}
 
 	void Renderer2D::Flush()
