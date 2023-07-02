@@ -63,17 +63,30 @@ namespace Blu
 		}
 		if (mainCamera)
 		{
-			Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), cameraTransform);
+			
 
+			Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), cameraTransform);
+			// Update particle systems
+			auto particleView = m_Registry.view<ParticleSystemComponent>();
+			for (auto& entity : particleView)
+			{
+				auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+				particleSystem.Update(deltaTime);
+
+
+			}
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto& entity : group)
 			{
 				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
-				
 			}
+
+			
+
 			Renderer2D::EndScene();
 		}
+
 	}
 	void Scene::OnViewportResize(float width, float height)
 	{

@@ -3,6 +3,8 @@
 #include "Blu/Scene/SceneCamera.h"
 #include "Blu/Core/Timestep.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "Blu/Rendering/ParticleSystem.h"
+
 
 namespace Blu
 {
@@ -30,6 +32,24 @@ namespace Blu
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
 		
+	};
+
+	struct ParticleSystemComponent
+	{
+		Particle ParticleAttributes;
+		Entity* AttachedEntity = nullptr;
+		ParticleProps ParticleSystemProps;
+		ParticleSystem PSystem;
+		ParticleSystemComponent() = default;
+		ParticleSystemComponent(const ParticleSystemComponent&) = default;
+		ParticleSystemComponent(const glm::mat4& attachTransform) {}
+		void Update(float deltaTime)
+		{
+			PSystem.Emit(ParticleSystemProps);
+			PSystem.OnUpdate(deltaTime);
+			PSystem.OnRender();
+		}
+			
 	};
 
 	struct SpriteRendererComponent 

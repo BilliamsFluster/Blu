@@ -15,6 +15,7 @@ namespace Blu
 		void OnDestroy();
 
 		void OnUpdate(Timestep deltaTime);
+		void ReceiveMouseScrolled(float xOffset, float yOffset);
 		
 	};
 

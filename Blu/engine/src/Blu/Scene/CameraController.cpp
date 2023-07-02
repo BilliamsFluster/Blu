@@ -42,4 +42,12 @@ namespace Blu
 
 		}
 	}
+	void CameraController::ReceiveMouseScrolled(float xOffset, float yOffset)
+	{
+		auto& transform = GetComponent<TransformComponent>();
+		if (Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_RIGHT))
+		{
+			transform.Translation.z += xOffset;
+		}
+	}
 }

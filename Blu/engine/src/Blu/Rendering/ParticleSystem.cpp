@@ -40,7 +40,7 @@ namespace Blu
             float life = particle.LifeRemaining / particle.LifeTime;
             glm::vec4 color = glm::mix(particle.ColorEnd, particle.ColorBegin, life);
             float size = glm::mix(particle.SizeEnd, particle.SizeBegin, life);
-            Blu::Renderer2D::DrawRotatedQuad(glm::vec3({ particle.Position, 0.1f }), { size, size }, glm::radians(particle.Rotation), color);
+            Blu::Renderer2D::DrawRotatedQuad(particle.Position, { size, size }, glm::radians(particle.Rotation.z), color);
 
         }
     }
@@ -48,6 +48,7 @@ namespace Blu
     void ParticleSystem::Emit(const ParticleProps& particleProps)
     {
         Particle& particle = m_ParticlePool[m_PoolIndex];
+
         particle.Active = true;
         particle.Position = particleProps.Position;
         particle.Velocity = particleProps.Velocity;
