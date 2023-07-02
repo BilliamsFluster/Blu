@@ -40,7 +40,11 @@ namespace Blu
 						nsc.Instance->m_Entity = Entity{ entity, this };
 						nsc.Instance->OnCreate();
 					}
-					nsc.Instance->OnUpdate(deltaTime);
+					if (nsc.Instance)
+					{
+						nsc.Instance->OnUpdate(deltaTime);	
+
+					}
 				});
 		}
 		Camera* mainCamera = nullptr;
@@ -66,6 +70,7 @@ namespace Blu
 			{
 				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+				
 			}
 			Renderer2D::EndScene();
 		}

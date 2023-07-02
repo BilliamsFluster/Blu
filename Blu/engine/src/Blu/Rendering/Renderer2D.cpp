@@ -42,12 +42,12 @@ namespace Blu
 		
 	};
 
-	static Renderer2DStorage* s_RendererData;
+	Unique<Renderer2DStorage> s_RendererData;
 	void Renderer2D::Init()
 	{
 		BLU_PROFILE_FUNCTION();
-
-		s_RendererData = new Renderer2DStorage();
+		s_RendererData = std::make_unique<Renderer2DStorage>();
+		
 
 		s_RendererData->QuadVertexArray = Blu::VertexArray::Create();
 		s_RendererData->QuadVertexBuffer = Blu::VertexBuffer::Create(s_RendererData->MaxVertices * sizeof(QuadVertex));
@@ -86,7 +86,7 @@ namespace Blu
 
 		delete[] quadIndices;
 		
-		int32_t samplers[s_RendererData->MaxTextureSlots];
+		std::vector<int32_t> samplers(s_RendererData->MaxTextureSlots);
 		for (uint32_t i = 0; i < s_RendererData->MaxTextureSlots; i++)
 		{
 			samplers[i] = i;
@@ -94,7 +94,7 @@ namespace Blu
 		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
 		s_RendererData->TextureShader = Blu::Renderer::GetShaderLibrary()->Get("Texture");
 		s_RendererData->TextureShader->Bind();
-		s_RendererData->TextureShader->SetUniformIntArray("u_Textures", samplers, s_RendererData->MaxTextureSlots);
+		s_RendererData->TextureShader->SetUniformIntArray("u_Textures", samplers.data(), s_RendererData->MaxTextureSlots);
 		s_RendererData->WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_RendererData->WhiteTexture->SetData(&whiteTextureData, sizeof(whiteTextureData));
@@ -109,7 +109,7 @@ namespace Blu
 	}
 	void Renderer2D::Shutdown()
 	{
-		delete s_RendererData;
+		//delete s_RendererData;
 	}
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
@@ -130,6 +130,7 @@ namespace Blu
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
+		BLU_CORE_INFO("QUad vertexBaseBuffer is {0}", s_RendererData->QuadVertexBufferBase->Color.x);
 	}
 
 	void Renderer2D::Flush()
@@ -154,6 +155,7 @@ namespace Blu
 		uint32_t dataSize = (uint8_t*)s_RendererData->QuadVertexBufferPtr - (uint8_t*)s_RendererData->QuadVertexBufferBase;
 		s_RendererData->QuadVertexBuffer->SetData(s_RendererData->QuadVertexBufferBase, dataSize);
 		Flush();
+
 	}
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
 	{
@@ -163,7 +165,7 @@ namespace Blu
 		}
 		float textureIndex = 0.0f;
 		float tilingFactor = 1.0f;
-
+		
 		std::array<glm::vec2, 4> texCoords = { { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} } };
 
 		for (int i = 0; i < 4; i++) {
@@ -176,6 +178,7 @@ namespace Blu
 		}
 
 		s_RendererData->QuadIndexCount += 6;
+		s_RendererData->Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)
@@ -216,6 +219,7 @@ namespace Blu
 
 		s_RendererData->QuadIndexCount += 6;
 		s_RendererData->Stats.QuadCount++;
+		
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor)
@@ -233,69 +237,16 @@ namespace Blu
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 		DrawQuad(transform, color);
 		
-		/*std::array<glm::vec2, 4> texCoords = { { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} } };
-		
-		for (int i = 0; i < 4; i++) {
-			s_RendererData->QuadVertexBufferPtr->Position = transform * s_RendererData->QuadVertexPositions[i];
-			s_RendererData->QuadVertexBufferPtr->Color = color;
-			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
-			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_RendererData->QuadVertexBufferPtr++;
-		}
-
-		s_RendererData->QuadIndexCount += 6;
-
-		
-		*/
 		
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)
 	{
-		
-		
-		
+
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 		DrawQuad(transform, size, texture, tilingFactor);
-		/*constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
-		{
-			FlushAndReset();
-		}
-		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < s_RendererData->TextureSlotIndex; i++)
-		{
-			if (*s_RendererData->TextureSlots[i].get() == *texture.get())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-		if (textureIndex == 0.0f)
-		{
-			textureIndex = (float)s_RendererData->TextureSlotIndex;
-			s_RendererData->TextureSlots[s_RendererData->TextureSlotIndex] = texture;
-			s_RendererData->TextureSlotIndex++;
-		}
 		
-		
-		std::array<glm::vec2, 4> texCoords = { { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} } };
-		
-		BLU_PROFILE_FUNCTION();
-		for (int i = 0; i < 4; i++) {
-			s_RendererData->QuadVertexBufferPtr->Position = transform * s_RendererData->QuadVertexPositions[i];
-			s_RendererData->QuadVertexBufferPtr->Color = color;
-			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
-			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_RendererData->QuadVertexBufferPtr++;
-		}
-
-		s_RendererData->QuadIndexCount += 6;
-		s_RendererData->Stats.QuadCount++;*/
-
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor)

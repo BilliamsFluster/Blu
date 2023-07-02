@@ -47,14 +47,13 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	BLU_PROFILE_FUNCTION();
 	{
 
-		BLU_PROFILE_SCOPE("Azure2D::OnUpdate: ")
-		m_CameraController.OnUpdate(deltaTime);
+		
 	}
 	
 	Blu::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 	Blu::RenderCommand::Clear();
 	
-	Blu::Renderer2D::BeginScene(m_CameraController.GetCamera()); 
+	//Blu::Renderer2D::BeginScene(m_CameraController.GetCamera()); 
 	
 	m_ParticleProps.Position = glm::vec2( (m_MousePosX/ 100.f) -8 , -m_MousePosY /100.0f + 5);
 
@@ -73,7 +72,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 
 	
 
-	Blu::Renderer2D::EndScene();
+	//Blu::Renderer2D::EndScene();
 	m_FrameBuffer->UnBind();
 
 	 
