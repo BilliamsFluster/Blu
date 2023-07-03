@@ -25,6 +25,10 @@ namespace Blu
 		bool OnMouseMovedEvent(Events::MouseMovedEvent& event);
 		bool OnWindowResizedEvent(Events::WindowResizeEvent& event);
 
+		void NewScene();
+		void OpenScene();
+		void SaveSceneAs();
+
 	private:
 		Blu::OrthographicCameraController m_CameraController;
 

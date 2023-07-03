@@ -13,6 +13,7 @@ namespace Blu
 	void SceneHierarchyPanel::SetContext(const Shared<Scene>& scene)
 	{
 		m_Context = scene;
+		m_SelectedEntity = {};
 	}
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
