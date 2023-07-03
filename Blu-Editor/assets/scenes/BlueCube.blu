@@ -2,6 +2,15 @@ Scene: Name
 Entities:
   - Entity: 1234567890
     TagComponent:
+      Tag: BlueCube
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [0, 0.501930714, 1, 1]
+  - Entity: 1234567890
+    TagComponent:
       Tag: Camera
     CameraComponent:
       Camera:

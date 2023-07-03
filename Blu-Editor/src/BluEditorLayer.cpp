@@ -8,6 +8,7 @@
 #include "GLFW/glfw3.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "Blu/Scene/SceneSerializer.h"
+#include "Blu/Utils/PlatformUtils.h"
 
 
 
@@ -59,13 +60,12 @@ namespace Blu
 		io.KeyMap[ImGuiKey_Z] = BLU_KEY_Z;
 		
 
-		/*m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<CameraComponent>();
 		m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
-		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();*/
+		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 
-		SceneSerializer serializer(m_ActiveScene);
-		serializer.Deserialize("assets/scenes/Example.Blu");
+		
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
@@ -176,12 +176,67 @@ namespace Blu
 		return false;
 	}
 
+	void BluEditorLayer::NewScene()
+	{
+		m_ActiveScene = std::make_shared<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+	}
+
+	void BluEditorLayer::OpenScene()
+	{
+		std::string filepath = FileDialogs::OpenFile("Blu Scene (*.blu)\0*.blu\0");
+		if (!filepath.empty())
+		{
+			m_ActiveScene = std::make_shared<Scene>();
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Deserialize(filepath);
+
+		}
+	}
+
+	void BluEditorLayer::SaveSceneAs()
+	{
+		std::string filepath = FileDialogs::SaveFile("Blu Scene (*.blu)\0*.blu\0");
+		if (!filepath.empty())
+		{
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Serialize(filepath);
+		}
+	}
+
 	void BluEditorLayer::OnGuiDraw()
 	{
-		
+		if (ImGui::BeginMainMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("New", "Ctrl+N"))
+				{
+					NewScene();
+				}
+				if (ImGui::MenuItem("Open...", "Ctrl+O"))
+				{
+					OpenScene();
+				}
+				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+				{
+					SaveSceneAs();
+
+				}
+				if (ImGui::MenuItem("Exit")) Application::Get().Close();
+				ImGui::EndMenu();
+
+			}
+			ImGui::EndMainMenuBar();
+		}
 		m_SceneHierarchyPanel->OnImGuiRender();
+
 		ImGui::Begin("Renderer2D Statistics");
-		
+
 		if (GuiManager::BeginMenu("Renderer2D Statistics"))
 		{
 			GuiManager::Text("Draw Calls: %d", Renderer2D::GetStats().DrawCalls); 
@@ -190,8 +245,6 @@ namespace Blu
 			GuiManager::EndMenu();
 		}
 		
-		
-
 		ImGui::End();
 		
 		GuiManager::ClearColor();
@@ -267,6 +320,35 @@ namespace Blu
 		io.KeyAlt = io.KeysDown[BLU_KEY_LEFT_ALT] || io.KeysDown[BLU_KEY_RIGHT_ALT];
 		io.KeySuper = io.KeysDown[BLU_KEY_LEFT_SUPER] || io.KeysDown[BLU_KEY_RIGHT_SUPER];
 
+		bool control = Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL) || Input::IsKeyPressed(BLU_KEY_RIGHT_CONTROL);
+		bool shift = Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT) || Input::IsKeyPressed(BLU_KEY_RIGHT_SHIFT);
+		switch (event.GetKeyCode())
+		{
+		case BLU_KEY_O:
+		{
+			if (control)
+			{
+				OpenScene();
+			}
+			break;
+		}
+		case BLU_KEY_N:
+		{
+			if (control)
+			{
+				NewScene();
+			}
+			break;
+		}
+		case BLU_KEY_S:
+		{
+			if (control && shift)
+			{
+				SaveSceneAs();
+			}
+			break;
+		}
+		}
 		event.Handled = true;
 		return false;
 

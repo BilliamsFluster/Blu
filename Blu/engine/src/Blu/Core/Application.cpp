@@ -61,6 +61,11 @@ namespace Blu
 
 	}
 
+	void Application::Close()
+	{
+		m_Running = false;
+	}
+
 	void Application::Run()
 	{
 		BLU_PROFILE_FUNCTION();

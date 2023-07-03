@@ -27,6 +27,7 @@ namespace Blu
 		void PushLayer(Shared<Layers::Layer> layer);
 		void PushOverlay(Shared<Layers::Layer> overlay);
 		void Run();
+		void Close(); 
 		void OnEvent(Events::Event& event);
 		Shared<Layers::ImGuiLayer> GetImGuiLayer() { return m_ImGuiLayer; }
 		Events::EventDispatcher& GetEventDispatcher() { return m_EventDispatcher; }
