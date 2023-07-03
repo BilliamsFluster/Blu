@@ -20,20 +20,7 @@ void Azure2D::OnAttach()
 	m_Texture = Blu::Texture2D::Create("assets/textures/StickMan.png");
 	m_WallpaperTexture = Blu::Texture2D::Create("assets/spriteSheets/blockPack_spritesheet@2.png");
 	
-	m_ParticleProps.Position = glm::vec2(-0.5f, 1.0f);
-	m_ParticleProps.Velocity = glm::vec2(1.0f, 0.0f);
-	m_ParticleProps.ColorBegin = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); 
-	m_ParticleProps.ColorEnd = glm::vec4(0.0f, 0.0f, 0.5f, 1.0f); 
-	m_ParticleProps.SizeBegin = 1.0f;
-	m_ParticleProps.SizeEnd = 0.0f;
-	m_ParticleProps.SizeVariation = 0.5f;  
-	m_ParticleProps.LifeTime = 10.0f;
-
-	Blu::FrameBufferSpecifications fbSpec;
-	fbSpec.Width = 1280;
-	fbSpec.Height = 720;
-	m_FrameBuffer = Blu::FrameBuffer::Create(fbSpec);
-
+	
 }
 
 void Azure2D::OnDetach()
@@ -55,19 +42,7 @@ void Azure2D::OnUpdate(Blu::Timestep deltaTime)
 	
 	//Blu::Renderer2D::BeginScene(m_CameraController.GetCamera()); 
 	
-	m_ParticleProps.Position = glm::vec2( (m_MousePosX/ 100.f) -8 , -m_MousePosY /100.0f + 5);
 
-
-	m_ParticleSystem.Emit(m_ParticleProps);
-	m_ParticleSystem.OnUpdate(deltaTime);
-
-	m_ParticleSystem.OnRender();
-	
-	static float rotation = 0.0f;
-	rotation += deltaTime * 150.0f;
-	Blu::Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
-
-	Blu::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
 
 
 	

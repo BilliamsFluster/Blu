@@ -10,3 +10,6 @@
 [submodule "Blu/engine/ExternalDependencies/imgui"]
 	path = Blu/engine/ExternalDependencies/imgui
 	url = https://github.com/BilliamsFluster/imgui
+[submodule "Blu/engine/ExternalDependencies/yaml"]
+	path = Blu/engine/ExternalDependencies/yaml
+	url = https://github.com/BilliamsFluster/yaml-cpp

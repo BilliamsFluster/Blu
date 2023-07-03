@@ -25,7 +25,6 @@ namespace Blu
 			
 		});
 		
-		BLU_CORE_INFO("{}", m_EntityHovered);
 
 		if (!m_EntityHovered)
 		{
