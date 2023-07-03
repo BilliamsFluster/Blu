@@ -1446,6 +1446,9 @@
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Camera.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
@@ -1479,18 +1482,30 @@
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\CameraController.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\Component.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\Entity.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Scene\Scene.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h">
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Scene\Component.h" />
-    <ClInclude Include="engine\src\Blu\Scene\Entity.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
-    <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h" />
-    <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h" />
-    <ClInclude Include="engine\src\Blu\Scene\CameraController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
@@ -1571,6 +1586,9 @@
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
@@ -1601,17 +1619,29 @@
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scene\CameraController.cpp">
+      <Filter>src\Blu\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scene\Component.cpp">
+      <Filter>src\Blu\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scene\Entity.cpp">
+      <Filter>src\Blu\Scene</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Scene\Scene.cpp">
+      <Filter>src\Blu\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp">
+      <Filter>src\Blu\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scene\SceneSerializer.cpp">
+      <Filter>src\Blu\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp">
       <Filter>src\Blu\Scene</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
-    <ClCompile Include="engine\src\Blu\Scene\Entity.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
-    <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp" />
-    <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp" />
-    <ClCompile Include="engine\src\Blu\Scene\CameraController.cpp" />
   </ItemGroup>
 </Project>

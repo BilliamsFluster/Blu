@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -99,7 +99,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -124,7 +124,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -144,8 +144,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="engine\src\Blu\Scene\CameraController.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\common.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\detail\_features.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\detail\_fixes.hpp" />
@@ -607,6 +605,7 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h" />
@@ -618,16 +617,16 @@
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h" />
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
+    <ClInclude Include="engine\src\Blu\Scene\CameraController.h" />
     <ClInclude Include="engine\src\Blu\Scene\Component.h" />
     <ClInclude Include="engine\src\Blu\Scene\Entity.h" />
     <ClInclude Include="engine\src\Blu\Scene\Scene.h" />
-    <ClInclude Include="engine\src\Blupch.h" />
     <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h" />
+    <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h" />
     <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h" />
+    <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\src\Blu\Scene\CameraController.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
@@ -654,6 +653,7 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
@@ -664,14 +664,16 @@
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\CameraController.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Entity.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Scene.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\SceneSerializer.cpp" />
+    <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp" />
-    <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">
@@ -682,6 +684,9 @@
     </ProjectReference>
     <ProjectReference Include="engine\ExternalDependencies\imgui\ImGui.vcxproj">
       <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
+    </ProjectReference>
+    <ProjectReference Include="engine\ExternalDependencies\yaml\yaml.vcxproj">
+      <Project>{7814A17C-644B-A20D-0D38-8810F94D1E0F}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Glad", "Blu\engine\External
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImGui", "Blu\engine\ExternalDependencies\imgui\ImGui.vcxproj", "{C0FF640D-2C14-8DBE-F595-301E616989EF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yaml", "Blu\engine\ExternalDependencies\yaml\yaml.vcxproj", "{7814A17C-644B-A20D-0D38-8810F94D1E0F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -56,6 +58,12 @@ Global
 		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Dist|x64.Build.0 = Dist|x64
 		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Release|x64.ActiveCfg = Release|x64
 		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Release|x64.Build.0 = Release|x64
+		{7814A17C-644B-A20D-0D38-8810F94D1E0F}.Debug|x64.ActiveCfg = Debug|x64
+		{7814A17C-644B-A20D-0D38-8810F94D1E0F}.Debug|x64.Build.0 = Debug|x64
+		{7814A17C-644B-A20D-0D38-8810F94D1E0F}.Dist|x64.ActiveCfg = Dist|x64
+		{7814A17C-644B-A20D-0D38-8810F94D1E0F}.Dist|x64.Build.0 = Dist|x64
+		{7814A17C-644B-A20D-0D38-8810F94D1E0F}.Release|x64.ActiveCfg = Release|x64
+		{7814A17C-644B-A20D-0D38-8810F94D1E0F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

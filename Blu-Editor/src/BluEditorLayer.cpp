@@ -7,6 +7,7 @@
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "Blu/Scene/SceneSerializer.h"
 
 
 
@@ -58,11 +59,13 @@ namespace Blu
 		io.KeyMap[ImGuiKey_Z] = BLU_KEY_Z;
 		
 
-		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
+		/*m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<CameraComponent>();
 		m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
-		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();*/
 
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Deserialize("assets/scenes/Example.Blu");
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
@@ -89,26 +92,11 @@ namespace Blu
 			BLU_PROFILE_SCOPE("Azure2D::OnUpdate: ");
 			if (m_ViewPortFocused)
 			{
-				m_CameraController.OnUpdate(deltaTime);
+				//m_CameraController.OnUpdate(deltaTime);
 			}
 		}
 		
 		m_ActiveScene->OnUpdate(deltaTime);
-		/*m_ParticleProps.Position = glm::vec2((m_MousePosX / 100.f) - 8, -m_MousePosY / 100.0f + 5);
-
-
-		m_ParticleSystem.Emit(m_ParticleProps);
-		m_ParticleSystem.OnUpdate(deltaTime);
-
-		m_ParticleSystem.OnRender();*/
-		
-		/*static float rotation = 0.0f;
-		rotation += deltaTime * 150.0f;
-		Renderer2D::DrawRotatedQuad({ -1, 0 }, { 1, 1 }, glm::radians(rotation), { 1.0f ,1.0f ,0.0f ,1.0f });
-
-		Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);*/
-
-
 
 		m_FrameBuffer->UnBind();
 
