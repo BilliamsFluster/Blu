@@ -9,6 +9,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Utils/PlatformUtils.h"
+#include "ImGuizmo.h"
+#include "Blu/Math/Math.h"
 
 
 
@@ -260,14 +262,142 @@ namespace Blu
 			m_CameraController.ResizeCamera(m_ViewportSize.x, m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 			BLU_CORE_ERROR("ViewportSize x: {0}, viewport size y: {1}", m_ViewportSize.x, m_ViewportSize.y);
-
-
-
 		}
 	
 		
 		uint32_t textureID = m_FrameBuffer->GetColorAttachment();
 		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		//Guizmos
+		Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
+		if (selectedEntity && m_ImGuizmoType != -1)
+		{
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::SetDrawlist();
+			float windowWidth = (float)ImGui::GetWindowWidth();
+			float windowHeight = (float)ImGui::GetWindowHeight();
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+			// Camera
+			auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+			const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+
+			const glm::mat4& cameraProjection = camera.GetProjectionMatrix();
+			glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+
+			//Entity Transform
+			auto& tc = selectedEntity.GetComponent<TransformComponent>();
+			glm::mat4 transform = tc.GetTransform();
+
+			
+			//snapping 
+			
+			
+			if (enableTranslationSnap && m_ImGuizmoType == ImGuizmo::OPERATION::TRANSLATE)
+			{
+				ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+					(ImGuizmo::OPERATION)m_ImGuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, &translationSnapValue);
+			}
+			else if (enableRotationSnap && m_ImGuizmoType == ImGuizmo::OPERATION::ROTATE)
+			{
+				ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+					(ImGuizmo::OPERATION)m_ImGuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, &rotationSnapValue);
+			}
+			else if (enableScaleSnap && m_ImGuizmoType == ImGuizmo::OPERATION::SCALE)
+			{
+				ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+					(ImGuizmo::OPERATION)m_ImGuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, &scaleSnapValue);
+			}
+			else
+			{
+				ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+					(ImGuizmo::OPERATION)m_ImGuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr);
+			}
+			
+
+			if (ImGuizmo::IsUsing())
+			{
+				glm::vec3 translation, rotation, scale;
+				Math::DecomposeTransform(transform, translation, rotation, scale);
+				
+				glm::vec3 deltaRotation =  rotation - tc.Rotation;
+				tc.Translation = translation;
+				tc.Rotation += deltaRotation;
+				tc.Scale = scale;
+			}
+		}
+		static const char* items[] = { "Translation", "Rotation", "Scale" };
+		static int current_item = 0;
+
+		// Position the 'tab' button at the top right corner of the viewport
+		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 110); // Keep dropdown on the right
+		ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 665);
+		static bool showSnappingDropdown;
+		if (ImGui::Button("Snapping Options"))
+		{
+			showSnappingDropdown = !showSnappingDropdown; // Toggle dropdown visibility when button is pressed
+		}
+
+		if (showSnappingDropdown)
+		{
+			// Show the dropdown below the 'tab' button
+			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 110); // Keep dropdown on the right
+			ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 640);
+
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4{ 0.05f, 0.055f, 0.05f, 1.0f }); // Push a new color for window backgrounds
+			ImGui::BeginChild("dropdown", ImVec2(120, 110), true);
+
+			ImGui::Text("Snapping");
+			ImGui::Separator();
+
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));  // Set padding to zero
+			ImGui::Combo("##Snapping", &current_item, items, IM_ARRAYSIZE(items));
+			ImGui::PopStyleVar();  // Restore previous padding
+
+			switch (current_item)
+			{
+			case 0: // Translation
+				ImGui::Checkbox("Enabled", &enableTranslationSnap);
+				ImGui::SameLine();
+				ImGui::Text("?"); if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enable or disable snapping for Translation");
+				if (enableTranslationSnap)
+				{
+					ImGui::Text(" Value");
+					ImGui::SameLine();
+					ImGui::InputFloat("##Value", &translationSnapValue);
+				}
+				break;
+
+			case 1: // Rotation
+				ImGui::Checkbox("Enabled", &enableRotationSnap);
+				ImGui::SameLine();
+				ImGui::Text("?"); if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enable or disable snapping for Rotation");
+				if (enableRotationSnap)
+				{
+					ImGui::Text(" Value");
+					ImGui::SameLine();
+					ImGui::InputFloat("##Value", &rotationSnapValue);
+				}
+				break;
+
+			case 2: // Scale
+				ImGui::Checkbox("Enabled", &enableScaleSnap);
+				ImGui::SameLine();
+				ImGui::Text("?"); if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enable or disable snapping for Scale");
+				if (enableScaleSnap)
+				{
+					ImGui::Text(" Value");
+					ImGui::SameLine();
+					ImGui::InputFloat("##Value", &scaleSnapValue);
+				}
+				break;
+			}
+
+			ImGui::EndChild();
+			ImGui::PopStyleColor();
+
+		}
+
 		ImGui::PopStyleVar();
 		ImGui::End();
 		
@@ -348,6 +478,19 @@ namespace Blu
 			}
 			break;
 		}
+		case BLU_KEY_Q:
+			m_ImGuizmoType = -1;
+			break;
+		case BLU_KEY_W:
+			m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		case BLU_KEY_E:
+			m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
+			break;
+		case BLU_KEY_R:
+			m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
+			break;
+		
 		}
 		event.Handled = true;
 		return false;

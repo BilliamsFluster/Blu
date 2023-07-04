@@ -11,7 +11,7 @@ namespace Blu
 		SceneHierarchyPanel() = default;
 		SceneHierarchyPanel(const Shared<Scene>& scene);
 		void SetContext(const Shared<Scene>& scene);
-
+		Entity GetSelectedEntity() const { return m_SelectedEntity; }
 		void OnImGuiRender();
 	private:
 		void DrawEntityNode(Entity entity);

@@ -48,6 +48,14 @@ namespace Blu
 		Blu::Shared<Scene> m_ActiveScene;
 		std::vector<Entity> Entities;
 		
+		int m_ImGuizmoType = -1;
+		bool enableTranslationSnap = false;
+		bool enableRotationSnap = false;
+		bool enableScaleSnap = false;
+
+		float translationSnapValue = 0.5f;
+		float rotationSnapValue = 10.0f;
+		float scaleSnapValue = 0.5f;
 		/*Scene Panels */
 
 		Shared<SceneHierarchyPanel> m_SceneHierarchyPanel;
