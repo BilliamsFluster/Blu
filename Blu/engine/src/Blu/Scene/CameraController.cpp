@@ -18,24 +18,24 @@ namespace Blu
 		{
 			if (Blu::Input::IsKeyPressed(BLU_KEY_W))
 			{
-				transform.Translation.y += 5 * deltaTime;
+				transform.Translation.y -= m_CameraSpeed * deltaTime;
 
 			}
 
 			if (Blu::Input::IsKeyPressed(BLU_KEY_S))
 			{
-				transform.Translation.y -= 5 * deltaTime;
+				transform.Translation.y += m_CameraSpeed * deltaTime;
 
 			}
 			if (Blu::Input::IsKeyPressed(BLU_KEY_A))
 			{
-				transform.Translation.x -= 5 * deltaTime;
+				transform.Translation.x += m_CameraSpeed * deltaTime;
 
 			}
 
 			if (Blu::Input::IsKeyPressed(BLU_KEY_D))
 			{
-				transform.Translation.x += 5 * deltaTime;
+				transform.Translation.x -= m_CameraSpeed * deltaTime;
 
 			}
 

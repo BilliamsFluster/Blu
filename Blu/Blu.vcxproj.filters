@@ -4,6 +4,9 @@
     <Filter Include="ExternalDependencies">
       <UniqueIdentifier>{EFA515CE-DB34-9F97-8453-B39270C1AF3D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ExternalDependencies\ImGuizmo">
+      <UniqueIdentifier>{2F356641-9B4D-4D6B-64FA-DC04D0D1E104}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ExternalDependencies\glm">
       <UniqueIdentifier>{BE8F608B-AAB4-AF0B-D3FF-949BBF83AE29}</UniqueIdentifier>
     </Filter>
@@ -61,8 +64,14 @@
     <Filter Include="src\Blu\Scene">
       <UniqueIdentifier>{FC0EC887-68CF-43BE-310A-8D3B9D89889A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Utils">
+      <UniqueIdentifier>{3FA3F587-AB63-71BE-749E-BA3BE01DB69A}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.h">
+      <Filter>ExternalDependencies\ImGuizmo</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ExternalDependencies\glm\glm\common.hpp">
       <Filter>ExternalDependencies\glm\glm</Filter>
     </ClInclude>
@@ -1503,12 +1512,18 @@
     <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h">
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h">
+      <Filter>src\Blu\Utils</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h" />
+    <ClInclude Include="engine\src\Blu\Math\Math.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
+      <Filter>ExternalDependencies\ImGuizmo</Filter>
+    </ClCompile>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
       <Filter>ExternalDependencies\stb_image</Filter>
     </ClCompile>
@@ -1581,6 +1596,9 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsPlatformUtils.cpp">
+      <Filter>src\Blu\Platform\Windows</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClCompile>
@@ -1644,6 +1662,6 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsPlatformUtils.cpp" />
+    <ClCompile Include="engine\src\Blu\Math\Math.cpp" />
   </ItemGroup>
 </Project>

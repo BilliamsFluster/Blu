@@ -249,7 +249,7 @@ namespace Blu
 				DrawVec3Control("Rotation", rotation);
 				component.Rotation = glm::radians(rotation);
 				ImGui::Spacing();
-				DrawVec3Control("Scale", component.Scale);
+				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
 
 		DrawComponent<ParticleSystemComponent>("Particle System", entity, [](auto& component)

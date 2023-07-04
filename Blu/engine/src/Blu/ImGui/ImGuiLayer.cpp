@@ -7,7 +7,7 @@
 #include "Blu/Events/EventDispatcher.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include <imgui.h>
-
+#include "ImGuizmo.h"
 
 
 //Temporary
@@ -137,6 +137,7 @@ namespace Blu
 			ImGui_ImplOpenGL3_NewFrame();
 			//ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+			ImGuizmo::BeginFrame();
 		}
 		void ImGuiLayer::End()
 		{

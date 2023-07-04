@@ -13,3 +13,6 @@
 [submodule "Blu/engine/ExternalDependencies/yaml"]
 	path = Blu/engine/ExternalDependencies/yaml
 	url = https://github.com/BilliamsFluster/yaml-cpp
+[submodule "Blu/engine/ExternalDependencies/ImGuizmo"]
+	path = Blu/engine/ExternalDependencies/ImGuizmo
+	url = https://github.com/BilliamsFluster/ImGuizmo

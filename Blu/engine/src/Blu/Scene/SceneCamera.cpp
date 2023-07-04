@@ -6,6 +6,8 @@ namespace Blu
 {
 	SceneCamera::SceneCamera()
 	{
+		m_ProjectionType = ProjectionType::Perspective;
+
 		RecalculateProjection();
 	}
 	void SceneCamera::SetOrthographic(float size, float nearClip, float farClip)

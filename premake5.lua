@@ -19,6 +19,7 @@ workspace "Blu"
 	IncludeDir["stb_image"] = "Blu/engine/ExternalDependencies/stb_image"
 	IncludeDir["entt"] = "Blu/engine/ExternalDependencies/entt/include"
 	IncludeDir["yaml"] = "Blu/engine/ExternalDependencies/yaml/include"
+	IncludeDir["ImGuizmo"] = "Blu/engine/ExternalDependencies/ImGuizmo"
 
 
 
@@ -57,7 +58,9 @@ project "Blu"
 		"%{prj.name}/engine/ExternalDependencies/glm/**.h",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.hpp",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.inl",
-		"%{prj.name}/engine/ExternalDependencies/stb_image/**.h"
+		"%{prj.name}/engine/ExternalDependencies/stb_image/**.h",
+		"%{prj.name}/engine/ExternalDependencies/ImGuizmo/ImGuizmo.h",
+		"%{prj.name}/engine/ExternalDependencies/ImGuizmo/ImGuizmo.cpp"
 
 
 
@@ -73,7 +76,8 @@ project "Blu"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml}"
+		"%{IncludeDir.yaml}",
+		"%{IncludeDir.ImGuizmo}"
 
 
 
@@ -91,6 +95,9 @@ project "Blu"
 		"dwmapi"
 		
 	}
+	filter {"files:Blu/engine/ExternalDependencies/ImGuizmo/*.cpp"}
+	flags {"NoPCH"}
+
 	
 	--buildoptions { "/wd4251" } for dll
 
@@ -105,7 +112,8 @@ project "Blu"
 			"BLU_PLATFORM_WINDOWS",
 			"BLU_BUILD_DLL",
 			"GLFW_INCLUDE_NONE",
-			"NOMINMAX"
+			"NOMINMAX",
+			"IMGUI_DEFINE_MATH_OPERATORS"
 		}
 
 		
@@ -223,7 +231,9 @@ project "Blu-Editor"
 		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/include",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml}"
+		"%{IncludeDir.yaml}",
+		"%{IncludeDir.ImGuizmo}"
+
 
 
 
