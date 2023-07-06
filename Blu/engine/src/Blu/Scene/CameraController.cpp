@@ -14,33 +14,32 @@ namespace Blu
 	void CameraController::OnUpdate(Timestep deltaTime)
 	{
 		auto& transform = GetComponent<TransformComponent>();
-		if (Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_RIGHT))
+		
+		if (Blu::Input::IsKeyPressed(BLU_KEY_W))
 		{
-			if (Blu::Input::IsKeyPressed(BLU_KEY_W))
-			{
-				transform.Translation.y -= m_CameraSpeed * deltaTime;
-
-			}
-
-			if (Blu::Input::IsKeyPressed(BLU_KEY_S))
-			{
-				transform.Translation.y += m_CameraSpeed * deltaTime;
-
-			}
-			if (Blu::Input::IsKeyPressed(BLU_KEY_A))
-			{
-				transform.Translation.x += m_CameraSpeed * deltaTime;
-
-			}
-
-			if (Blu::Input::IsKeyPressed(BLU_KEY_D))
-			{
-				transform.Translation.x -= m_CameraSpeed * deltaTime;
-
-			}
-
+			transform.Translation.y -= m_CameraSpeed * deltaTime;
 
 		}
+
+		if (Blu::Input::IsKeyPressed(BLU_KEY_S))
+		{
+			transform.Translation.y += m_CameraSpeed * deltaTime;
+
+		}
+		if (Blu::Input::IsKeyPressed(BLU_KEY_A))
+		{
+			transform.Translation.x += m_CameraSpeed * deltaTime;
+
+		}
+
+		if (Blu::Input::IsKeyPressed(BLU_KEY_D))
+		{
+			transform.Translation.x -= m_CameraSpeed * deltaTime;
+
+		}
+
+
+		
 	}
 	void CameraController::ReceiveMouseScrolled(float xOffset, float yOffset)
 	{

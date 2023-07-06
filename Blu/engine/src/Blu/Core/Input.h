@@ -14,7 +14,10 @@ namespace Blu
 
 		 static float GetMouseX();
 		 static float GetMouseY();
+		 static int GetKeyCode() { return m_KeyCode; }
+		 static int GetMouseCode() { return m_MouseCode; }
 	private:
+		static int m_KeyCode, m_MouseCode;
 	};
 	
 }

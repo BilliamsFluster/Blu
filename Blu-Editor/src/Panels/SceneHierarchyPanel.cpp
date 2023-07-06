@@ -32,9 +32,24 @@ namespace Blu
 
 			if (ImGui::BeginPopupContextWindow())
 			{
-				if (ImGui::MenuItem("Create Empty Entity"))
+				if (ImGui::BeginMenu("Create Entity"))
 				{
-					m_Context->CreateEntity("Empty Entity");
+					if (ImGui::MenuItem("Camera Entity"))
+					{
+						auto Entity = m_Context->CreateEntity("Camera");
+						Entity.AddComponent<CameraComponent>();
+					}
+					if (ImGui::MenuItem("Sprite Entity"))
+					{
+						auto Entity = m_Context->CreateEntity("Sprite");
+						Entity.AddComponent<SpriteRendererComponent>();
+					}
+					ImGui::Separator();
+					if (ImGui::MenuItem("Empty Entity"))
+					{
+						m_Context->CreateEntity("Empty");
+					}
+					ImGui::EndMenu();
 				}
 				ImGui::EndPopup();
 			}

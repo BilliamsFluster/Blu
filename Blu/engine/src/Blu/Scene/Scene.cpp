@@ -3,6 +3,7 @@
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Scene/ScriptableEntity.h"
 #include "Entity.h"
+#include "Blu/Rendering/EditorCamera.h"
 
 namespace Blu
 {
@@ -41,7 +42,28 @@ namespace Blu
 	{
 		m_Registry.destroy(entity);
 	}
-	void Scene::OnUpdate(Timestep deltaTime)
+	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
+	{
+		Renderer2D::BeginScene(camera);
+		auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+		for (auto& entity : group)
+		{
+			auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+		}
+
+		auto particleView = m_Registry.view<ParticleSystemComponent>();
+		for (auto& entity : particleView)
+		{
+			auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+			particleSystem.Update(deltaTime);
+
+
+		}
+		Renderer2D::EndScene();
+
+	}
+	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)

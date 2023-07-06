@@ -144,6 +144,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
     <ClInclude Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\common.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\detail\_features.hpp" />
@@ -630,6 +631,7 @@
     <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

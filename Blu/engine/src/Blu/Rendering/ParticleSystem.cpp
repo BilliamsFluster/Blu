@@ -1,6 +1,8 @@
 #include "Blupch.h"
 #include "ParticleSystem.h"
 #include "Blu/Rendering/Renderer2D.h"
+#include <glm/gtc/constants.hpp>
+
 
 
 
@@ -40,8 +42,41 @@ namespace Blu
             float life = particle.LifeRemaining / particle.LifeTime;
             glm::vec4 color = glm::mix(particle.ColorEnd, particle.ColorBegin, life);
             float size = glm::mix(particle.SizeEnd, particle.SizeBegin, life);
-            Blu::Renderer2D::DrawRotatedQuad(particle.Position, { size, size }, glm::radians(particle.Rotation.z), color);
+            Blu::Renderer2D::DrawRotatedQuad(particle.Position, { size, size }, glm::radians(particle.Rotation).z, color);
 
+        }
+    }
+    void ParticleSystem::EmitExplosion(const ParticleProps& particleProps, uint32_t count, float speed)
+    {
+        for (uint32_t i = 0; i < count; i++)
+        {
+            ParticleProps p = particleProps;  // Copy the properties
+
+            // Generate a random direction (normalized)
+            float direction = ((float)rand() / (RAND_MAX)) * 2.0f * glm::pi<float>();
+            glm::vec2 directionVector(cos(direction), sin(direction));
+
+            // Set velocity based on direction and speed
+            p.Velocity = glm::vec3{ directionVector, 0.0f} *speed;
+
+            Emit(p);
+        }
+    }
+
+    void ParticleSystem::EmitFountain(const ParticleProps& particleProps, uint32_t count, float speed)
+    {
+        for (uint32_t i = 0; i < count; i++)
+        {
+            ParticleProps p = particleProps;  // Copy the properties
+
+            // Generate a random direction mostly upwards
+            float direction = ((float)rand() / (RAND_MAX)) * glm::pi<float>() - glm::pi<float>() / 2.0f;
+            glm::vec2 directionVector(cos(direction), sin(direction));
+
+            // Set velocity based on direction and speed
+            p.Velocity = glm::vec3{ directionVector, 0.0f} *speed;
+
+            Emit(p);
         }
     }
 
