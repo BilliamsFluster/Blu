@@ -3,6 +3,7 @@
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Core/Core.h"
 #include "Blu/Rendering/Camera.h"
+#include "EditorCamera.h"
 
 namespace Blu
 {
@@ -13,6 +14,7 @@ namespace Blu
 		static void Init();
 		static void Shutdown();
 		static void BeginScene(const OrthographicCamera& camera);
+		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
 		static void Flush();
 		static void EndScene();
@@ -28,6 +30,7 @@ namespace Blu
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor = 1.0f);
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor = 1.0f);
 		
+		static void DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color, const float rotation);
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, const float rotation, const glm::vec4& color, float tilingFactor = 1.0f);
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const float rotation, const glm::vec4& color, float tilingFactor = 1.0f);
 

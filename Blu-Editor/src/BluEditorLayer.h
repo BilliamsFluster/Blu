@@ -1,5 +1,6 @@
 #include <Blu.h>
 #include "Panels/SceneHierarchyPanel.h"
+#include "Blu/Rendering/EditorCamera.h"
 
 
 #pragma once
@@ -24,14 +25,14 @@ namespace Blu
 		bool OnMouseScrolledEvent(Events::MouseScrolledEvent& event);
 		bool OnMouseMovedEvent(Events::MouseMovedEvent& event);
 		bool OnWindowResizedEvent(Events::WindowResizeEvent& event);
-
+		void GizmosTransform(glm::mat4& view, const glm::mat4& projection, glm::mat4& transform);
 		void NewScene();
 		void OpenScene();
 		void SaveSceneAs();
 
 	private:
 		Blu::OrthographicCameraController m_CameraController;
-
+		Blu::EditorCamera m_EditorCamera;
 		Blu::ParticleSystem m_ParticleSystem;
 		Blu::ParticleProps m_ParticleProps;
 		float m_MousePosX, m_MousePosY;

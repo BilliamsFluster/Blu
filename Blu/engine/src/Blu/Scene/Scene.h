@@ -3,6 +3,7 @@
 #include "Component.h"
 #include "Blu/Core/Timestep.h"
 
+
 namespace Blu
 {
 	class Entity;
@@ -14,7 +15,8 @@ namespace Blu
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity GetPrimaryCameraEntity();
 		void DestroyEntity(Entity entity);
-		void OnUpdate(Timestep deltaTime);
+		void OnUpdateEditor(Timestep deltaTime, class EditorCamera& camera);
+		void OnUpdateRuntime(Timestep deltaTime);
 		void OnViewportResize(float width, float height);
 	private:
 		entt::registry m_Registry; // container for all of our entt components

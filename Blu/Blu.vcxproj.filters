@@ -1519,6 +1519,7 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Math\Math.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -1663,5 +1664,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Math\Math.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
   </ItemGroup>
 </Project>

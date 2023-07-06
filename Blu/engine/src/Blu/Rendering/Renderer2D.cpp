@@ -111,6 +111,18 @@ namespace Blu
 	{
 		//delete s_RendererData;
 	}
+	void Renderer2D::BeginScene(const EditorCamera& camera)
+	{
+		BLU_PROFILE_FUNCTION();
+		s_RendererData->TextureShader->Bind();
+		s_RendererData->TextureShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->QuadIndexCount = 0;
+		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
+		s_RendererData->TextureSlotIndex = 1;
+		
+
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		BLU_PROFILE_FUNCTION();
@@ -156,6 +168,30 @@ namespace Blu
 		Flush();
 
 	}
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color, const float rotation)
+	{
+		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
+		{
+			FlushAndReset();
+		}
+		float textureIndex = 0.0f;
+		float tilingFactor = 1.0f;
+
+		std::array<glm::vec2, 4> texCoords = { { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} } };
+		
+		for (int i = 0; i < 4; i++) {
+			s_RendererData->QuadVertexBufferPtr->Position = transform * s_RendererData->QuadVertexPositions[i];
+			s_RendererData->QuadVertexBufferPtr->Color = color;
+			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
+			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_RendererData->QuadVertexBufferPtr++;
+		}
+
+		s_RendererData->QuadIndexCount += 6;
+		s_RendererData->Stats.QuadCount++;
+	}
+
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)

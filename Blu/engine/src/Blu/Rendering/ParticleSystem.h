@@ -36,6 +36,9 @@ namespace Blu
         void OnRender();
 
         void Emit(const ParticleProps& particleProps);
+        void EmitExplosion(const ParticleProps& particleProps, uint32_t count, float speed);
+        void EmitFountain(const ParticleProps& particleProps, uint32_t count, float speed);
+
 
     private:
         std::vector<Particle> m_ParticlePool;
