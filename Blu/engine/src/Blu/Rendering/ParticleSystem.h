@@ -10,6 +10,11 @@ namespace Blu
         glm::vec3 Velocity;
         glm::vec4 ColorBegin = { 1.0f, 0.0f, 0.0f, 1.0f }, ColorEnd = { 1.0f, 0.0f, 1.0f, 1.0f };
         float SizeBegin = 1, SizeEnd = 0, SizeVariation = 0.5;
+        int MaxParticlesPerEmit = 100;
+        int ParticleCount = 100;
+        bool Looping = true;
+        int MaxLoopCount = 100;
+        int LoopCount = 0;
         float LifeTime = 1.0f;
     };
 
@@ -36,8 +41,9 @@ namespace Blu
         void OnRender();
 
         void Emit(const ParticleProps& particleProps);
-        void EmitExplosion(const ParticleProps& particleProps, uint32_t count, float speed);
-        void EmitFountain(const ParticleProps& particleProps, uint32_t count, float speed);
+        void EmitExplosion( ParticleProps& particleProps);
+        void EmitFountain( ParticleProps& particleProps);
+        void EmitRainFall( ParticleProps& particleProps);
 
 
     private:

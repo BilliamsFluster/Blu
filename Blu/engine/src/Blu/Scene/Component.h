@@ -36,6 +36,7 @@ namespace Blu
 
 	struct ParticleSystemComponent
 	{
+		std::function<void()> CurrentParticleSystem; // function will call the correct particle system template
 		Particle ParticleAttributes;
 		Entity* AttachedEntity = nullptr;
 		ParticleProps ParticleSystemProps;
@@ -43,9 +44,18 @@ namespace Blu
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
 		ParticleSystemComponent(const glm::mat4& attachTransform) {}
+		bool operator==(const ParticleSystemComponent& other) const {
+			
+			return ParticleAttributes.ColorBegin == other.ParticleAttributes.ColorBegin;
+		}
 		void Update(float deltaTime)
 		{
-			PSystem.Emit(ParticleSystemProps);
+			if (CurrentParticleSystem)
+			{
+				CurrentParticleSystem();
+			}
+
+
 			PSystem.OnUpdate(deltaTime);
 			PSystem.OnRender();
 		}

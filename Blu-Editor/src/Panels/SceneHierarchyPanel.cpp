@@ -214,7 +214,47 @@ namespace Blu
 		ImGui::PopStyleVar();
 		ImGui::PopID();
 	}
-	
+	static void DrawParticleSystemPanel(ParticleSystemComponent& component)
+	{
+		
+		DrawVec3Control("Position", component.ParticleSystemProps.Position);
+		DrawVec3Control("Velocity", component.ParticleSystemProps.Velocity);
+
+		ImGui::Text("Color Begin");
+		ImGui::ColorEdit4("Color Begin", glm::value_ptr(component.ParticleSystemProps.ColorBegin));
+
+		ImGui::Text("Color End");
+		ImGui::ColorEdit4("Color End", glm::value_ptr(component.ParticleSystemProps.ColorEnd));
+		DrawVec3Control("Rotation", component.ParticleAttributes.Rotation);
+
+		ImGui::Text("Size Begin");
+		ImGui::SliderFloat("Size Begin", &component.ParticleSystemProps.SizeBegin, 0.0f, 5.0f);
+		ImGui::Text("Size End");
+		ImGui::SliderFloat("Size End", &component.ParticleSystemProps.SizeEnd, 0.0f, 5.0f);
+		ImGui::Text("Size Variation");
+		ImGui::SliderFloat("Size Variation", &component.ParticleSystemProps.SizeVariation, 0.0f, 1.0f);
+		ImGui::Text("Life Time");
+		ImGui::SliderFloat("Life Time", &component.ParticleSystemProps.LifeTime, 0.0f, 10.0f);
+		ImGui::Text("Max Particles Per Emit");
+		ImGui::InputInt("Max Particles Per Emit", &component.ParticleSystemProps.MaxParticlesPerEmit);
+
+		ImGui::Text("Particle Count");
+		ImGui::InputInt("Particle Count", &component.ParticleSystemProps.ParticleCount);
+
+		ImGui::Text("Looping");
+		ImGui::Checkbox("Looping", &component.ParticleSystemProps.Looping);
+
+		ImGui::Text("Max Loop Count");
+		ImGui::InputInt("Max Loop Count", &component.ParticleSystemProps.MaxLoopCount);
+
+		ImGui::Text("Start Simulation");
+		//ImGui::Checkbox("Loop Count", &component.ParticleSystemProps.LoopCount);
+			
+
+		
+	}
+	//static std::map<int, ParticleSystemComponent> ParticleSystems;
+	static std::vector<ParticleSystemComponent> ParticleSystems(10);
 	void SceneHierarchyPanel::DrawEntityComponents(Entity entity)
 	{
 		if (entity.HasComponent<TagComponent>())
@@ -266,37 +306,52 @@ namespace Blu
 				ImGui::Spacing();
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
-
-		DrawComponent<ParticleSystemComponent>("Particle System", entity, [](auto& component)
+		
+		DrawComponent<ParticleSystemComponent>("Particle System", entity, [&](auto& component)
 			{
-				static const char* particle_systems[] = { "ParticleSystem1", "ParticleSystem2", "ParticleSystem3" }; // Add more as needed
-				static int current_particle_system = 0;
+				static const char* particleSystems[] = { "Default", "Fountain", "Explosion", "RainFall" }; // Add more as needed
+				static int currentParticleSystem = 0;
+				static int lastParticleSystem = -1;
 
-				ImGui::Combo("Particle System", &current_particle_system, particle_systems, IM_ARRAYSIZE(particle_systems));
-
-
-				if (ImGui::CollapsingHeader("Particle Attributes"))
+				
+				if (ImGui::Combo("Particle System", &currentParticleSystem, particleSystems, IM_ARRAYSIZE(particleSystems)))
 				{
-					DrawVec3Control("Position", component.ParticleSystemProps.Position);
-					DrawVec3Control("Velocity", component.ParticleSystemProps.Velocity);
-					
-					ImGui::Text("Color Begin");
-					ImGui::ColorEdit4("Color Begin", glm::value_ptr(component.ParticleSystemProps.ColorBegin));
+					// The user has selected a different particle system type.
+					if (lastParticleSystem != -1)
+					{
+						// Save the current state of the particle system component to the previous particle system type.
+						ParticleSystems[lastParticleSystem] = component;
+					}
 
-					ImGui::Text("Color End");
-					ImGui::ColorEdit4("Color End", glm::value_ptr(component.ParticleSystemProps.ColorEnd));
-					DrawVec3Control("Rotation", component.ParticleAttributes.Rotation);
-					
-					ImGui::Text("Size Begin");
-					ImGui::SliderFloat("Size Begin", &component.ParticleSystemProps.SizeBegin, 0.0f, 5.0f);
-					ImGui::Text("Size End");
-					ImGui::SliderFloat("Size End", &component.ParticleSystemProps.SizeEnd, 0.0f, 5.0f);
-					ImGui::Text("Size Variation");
-					ImGui::SliderFloat("Size Variation", &component.ParticleSystemProps.SizeVariation, 0.0f, 1.0f);
-					ImGui::Text("Life Time");
-					ImGui::SliderFloat("Life Time", &component.ParticleSystemProps.LifeTime, 0.0f, 10.0f);
+					// Load the previous state of the new particle system type into the component.
+					component = ParticleSystems[currentParticleSystem];
+
+					lastParticleSystem = currentParticleSystem;
 				}
+				
+
+				switch (currentParticleSystem)
+				{
+				case 0: // Default - Call the approate Particle function in the Particle Component OnUpdateFunction
+					component.CurrentParticleSystem = [&]() { component.PSystem.Emit(component.ParticleSystemProps); };
+					break;
+				case 1: // Fountain - Call the approate Particle function in the Particle Component OnUpdateFunction
+					component.CurrentParticleSystem = [&]() { component.PSystem.EmitFountain(component.ParticleSystemProps); };
+					break;
+				case 2: // Explosion - Call the approate Particle function in the Particle Component OnUpdateFunction
+					component.CurrentParticleSystem = [&]() { component.PSystem.EmitExplosion(component.ParticleSystemProps); };
+					break;
+				case 3: // RainFall - Call the approate Particle function in the Particle Component OnUpdateFunction
+					component.CurrentParticleSystem = [&]() { component.PSystem.EmitRainFall(component.ParticleSystemProps); };
+					break;
+				}
+				
+				DrawParticleSystemPanel(component);
+				 
 			});
+
+	
+
 
 		
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
