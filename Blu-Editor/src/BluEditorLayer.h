@@ -59,6 +59,7 @@ namespace Blu
 		float scaleSnapValue = 0.5f;
 		/*Scene Panels */
 
+		glm::vec2 m_ViewportBounds[2];
 		Shared<SceneHierarchyPanel> m_SceneHierarchyPanel;
 	};
 }
