@@ -4,6 +4,7 @@
 #include "Blu/Scene/ScriptableEntity.h"
 #include "Entity.h"
 #include "Blu/Rendering/EditorCamera.h"
+#include "Blu/Rendering/Shader.h"
 
 namespace Blu
 {
@@ -16,6 +17,7 @@ namespace Blu
 	{
 
 	}
+	static int nextID = 0;
 	Entity Scene::CreateEntity(const std::string& name)
 	{
 		Entity entity = { m_Registry.create(), this };
@@ -45,10 +47,14 @@ namespace Blu
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
 	{
 		Renderer2D::BeginScene(camera);
+		Renderer2D::GetRendererData()->TextureShader->Bind();
 		auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 		for (auto& entity : group)
 		{
 			auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			std::cout << "Entity ID: " << (int)entity << std::endl;
+			Renderer2D::GetRendererData()->TextureShader->SetUniformInt("u_EntityID", (int)entity);
+
 			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
 		}
 

@@ -54,8 +54,35 @@ namespace Blu
 		};
 		static Statistics GetStats();
 		static void ResetStats();
+		static struct Renderer2DStorage* GetRendererData() { return s_RendererData.get(); }
 	private:
 		static void FlushAndReset();
+
+	private:
+		static Unique<Renderer2DStorage> s_RendererData;
+	};
+
+	struct Renderer2DStorage
+	{
+		static const uint32_t MaxQuads = 10000;
+		static const uint32_t MaxVertices = (MaxQuads * 4);
+		static const uint32_t MaxIndices = (MaxQuads * 6);
+		static const uint32_t MaxTextureSlots = 32;
+		Shared<class VertexArray> QuadVertexArray;
+		Shared<class VertexBuffer> QuadVertexBuffer;
+		Shared<class IndexBuffer> QuadIndexBuffer;
+		Shared<class Shader> TextureShader;
+		Shared<class Texture2D> WhiteTexture;
+		uint32_t QuadIndexCount = 0;
+		struct QuadVertex* QuadVertexBufferBase = nullptr;
+		QuadVertex* QuadVertexBufferPtr = nullptr;
+
+		std::array<Shared<Texture2D>, MaxTextureSlots> TextureSlots;
+		uint32_t TextureSlotIndex = 1; // 0 = WhiteTexture
+		glm::vec4 QuadVertexPositions[4];
+
+		Renderer2D::Statistics Stats;
+
 	};
 
 }
