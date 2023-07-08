@@ -71,6 +71,34 @@ namespace Blu
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType , TextureTarget(multisampled), id, 0);
 
 		}
+
+		static GLenum BluTextureFormatToGL(FrameBufferTextureFormat format)
+		{
+			switch (format)
+			{
+			case FrameBufferTextureFormat::RGBA8:		return GL_RGBA8;
+			case FrameBufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
+			
+
+					
+			}
+			BLU_CORE_ASSERT(false); //format invalid
+			return 0;
+		}
+
+		static GLenum GLDataType(FrameBufferTextureFormat format)
+		{
+			switch (format)
+			{
+			case FrameBufferTextureFormat::RGBA8:		return GL_UNSIGNED_BYTE;
+			case FrameBufferTextureFormat::RED_INTEGER: return GL_INT;
+
+
+
+			}
+			BLU_CORE_ASSERT(false); //format invalid
+			return 0;
+		}
 		
 	}
 	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpecifications& spec)
@@ -100,6 +128,13 @@ namespace Blu
 
 		return pixelData;
 	}
+	void OpenGLFrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
+	{
+		BLU_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+
+		auto& spec = m_ColorAttachmentSpecs[attachmentIndex];
+		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::BluTextureFormatToGL(spec.TextureFormat), Utils::GLDataType(spec.TextureFormat), &value);
+	}
 	OpenGLFrameBuffer::~OpenGLFrameBuffer()
 	{
 		glDeleteFramebuffers(1, &m_RendererID);
@@ -110,6 +145,8 @@ namespace Blu
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
+
+		
 	}
 	void OpenGLFrameBuffer::UnBind()
 	{
@@ -178,22 +215,7 @@ namespace Blu
 		{
 			glDrawBuffer(GL_NONE);
 		}
-		//glCreateTextures(GL_TEXTURE_2D, 1, &m_ColorAttachment);
-		//glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
-
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specification.Width, m_Specification.Height, 0, 
-		//	GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
-
-		//glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
-		//glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
-		////glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 
-		//	0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
+		
 		
 		BLU_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is complete");
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -19,34 +19,12 @@ namespace Blu
 
 	};
 
-	struct Renderer2DStorage
-	{
-		static const uint32_t MaxQuads = 10000;
-		static const uint32_t MaxVertices = (MaxQuads * 4);
-		static const uint32_t MaxIndices = (MaxQuads * 6);
-		static const uint32_t MaxTextureSlots = 32;
-		Shared<VertexArray> QuadVertexArray;
-		Shared<VertexBuffer> QuadVertexBuffer;
-		Shared<IndexBuffer> QuadIndexBuffer;
-		Shared<Shader> TextureShader;
-		Shared<Texture2D> WhiteTexture;
-		uint32_t QuadIndexCount = 0;
-		QuadVertex* QuadVertexBufferBase = nullptr;
-		QuadVertex* QuadVertexBufferPtr = nullptr;
-
-		std::array<Shared<Texture2D>, MaxTextureSlots> TextureSlots;
-		uint32_t TextureSlotIndex = 1; // 0 = WhiteTexture
-		glm::vec4 QuadVertexPositions[4];
-
-		Renderer2D::Statistics Stats;
-		
-	};
-
-	Unique<Renderer2DStorage> s_RendererData;
+	
+	Unique<Renderer2DStorage> Renderer2D::s_RendererData = std::make_unique<Renderer2DStorage>();	
+	
 	void Renderer2D::Init()
 	{
 		BLU_PROFILE_FUNCTION();
-		s_RendererData = std::make_unique<Renderer2DStorage>();
 		
 
 		s_RendererData->QuadVertexArray = Blu::VertexArray::Create();
