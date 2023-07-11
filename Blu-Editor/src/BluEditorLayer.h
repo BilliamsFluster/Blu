@@ -61,6 +61,9 @@ namespace Blu
 
 		glm::vec2 m_ViewportBounds[2];
 		Shared<SceneHierarchyPanel> m_SceneHierarchyPanel;
+		int m_DrawnEntityID;
+
+		
 	};
 }
 

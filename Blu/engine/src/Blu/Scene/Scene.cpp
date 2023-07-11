@@ -52,10 +52,7 @@ namespace Blu
 		for (auto& entity : group)
 		{
 			auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-			std::cout << "Entity ID: " << (int)entity << std::endl;
-			Renderer2D::GetRendererData()->TextureShader->SetUniformInt("u_EntityID", (int)entity);
-
-			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+			Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
 		}
 
 		auto particleView = m_Registry.view<ParticleSystemComponent>();

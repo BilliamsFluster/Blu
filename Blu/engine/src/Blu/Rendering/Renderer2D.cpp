@@ -4,8 +4,10 @@
 #include "Blu/Core/Core.h"
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include "Blu/Platform/OpenGL/OpenGLBuffer.h"
 
 
+#define MODE_EDITOR
 
 namespace Blu
 {
@@ -16,6 +18,9 @@ namespace Blu
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
+		int EntityID = 2; // problem is that this is not getting read  even when the values change
+		
+		
 
 	};
 
@@ -30,12 +35,16 @@ namespace Blu
 		s_RendererData->QuadVertexArray = Blu::VertexArray::Create();
 		s_RendererData->QuadVertexBuffer = Blu::VertexBuffer::Create(s_RendererData->MaxVertices * sizeof(QuadVertex));
 
+
+
+
 		Blu::BufferLayout layout = {
 			{Blu::ShaderDataType::Float4, "a_Color"},
 			{Blu::ShaderDataType::Float3, "a_Position"},
 			{Blu::ShaderDataType::Float2, "a_TexCoord"},
 			{Blu::ShaderDataType::Float, "a_TexIndex"},
-			{Blu::ShaderDataType::Float, "a_TilingFactor"}
+			{Blu::ShaderDataType::Float, "a_TilingFactor"},
+			{Blu::ShaderDataType::Int, "a_EntityID"}
 		};
 
 		s_RendererData->QuadVertexBuffer->SetLayout(layout);
@@ -169,8 +178,13 @@ namespace Blu
 		s_RendererData->QuadIndexCount += 6;
 		s_RendererData->Stats.QuadCount++;
 	}
+	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
+	{
+		DrawQuad(transform, src.Color, entityID);
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
+	}
+
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int entityID)
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
@@ -187,6 +201,10 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
 			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			#ifdef MODE_EDITOR
+			s_RendererData->QuadVertexBufferPtr->EntityID = entityID;
+			#endif // MODE_EDITOR
+
 			s_RendererData->QuadVertexBufferPtr++;
 		}
 
