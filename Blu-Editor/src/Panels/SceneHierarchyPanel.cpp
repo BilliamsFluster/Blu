@@ -15,6 +15,11 @@ namespace Blu
 		m_Context = scene;
 		m_SelectedEntity = {};
 	}
+	void SceneHierarchyPanel::SetSelectedEntity(Entity entity)
+	{
+		m_SelectedEntity = entity;
+
+	}
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
 		m_EntityHovered = false;
