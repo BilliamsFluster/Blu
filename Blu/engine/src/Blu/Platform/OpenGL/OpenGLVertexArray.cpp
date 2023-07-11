@@ -26,12 +26,16 @@ namespace Blu
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
 		glCreateVertexArrays(1, &m_RendererID);
+		glObjectLabel(GL_VERTEX_ARRAY, m_RendererID, -1, "Vertex Array"); // debug
+
 	}
 
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
 		BLU_PROFILE_FUNCTION();
-
+		GLchar label[128];
+		GLsizei length;
+		glGetObjectLabel(GL_VERTEX_ARRAY, m_RendererID, sizeof(label), &length, label); // debug
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
@@ -57,17 +61,86 @@ namespace Blu
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
 
+//#define ENABLE
+		#ifndef ENABLE
+
 		uint32_t index = 0;
 		for (const auto& element : vertexBuffer->GetLayout())
 		{
+			if (element.Type != ShaderDataType::Int)
+			{
 			glEnableVertexAttribArray(index);
 			glVertexAttribPointer(index, element.GetComponentCount(),
 				ShaderDataTypeToOpenGlBaseType(element.Type),
 				element.Normalized ? GL_TRUE : GL_FALSE, vertexBuffer->GetLayout().GetStride(),
 				(const void*)element.Offset);
 			index++;
+
+			}
+			else
+			{
+				glEnableVertexAttribArray(index);
+				glVertexAttribIPointer(index, element.GetComponentCount(),
+					ShaderDataTypeToOpenGlBaseType(element.Type),
+					vertexBuffer->GetLayout().GetStride(),
+					(const void*)element.Offset);
+				index++;
+			}
+			
 		}
 		m_VertexBuffers.push_back(vertexBuffer);
+		#endif // !ENABLE
+
+		#ifdef ENABLE
+		uint32_t index = 0;
+		for (const auto& element : vertexBuffer->GetLayout())
+		{
+			switch (element.Type)
+			{
+			case ShaderDataType::Float:
+			case ShaderDataType::Float2:
+			case ShaderDataType::Float3:
+			case ShaderDataType::Float4:
+			{
+				glVertexAttribPointer(index, element.GetComponentCount(),
+					ShaderDataTypeToOpenGlBaseType(element.Type),
+					element.Normalized ? GL_TRUE : GL_FALSE, vertexBuffer->GetLayout().GetStride(),
+					(const void*)element.Offset);
+				break;
+			}
+			case ShaderDataType::Mat3:
+			case ShaderDataType::Mat4:
+			{
+				break;
+
+			}
+			case ShaderDataType::Int:
+			{
+				glVertexAttribIPointer(index, element.GetComponentCount(),
+					ShaderDataTypeToOpenGlBaseType(element.Type),
+					vertexBuffer->GetLayout().GetStride(),
+					(const void*)element.Offset);
+				break;
+			}
+			case ShaderDataType::Int2:
+			case ShaderDataType::Int3:
+			case ShaderDataType::Int4:
+			case ShaderDataType::Bool:
+			{
+				glVertexAttribIPointer(index, element.GetComponentCount(),
+					ShaderDataTypeToOpenGlBaseType(element.Type),
+					vertexBuffer->GetLayout().GetStride(),
+					(const void*)element.Offset);
+				break;
+			}
+			}
+			index++;
+		}
+		m_VertexBuffers.push_back(vertexBuffer);
+		#endif
+		
+
+		
 	}
 
 	void OpenGLVertexArray::AddIndexBuffer(const Shared<IndexBuffer>& indexBuffer)

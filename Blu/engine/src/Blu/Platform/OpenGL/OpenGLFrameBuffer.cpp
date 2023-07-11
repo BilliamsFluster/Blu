@@ -37,7 +37,7 @@ namespace Blu
 			}
 			else
 			{
-				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_INT, nullptr);
 
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -125,7 +125,6 @@ namespace Blu
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		int pixelData;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
-
 		return pixelData;
 	}
 	void OpenGLFrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
@@ -133,7 +132,7 @@ namespace Blu
 		BLU_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
 		auto& spec = m_ColorAttachmentSpecs[attachmentIndex];
-		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::BluTextureFormatToGL(spec.TextureFormat), Utils::GLDataType(spec.TextureFormat), &value);
+		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::BluTextureFormatToGL(spec.TextureFormat),Utils::GLDataType(spec.TextureFormat), &value);
 	}
 	OpenGLFrameBuffer::~OpenGLFrameBuffer()
 	{
@@ -166,6 +165,8 @@ namespace Blu
 		}
 
 		glCreateFramebuffers(1, &m_RendererID);
+		glObjectLabel(GL_FRAMEBUFFER, m_RendererID, -1, "Frame Buffer"); // debug
+
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 		
 		bool multisample = m_Specification.Samples > 1;
@@ -178,7 +179,9 @@ namespace Blu
 			for (size_t i = 0; i < m_ColorAttachments.size(); i++)
 			{
 				Utils::BindTexture(multisample, m_ColorAttachments[i]);
-				
+				std::string label = "My Color Attachment " + std::to_string(i);
+				glObjectLabel(GL_TEXTURE, m_ColorAttachments[i], -1, label.c_str()); // debug
+
 				switch (m_ColorAttachmentSpecs[i].TextureFormat)
 				{
 				case FrameBufferTextureFormat::RGBA8 :

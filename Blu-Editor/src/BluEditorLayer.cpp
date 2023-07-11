@@ -101,9 +101,10 @@ namespace Blu
 			}
 		}
 		
+		
+
 		m_EditorCamera.OnUpdate(deltaTime);
 		m_ActiveScene->OnUpdateEditor(deltaTime, m_EditorCamera);
-
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_ViewportBounds[0].x;
 		my -= m_ViewportBounds[0].y;
@@ -112,15 +113,19 @@ namespace Blu
 		my = viewportSize.y - my;
 		int mouseX = (int)mx;
 		int mouseY = (int)my;
+		m_MousePosX = mouseX;
+		m_MousePosY = mouseY;
 
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
 			int data = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
 			BLU_CORE_INFO(" PixelData = {0}", data);
+			m_DrawnEntityID = data;
 
 		}
-
 		m_FrameBuffer->UnBind();
+		
+		
 
 
 
@@ -317,6 +322,7 @@ namespace Blu
 	
 		
 		uint32_t textureID = m_FrameBuffer->GetColorAttachmentID();
+		BLU_CORE_ERROR(m_FrameBuffer->GetColorAttachmentID());
 		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto windowSize = ImGui::GetWindowSize();
@@ -467,6 +473,25 @@ namespace Blu
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		io.MouseDown[event.GetButton()] = true;
+		
+		if (m_MousePosX >= 0 && m_MousePosY >= 0 && m_MousePosX < (int)m_ViewportSize.x && m_MousePosY < (int)m_ViewportSize.y)
+		{
+			
+			if (m_ViewPortFocused)
+			{
+
+				Entity e = Entity{ (entt::entity)m_DrawnEntityID, m_ActiveScene.get() };
+				if (e.HasComponent<TransformComponent>())
+				{
+					m_SceneHierarchyPanel->SetSelectedEntity(e);
+
+				}
+
+			}
+			BLU_CORE_ERROR("Pixel data is {0}", m_DrawnEntityID);
+			
+
+		}
 		event.Handled = true;
 
 		return false;
