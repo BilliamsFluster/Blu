@@ -28,6 +28,7 @@ namespace Blu
 	{
 		m_ActiveScene = std::make_shared<Scene>();
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
+		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
 		m_WallpaperTexture = Texture2D::Create("assets/spriteSheets/blockPack_spritesheet@2.png");
 
@@ -291,6 +292,7 @@ namespace Blu
 			ImGui::EndMainMenuBar();
 		}
 		m_SceneHierarchyPanel->OnImGuiRender();
+		m_ContentBrowserPanel->OnImGuiRender();
 
 		ImGui::Begin("Renderer2D Statistics");
 
@@ -319,8 +321,8 @@ namespace Blu
 			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 			BLU_CORE_ERROR("ViewportSize x: {0}, viewport size y: {1}", m_ViewportSize.x, m_ViewportSize.y);
 		}
-	
 		
+
 		uint32_t textureID = m_FrameBuffer->GetColorAttachmentID();
 		BLU_CORE_ERROR(m_FrameBuffer->GetColorAttachmentID());
 		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });

@@ -1,5 +1,6 @@
 #include <Blu.h>
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 #include "Blu/Rendering/EditorCamera.h"
 
 
@@ -61,6 +62,7 @@ namespace Blu
 
 		glm::vec2 m_ViewportBounds[2];
 		Shared<SceneHierarchyPanel> m_SceneHierarchyPanel;
+		Shared<ContentBrowserPanel> m_ContentBrowserPanel;
 		int m_DrawnEntityID;
 
 		

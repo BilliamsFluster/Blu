@@ -86,8 +86,7 @@ namespace Blu
 			static float m_Time = 0.0f;
 			io.DeltaTime = m_Time > 0.0 ? (time - m_Time) : (1.00f / 60.f);
 			m_Time = time;
-			static bool show = true;
-			ImGui::ShowDemoWindow(&show);
+			
 		}
 
 		void ImGuiLayer::SetDarkColors()
