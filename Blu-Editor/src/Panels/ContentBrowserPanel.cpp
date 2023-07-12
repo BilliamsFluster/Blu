@@ -1,6 +1,10 @@
 #include "ContentBrowserPanel.h"
 #include <imgui.h>
+#include <fstream>
+#include "Blu/Core/MouseCodes.h"
+#include "Blu/Core/Input.h"
 #include "Blu/Platform/OpenGL/OpenGLTexture.h"
+
 
 
 namespace Blu
@@ -10,17 +14,37 @@ namespace Blu
     ContentBrowserPanel::ContentBrowserPanel()
         :m_CurrentDirectory(s_AssetsDirectory)
     {
-        m_FileIcons[".png"] = (Blu::Texture2D::Create("assets/textures/Wallpaper.png"));
+        m_FileIcons[".png"] = (Blu::Texture2D::Create("assets/textures/FileIcon.png"));
         m_FolderOpenIcon = (Blu::Texture2D::Create("assets/textures/FolderOpen.png"));
         m_FolderClosedIcon = (Blu::Texture2D::Create("assets/textures/FolderClosed.png"));
 
     }
     std::string m_Filter;  // Add a filter string
+    std::filesystem::path rightClickedItemPath;
 
     void ContentBrowserPanel::OnImGuiRender()
     {
-        ImGui::Begin("Content Browser");
+        static std::filesystem::path s_RenamingPath;
 
+        ImGui::Begin("Content Browser");
+        for (auto it = m_NavigationHistory.begin(); it != m_NavigationHistory.end(); ++it)
+        {
+            // If this isn't the first directory in the history, add a separator
+            if (it != m_NavigationHistory.begin())
+            {
+                ImGui::SameLine(); ImGui::Text(" > "); ImGui::SameLine();
+            }
+
+            if (ImGui::Button(it->filename().string().c_str()))
+            {
+                // Navigate directly to this directory
+                m_CurrentDirectory = *it;
+                // Remove all directories after the clicked one
+                m_NavigationHistory.erase(std::next(it), m_NavigationHistory.end());
+                break;
+            }
+        }
+        
         // Split the window into 2 parts: left will be the directory tree view, right will be the directory content view
         ImGui::BeginChild("left pane", ImVec2(ImGui::GetWindowWidth() * 0.3f, 0), true);
 
@@ -34,7 +58,9 @@ namespace Blu
         // Show directory content view
         ImGui::BeginChild("right pane", ImVec2(0, 0), true);
 
-        // If not at root directory, add button for going back to parent directory
+        
+
+
         if (m_CurrentDirectory != s_AssetsDirectory)
         {
             if (ImGui::Button("<- Back"))
@@ -43,10 +69,15 @@ namespace Blu
                 std::filesystem::path potentialParentDir = m_CurrentDirectory.parent_path();
                 if (potentialParentDir.string().find(s_AssetsDirectory.data()) != std::string::npos)
                 {
+                    // Change the current directory
                     m_CurrentDirectory = potentialParentDir;
+                    // Replace the navigation history with a path to the current directory
+                    m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
                 }
             }
         }
+
+       
 
         // Add a filter input box
         static char filter[128] = "";
@@ -66,13 +97,14 @@ namespace Blu
         int columnCount = (int)(panelWidth / cellSize);
         if (columnCount < 1) columnCount = 1;
 
+        m_ObjectClicked = false;
         ImGui::Columns(columnCount, nullptr, false);
-
         for (auto& p : std::filesystem::directory_iterator(m_CurrentDirectory))
         {
             const auto& path = p.path();
             auto relativePath = std::filesystem::relative(path, m_CurrentDirectory);
             std::string filenameString = relativePath.filename().string();
+
 
             // Check if filename matches filter
             if (currentFilterType == 0 && std::string::npos == filenameString.find(filter))
@@ -85,30 +117,131 @@ namespace Blu
 
             if (p.is_directory())
             {
+                
                 auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetRendererID()));
                 ImVec2 iconSize(50.0f, 50.0f);
 
-                // Push transparent colors
-                ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(0, 0, 0, 0));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(0, 0, 0, 0));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(0, 0, 0, 0));
+                ImGui::PushID(path.string().c_str());
+                ImGui::Image(closedID, iconSize, ImVec2(0, 1), ImVec2(1, 0));
 
-                if (ImGui::ImageButton(closedID, iconSize, ImVec2(0, 1), ImVec2(1, 0))) // Make the image a button
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - iconSize.y);
+                if (ImGui::InvisibleButton(filenameString.c_str(), iconSize))
                 {
-                    m_CurrentDirectory = path;
-                }
+                    //m_ObjectClicked |= ImGui::IsItemHovered();
 
-                // Pop colors to reset them
-                ImGui::PopStyleColor(3);
+                    
+                }
+                if (ImGui::IsItemHovered())
+                {
+
+                    if (ImGui::IsMouseDoubleClicked(0))
+                    {
+                        // Double click: Change the current directory
+                        m_CurrentDirectory = path;
+
+                        m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
+
+                    }
+                    if (ImGui::IsMouseClicked(1))
+                    {
+                        rightClickedItemPath = path;
+                         m_ObjectClicked = true;
+                    }
+                }
+                
+                
+                   
+                    
+                
+                ImGui::PopID();
             }
             else
             {
                 // Render file icon and make it selectable as necessary
+                auto fileID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FileIcons[".png"]->GetRendererID()));
+                ImVec2 iconSize(50.0f, 50.0f);
+
+                ImGui::PushID(path.string().c_str());
+                ImGui::Image(fileID, iconSize, ImVec2(0, 1), ImVec2(1, 0));
+
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - iconSize.y);
+                if (ImGui::InvisibleButton(filenameString.c_str(), iconSize))
+                {
+                    // Single click: Do something (if you want)
+                }
+                if (ImGui::IsItemHovered())
+                {
+                    m_ObjectClicked = true;
+
+                    
+                    if (ImGui::IsMouseClicked(1))
+                    {
+                        rightClickedItemPath = path;
+                        m_ObjectClicked = true;
+
+                    }
+                }
+                
+                ImGui::PopID();
+            }
+            std::cout << m_ObjectClicked << std::endl;
+            if (ImGui::IsMouseClicked(1) && !m_ObjectClicked)
+            {
+                rightClickedItemPath = "";  // clicked on empty space
             }
 
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+                
+                std::string payloadPath = path.string();
+
+                // Set payload to carry the path of the file being dragged
+                ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", payloadPath.c_str(), payloadPath.size() + 1); // +1 to include the null terminator
+
+                // Display a preview (could be anything, e.g. the filename, an icon...)
+                ImGui::Text("%s", filenameString.c_str());
+
+                ImGui::EndDragDropSource();
+            }
+
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                {
+                    std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
+
+                    // Check if the directory is not dragged onto itself
+                    if (path != payloadPath) {
+                        std::filesystem::path destinationPath = path / payloadPath.filename();
+
+                        // Move file or directory
+                        try {
+                            std::filesystem::rename(payloadPath, destinationPath);
+                            // Refresh your directory viewer here
+                        }
+                        catch (std::filesystem::filesystem_error& e) 
+                        {
+                            BLU_CORE_ASSERT(false, e.what());
+                        }
+                    }
+
+                  
+                   
+
+                }
+
+                ImGui::EndDragDropTarget();
+            }
+
+
+            
+           
             // Display filename
             ImGui::TextWrapped("%s", filenameString.c_str());
+           
+            
+            
 
+            
             ImGui::EndGroup();  // End group for icon and filename
 
             if (ImGui::IsItemHovered())
@@ -117,6 +250,78 @@ namespace Blu
             }
 
             ImGui::NextColumn();
+        }
+       
+        if (!rightClickedItemPath.empty() && ImGui::BeginPopupContextWindow())
+        {
+            if (ImGui::MenuItem("Rename"))
+            {
+                s_RenamingPath = rightClickedItemPath;
+                ImGui::OpenPopup("Rename Dialog");
+            }
+            if (ImGui::MenuItem("Delete"))  // Add a delete option to the context menu
+            {
+                if (std::filesystem::exists(rightClickedItemPath))
+                {
+                    std::filesystem::remove_all(rightClickedItemPath);  // Delete the file or folder
+                    rightClickedItemPath.clear();  // Clear the path as it is no longer valid
+                }
+            }
+            ImGui::EndPopup();
+        }
+        if (rightClickedItemPath.empty() && ImGui::BeginPopupContextWindow())
+        {
+            if (ImGui::MenuItem("New Folder"))
+            {
+                std::filesystem::path newFolderPath = m_CurrentDirectory / "new_folder";
+                int i = 0;
+                while (std::filesystem::exists(newFolderPath)) {
+                    newFolderPath = m_CurrentDirectory / ("new_folder" + std::to_string(i++));
+                }
+                std::filesystem::create_directory(newFolderPath);
+            }
+            if (ImGui::MenuItem("New File"))  // Add a delete option to the context menu
+            {
+                std::filesystem::path newFilePath = m_CurrentDirectory / "new_file.txt";
+                int i = 0;
+                while (std::filesystem::exists(newFilePath)) {
+                    newFilePath = m_CurrentDirectory / ("new_file" + std::to_string(i++) + ".txt");
+                }
+                std::ofstream newFile(newFilePath);
+            }
+            ImGui::EndPopup();
+
+        }
+        if (!s_RenamingPath.empty()) {
+            ImGui::OpenPopup("Rename Dialog");
+        }
+        static char renameBuffer[128] = "";
+
+        if (ImGui::BeginPopupModal("Rename Dialog", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+            // Only copy the filename to the buffer when the popup is first opened
+            if (ImGui::IsWindowAppearing()) {
+                std::string filename = s_RenamingPath.filename().string();
+                std::copy(filename.begin(), filename.end(), renameBuffer);
+                renameBuffer[filename.size()] = '\0';  // null terminate
+            }
+
+            ImGui::InputText("New name", renameBuffer, IM_ARRAYSIZE(renameBuffer));
+
+            if (ImGui::Button("Rename")) {
+                std::filesystem::path newPath = s_RenamingPath.parent_path() / renameBuffer;
+                if (!std::filesystem::exists(newPath)) {
+                    std::filesystem::rename(s_RenamingPath, newPath);
+                    s_RenamingPath.clear();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel")) {
+                s_RenamingPath.clear();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
         }
 
         ImGui::Columns(1);
@@ -158,8 +363,17 @@ namespace Blu
         // If the node is selected (clicked), change the current directory
         if (ImGui::IsItemClicked())
         {
-            m_CurrentDirectory = directoryPath;
+            // Toggle the expanded state
             m_DirectoryExpandedState[directoryPath.string()] = !expanded;
+            // If the directory is opened...
+            if (m_DirectoryExpandedState[directoryPath.string()])
+            {
+                // Change the current directory
+                m_CurrentDirectory = directoryPath;
+                // Replace the navigation history with a path to the current directory
+                m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
+            }
+            // Do nothing if the directory is closed
         }
 
         if (nodeOpen)
@@ -176,5 +390,15 @@ namespace Blu
             ImGui::TreePop();
         }
     }
-    
+
+    std::deque<std::filesystem::path> ContentBrowserPanel::GetDirectoryPath(const std::filesystem::path& directory)
+    {
+        std::deque<std::filesystem::path> path;
+        for (std::filesystem::path p = directory; p != s_AssetsDirectory; p = p.parent_path())
+        {
+            path.push_front(p);
+        }
+        path.push_front(s_AssetsDirectory);
+        return path;
+    }
 }

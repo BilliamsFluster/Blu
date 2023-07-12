@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <map>
+#include <deque>
 #include "Blu/Core/Core.h"
 #include "Blu/Rendering/Texture.h"
 
@@ -21,6 +22,8 @@ namespace Blu
 
 		void ShowDirectoryNodes(const std::filesystem::path& directoryPath);
 
+		std::deque<std::filesystem::path> GetDirectoryPath(const std::filesystem::path& directory);
+
 	private:
 		std::filesystem::path m_CurrentDirectory;
 		std::map<std::string, bool> m_DirectoryExpandedState;
@@ -31,6 +34,9 @@ namespace Blu
 		std::map<std::string, Blu::Shared<Blu::Texture2D>> m_FileIcons;
 		std::map<std::string, Blu::Shared<Blu::Texture2D>> m_Textures;
 		std::map<std::string, Shared<Texture2D>> m_TextureCache;
+		std::deque<std::filesystem::path> m_NavigationHistory;
+
+		bool m_ObjectClicked = false;
 
 
 

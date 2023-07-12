@@ -319,12 +319,10 @@ namespace Blu
 			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_CameraController.ResizeCamera(m_ViewportSize.x, m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
-			BLU_CORE_ERROR("ViewportSize x: {0}, viewport size y: {1}", m_ViewportSize.x, m_ViewportSize.y);
 		}
 		
 
 		uint32_t textureID = m_FrameBuffer->GetColorAttachmentID();
-		BLU_CORE_ERROR(m_FrameBuffer->GetColorAttachmentID());
 		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto windowSize = ImGui::GetWindowSize();
@@ -490,7 +488,6 @@ namespace Blu
 				}
 
 			}
-			BLU_CORE_ERROR("Pixel data is {0}", m_DrawnEntityID);
 			
 
 		}
