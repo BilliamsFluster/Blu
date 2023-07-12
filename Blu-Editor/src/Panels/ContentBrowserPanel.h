@@ -24,6 +24,10 @@ namespace Blu
 
 		std::deque<std::filesystem::path> GetDirectoryPath(const std::filesystem::path& directory);
 
+		void CreateNewFile(const std::filesystem::path& directory, const std::string& baseName);
+
+		void CreateNewFolder(const std::filesystem::path& directory, const std::string& baseName);
+
 	private:
 		std::filesystem::path m_CurrentDirectory;
 		std::map<std::string, bool> m_DirectoryExpandedState;
