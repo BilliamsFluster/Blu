@@ -56,9 +56,48 @@ namespace Blu
         ImGui::SameLine();
 
         // Show directory content view
-        ImGui::BeginChild("right pane", ImVec2(0, 0), true);
 
         
+        ImGui::BeginChild("right pane", ImVec2(0, 0), true);
+
+        // Top operation panel
+        ImGui::BeginChild("Operation Panel", ImVec2(0, 60), true);
+
+        // Operations Text
+        ImGui::Text("Operations: ");
+        ImGui::SameLine();
+
+        // New File Button and its functionality
+        if (ImGui::Button("New File"))
+        {
+            CreateNewFile(m_CurrentDirectory, "EmptyFile.txt");
+        }
+        ImGui::SameLine();
+
+        // New Folder Button and its functionality
+        if (ImGui::Button("New Folder"))
+        {
+            CreateNewFolder(m_CurrentDirectory, "EmptyFolder");
+        }
+        ImGui::SameLine();
+
+        // Sort Selection Combo box
+        const char* items[] = { "Name", "Date Modified", "Size" };
+        static int item_current = 0;
+        ImGui::Combo("Sort", &item_current, items, IM_ARRAYSIZE(items));
+
+        // Filter Input Text box
+        static char filter[128] = "";
+        ImGui::InputText("Filter", filter, IM_ARRAYSIZE(filter));
+
+        // Filter Type Selection Combo box
+        static const char* filterTypes[] = { "Name", "Extension" };
+        static int currentFilterType = 0;
+        ImGui::Combo("Filter Type", &currentFilterType, filterTypes, IM_ARRAYSIZE(filterTypes));
+
+        // Add logic for filtering and sorting here
+
+        ImGui::EndChild();
 
 
         if (m_CurrentDirectory != s_AssetsDirectory)
@@ -79,14 +118,7 @@ namespace Blu
 
        
 
-        // Add a filter input box
-        static char filter[128] = "";
-        ImGui::InputText("Filter", filter, IM_ARRAYSIZE(filter));
-
-        // Add a filter type selection
-        static const char* filterTypes[] = { "Name", "Extension" };
-        static int currentFilterType = 0;
-        ImGui::Combo("Filter Type", &currentFilterType, filterTypes, IM_ARRAYSIZE(filterTypes));
+      
 
         // Show content of the current directory
         static float padding = 10.0f;
@@ -145,7 +177,7 @@ namespace Blu
                     if (ImGui::IsMouseClicked(1))
                     {
                         rightClickedItemPath = path;
-                         m_ObjectClicked = true;
+                        m_ObjectClicked = true;
                     }
                 }
                 
@@ -196,6 +228,17 @@ namespace Blu
 
                 // Set payload to carry the path of the file being dragged
                 ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", payloadPath.c_str(), payloadPath.size() + 1); // +1 to include the null terminator
+                
+                if (std::filesystem::is_directory(payloadPath)) 
+                {
+                    ImGui::Image((void*)(intptr_t)m_FolderOpenIcon->GetRendererID(), ImVec2(50, 50), ImVec2(0, 1), ImVec2(1, 0));
+                    
+                }
+                else 
+                {
+                    ImGui::Image((void*)(intptr_t)m_FileIcons[".png"]->GetRendererID(), ImVec2(50, 50), ImVec2(0, 1), ImVec2(1, 0));
+                    
+                }
 
                 // Display a preview (could be anything, e.g. the filename, an icon...)
                 ImGui::Text("%s", filenameString.c_str());
@@ -273,19 +316,19 @@ namespace Blu
         {
             if (ImGui::MenuItem("New Folder"))
             {
-                std::filesystem::path newFolderPath = m_CurrentDirectory / "new_folder";
+                std::filesystem::path newFolderPath = m_CurrentDirectory / "EmptyFolder";
                 int i = 0;
                 while (std::filesystem::exists(newFolderPath)) {
-                    newFolderPath = m_CurrentDirectory / ("new_folder" + std::to_string(i++));
+                    newFolderPath = m_CurrentDirectory / ("EmptyFolder" + std::to_string(i++));
                 }
                 std::filesystem::create_directory(newFolderPath);
             }
             if (ImGui::MenuItem("New File"))  // Add a delete option to the context menu
             {
-                std::filesystem::path newFilePath = m_CurrentDirectory / "new_file.txt";
+                std::filesystem::path newFilePath = m_CurrentDirectory / "EmptyFile.txt"; 
                 int i = 0;
                 while (std::filesystem::exists(newFilePath)) {
-                    newFilePath = m_CurrentDirectory / ("new_file" + std::to_string(i++) + ".txt");
+                    newFilePath = m_CurrentDirectory / ("EmptyFile" + std::to_string(i++) + ".txt");
                 }
                 std::ofstream newFile(newFilePath);
             }
@@ -333,7 +376,16 @@ namespace Blu
     
     void ContentBrowserPanel::SortEntries(std::vector<std::filesystem::directory_entry>& entries, int sort_option)
     {
-        // Implement sorting based on sort_option
+        // Currently only sorting by name is implemented
+        switch (sort_option) {
+        case 0: // Name
+            std::sort(entries.begin(), entries.end(),
+                [](const std::filesystem::directory_entry& a, const std::filesystem::directory_entry& b) {
+                    return a.path().filename().string() < b.path().filename().string();
+                });
+            break;
+            // TODO: Implement sorting by date, size and type
+        }
     }
     void ContentBrowserPanel::ShowDirectoryNodes(const std::filesystem::path& directoryPath)
     {
@@ -401,4 +453,27 @@ namespace Blu
         path.push_front(s_AssetsDirectory);
         return path;
     }
+
+    void ContentBrowserPanel::CreateNewFile(const std::filesystem::path& directory, const std::string& baseName)
+    {
+        std::filesystem::path newFilePath = directory / baseName;
+        int i = 0;
+        while (std::filesystem::exists(newFilePath))
+        {
+            newFilePath = directory / (baseName + std::to_string(i++) + ".txt");
+        }
+        std::ofstream newFile(newFilePath);
+    }
+
+    void ContentBrowserPanel::CreateNewFolder(const std::filesystem::path& directory, const std::string& baseName)
+    {
+        std::filesystem::path newFolderPath = directory / baseName;
+        int i = 0;
+        while (std::filesystem::exists(newFolderPath))
+        {
+            newFolderPath = directory / (baseName + std::to_string(i++));
+        }
+        std::filesystem::create_directory(newFolderPath);
+    }
+
 }
