@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include "Blu/Scene/SceneCamera.h"
 #include "Blu/Core/Timestep.h"
+#include "Blu/Core/Core.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "Blu/Rendering/ParticleSystem.h"
 
@@ -66,6 +67,7 @@ namespace Blu
 	{
 		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
+		Shared<class Texture2D> Texture;
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color)

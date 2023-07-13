@@ -2,7 +2,9 @@
 #include "imgui.h"
 #include "Blu/Scene/Component.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "Blu/Rendering/Texture.h"
 #include <imgui_internal.h>
+#include <filesystem>
 
 namespace Blu
 {
@@ -423,6 +425,17 @@ namespace Blu
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
 			{
 				ImGui::ColorEdit4("Entity Color: ", glm::value_ptr(component.Color));
+				ImGui::Button("Texture", ImVec2(50.0f, 50.0f));
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+					{
+						
+						std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
+						component.Texture = Texture2D::Create(payloadPath.string());
+					}
+					ImGui::EndDragDropTarget();
+				}
 			});
 		
 		

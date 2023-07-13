@@ -180,8 +180,50 @@ namespace Blu
 	}
 	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
 	{
+		if (src.Texture)
+		{
+			DrawTexturedQuad(transform, src.Texture, src.Color, entityID);
+		}
 		DrawQuad(transform, src.Color, entityID);
 
+	}
+	void Renderer2D::DrawTexturedQuad(const glm::mat4& transform, const Shared<Texture2D>& texture, const glm::vec4& color, int entityID, float tilingFactor)
+	{
+		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
+		{
+			FlushAndReset();
+		}
+
+		float textureIndex = 0.0f;
+		for (uint32_t i = 1; i < s_RendererData->TextureSlotIndex; i++)
+		{
+			if (*s_RendererData->TextureSlots[i].get() == *texture.get())
+			{
+				textureIndex = (float)i;
+				break;
+			}
+		}
+		if (textureIndex == 0.0f)
+		{
+			textureIndex = (float)s_RendererData->TextureSlotIndex;
+			s_RendererData->TextureSlots[s_RendererData->TextureSlotIndex] = texture;
+			s_RendererData->TextureSlotIndex++;
+		}
+
+		std::array<glm::vec2, 4> texCoords = { { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} } };
+
+		BLU_PROFILE_FUNCTION();
+		for (int i = 0; i < 4; i++) {
+			s_RendererData->QuadVertexBufferPtr->Position = transform * s_RendererData->QuadVertexPositions[i];
+			s_RendererData->QuadVertexBufferPtr->Color = color;
+			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
+			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_RendererData->QuadVertexBufferPtr++;
+		}
+
+		s_RendererData->QuadIndexCount += 6;
+		s_RendererData->Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int entityID)
