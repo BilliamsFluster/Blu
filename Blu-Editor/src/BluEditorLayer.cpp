@@ -103,9 +103,20 @@ namespace Blu
 		}
 		
 		
-
-		m_EditorCamera.OnUpdate(deltaTime);
-		m_ActiveScene->OnUpdateEditor(deltaTime, m_EditorCamera);
+		switch (m_SceneState)
+		{
+			case SceneState::Edit:
+			{
+				m_EditorCamera.OnUpdate(deltaTime);
+				m_ActiveScene->OnUpdateEditor(deltaTime, m_EditorCamera);
+				break;
+			}
+			case SceneState::Play:
+			{
+				m_ActiveScene->OnUpdateRuntime(deltaTime);
+			}
+		}
+		
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_ViewportBounds[0].x;
 		my -= m_ViewportBounds[0].y;
@@ -245,17 +256,57 @@ namespace Blu
 	{
 		ImGui::Begin("##Toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-		if (ImGui::ImageButton(nullptr, ImVec2(20, 20)))
+		float size = 20.0f;
+		float windowWidth = ImGui::GetWindowWidth();
+		float buttonWidth = 3 * size; // width of 3 buttons
+		float spacing = 10.0f; // space between each button
+		float totalWidth = buttonWidth + 2 * spacing; // total width of elements
+		float offset = (windowWidth - totalWidth) / 2.0f; // calculate the offset to center the elements
+
+		ImGui::Dummy(ImVec2(offset, 0)); // create an invisible widget to offset elements
+		ImGui::SameLine();
+
+		// Play button with drop-down options
+		if (ImGui::ArrowButton("##PlayOptions", ImGuiDir_Right))
 		{
-			if (m_SceneState == SceneState::Edit)
+			ImGui::OpenPopup("PlayOptions");
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::BeginPopup("PlayOptions"))
+		{
+			if (ImGui::MenuItem("Play"))
 			{
 				OnScenePlay();
 			}
-			else if (m_SceneState == SceneState::Play)
+
+			if (ImGui::MenuItem("Play In New Window"))
+			{
+				OnScenePlayNewWindow();
+			}
+
+			if (ImGui::MenuItem("Simulate"))
+			{
+				OnSceneSimulate();
+			}
+
+			ImGui::EndPopup();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::ImageButton(nullptr, ImVec2(size, size)))
+		{
+			if (m_SceneState == SceneState::Play )
 			{
 				OnSceneStop();
 			}
+			
 		}
+
+		// Add more toolbar items here as needed
+		BLU_CORE_ERROR("Scene state is {0}", (int)m_SceneState);
 		ImGui::End();
 	}
 
@@ -294,10 +345,22 @@ namespace Blu
 		m_SceneState = SceneState::Play;
 	}
 
+	void BluEditorLayer::OnScenePause()
+	{
+	}
+
 	void BluEditorLayer::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
 
+	}
+
+	void BluEditorLayer::OnScenePlayNewWindow()
+	{
+	}
+
+	void BluEditorLayer::OnSceneSimulate()
+	{
 	}
 
 	void BluEditorLayer::OnGuiDraw()
@@ -344,6 +407,7 @@ namespace Blu
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
+		
 		auto viewportOffset = ImGui::GetCursorPos();
 		m_ViewPortFocused = ImGui::IsWindowFocused();
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -421,6 +485,7 @@ namespace Blu
 				tc.Scale = scale;
 			}
 		}
+		Toolbar();
 		static const char* items[] = { "Translation", "Rotation", "Scale" };
 		static int current_item = 0;
 
