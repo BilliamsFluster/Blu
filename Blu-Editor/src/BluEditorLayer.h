@@ -34,8 +34,10 @@ namespace Blu
 		void SaveSceneAs();
 
 		void OnScenePlay();
-
+		void OnScenePause();
 		void OnSceneStop();
+		void OnScenePlayNewWindow();
+		void OnSceneSimulate();
 
 	private:
 		Blu::OrthographicCameraController m_CameraController;
@@ -75,7 +77,8 @@ namespace Blu
 		{
 			Edit = 0,
 			Play = 1,
-			Simulate = 2
+			Pause = 2,
+			Simulate = 3
 		};
 
 		SceneState m_SceneState = SceneState::Edit;
