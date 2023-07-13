@@ -28,8 +28,14 @@ namespace Blu
 		bool OnWindowResizedEvent(Events::WindowResizeEvent& event);
 		void GizmosTransform(glm::mat4& view, const glm::mat4& projection, glm::mat4& transform);
 		void NewScene();
+		void Toolbar();
 		void OpenScene();
+		void OpenScene(const std::filesystem::path& path);
 		void SaveSceneAs();
+
+		void OnScenePlay();
+
+		void OnSceneStop();
 
 	private:
 		Blu::OrthographicCameraController m_CameraController;
@@ -65,7 +71,14 @@ namespace Blu
 		Shared<ContentBrowserPanel> m_ContentBrowserPanel;
 		int m_DrawnEntityID;
 
-		
+		enum class SceneState
+		{
+			Edit = 0,
+			Play = 1,
+			Simulate = 2
+		};
+
+		SceneState m_SceneState = SceneState::Edit;
 	};
 }
 

@@ -241,19 +241,42 @@ namespace Blu
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
+	void BluEditorLayer::Toolbar()
+	{
+		ImGui::Begin("##Toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+		if (ImGui::ImageButton(nullptr, ImVec2(20, 20)))
+		{
+			if (m_SceneState == SceneState::Edit)
+			{
+				OnScenePlay();
+			}
+			else if (m_SceneState == SceneState::Play)
+			{
+				OnSceneStop();
+			}
+		}
+		ImGui::End();
+	}
+
 	void BluEditorLayer::OpenScene()
 	{
 		std::string filepath = FileDialogs::OpenFile("Blu Scene (*.blu)\0*.blu\0");
 		if (!filepath.empty())
 		{
-			m_ActiveScene = std::make_shared<Scene>();
-			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-
-			SceneSerializer serializer(m_ActiveScene);
-			serializer.Deserialize(filepath);
+			OpenScene(filepath);
 
 		}
+	}
+
+	void BluEditorLayer::OpenScene(const std::filesystem::path& path)
+	{
+		m_ActiveScene = std::make_shared<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Deserialize(path.string());
 	}
 
 	void BluEditorLayer::SaveSceneAs()
@@ -264,6 +287,17 @@ namespace Blu
 			SceneSerializer serializer(m_ActiveScene);
 			serializer.Serialize(filepath);
 		}
+	}
+
+	void BluEditorLayer::OnScenePlay()
+	{
+		m_SceneState = SceneState::Play;
+	}
+
+	void BluEditorLayer::OnSceneStop()
+	{
+		m_SceneState = SceneState::Edit;
+
 	}
 
 	void BluEditorLayer::OnGuiDraw()
@@ -324,6 +358,16 @@ namespace Blu
 
 		uint32_t textureID = m_FrameBuffer->GetColorAttachmentID();
 		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			{
+				std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
+				OpenScene(payloadPath);
+			}
+			ImGui::EndDragDropTarget();
+		}
 
 		auto windowSize = ImGui::GetWindowSize();
 		ImVec2 minBound = ImGui::GetWindowPos();

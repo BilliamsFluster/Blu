@@ -57,7 +57,7 @@ namespace Blu
 
         // Show directory content view
 
-        
+       
         ImGui::BeginChild("right pane", ImVec2(0, 0), true);
 
         // Top operation panel
@@ -131,6 +131,9 @@ namespace Blu
 
         m_ObjectClicked = false;
         ImGui::Columns(columnCount, nullptr, false);
+        //ImGui::BeginChild("Scrolling", ImVec2(ImGui::GetWindowWidth(), 0), true);
+
+
         for (auto& p : std::filesystem::directory_iterator(m_CurrentDirectory))
         {
             const auto& path = p.path();
@@ -146,9 +149,10 @@ namespace Blu
                 continue;
 
             ImGui::BeginGroup();  // Begin group for icon and filename
-
+            
             if (p.is_directory())
             {
+
                 
                 auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetRendererID()));
                 ImVec2 iconSize(50.0f, 50.0f);
@@ -216,6 +220,8 @@ namespace Blu
                 
                 ImGui::PopID();
             }
+            
+
             std::cout << m_ObjectClicked << std::endl;
             if (ImGui::IsMouseClicked(1) && !m_ObjectClicked)
             {
@@ -229,16 +235,40 @@ namespace Blu
                 // Set payload to carry the path of the file being dragged
                 ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", payloadPath.c_str(), payloadPath.size() + 1); // +1 to include the null terminator
                 
-                if (std::filesystem::is_directory(payloadPath)) 
+                // Get current mouse position
+                ImVec2 mousePos = ImGui::GetMousePos();
+
+                // Size of your image
+                ImVec2 imageSize = ImVec2(50, 50);
+
+                // Calculate the top left position for the image
+                // to make the image centered around the mouse position
+                ImVec2 imagePos = ImVec2(mousePos.x - imageSize.x * 0.5f, mousePos.y - imageSize.y * 0.5f);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
+                // Create an overlay at mouse position
+                ImGui::SetNextWindowPos(imagePos);
+                ImGui::SetNextWindowSize(imageSize);
+
+                // Make the window background transparent and disable title bar, resize, move, and scrollbars
+                ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+                    ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoInputs |
+                    ImGuiWindowFlags_NoBackground;
+
+                // Create the overlay window
+                ImGui::Begin("ImageOverlay", nullptr, windowFlags);
+
+                if (std::filesystem::is_directory(payloadPath))
                 {
-                    ImGui::Image((void*)(intptr_t)m_FolderOpenIcon->GetRendererID(), ImVec2(50, 50), ImVec2(0, 1), ImVec2(1, 0));
-                    
+                    ImGui::Image((void*)(intptr_t)m_FolderOpenIcon->GetRendererID(), imageSize, ImVec2(0, 1), ImVec2(1, 0));
                 }
-                else 
+                else
                 {
-                    ImGui::Image((void*)(intptr_t)m_FileIcons[".png"]->GetRendererID(), ImVec2(50, 50), ImVec2(0, 1), ImVec2(1, 0));
-                    
+                    ImGui::Image((void*)(intptr_t)m_FileIcons[".png"]->GetRendererID(), imageSize, ImVec2(0, 1), ImVec2(1, 0));
                 }
+                ImGui::End();
+                ImGui::PopStyleVar();
 
                 // Display a preview (could be anything, e.g. the filename, an icon...)
                 ImGui::Text("%s", filenameString.c_str());
@@ -294,6 +324,9 @@ namespace Blu
 
             ImGui::NextColumn();
         }
+        //ImGui::PopItemWidth(); // Reset the item width to the previous value
+
+        //ImGui::EndChild();
        
         if (!rightClickedItemPath.empty() && ImGui::BeginPopupContextWindow())
         {
