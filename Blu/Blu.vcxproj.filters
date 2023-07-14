@@ -49,6 +49,9 @@
     <Filter Include="src\Blu\ImGui">
       <UniqueIdentifier>{09171887-75D7-93BD-3E12-DD3AAA91D899}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Math">
+      <UniqueIdentifier>{D8C62123-C429-B1C7-6DAF-E97D59F17C4A}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Blu\Platform">
       <UniqueIdentifier>{D38520C2-BF7E-3F14-E8B0-2499D4081F20}</UniqueIdentifier>
     </Filter>
@@ -1425,6 +1428,9 @@
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h">
       <Filter>src\Blu\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Math\Math.h">
+      <Filter>src\Blu\Math</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
@@ -1456,6 +1462,9 @@
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Camera.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h">
@@ -1518,8 +1527,6 @@
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Math\Math.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -1570,6 +1577,9 @@
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp">
       <Filter>src\Blu\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Math\Math.cpp">
+      <Filter>src\Blu\Math</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
@@ -1607,6 +1617,9 @@
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp">
@@ -1663,7 +1676,5 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Math\Math.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
   </ItemGroup>
 </Project>

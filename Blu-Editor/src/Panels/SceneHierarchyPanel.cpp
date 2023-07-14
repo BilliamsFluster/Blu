@@ -264,6 +264,7 @@ namespace Blu
 	static std::vector<ParticleSystemComponent> ParticleSystems(10);
 	void SceneHierarchyPanel::DrawEntityComponents(Entity entity)
 	{
+		ImGui::BeginChild("Properties Window");
 		if (entity.HasComponent<TagComponent>())
 		{
 			auto& tag = entity.GetComponent<TagComponent>().Tag;
@@ -284,20 +285,50 @@ namespace Blu
 		}
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			if (ImGui::MenuItem("Camera"))
+			if (!m_SelectedEntity.HasComponent<CameraComponent>())
 			{
-				m_SelectedEntity.AddComponent<CameraComponent>();
-				ImGui::CloseCurrentPopup();
+				if (ImGui::MenuItem("Camera"))
+				{
+					m_SelectedEntity.AddComponent<CameraComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
 			}
+			if (!m_SelectedEntity.HasComponent<SpriteRendererComponent>())
+			{
 			if (ImGui::MenuItem("Sprite Renderer"))
 			{
 				m_SelectedEntity.AddComponent<SpriteRendererComponent>();
 				ImGui::CloseCurrentPopup();
 			}
-			if (ImGui::MenuItem("Particle System"))
+
+			}
+
+			if (!m_SelectedEntity.HasComponent<ParticleSystemComponent>())
 			{
-				m_SelectedEntity.AddComponent<ParticleSystemComponent>();
-				ImGui::CloseCurrentPopup();
+				if (ImGui::MenuItem("Particle System"))
+				{
+					m_SelectedEntity.AddComponent<ParticleSystemComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
+			}
+
+			if (!m_SelectedEntity.HasComponent<Rigidbody2DComponent>())
+			{
+				if (ImGui::MenuItem("Rigidbody 2D"))
+				{
+					m_SelectedEntity.AddComponent<Rigidbody2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<BoxCollider2DComponent>())
+			{
+				if (ImGui::MenuItem("Box Collider 2D"))
+				{
+					m_SelectedEntity.AddComponent<BoxCollider2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
 			}
 			ImGui::EndPopup();
 		}
@@ -319,7 +350,8 @@ namespace Blu
 				static const char* particleSystems[] = { "Default", "Fountain", "Explosion", "RainFall" }; // Add more as needed
 				static int currentParticleSystem = 0;
 				static int lastParticleSystem = -1;
-
+				float itemWidth = 2.0f; // Adjust this value as needed
+				ImGui::PushItemWidth(ImGui::GetWindowWidth() / itemWidth);
 				
 				if (ImGui::Combo("Particle System", &currentParticleSystem, particleSystems, IM_ARRAYSIZE(particleSystems)))
 				{
@@ -363,6 +395,8 @@ namespace Blu
 		
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
 			{
+				float itemWidth = 2.0f; // Adjust this value as needed
+				ImGui::PushItemWidth(ImGui::GetWindowWidth() / itemWidth);
 				auto& camera = component.Camera;
 				ImGui::Checkbox("Primary", &component.Primary);
 				ImGui::Checkbox("Fixed AspectRatio", &component.FixedAspectRatio);
@@ -371,6 +405,7 @@ namespace Blu
 				const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
 				if (ImGui::BeginCombo("Projection", currentProjectionTypeString))
 				{
+					
 					for (int i = 0; i < 2; i++)
 					{
 						bool isSelected = currentProjectionTypeString == projectionTypeStrings[i];
@@ -424,6 +459,8 @@ namespace Blu
 			});
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
 			{
+				float itemWidth = 2.0f; // Adjust this value as needed
+				ImGui::PushItemWidth(ImGui::GetWindowWidth() / itemWidth);
 				ImGui::ColorEdit4("Entity Color: ", glm::value_ptr(component.Color));
 				ImGui::Button("Texture", ImVec2(50.0f, 50.0f));
 				if (ImGui::BeginDragDropTarget())
@@ -437,8 +474,54 @@ namespace Blu
 					ImGui::EndDragDropTarget();
 				}
 			});
-		
-		
+		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)
+			{
+
+				float itemWidth = 2.0f;
+				float itemHeight = 10.0f;
+				ImGui::PushItemWidth(ImGui::GetWindowWidth() / itemWidth);
+				
+
+				ImGui::Text("Offset");
+				ImGui::DragFloat2("##Offset", glm::value_ptr(component.Offset), 0.1f);
+				ImGui::Text("Size");
+				ImGui::DragFloat2("##Size", glm::value_ptr(component.Size), 0.1f);
+				ImGui::Text("Density");
+				ImGui::DragFloat("##Density", &component.Density, 0.01f, 0.0f, 10.0f);
+				ImGui::Text("Friction");
+				ImGui::DragFloat("##Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
+				ImGui::Text("Restitution");
+				ImGui::DragFloat("##Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::Text("Restitution Threshold");
+				ImGui::DragFloat("##RestitutionThreshold", &component.RestitutionThreshold, 0.1f, 0.0f, 10.0f);
+
+
+			});
+		DrawComponent<Rigidbody2DComponent>("Rigidbody 2D", entity, [](auto& component)
+			{
+				const char* bodyTypes[] = { "Static", "Dynamic", "Kinematic" };
+				const char* currentBodyType = bodyTypes[(int)component.Type];
+				if (ImGui::BeginCombo("Body Type", currentBodyType)) // The second parameter is the label previewed before opening the combo.
+				{
+					for (int i = 0; i < IM_ARRAYSIZE(bodyTypes); i++)
+					{
+						bool isSelected = (currentBodyType == bodyTypes[i]); // You can store your selection however you want.
+						if (ImGui::Selectable(bodyTypes[i], isSelected))
+							component.Type = (Rigidbody2DComponent::BodyType)i;
+
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + keyboard navigation focus).
+					}
+					ImGui::EndCombo();
+				}
+				ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+			});
+
+		float extraSpace = 200.0f;  // Extra space at the end in pixels
+		ImGui::Dummy(ImVec2(0.0f, extraSpace));  
+
+		ImGui::EndChild();
+
 			
 		
 	}
