@@ -127,7 +127,7 @@ namespace Blu
 			ImGui::Separator();
 			bool open = ImGui::TreeNodeEx((void*)typeid(ComponentType).hash_code(), treeNodeFlags, name.c_str());
 			ImGui::PopStyleVar();
-			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
+			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f - 13.0f);
 			if (ImGui::Button("...", ImVec2{ lineHeight, lineHeight }))
 			{
 				ImGui::OpenPopup("Component Settings");

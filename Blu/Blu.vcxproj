@@ -584,6 +584,7 @@
     <ClInclude Include="engine\src\Blu\Core\MouseCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\OrthographicCameraController.h" />
     <ClInclude Include="engine\src\Blu\Core\Timestep.h" />
+    <ClInclude Include="engine\src\Blu\Core\UUID.h" />
     <ClInclude Include="engine\src\Blu\Core\Window.h" />
     <ClInclude Include="engine\src\Blu\Debug\Instrumentor.h" />
     <ClInclude Include="engine\src\Blu\Events\Event.h" />
@@ -640,6 +641,7 @@
     <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\UUID.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />

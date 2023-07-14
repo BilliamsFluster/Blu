@@ -13,6 +13,7 @@ namespace Blu
 		Scene();
 		~Scene();
 		Entity CreateEntity(const std::string& name = std::string());
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		Entity GetPrimaryCameraEntity();
 
 		void OnRuntimeStart();
