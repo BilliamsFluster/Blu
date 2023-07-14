@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "entt.hpp"
 #include "Blu/Core/Log.h"
+#include "Blu/Core/UUID.h"
 
 namespace Blu
 {
@@ -12,6 +13,7 @@ namespace Blu
 		Entity(entt::entity handle, Scene* scene);
 		Entity(const Entity& other) = default;
 
+		UUID GetUUID() { return  GetComponent<IDComponent>().ID; }
 		template<typename T>
 		bool HasComponent()
 		{

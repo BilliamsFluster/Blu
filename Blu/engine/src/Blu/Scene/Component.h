@@ -5,6 +5,7 @@
 #include "Blu/Core/Core.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "Blu/Rendering/ParticleSystem.h"
+#include "Blu/Core/UUID.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -14,6 +15,13 @@ namespace Blu
 	class ScriptableEntity;
 	class Entity;
 	
+	struct IDComponent
+	{
+		UUID ID;
+
+		IDComponent() = default;
+		IDComponent(const IDComponent&) = default;
+	};
 	struct TransformComponent
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
