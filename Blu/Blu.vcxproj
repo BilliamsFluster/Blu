@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -99,7 +99,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -124,7 +124,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -144,7 +144,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
     <ClInclude Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\common.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\detail\_features.hpp" />
@@ -609,6 +608,7 @@
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h" />
@@ -631,7 +631,6 @@
     <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -664,6 +663,7 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
@@ -697,6 +697,9 @@
     </ProjectReference>
     <ProjectReference Include="engine\ExternalDependencies\yaml\yaml.vcxproj">
       <Project>{7814A17C-644B-A20D-0D38-8810F94D1E0F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="engine\ExternalDependencies\box2d\Box2D.vcxproj">
+      <Project>{A434E80C-1049-10BE-D9CA-B31D459E0CEF}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -131,9 +131,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Panels\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\BluEditor.cpp" />
     <ClCompile Include="src\BluEditorLayer.cpp" />
+    <ClCompile Include="src\Panels\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -152,12 +152,6 @@
     <ProjectReference Include="..\Blu\engine\ExternalDependencies\Glad\Glad.vcxproj">
       <Project>{BDD6857C-A90D-870D-52FA-6C103E10030F}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\shaders\Texture.glsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\Panels\ContentBrowserPanel.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -343,6 +343,7 @@ namespace Blu
 	void BluEditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+		m_ActiveScene->OnRuntimeStart();
 	}
 
 	void BluEditorLayer::OnScenePause()
@@ -352,6 +353,7 @@ namespace Blu
 	void BluEditorLayer::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+		m_ActiveScene->OnRuntimeStop();
 
 	}
 
@@ -445,44 +447,48 @@ namespace Blu
 
 		//Guizmos
 		Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
-		if (selectedEntity && m_ImGuizmoType != -1)
+		if (m_SceneState != SceneState::Play)
 		{
-			ImGuizmo::SetOrthographic(false);
-			ImGuizmo::SetDrawlist();
-			float windowWidth = (float)ImGui::GetWindowWidth();
-			float windowHeight = (float)ImGui::GetWindowHeight();
-			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-			//// Runtime Camera
-			//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-			//const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-
-			//const glm::mat4& cameraProjection = camera.GetProjectionMatrix();
-			//glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
-
-			//Entity Transform
-			auto& tc = selectedEntity.GetComponent<TransformComponent>();
-			glm::mat4 transform = tc.GetTransform();
-
-			//Editor Camera
-			const glm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
-			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
-			
-			//snapping 
-			
-			
-			GizmosTransform(cameraView, cameraProjection, transform);
-			
-
-			if (ImGuizmo::IsUsing())
+			if (selectedEntity && m_ImGuizmoType != -1)
 			{
-				glm::vec3 translation, rotation, scale;
-				Math::DecomposeTransform(transform, translation, rotation, scale);
+				ImGuizmo::SetOrthographic(false);
+				ImGuizmo::SetDrawlist();
+				float windowWidth = (float)ImGui::GetWindowWidth();
+				float windowHeight = (float)ImGui::GetWindowHeight();
+				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+				//// Runtime Camera
+				//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+				//const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+
+				//const glm::mat4& cameraProjection = camera.GetProjectionMatrix();
+				//glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+
+				//Entity Transform
+				auto& tc = selectedEntity.GetComponent<TransformComponent>();
+				glm::mat4 transform = tc.GetTransform();
+
+				//Editor Camera
+				const glm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
+				glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+			
+				//snapping 
+			
+			
+				GizmosTransform(cameraView, cameraProjection, transform);
+			
+
+				if (ImGuizmo::IsUsing())
+				{
+					glm::vec3 translation, rotation, scale;
+					Math::DecomposeTransform(transform, translation, rotation, scale);
 				
-				glm::vec3 deltaRotation =  rotation - tc.Rotation;
-				tc.Translation = translation;
-				tc.Rotation += deltaRotation;
-				tc.Scale = scale;
+					glm::vec3 deltaRotation =  rotation - tc.Rotation;
+					tc.Translation = translation;
+					tc.Rotation += deltaRotation;
+					tc.Scale = scale;
+				}
+
 			}
 		}
 		Toolbar();

@@ -20,6 +20,7 @@ workspace "Blu"
 	IncludeDir["entt"] = "Blu/engine/ExternalDependencies/entt/include"
 	IncludeDir["yaml"] = "Blu/engine/ExternalDependencies/yaml/include"
 	IncludeDir["ImGuizmo"] = "Blu/engine/ExternalDependencies/ImGuizmo"
+	IncludeDir["box2d"] = "Blu/engine/ExternalDependencies/box2d/include"
 
 
 
@@ -29,6 +30,7 @@ workspace "Blu"
 	include "Blu/engine/ExternalDependencies/Glad"
 	include "Blu/engine/ExternalDependencies/imgui"
 	include "Blu/engine/ExternalDependencies/yaml"
+	include "Blu/engine/ExternalDependencies/box2d"
 	
 
 
@@ -77,7 +79,8 @@ project "Blu"
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml}",
-		"%{IncludeDir.ImGuizmo}"
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.box2d}",
 
 
 
@@ -92,7 +95,8 @@ project "Blu"
 		"opengl32",
 		"ImGui",
 		"yaml",
-		"dwmapi"
+		"dwmapi",
+		"box2d"
 		
 	}
 	filter {"files:Blu/engine/ExternalDependencies/ImGuizmo/*.cpp"}

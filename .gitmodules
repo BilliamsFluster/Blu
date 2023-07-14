@@ -16,3 +16,6 @@
 [submodule "Blu/engine/ExternalDependencies/ImGuizmo"]
 	path = Blu/engine/ExternalDependencies/ImGuizmo
 	url = https://github.com/BilliamsFluster/ImGuizmo
+[submodule "Blu/engine/ExternalDependencies/box2d"]
+	path = Blu/engine/ExternalDependencies/box2d
+	url = https://github.com/BilliamsFluster/box2d
