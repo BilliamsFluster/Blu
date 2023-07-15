@@ -56,6 +56,7 @@ namespace Blu
 		Entity m_CameraEntity;
 		bool m_ViewPortFocused = false;
 		Blu::Shared<Scene> m_ActiveScene;
+		Blu::Shared<Scene> m_EditorScene;
 		std::vector<Entity> Entities;
 		
 		int m_ImGuizmoType = -1;

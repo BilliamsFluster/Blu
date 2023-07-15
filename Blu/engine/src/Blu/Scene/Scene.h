@@ -12,9 +12,13 @@ namespace Blu
 	public:
 		Scene();
 		~Scene();
+
+		static Shared<Scene> Copy(Shared<Scene> scene);
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		Entity GetPrimaryCameraEntity();
+		Entity DuplicateEntity(Entity& targetEntity);
+		
 
 		void OnRuntimeStart();
 		void OnRuntimeStop();

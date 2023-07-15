@@ -33,6 +33,7 @@ namespace Blu
 		BLU_CORE_ASSERT(false, "Unknown body type")
 		return b2BodyType::b2_staticBody;
 	}
+
 	Scene::Scene()
 	{
 		
@@ -42,7 +43,55 @@ namespace Blu
 	{
 
 	}
-	static int nextID = 0;
+	template<typename Component>
+	static void CopyComponent(entt::registry& dst, entt::registry& src, std::unordered_map<UUID, entt::entity> map)
+	{
+		auto view = src.view<Component>();
+
+		for (auto e : view)
+		{
+			UUID uuid = src.get<IDComponent>(e).ID;
+			entt::entity enttID = map.at(uuid);
+			auto& component = src.get<Component>(e);
+
+			dst.emplace_or_replace<Component>(enttID, component);
+
+		}
+	}
+
+	
+	Shared<Scene> Scene::Copy(Shared<Scene> scene)
+	{
+		Shared<Scene> newScene = std::make_shared<Scene>();
+
+		newScene->m_ViewportHeight = scene->m_ViewportHeight;
+		newScene->m_ViewportWidth = scene->m_ViewportWidth;
+
+		std::unordered_map<UUID, entt::entity> enttMap;
+
+		auto& srcSceneRegistry = scene->m_Registry;
+		auto& dstSceneRegistry = newScene->m_Registry;
+		auto idView = srcSceneRegistry.view<IDComponent>();
+
+		for (auto e : idView)
+		{ 
+			UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
+			const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
+			Entity entity = newScene->CreateEntityWithUUID(uuid, name);
+			enttMap[uuid] = (entt::entity)entity;
+
+		}
+		// need to make sure when you create a component you add this function to it 
+		CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<ParticleSystemComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<Rigidbody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+
+		return newScene;
+	}
 	Entity Scene::CreateEntity(const std::string& name)
 	{
 		return CreateEntityWithUUID(UUID(), name);
@@ -69,6 +118,40 @@ namespace Blu
 			}
 			return {};
 		}
+	}
+	Entity Scene::DuplicateEntity(Entity& targetEntity)
+	{
+		if (true)
+		{
+			Entity duplicatedEntity = CreateEntity("Entity");
+			auto& tc = targetEntity.GetComponent<TransformComponent>();
+
+			auto& detc = duplicatedEntity.GetComponent<TransformComponent>();
+
+			detc.Translation = tc.Translation;
+			detc.Rotation = tc.Rotation;
+			detc.Scale = tc.Scale;
+
+			if (targetEntity.HasComponent<SpriteRendererComponent>())
+			{
+				m_Registry.emplace<SpriteRendererComponent>((entt::entity)duplicatedEntity, targetEntity.GetComponent<SpriteRendererComponent>());
+			}
+			if (targetEntity.HasComponent<ParticleSystemComponent>())
+			{
+				m_Registry.emplace<ParticleSystemComponent>((entt::entity)duplicatedEntity, targetEntity.GetComponent<ParticleSystemComponent>());
+			}
+			if (targetEntity.HasComponent<BoxCollider2DComponent>())
+			{
+				m_Registry.emplace<BoxCollider2DComponent>((entt::entity)duplicatedEntity, targetEntity.GetComponent<BoxCollider2DComponent>());
+			}
+			if (targetEntity.HasComponent<Rigidbody2DComponent>())
+			{
+				m_Registry.emplace<Rigidbody2DComponent>((entt::entity)duplicatedEntity, targetEntity.GetComponent<Rigidbody2DComponent>());
+			}
+
+			return duplicatedEntity;
+		}
+		return Entity{};
 	}
 	void Scene::OnRuntimeStart()
 	{

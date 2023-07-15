@@ -322,12 +322,21 @@ namespace Blu
 
 	void BluEditorLayer::OpenScene(const std::filesystem::path& path)
 	{
-		m_ActiveScene = std::make_shared<Scene>();
-		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+		if (m_SceneState != SceneState::Edit)
+			OnSceneStop();
 
+		m_ActiveScene = std::make_shared<Scene>();
+		
 		SceneSerializer serializer(m_ActiveScene);
-		serializer.Deserialize(path.string());
+		if (serializer.Deserialize(path.string()))
+		{
+			m_EditorScene = m_ActiveScene;
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+			
+
+		}
+
 	}
 
 	void BluEditorLayer::SaveSceneAs()
@@ -343,6 +352,8 @@ namespace Blu
 	void BluEditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+
+		m_ActiveScene = Scene::Copy(m_EditorScene);
 		m_ActiveScene->OnRuntimeStart();
 	}
 
@@ -354,6 +365,7 @@ namespace Blu
 	{
 		m_SceneState = SceneState::Edit;
 		m_ActiveScene->OnRuntimeStop();
+		m_ActiveScene = m_EditorScene;
 
 	}
 
@@ -658,6 +670,15 @@ namespace Blu
 			if (control)
 			{
 				OpenScene();
+			}
+			break;
+		}
+		case BLU_KEY_D:
+		{
+			if (control)
+			{
+				Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
+				m_ActiveScene->DuplicateEntity(selectedEntity);
 			}
 			break;
 		}
