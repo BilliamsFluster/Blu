@@ -131,7 +131,6 @@ namespace Blu
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
 			int data = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
-			BLU_CORE_INFO(" PixelData = {0}", data);
 			m_DrawnEntityID = data;
 
 		}
@@ -306,7 +305,6 @@ namespace Blu
 		}
 
 		// Add more toolbar items here as needed
-		BLU_CORE_ERROR("Scene state is {0}", (int)m_SceneState);
 		ImGui::End();
 	}
 

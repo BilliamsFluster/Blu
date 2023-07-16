@@ -89,6 +89,7 @@ namespace Blu
 		CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CircleRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		return newScene;
 	}
@@ -148,6 +149,10 @@ namespace Blu
 			{
 				m_Registry.emplace<Rigidbody2DComponent>((entt::entity)duplicatedEntity, targetEntity.GetComponent<Rigidbody2DComponent>());
 			}
+			if (targetEntity.HasComponent<CircleRendererComponent>())
+			{
+				m_Registry.emplace<CircleRendererComponent>((entt::entity)duplicatedEntity, targetEntity.GetComponent<CircleRendererComponent>());
+			}
 
 			return duplicatedEntity;
 		}
@@ -206,21 +211,32 @@ namespace Blu
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
 	{
 		Renderer2D::BeginScene(camera);
-		Renderer2D::GetRendererData()->TextureShader->Bind();
-		auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-		for (auto& entity : group)
+		Renderer2D::GetRendererData()->QuadShader->Bind();
 		{
-			auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-			Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			for (auto& entity : group)
+			{
+				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+			}
 		}
-
-		auto particleView = m_Registry.view<ParticleSystemComponent>();
-		for (auto& entity : particleView)
 		{
-			auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-			particleSystem.Update(deltaTime);
+			auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+			for (auto& entity : view)
+			{
+				auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+				Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+			}
+		}
+		{
+			auto particleView = m_Registry.view<ParticleSystemComponent>();
+			for (auto& entity : particleView)
+			{
+				auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+				particleSystem.Update(deltaTime);
 
 
+			}
 		}
 		Renderer2D::EndScene();
 
@@ -287,19 +303,31 @@ namespace Blu
 
 			Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), cameraTransform);
 			// Update particle systems
-			auto particleView = m_Registry.view<ParticleSystemComponent>();
-			for (auto& entity : particleView)
 			{
-				auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-				particleSystem.Update(deltaTime);
+				auto particleView = m_Registry.view<ParticleSystemComponent>();
+				for (auto& entity : particleView)
+				{
+					auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+					particleSystem.Update(deltaTime);
 
 
+				}
 			}
-			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-			for (auto& entity : group)
 			{
-				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				for (auto& entity : group)
+				{
+					auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+					Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+				}
+			}
+			{
+				auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+				for (auto& entity : view)
+				{
+					auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+					Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+				}
 			}
 
 			

@@ -222,7 +222,6 @@ namespace Blu
             }
             
 
-            std::cout << m_ObjectClicked << std::endl;
             if (ImGui::IsMouseClicked(1) && !m_ObjectClicked)
             {
                 rightClickedItemPath = "";  // clicked on empty space
