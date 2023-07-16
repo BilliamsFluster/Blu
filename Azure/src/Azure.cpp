@@ -83,13 +83,13 @@ public:
 		
 		m_Shader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc));
 		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
-		m_TextureShader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Renderer::GetShaderLibrary()->Get("Texture"));
+		m_QuadShader = std::dynamic_pointer_cast<Blu::OpenGLShader>(Blu::Renderer::GetShaderLibrary()->Get("Texture"));
 
 		m_Texture = (Blu::Texture2D::Create("assets/textures/Wallpaper.png"));
 
-		m_TextureShader->Bind();
-		//std::dynamic_pointer_cast<Blu::OpenGLShader>(textureShader)->Bind();
-		std::dynamic_pointer_cast<Blu::OpenGLShader>(m_TextureShader)->SetUniformInt("u_Texture", 0);
+		m_QuadShader->Bind();
+		//std::dynamic_pointer_cast<Blu::OpenGLShader>(QuadShader)->Bind();
+		std::dynamic_pointer_cast<Blu::OpenGLShader>(m_QuadShader)->SetUniformInt("u_Texture", 0);
 
 
 
@@ -118,7 +118,7 @@ public:
 
 		Blu::Renderer::Submit(m_VertexArray, m_Shader);
 		m_Texture->Bind();
-		Blu::Renderer::Submit(m_VertexArray, m_TextureShader, transform); //for another triangle
+		Blu::Renderer::Submit(m_VertexArray, m_QuadShader, transform); //for another triangle
 		//m_Shader->SetUniformFloat4("u_Color", m_Color.x, m_Color.y, m_Color.z, m_Color.w); // set color of triangle 
 
 		Blu::Renderer::EndScene();
@@ -137,7 +137,7 @@ public:
 private:
 	Blu::ShaderLibrary m_ShaderLibrary;
 	Blu::Shared<Blu::VertexArray> m_VertexArray;
-	Blu::Shared<Blu::OpenGLShader> m_Shader, m_TextureShader;
+	Blu::Shared<Blu::OpenGLShader> m_Shader, m_QuadShader;
 	Blu::OrthographicCameraController m_CameraController;
 	Blu::Shared<Blu::Texture2D> m_Texture;
 	

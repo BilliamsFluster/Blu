@@ -18,10 +18,20 @@ namespace Blu
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
-		int EntityID = 2; // problem is that this is not getting read  even when the values change
+		int EntityID;
 		
 		
 
+	};
+
+	struct CircleVertex
+	{
+		glm::vec4 Color;
+		glm::vec3 WorldPosition;
+		glm::vec3 LocalPosition;
+		float Fade;
+		float Thicknes;
+		int EntityID;
 	};
 
 	
@@ -35,10 +45,13 @@ namespace Blu
 		s_RendererData->QuadVertexArray = Blu::VertexArray::Create();
 		s_RendererData->QuadVertexBuffer = Blu::VertexBuffer::Create(s_RendererData->MaxVertices * sizeof(QuadVertex));
 
+		s_RendererData->CircleVertexArray = Blu::VertexArray::Create();
+		s_RendererData->CircleVertexBuffer = Blu::VertexBuffer::Create(s_RendererData->MaxVertices * sizeof(CircleVertex));
 
 
 
-		Blu::BufferLayout layout = {
+		/* Quad layout*/
+		Blu::BufferLayout quadLayout = {
 			{Blu::ShaderDataType::Float4, "a_Color"},
 			{Blu::ShaderDataType::Float3, "a_Position"},
 			{Blu::ShaderDataType::Float2, "a_TexCoord"},
@@ -47,9 +60,22 @@ namespace Blu
 			{Blu::ShaderDataType::Int, "a_EntityID"}
 		};
 
-		s_RendererData->QuadVertexBuffer->SetLayout(layout);
+		/* Circle layout*/
+		Blu::BufferLayout circleLayout = {
+			{Blu::ShaderDataType::Float4, "a_Color"},
+			{Blu::ShaderDataType::Float3, "a_WorldPosition"},
+			{Blu::ShaderDataType::Float3, "a_LocalPosition"},
+			{Blu::ShaderDataType::Float, "a_Fade"},
+			{Blu::ShaderDataType::Float, "a_Thickness"},
+			{Blu::ShaderDataType::Int, "a_EntityID"}
+		};
+
+		s_RendererData->QuadVertexBuffer->SetLayout(quadLayout);
+		s_RendererData->CircleVertexBuffer->SetLayout(circleLayout);
 
 		s_RendererData->QuadVertexBufferBase = new QuadVertex[s_RendererData->MaxVertices];
+		s_RendererData->CircleVertexBufferBase = new CircleVertex[s_RendererData->MaxVertices];
+
 		uint32_t* quadIndices = new uint32_t[s_RendererData->MaxIndices];
 
 		uint32_t offset = 0;
@@ -67,9 +93,11 @@ namespace Blu
 
 		
 		s_RendererData->QuadVertexArray->AddVertexBuffer(s_RendererData->QuadVertexBuffer);
+		s_RendererData->CircleVertexArray->AddVertexBuffer(s_RendererData->CircleVertexBuffer);
 
 		Shared<IndexBuffer> quadIB = (Blu::IndexBuffer::Create(quadIndices, s_RendererData->MaxIndices ));
 		s_RendererData->QuadVertexArray->AddIndexBuffer(quadIB);
+		s_RendererData->CircleVertexArray->AddIndexBuffer(quadIB); // this is intentional
 
 		delete[] quadIndices;
 		
@@ -78,10 +106,12 @@ namespace Blu
 		{
 			samplers[i] = i;
 		}
-		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
-		s_RendererData->TextureShader = Blu::Renderer::GetShaderLibrary()->Get("Texture");
-		s_RendererData->TextureShader->Bind();
-		s_RendererData->TextureShader->SetUniformIntArray("u_Textures", samplers.data(), s_RendererData->MaxTextureSlots);
+		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Quad.glsl");
+		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Circle.glsl");
+		s_RendererData->QuadShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
+		s_RendererData->CircleShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
+		s_RendererData->QuadShader->Bind();
+		s_RendererData->QuadShader->SetUniformIntArray("u_Textures", samplers.data(), s_RendererData->MaxTextureSlots);
 		s_RendererData->WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_RendererData->WhiteTexture->SetData(&whiteTextureData, sizeof(whiteTextureData));
@@ -101,11 +131,16 @@ namespace Blu
 	void Renderer2D::BeginScene(const EditorCamera& camera)
 	{
 		BLU_PROFILE_FUNCTION();
-		s_RendererData->TextureShader->Bind();
-		s_RendererData->TextureShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->QuadShader->Bind();
+		s_RendererData->QuadShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
+
+		s_RendererData->CircleShader->Bind();
+		s_RendererData->CircleShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->CircleIndexCount = 0;
+		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
 		
 
 	}
@@ -113,25 +148,36 @@ namespace Blu
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		BLU_PROFILE_FUNCTION();
-		s_RendererData->TextureShader->Bind();
-		s_RendererData->TextureShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->QuadShader->Bind();
+		s_RendererData->QuadShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
+
+
+		s_RendererData->CircleShader->Bind();
+		s_RendererData->CircleShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->CircleIndexCount = 0;
+		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
 	}
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		BLU_PROFILE_FUNCTION();
 
 		glm::mat4 viewProj = camera.GetProjectionMatrix() * glm::inverse(transform);
-		s_RendererData->TextureShader->Bind();
-		s_RendererData->TextureShader->SetUniformMat4("u_ViewProjectionMatrix", viewProj);
+		s_RendererData->QuadShader->Bind();
+		s_RendererData->QuadShader->SetUniformMat4("u_ViewProjectionMatrix", viewProj);
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
+
+		s_RendererData->CircleShader->Bind();
+		s_RendererData->CircleShader->SetUniformMat4("u_ViewProjectionMatrix", viewProj);
+		s_RendererData->CircleIndexCount = 0;
+		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
 	}
 
-	void Renderer2D::Flush()
+	void Renderer2D::FlushQuad()
 	{
 		for (uint32_t i = 0; i < s_RendererData->TextureSlotIndex; i++)
 		{
@@ -140,26 +186,50 @@ namespace Blu
 		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray, s_RendererData->QuadIndexCount);
 		s_RendererData->Stats.DrawCalls++;
 	}
-	void Renderer2D::FlushAndReset()
+	void Renderer2D::FlushCircle()
+	{
+		for (uint32_t i = 0; i < s_RendererData->TextureSlotIndex; i++)
+		{
+			s_RendererData->TextureSlots[i]->Bind(i);
+		}
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_RendererData->CircleVertexBufferPtr - (uint8_t*)s_RendererData->CircleVertexBufferBase);
+		s_RendererData->CircleVertexBuffer->SetData(s_RendererData->CircleVertexBufferBase, dataSize);
+
+		s_RendererData->CircleShader->Bind();
+		RenderCommand::DrawIndexed(s_RendererData->CircleVertexArray, s_RendererData->CircleIndexCount);
+		s_RendererData->Stats.DrawCalls++;
+	}
+
+	void Renderer2D::FlushAndResetQuad()
 	{
 		EndScene();
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
 	}
+
+	void Renderer2D::FlushAndResetCircle()
+	{
+		EndScene();
+		s_RendererData->CircleIndexCount = 0;
+		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
+		s_RendererData->TextureSlotIndex = 1;
+	}
+
 	void Renderer2D::EndScene()
 	{
 		BLU_PROFILE_FUNCTION();
 		uint32_t dataSize = (uint8_t*)s_RendererData->QuadVertexBufferPtr - (uint8_t*)s_RendererData->QuadVertexBufferBase;
 		s_RendererData->QuadVertexBuffer->SetData(s_RendererData->QuadVertexBufferBase, dataSize);
-		Flush();
+		FlushQuad();
+		FlushCircle();
 
 	}
 	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color, const float rotation)
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
-			FlushAndReset();
+			FlushAndResetQuad();
 		}
 		float textureIndex = 0.0f;
 		float tilingFactor = 1.0f;
@@ -187,11 +257,39 @@ namespace Blu
 		DrawQuad(transform, src.Color, entityID);
 
 	}
+
+	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade, int entityID)
+	{
+		if (s_RendererData->CircleIndexCount >= Renderer2DStorage::MaxIndices)
+		{
+			FlushAndResetCircle();
+		}
+		
+
+		std::array<glm::vec2, 4> texCoords = { { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} } };
+
+		for (int i = 0; i < 4; i++) {
+			s_RendererData->CircleVertexBufferPtr->WorldPosition = transform * s_RendererData->QuadVertexPositions[i];
+			s_RendererData->CircleVertexBufferPtr->LocalPosition = s_RendererData->QuadVertexPositions[i] * 2.0f;
+			s_RendererData->CircleVertexBufferPtr->Color = color;
+			s_RendererData->CircleVertexBufferPtr->Thicknes = thickness;
+			s_RendererData->CircleVertexBufferPtr->Fade = fade;
+#ifdef MODE_EDITOR
+			s_RendererData->CircleVertexBufferPtr->EntityID = entityID;
+#endif // MODE_EDITOR
+
+			s_RendererData->CircleVertexBufferPtr++;
+		}
+
+		s_RendererData->CircleIndexCount += 6;
+		s_RendererData->Stats.CircleCount++;
+	}
+
 	void Renderer2D::DrawTexturedQuad(const glm::mat4& transform, const Shared<Texture2D>& texture, const glm::vec4& color, int entityID, float tilingFactor)
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
-			FlushAndReset();
+			FlushAndResetQuad();
 		}
 
 		float textureIndex = 0.0f;
@@ -230,7 +328,7 @@ namespace Blu
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
-			FlushAndReset();
+			FlushAndResetQuad();
 		}
 		float textureIndex = 0.0f;
 		float tilingFactor = 1.0f;
@@ -258,7 +356,7 @@ namespace Blu
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
-			FlushAndReset();
+			FlushAndResetQuad();
 		}
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -303,7 +401,7 @@ namespace Blu
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
-			FlushAndReset();
+			FlushAndResetQuad();
 		}
 		float textureIndex = 0.0f;
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
@@ -336,7 +434,7 @@ namespace Blu
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
-			FlushAndReset();
+			FlushAndResetQuad();
 		}
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f))
@@ -369,7 +467,7 @@ namespace Blu
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
-			FlushAndReset();
+			FlushAndResetQuad();
 		}
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 

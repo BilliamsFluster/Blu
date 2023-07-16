@@ -17,7 +17,8 @@ namespace Blu
 		static void BeginScene(const OrthographicCamera& camera);
 		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
-		static void Flush();
+		static void FlushQuad();
+		static void FlushCircle();
 		static void EndScene();
 
 
@@ -44,10 +45,13 @@ namespace Blu
 		
 		static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID);
 
+		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness = 1.0f, float fade = 0.05f, int entityID = -1);
+
 		struct Statistics
 		{
 			uint32_t DrawCalls = 0;
 			uint32_t QuadCount = 0;
+			uint32_t CircleCount = 0;
 
 
 			uint32_t GetTotalVertexCount() { return QuadCount * 4; }
@@ -57,13 +61,15 @@ namespace Blu
 			{
 				DrawCalls = 0;
 				QuadCount = 0;
+				CircleCount = 0;
 			}
 		};
 		static Statistics GetStats();
 		static void ResetStats();
 		static struct Renderer2DStorage* GetRendererData() { return s_RendererData.get(); }
 	private:
-		static void FlushAndReset();
+		static void FlushAndResetQuad();
+		static void FlushAndResetCircle();
 
 	private:
 		static Unique<Renderer2DStorage> s_RendererData;
@@ -75,14 +81,25 @@ namespace Blu
 		static const uint32_t MaxVertices = (MaxQuads * 4);
 		static const uint32_t MaxIndices = (MaxQuads * 6);
 		static const uint32_t MaxTextureSlots = 32;
+
 		Shared<class VertexArray> QuadVertexArray;
 		Shared<class VertexBuffer> QuadVertexBuffer;
 		Shared<class IndexBuffer> QuadIndexBuffer;
-		Shared<class Shader> TextureShader;
+		Shared<class Shader> QuadShader;
+
+		Shared<class VertexArray> CircleVertexArray;
+		Shared<class VertexBuffer> CircleVertexBuffer;
+		Shared<class Shader> CircleShader;
+
 		Shared<class Texture2D> WhiteTexture;
 		uint32_t QuadIndexCount = 0;
 		struct QuadVertex* QuadVertexBufferBase = nullptr;
 		QuadVertex* QuadVertexBufferPtr = nullptr;
+
+
+		uint32_t CircleIndexCount = 0;
+		struct CircleVertex* CircleVertexBufferBase = nullptr;
+		CircleVertex* CircleVertexBufferPtr = nullptr;
 
 		std::array<Shared<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = WhiteTexture

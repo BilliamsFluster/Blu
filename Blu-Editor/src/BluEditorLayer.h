@@ -50,7 +50,7 @@ namespace Blu
 		Blu::Shared<Blu::VertexArray> m_VertexArray;
 		Blu::Shared< Blu::IndexBuffer> m_IndexBuffer;
 		Blu::Shared< Blu::VertexBuffer> m_VertexBuffer;
-		Blu::Shared<Blu::OpenGLShader> m_FlatColorShader, m_TextureShader;
+		Blu::Shared<Blu::OpenGLShader> m_FlatColorShader, m_QuadShader;
 		Blu::Shared<Blu::FrameBuffer> m_FrameBuffer;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		Entity m_CameraEntity;

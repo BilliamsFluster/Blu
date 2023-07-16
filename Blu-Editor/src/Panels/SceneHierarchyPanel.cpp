@@ -303,6 +303,16 @@ namespace Blu
 			}
 
 			}
+			if (!m_SelectedEntity.HasComponent<CircleRendererComponent>())
+			{
+				if (ImGui::MenuItem("Circle Renderer"))
+				{
+					m_SelectedEntity.AddComponent<CircleRendererComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
+			}
+
 
 			if (!m_SelectedEntity.HasComponent<ParticleSystemComponent>())
 			{
@@ -473,6 +483,15 @@ namespace Blu
 					}
 					ImGui::EndDragDropTarget();
 				}
+			});
+
+		DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [](auto& component)
+			{
+				float itemWidth = 2.0f; // Adjust this value as needed
+				ImGui::PushItemWidth(ImGui::GetWindowWidth() / itemWidth);
+				ImGui::ColorEdit4("Color: ", glm::value_ptr(component.Color));
+				ImGui::DragFloat("Thickness", &component.Thickness, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Fade", &component.Fade, 0.01f, 0.0f, 1.0f);
 			});
 		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)
 			{
