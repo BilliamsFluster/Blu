@@ -1,6 +1,6 @@
 Scene: Name
 Entities:
-  - Entity: 1404782132383836729
+  - Entity: 13091489709502492819
     TagComponent:
       Tag: Cube 1
     TransformComponent:
@@ -9,11 +9,11 @@ Entities:
       Scale: [1.09999657, 1.09999204, 1.09998894]
     SpriteRendererComponent:
       Color: [0, 0.525096655, 1, 1]
-  - Entity: 766908931111957631
+  - Entity: 3044686693586449449
     TagComponent:
       Tag: Cube 2
     TransformComponent:
-      Translation: [-0.00673947809, -10.9106579, 0]
+      Translation: [-0.00721002417, -7.55861425, 0]
       Rotation: [0, 0, 0.000140375152]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
@@ -28,7 +28,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
-  - Entity: 2317766154665108628
+  - Entity: 15653692006220263959
     TagComponent:
       Tag: Camera
     CameraComponent:
@@ -43,10 +43,10 @@ Entities:
       Primary: true
       FixedAspectRatio: false
     TransformComponent:
-      Translation: [0, -11.0939999, 3.0999999]
+      Translation: [0, -11.0939999, 11.1995163]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 10165667215783988795
+  - Entity: 16673001270064344545
     TagComponent:
       Tag: Sprite
     TransformComponent:
@@ -60,7 +60,29 @@ Entities:
       FixedRotation: false
     BoxCollider2DComponent:
       Offset: [0, 0]
-      Size: [1, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 7001560352133199177
+    TagComponent:
+      Tag: Circle
+    TransformComponent:
+      Translation: [-0.689507723, -6.23878622, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Radius: 0.5
+      Thickness: 1
+      Fade: 0.00499999989
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    CircleCollider2DComponent:
+      Offset: [0, 0]
+      Radius: 1
       Density: 1
       Friction: 0.5
       Restitution: 0.100000001

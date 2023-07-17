@@ -186,6 +186,20 @@ namespace Blu
 			out << YAML::EndMap;
 
 		}
+		if (entity.HasComponent<CircleRendererComponent>())
+		{
+			out << YAML::Key << "CircleRendererComponent";
+			out << YAML::BeginMap;
+
+			auto& crc = entity.GetComponent<CircleRendererComponent>();
+			out << YAML::Key << "Color" << YAML::Value << crc.Color;
+			out << YAML::Key << "Radius" << YAML::Value << crc.Radius;
+			out << YAML::Key << "Thickness" << YAML::Value << crc.Thickness;
+			out << YAML::Key << "Fade" << YAML::Value << crc.Fade;
+
+			out << YAML::EndMap;
+		}
+
 		if (entity.HasComponent<Rigidbody2DComponent>())
 		{
 			out << YAML::Key << "Rigidbody2DComponent";
@@ -211,6 +225,21 @@ namespace Blu
 			out << YAML::Key << "Friction" << YAML::Value << bc2d.Friction;
 			out << YAML::Key << "Restitution" << YAML::Value << bc2d.Restitution;
 			out << YAML::Key << "RestitutionThreshold" << YAML::Value << bc2d.RestitutionThreshold;
+
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<CircleCollider2DComponent>())
+		{
+			out << YAML::Key << "CircleCollider2DComponent";
+			out << YAML::BeginMap;
+
+			auto& cc = entity.GetComponent<CircleCollider2DComponent>();
+			out << YAML::Key << "Offset" << YAML::Value << cc.Offset;
+			out << YAML::Key << "Radius" << YAML::Value << cc.Radius;
+			out << YAML::Key << "Density" << YAML::Value << cc.Density;
+			out << YAML::Key << "Friction" << YAML::Value << cc.Friction;
+			out << YAML::Key << "Restitution" << YAML::Value << cc.Restitution;
+			out << YAML::Key << "RestitutionThreshold" << YAML::Value << cc.RestitutionThreshold;
 
 			out << YAML::EndMap;
 		}
@@ -328,6 +357,18 @@ namespace Blu
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 				}
 				
+				auto circleRendererComponent = entity["CircleRendererComponent"];
+
+				if (circleRendererComponent)
+				{
+					auto& crc = deserializedEntity.AddComponent<CircleRendererComponent>();
+					crc.Color = circleRendererComponent["Color"].as<glm::vec4>();
+					crc.Radius = circleRendererComponent["Radius"].as<float>();
+					crc.Thickness = circleRendererComponent["Thickness"].as<float>();
+					crc.Fade = circleRendererComponent["Fade"].as<float>();
+				}
+
+				
 				auto rigidbody2DComponent = entity["Rigidbody2DComponent"];
 
 				if (rigidbody2DComponent)
@@ -350,6 +391,19 @@ namespace Blu
 					bc2d.Restitution = boxCollider2DComponent["Restitution"].as<float>();
 					bc2d.RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
 				}
+				auto circleColliderComponent = entity["CircleCollider2DComponent"];
+
+				if (circleColliderComponent)
+				{
+					auto& cc = deserializedEntity.AddComponent<CircleCollider2DComponent>();
+					cc.Offset = circleColliderComponent["Offset"].as<glm::vec2>();
+					cc.Radius = circleColliderComponent["Radius"].as<float>();
+					cc.Density = circleColliderComponent["Density"].as<float>();
+					cc.Friction = circleColliderComponent["Friction"].as<float>();
+					cc.Restitution = circleColliderComponent["Restitution"].as<float>();
+					cc.RestitutionThreshold = circleColliderComponent["RestitutionThreshold"].as<float>();
+				}
+
 			}
 		}
 

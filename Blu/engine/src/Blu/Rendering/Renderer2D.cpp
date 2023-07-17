@@ -136,12 +136,15 @@ namespace Blu
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
+		s_RendererData->QuadShader->UnBind();
+
 
 		s_RendererData->CircleShader->Bind();
 		s_RendererData->CircleShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
 		s_RendererData->CircleIndexCount = 0;
 		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
-		
+		s_RendererData->CircleShader->UnBind();
+
 
 	}
 
@@ -153,32 +156,45 @@ namespace Blu
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
+		s_RendererData->QuadShader->UnBind();
+
 
 
 		s_RendererData->CircleShader->Bind();
 		s_RendererData->CircleShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
 		s_RendererData->CircleIndexCount = 0;
 		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
+		s_RendererData->CircleShader->UnBind();
+
 	}
+	static glm::mat4 viewProj;
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		BLU_PROFILE_FUNCTION();
 
-		glm::mat4 viewProj = camera.GetProjectionMatrix() * glm::inverse(transform);
+		viewProj = camera.GetProjectionMatrix() *glm::inverse(transform);
+		
 		s_RendererData->QuadShader->Bind();
 		s_RendererData->QuadShader->SetUniformMat4("u_ViewProjectionMatrix", viewProj);
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
+		s_RendererData->QuadShader->UnBind();
 
 		s_RendererData->CircleShader->Bind();
 		s_RendererData->CircleShader->SetUniformMat4("u_ViewProjectionMatrix", viewProj);
 		s_RendererData->CircleIndexCount = 0;
 		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
+		s_RendererData->CircleShader->UnBind();
+		
+		
+
 	}
 
 	void Renderer2D::FlushQuad()
 	{
+		
+		s_RendererData->QuadShader->Bind();
 		for (uint32_t i = 0; i < s_RendererData->TextureSlotIndex; i++)
 		{
 			s_RendererData->TextureSlots[i]->Bind(i);
@@ -188,14 +204,11 @@ namespace Blu
 	}
 	void Renderer2D::FlushCircle()
 	{
-		for (uint32_t i = 0; i < s_RendererData->TextureSlotIndex; i++)
-		{
-			s_RendererData->TextureSlots[i]->Bind(i);
-		}
+		
+		s_RendererData->CircleShader->Bind();		
 		uint32_t dataSize = (uint32_t)((uint8_t*)s_RendererData->CircleVertexBufferPtr - (uint8_t*)s_RendererData->CircleVertexBufferBase);
 		s_RendererData->CircleVertexBuffer->SetData(s_RendererData->CircleVertexBufferBase, dataSize);
 
-		s_RendererData->CircleShader->Bind();
 		RenderCommand::DrawIndexed(s_RendererData->CircleVertexArray, s_RendererData->CircleIndexCount);
 		s_RendererData->Stats.DrawCalls++;
 	}
@@ -213,7 +226,6 @@ namespace Blu
 		EndScene();
 		s_RendererData->CircleIndexCount = 0;
 		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
-		s_RendererData->TextureSlotIndex = 1;
 	}
 
 	void Renderer2D::EndScene()
