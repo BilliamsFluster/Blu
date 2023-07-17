@@ -18,7 +18,9 @@ namespace Blu
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
+		float Thickness = 1.0f;
 		int EntityID;
+
 		
 		
 
@@ -57,6 +59,7 @@ namespace Blu
 			{Blu::ShaderDataType::Float2, "a_TexCoord"},
 			{Blu::ShaderDataType::Float, "a_TexIndex"},
 			{Blu::ShaderDataType::Float, "a_TilingFactor"},
+			{Blu::ShaderDataType::Float, "a_Thickness"},
 			{Blu::ShaderDataType::Int, "a_EntityID"}
 		};
 
@@ -171,7 +174,7 @@ namespace Blu
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		BLU_PROFILE_FUNCTION();
-
+		
 		viewProj = camera.GetProjectionMatrix() *glm::inverse(transform);
 		
 		s_RendererData->QuadShader->Bind();
@@ -328,7 +331,34 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->Color = color;
 			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
 			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData->QuadVertexBufferPtr->Thickness = 1.0f;
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_RendererData->QuadVertexBufferPtr++;
+		}
+
+		s_RendererData->QuadIndexCount += 6;
+		s_RendererData->Stats.QuadCount++;
+	}
+
+	void Renderer2D::DrawRect(const glm::mat4& transform, const glm::vec4& color, float thickness)
+	{
+		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
+		{
+			FlushAndResetQuad();
+		}
+		float textureIndex = 0.0f;
+		float tilingFactor = 1.0f;
+
+		std::array<glm::vec2, 4> texCoords = { { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} } };
+
+		for (int i = 0; i < 4; i++) {
+			s_RendererData->QuadVertexBufferPtr->Position = transform * s_RendererData->QuadVertexPositions[i];
+			s_RendererData->QuadVertexBufferPtr->Color = color;
+			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
+			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData->QuadVertexBufferPtr->Thickness = thickness;
+			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
+
 			s_RendererData->QuadVertexBufferPtr++;
 		}
 
@@ -352,6 +382,8 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->Color = color;
 			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
 			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData->QuadVertexBufferPtr->Thickness = 1.0f;
+
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			#ifdef MODE_EDITOR
 			s_RendererData->QuadVertexBufferPtr->EntityID = entityID;
@@ -396,6 +428,8 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->Color = color;
 			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
 			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData->QuadVertexBufferPtr->Thickness = 1.0f;
+
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_RendererData->QuadVertexBufferPtr++;
 		}
@@ -460,6 +494,8 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->Color = color;
 			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
 			s_RendererData->QuadVertexBufferPtr->TexIndex = 0.0f;
+			s_RendererData->QuadVertexBufferPtr->Thickness = 1.0f;
+
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_RendererData->QuadVertexBufferPtr++;
 		}
@@ -509,6 +545,8 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->Color = color;
 			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
 			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData->QuadVertexBufferPtr->Thickness = 1.0f;
+
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_RendererData->QuadVertexBufferPtr++;
 		}

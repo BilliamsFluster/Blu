@@ -210,7 +210,7 @@ namespace Blu
 
 				b2CircleShape circleShape;
 				float pixelToMetersScale = 0.5f;
-				circleShape.m_radius = cc.Radius * transform.Scale.x * pixelToMetersScale; // Assuming uniform scaling
+				circleShape.m_radius = cc.Radius * transform.Scale.x * pixelToMetersScale; 
 				
 				b2FixtureDef fixtureDef;
 				fixtureDef.shape = &circleShape;
@@ -235,8 +235,10 @@ namespace Blu
 	}
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
 	{
+		
 		Renderer2D::BeginScene(camera);
 		Renderer2D::GetRendererData()->QuadShader->Bind();
+		
 		{
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto& entity : group)

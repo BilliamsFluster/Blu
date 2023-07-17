@@ -513,6 +513,7 @@ namespace Blu
 				ImGui::DragFloat2("##Offset", glm::value_ptr(component.Offset), 0.1f);
 				ImGui::Text("Size");
 				ImGui::DragFloat2("##Size", glm::value_ptr(component.Size), 0.1f);
+
 				ImGui::Text("Density");
 				ImGui::DragFloat("##Density", &component.Density, 0.01f, 0.0f, 10.0f);
 				ImGui::Text("Friction");
