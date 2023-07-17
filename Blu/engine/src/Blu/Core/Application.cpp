@@ -76,33 +76,38 @@ namespace Blu
 		
 		while (m_Running)
 		{
-			BLU_PROFILE_SCOPE("RunLoop");
-			m_Window->OnUpdate();
-			m_Running = !m_Window->ShouldClose();
-
-			for (Shared<Layers::Layer> layer : m_LayerStack)
+			if (!glfwGetWindowAttrib((GLFWwindow*)m_Window->GetNativeWindow(), GLFW_ICONIFIED))
 			{
-				{
-					BLU_PROFILE_SCOPE("LayerStack OnUpdates");
-					layer->OnUpdate(timestep);
-				}
-			}
-			m_ImGuiLayer->Begin();
-			m_ImGuiLayer->DrawDockspace();
-			for (Shared<Layers::Layer> layer : m_LayerStack)
-			{
-				{
-					BLU_PROFILE_SCOPE("LayerStack OnUpdates");
-					
-					layer->OnGuiDraw();
-				}
-			}
-			m_ImGuiLayer->End();
 
-			
-			
-			auto [x, y] = Blu::Input::GetMousePosition();
 
+				BLU_PROFILE_SCOPE("RunLoop");
+				m_Window->OnUpdate();
+				m_Running = !m_Window->ShouldClose();
+
+				for (Shared<Layers::Layer> layer : m_LayerStack)
+				{
+					{
+						BLU_PROFILE_SCOPE("LayerStack OnUpdates");
+						layer->OnUpdate(timestep);
+					}
+				}
+				m_ImGuiLayer->Begin();
+				m_ImGuiLayer->DrawDockspace();
+				for (Shared<Layers::Layer> layer : m_LayerStack)
+				{
+					{
+						BLU_PROFILE_SCOPE("LayerStack OnUpdates");
+
+						layer->OnGuiDraw();
+					}
+				}
+				m_ImGuiLayer->End();
+
+
+
+				auto [x, y] = Blu::Input::GetMousePosition();
+			}
+			
 			
 		}
 		

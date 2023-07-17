@@ -229,7 +229,7 @@ namespace Blu
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
 					* glm::rotate(glm::mat4(1.0f), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
 					* glm::scale(glm::mat4(1.0f), scale);
-				Renderer2D::DrawQuad(transform, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.05f);
+				Renderer2D::DrawRect(transform, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.2f);
 			}
 		}
 		{
@@ -257,8 +257,12 @@ namespace Blu
 		ImGuiIO& io = ImGui::GetIO();
 		// Update the display size
 		io.DisplaySize = ImVec2(event.GetWidth(), event.GetHeight());
-		io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f); // Assuming no scale here
-		m_EditorCamera.SetViewportSize(io.DisplaySize.x, io.DisplaySize.y);
+		if (m_ViewportSize != glm::vec2(0.0f, 0.0f) && io.DisplaySize.x > 0 && io.DisplaySize.y > 0)
+		{
+			io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f); // Assuming no scale here
+			m_EditorCamera.SetViewportSize(io.DisplaySize.x, io.DisplaySize.y);
+
+		}
 
 		return false;
 	}
@@ -472,10 +476,18 @@ namespace Blu
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 		if (m_ViewportSize != *(glm::vec2*)&viewportSize)
 		{
+			
+			
 			m_ViewportSize = { viewportSize.x, viewportSize.y };
-			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_CameraController.ResizeCamera(m_ViewportSize.x, m_ViewportSize.y);
-			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+			if (m_ViewportSize != glm::vec2(0.0f, 0.0f))
+			{
+				m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+				m_CameraController.ResizeCamera(m_ViewportSize.x, m_ViewportSize.y);
+				m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+
+			}
+
+			
 		}
 		
 
@@ -492,12 +504,13 @@ namespace Blu
 			ImGui::EndDragDropTarget();
 		}
 
+		/* Clicking */
 		auto windowSize = ImGui::GetWindowSize();
 		ImVec2 minBound = ImGui::GetWindowPos();
 		minBound.x += viewportOffset.x;
 		minBound.y += viewportOffset.y;
 
-		ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
+		ImVec2 maxBound = { minBound.x + windowSize.x , minBound.y + windowSize.y};
 		m_ViewportBounds[0] = { minBound.x, minBound.y };
 		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
 

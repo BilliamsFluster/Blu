@@ -57,8 +57,7 @@ void main()
     
     o_Color = v_Color;
     o_Color.a *= circleAlpha;
-	
-	
+
 	o_EntityID = v_EntityID;
 
 	
