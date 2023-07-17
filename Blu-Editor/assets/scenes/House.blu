@@ -1,78 +1,24 @@
 Scene: Name
 Entities:
-  - Entity: 1234567890
+  - Entity: 5922661280041371248
     TagComponent:
-      Tag: Door
+      Tag: Camera
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 45
+      Primary: true
+      FixedAspectRatio: false
     TransformComponent:
-      Translation: [0, -0.327366889, 0.0260000005]
+      Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [0.839205325, 1.27722991, 1]
-    SpriteRendererComponent:
-      Color: [0.66023165, 0.420719177, 0.265112311, 1]
-  - Entity: 1234567890
-    TagComponent:
-      Tag: RedHouseRoof
-    TransformComponent:
-      Translation: [0.0500000007, 1.35000002, -0.200000003]
-      Rotation: [0, 0, -0.812555492]
-      Scale: [2.30200005, 2.30200005, 2.30200005]
-    SpriteRendererComponent:
-      Color: [1, 0, 0, 1]
-  - Entity: 1234567890
-    TagComponent:
-      Tag: HouseRoof
-    TransformComponent:
-      Translation: [0.0231027454, 1.14717352, -0.00171852089]
-      Rotation: [0, 0, -0.812737525]
-      Scale: [2.30230021, 2.30230021, 2.30229998]
-    SpriteRendererComponent:
-      Color: [0.925490201, 0.921568632, 0.917647064, 1]
-  - Entity: 1234567890
-    TagComponent:
-      Tag: TopWindow
-    TransformComponent:
-      Translation: [0, 0.87637496, 0.0260000005]
-      Rotation: [0, 0, 0]
-      Scale: [0.600000024, 0.600000024, 0.600000024]
-    SpriteRendererComponent:
-      Color: [0.827450991, 0.815686285, 0.403921574, 1]
-  - Entity: 1234567890
-    TagComponent:
-      Tag: LeftWindow
-    TransformComponent:
-      Translation: [-1.11249804, 0, 0.0260000005]
-      Rotation: [0, 0, 0]
-      Scale: [0.600000024, 0.600000024, 0.600000024]
-    SpriteRendererComponent:
-      Color: [0.827450991, 0.815686285, 0.403921574, 1]
-  - Entity: 1234567890
-    TagComponent:
-      Tag: "Right Window "
-    TransformComponent:
-      Translation: [0.955657005, -0.00854367018, 0.0260035992]
-      Rotation: [0, 0, 0]
-      Scale: [0.600000024, 0.600000024, 0.600000024]
-    SpriteRendererComponent:
-      Color: [0.826254845, 0.814787447, 0.401961833, 1]
-  - Entity: 1234567890
-    TagComponent:
-      Tag: HouseFrame
-    TransformComponent:
-      Translation: [0, 0.190848768, 0]
-      Rotation: [0, 0, 0]
-      Scale: [3.29999995, 2.34000015, 1]
-    SpriteRendererComponent:
-      Color: [0.926640928, 0.920134664, 0.915907621, 1]
-  - Entity: 1234567890
-    TagComponent:
-      Tag: Grass
-    TransformComponent:
-      Translation: [-0.160999998, -1.09500003, 0]
-      Rotation: [0, 0, 0]
-      Scale: [9.5, 0.25, 1]
-    SpriteRendererComponent:
-      Color: [0, 1, 0, 1]
-  - Entity: 1234567890
+      Scale: [1, 1, 1]
+  - Entity: 8933743640111222917
     TagComponent:
       Tag: Dirt
     TransformComponent:
@@ -81,3 +27,75 @@ Entities:
       Scale: [9.5, 0.5, 1]
     SpriteRendererComponent:
       Color: [0.513513505, 0.218385413, 0.091203168, 1]
+  - Entity: 1311739119778680758
+    TagComponent:
+      Tag: Grass
+    TransformComponent:
+      Translation: [-0.160999998, -1.09500003, 0]
+      Rotation: [0, 0, 0]
+      Scale: [9.5, 0.25, 1]
+    SpriteRendererComponent:
+      Color: [0, 1, 0, 1]
+  - Entity: 11629605395072474090
+    TagComponent:
+      Tag: HouseFrame
+    TransformComponent:
+      Translation: [0, 0.190848768, 0]
+      Rotation: [0, 0, 0]
+      Scale: [3.29999995, 2.34000015, 1]
+    SpriteRendererComponent:
+      Color: [0.926640928, 0.920134664, 0.915907621, 1]
+  - Entity: 14935605214081726147
+    TagComponent:
+      Tag: "Right Window "
+    TransformComponent:
+      Translation: [0.955657005, -0.00854367018, 0.0260035992]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 0.600000024, 0.600000024]
+    SpriteRendererComponent:
+      Color: [0.826254845, 0.814787447, 0.401961833, 1]
+  - Entity: 13084245353658928133
+    TagComponent:
+      Tag: LeftWindow
+    TransformComponent:
+      Translation: [-1.11249804, 0, 0.0260000005]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 0.600000024, 0.600000024]
+    SpriteRendererComponent:
+      Color: [0.827450991, 0.815686285, 0.403921574, 1]
+  - Entity: 14305478700278627875
+    TagComponent:
+      Tag: TopWindow
+    TransformComponent:
+      Translation: [0, 0.87637496, 0.0260000005]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 0.600000024, 0.600000024]
+    SpriteRendererComponent:
+      Color: [0.827450991, 0.815686285, 0.403921574, 1]
+  - Entity: 14312422763431489749
+    TagComponent:
+      Tag: HouseRoof
+    TransformComponent:
+      Translation: [0.0231027454, 1.14717352, -0.00171852089]
+      Rotation: [0, 0, -0.812737525]
+      Scale: [2.30230021, 2.30230021, 2.30229998]
+    SpriteRendererComponent:
+      Color: [0.925490201, 0.921568632, 0.917647064, 1]
+  - Entity: 15530618072964194454
+    TagComponent:
+      Tag: RedHouseRoof
+    TransformComponent:
+      Translation: [0.0500000007, 1.35000002, -0.200000003]
+      Rotation: [0, 0, -0.812555492]
+      Scale: [2.30200005, 2.30200005, 2.30200005]
+    SpriteRendererComponent:
+      Color: [1, 0, 0, 1]
+  - Entity: 11044870986961718488
+    TagComponent:
+      Tag: Door
+    TransformComponent:
+      Translation: [0, -0.327366889, 0.0260000005]
+      Rotation: [0, 0, 0]
+      Scale: [0.839205325, 1.27722991, 1]
+    SpriteRendererComponent:
+      Color: [0.66023165, 0.420719177, 0.265112311, 1]

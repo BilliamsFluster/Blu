@@ -17,6 +17,7 @@ namespace Blu
 		virtual void OnDetach() override;
 		void OnUpdate(Blu::Timestep deltaTime) override;
 		void OnEvent(Blu::Events::Event& event) override;
+		void OnOverlayRender();
 		virtual void OnGuiDraw() override;
 		bool OnKeyPressedEvent(Events::KeyPressedEvent& event);
 		bool OnKeyReleasedEvent(Events::KeyReleasedEvent& event);

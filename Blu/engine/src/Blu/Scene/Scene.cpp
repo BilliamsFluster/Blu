@@ -9,6 +9,7 @@
 #include "box2d/b2_body.h"
 #include "box2d/b2_fixture.h"
 #include "box2d/b2_polygon_shape.h"
+#include "box2d/b2_circle_shape.h"
 
 namespace Blu
 {
@@ -84,12 +85,17 @@ namespace Blu
 		// need to make sure when you create a component you add this function to it 
 		CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<ParticleSystemComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		
 		CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CircleRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		
 		CopyComponent<Rigidbody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		
 		CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		
 		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-		CopyComponent<CircleRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		return newScene;
 	}
@@ -184,7 +190,9 @@ namespace Blu
 				auto& bc = entity.GetComponent<BoxCollider2DComponent>();
 
 				b2PolygonShape boxShape;
-				boxShape.SetAsBox(bc.Size.x * transform.Scale.x, bc.Size.y * transform.Scale.y);
+				float pixelToMetersScale = 0.5f;  
+				boxShape.SetAsBox(bc.Size.x * transform.Scale.x * pixelToMetersScale, bc.Size.y * transform.Scale.y * pixelToMetersScale);
+
 
 				b2FixtureDef fixtureDef;
 				fixtureDef.shape = &boxShape;
@@ -195,6 +203,23 @@ namespace Blu
 				
 				body->CreateFixture(&fixtureDef);
 
+			}
+			else if (entity.HasComponent<CircleCollider2DComponent>())
+			{
+				auto& cc = entity.GetComponent<CircleCollider2DComponent>();
+
+				b2CircleShape circleShape;
+				float pixelToMetersScale = 0.5f;
+				circleShape.m_radius = cc.Radius * transform.Scale.x * pixelToMetersScale; // Assuming uniform scaling
+				
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = &circleShape;
+				fixtureDef.density = cc.Density;
+				fixtureDef.friction = cc.Friction;
+				fixtureDef.restitution = cc.Restitution;
+				fixtureDef.restitutionThreshold = cc.RestitutionThreshold;
+
+				body->CreateFixture(&fixtureDef);
 			}
 
 		}
