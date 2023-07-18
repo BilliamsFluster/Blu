@@ -29,7 +29,7 @@ namespace Blu
 
 		void OnRuntimeStart();
 		void OnRuntimeStop();
-
+		void UpdateActiveCameraComponent(Timestep deltaTime);
 
 		void DestroyEntity(Entity entity);
 		void OnUpdateEditor(Timestep deltaTime, class EditorCamera& camera);
