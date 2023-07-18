@@ -87,22 +87,17 @@ namespace Blu
 	void Application::Run()
 	{
 		BLU_PROFILE_FUNCTION();
-
 		// Initialize the time and timestep variables
 		float time = glfwGetTime(); // need platform class Platform::GetTime()
 		Timestep timestep = time - m_LastFrameTime; // get delta time
 		m_LastFrameTime = time;
 		
-		
 		// Main application loop
 		while (m_Running)
 		{
-			// If the window is not minimized
+			// If the window is valid we can update it 
 			if (m_Window)
 			{
-
-				
-				
 				BLU_PROFILE_SCOPE("RunLoop");
 				
 				// Update the window and check if it should be closed
@@ -112,13 +107,9 @@ namespace Blu
 				// Update all layers
 				for (Shared<Layers::Layer> layer : m_LayerStack)
 				{
-					// This macro appears to be for profiling purposes
 					BLU_PROFILE_SCOPE("LayerStack OnUpdates");
 					layer->OnUpdate(timestep);
-					CheckOpenGLError();
-
 				}
-
 				// Begin ImGui layer and draw dockspace
 				m_ImGuiLayer->Begin();
 				m_ImGuiLayer->DrawDockspace();
@@ -132,13 +123,7 @@ namespace Blu
 
 				// End ImGui layer
 				m_ImGuiLayer->End();
-
-				// Get mouse position
-				auto [x, y] = Blu::Input::GetMousePosition();
-				
 			}
-				
-			
 			
 		}
 		

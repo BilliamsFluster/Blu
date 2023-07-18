@@ -4,6 +4,7 @@
 #include <chrono>
 #include "Blu/Events/MouseEvent.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 #include <glm/gtc/type_ptr.hpp>
@@ -40,6 +41,14 @@ namespace Blu
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_FrameBuffer = FrameBuffer::Create(fbSpec);
+
+		FrameBufferSpecifications fbCameraSpec;
+		fbCameraSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
+		fbCameraSpec.Width = 1280;
+		fbCameraSpec.Height = 720;
+		m_CameraViewFrameBuffer = FrameBuffer::Create(fbCameraSpec);
+
+		
 		ImGuiIO& io = ImGui::GetIO();
 
 		// Key map setup
@@ -98,10 +107,7 @@ namespace Blu
 		{
 
 			BLU_PROFILE_SCOPE("Azure2D::OnUpdate: ");
-			if (m_ViewPortFocused)
-			{
-				//m_CameraController.OnUpdate(deltaTime);
-			}
+			
 		}
 		
 		
@@ -111,6 +117,7 @@ namespace Blu
 			{
 				m_EditorCamera.OnUpdate(deltaTime);
 				m_ActiveScene->OnUpdateEditor(deltaTime, m_EditorCamera);
+				
 				break;
 			}
 			case SceneState::Play:
@@ -138,6 +145,19 @@ namespace Blu
 		}
 		OnOverlayRender();
 		m_FrameBuffer->UnBind();
+		
+		m_CameraViewFrameBuffer->Bind();
+		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		RenderCommand::Clear();
+		switch (m_SceneState)
+		{
+			case SceneState::Edit:
+			{
+				m_ActiveScene->UpdateActiveCameraComponent(deltaTime); // for popup camera viewer window
+
+			}
+		}
+		m_CameraViewFrameBuffer->UnBind();
 		
 		
 
@@ -490,11 +510,32 @@ namespace Blu
 				m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 
 			}
-
-			
-
-			
 		}
+		switch (m_SceneState)
+		{
+			case SceneState::Edit:
+			{
+				auto selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
+				if (selectedEntity)
+				{
+					if (selectedEntity.HasComponent<CameraComponent>())
+					{
+						if (selectedEntity.GetComponent<CameraComponent>().Primary)
+						{
+							ImGui::SetNextWindowSizeConstraints(ImVec2(300, 200), ImVec2(800, 600));
+							ImGui::Begin("CameraViewWindow", nullptr, ImGuiWindowFlags_NoScrollbar);
+							uint32_t textureIDForCameraView = m_CameraViewFrameBuffer->GetColorAttachmentID();
+							ImGui::Image((void*)textureIDForCameraView, ImVec2{ ImGui::GetWindowWidth(), ImGui::GetWindowHeight() }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+							ImGui::End();
+
+						}
+					}
+
+				}
+
+			}
+		}
+		
 		
 
 		uint32_t textureID = m_FrameBuffer->GetColorAttachmentID();

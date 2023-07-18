@@ -52,6 +52,7 @@ namespace Blu
 		Blu::Shared< Blu::VertexBuffer> m_VertexBuffer;
 		Blu::Shared<Blu::OpenGLShader> m_FlatColorShader, m_QuadShader;
 		Blu::Shared<Blu::FrameBuffer> m_FrameBuffer;
+		Blu::Shared<Blu::FrameBuffer> m_CameraViewFrameBuffer;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		Entity m_CameraEntity;
 		bool m_ViewPortFocused = false;

@@ -229,6 +229,60 @@ namespace Blu
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
 	}
+	void Scene::UpdateActiveCameraComponent(Timestep deltaTime)
+	{
+		Camera* mainCamera = nullptr;
+		glm::mat4 cameraTransform;
+		auto view = m_Registry.view<CameraComponent, TransformComponent>();
+		for (auto& entity : view)
+		{
+			auto [camera, transform] = view.get<CameraComponent, TransformComponent>(entity);
+			if (camera.Primary)
+			{
+				mainCamera = &camera.Camera;
+				cameraTransform = transform.GetTransform();
+				break;
+			}
+
+		}
+		if (mainCamera)
+		{
+
+
+			Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), cameraTransform);
+			// Update particle systems
+			{
+				auto particleView = m_Registry.view<ParticleSystemComponent>();
+				for (auto& entity : particleView)
+				{
+					auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+					particleSystem.Update(deltaTime);
+
+
+				}
+			}
+			{
+				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				for (auto& entity : group)
+				{
+					auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+					Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+				}
+			}
+			{
+				auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+				for (auto& entity : view)
+				{
+					auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+					Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+				}
+			}
+
+
+
+			Renderer2D::EndScene();
+		}
+	}
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
