@@ -74,6 +74,7 @@ namespace Blu
 	{
 		BLU_PROFILE_FUNCTION();
 		glfwDestroyWindow(m_Window);
+		delete m_Context;
 	}
 
 }

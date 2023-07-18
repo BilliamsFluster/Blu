@@ -595,7 +595,6 @@
     <ClInclude Include="engine\src\Blu\Events\KeyEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\MouseEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
-    <ClInclude Include="engine\src\Blu\ImGui\GuiManager.h" />
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
     <ClInclude Include="engine\src\Blu\Math\Math.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
@@ -648,7 +647,6 @@
     <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp" />
-    <ClCompile Include="engine\src\Blu\ImGui\GuiManager.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="engine\src\Blu\Math\Math.cpp" />

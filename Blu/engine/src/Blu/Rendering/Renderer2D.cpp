@@ -52,7 +52,7 @@ namespace Blu
 
 
 
-		/* Quad layout*/
+		// Define the layout for quadrilateral and circle objects
 		Blu::BufferLayout quadLayout = {
 			{Blu::ShaderDataType::Float4, "a_Color"},
 			{Blu::ShaderDataType::Float3, "a_Position"},
@@ -63,7 +63,7 @@ namespace Blu
 			{Blu::ShaderDataType::Int, "a_EntityID"}
 		};
 
-		/* Circle layout*/
+		// Circle layout
 		Blu::BufferLayout circleLayout = {
 			{Blu::ShaderDataType::Float4, "a_Color"},
 			{Blu::ShaderDataType::Float3, "a_WorldPosition"},
@@ -73,14 +73,17 @@ namespace Blu
 			{Blu::ShaderDataType::Int, "a_EntityID"}
 		};
 
+		// Set the layouts for the quad and circle vertex buffers
 		s_RendererData->QuadVertexBuffer->SetLayout(quadLayout);
 		s_RendererData->CircleVertexBuffer->SetLayout(circleLayout);
 
+		// Initialize the base vertex buffer for quad and circle objects
 		s_RendererData->QuadVertexBufferBase = new QuadVertex[s_RendererData->MaxVertices];
 		s_RendererData->CircleVertexBufferBase = new CircleVertex[s_RendererData->MaxVertices];
 
-		uint32_t* quadIndices = new uint32_t[s_RendererData->MaxIndices];
+		// Initialize quad indices and set up the offsets
 
+		uint32_t* quadIndices = new uint32_t[s_RendererData->MaxIndices];
 		uint32_t offset = 0;
 		for (uint32_t i = 0; i < s_RendererData->MaxIndices; i += 6)
 		{
@@ -95,30 +98,41 @@ namespace Blu
 		}
 
 		
+		// Add vertex buffers to the quad and circle vertex arrays
 		s_RendererData->QuadVertexArray->AddVertexBuffer(s_RendererData->QuadVertexBuffer);
 		s_RendererData->CircleVertexArray->AddVertexBuffer(s_RendererData->CircleVertexBuffer);
 
+		// Create quad index buffer and add it to the quad and circle vertex arrays
 		Shared<IndexBuffer> quadIB = (Blu::IndexBuffer::Create(quadIndices, s_RendererData->MaxIndices ));
 		s_RendererData->QuadVertexArray->AddIndexBuffer(quadIB);
 		s_RendererData->CircleVertexArray->AddIndexBuffer(quadIB); // this is intentional
 
+		// Free the memory allocated for quadIndices
 		delete[] quadIndices;
 		
+		// Initialize the texture slots
 		std::vector<int32_t> samplers(s_RendererData->MaxTextureSlots);
 		for (uint32_t i = 0; i < s_RendererData->MaxTextureSlots; i++)
 		{
 			samplers[i] = i;
 		}
+		
+		// Load the shaders and bind the quad shader
 		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Quad.glsl");
 		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Circle.glsl");
 		s_RendererData->QuadShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
 		s_RendererData->CircleShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
 		s_RendererData->QuadShader->Bind();
+
+		// Set the texture slots for the quad shader
 		s_RendererData->QuadShader->SetUniformIntArray("u_Textures", samplers.data(), s_RendererData->MaxTextureSlots);
+		
+		// Create a white texture and set it as the first texture slot
 		s_RendererData->WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_RendererData->WhiteTexture->SetData(&whiteTextureData, sizeof(whiteTextureData));
 
+		// Set the vertex positions for the quad
 		s_RendererData->TextureSlots[0] = s_RendererData->WhiteTexture;
 		s_RendererData->QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
 		s_RendererData->QuadVertexPositions[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
@@ -129,11 +143,13 @@ namespace Blu
 	}
 	void Renderer2D::Shutdown()
 	{
-		//delete s_RendererData;
 	}
+
+	// Begin rendering the scene with a given camera
 	void Renderer2D::BeginScene(const EditorCamera& camera)
 	{
 		BLU_PROFILE_FUNCTION();
+		// Bind the quad shader, set the view projection matrix and initialize other data for quad rendering
 		s_RendererData->QuadShader->Bind();
 		s_RendererData->QuadShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
 		s_RendererData->QuadIndexCount = 0;
@@ -141,7 +157,7 @@ namespace Blu
 		s_RendererData->TextureSlotIndex = 1;
 		s_RendererData->QuadShader->UnBind();
 
-
+		// Bind the circle shader, set the view projection matrix and initialize other data for circle rendering
 		s_RendererData->CircleShader->Bind();
 		s_RendererData->CircleShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
 		s_RendererData->CircleIndexCount = 0;

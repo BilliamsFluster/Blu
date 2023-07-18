@@ -21,7 +21,10 @@ namespace Blu
 	BluEditorLayer::BluEditorLayer()
 		:Layer("TestRenderingLayer"), m_CameraController(1280.0f / 720.0f, true)
 	{
-
+		GLenum error = glGetError();  // Consume any existing errors
+		if (error != GL_NO_ERROR) {
+			std::cout << "OpenGL error in Blu editor layer on construction: " << error << std::endl;
+		}
 	}
 
 	void BluEditorLayer::OnAttach()
@@ -30,8 +33,7 @@ namespace Blu
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
-		m_WallpaperTexture = Texture2D::Create("assets/spriteSheets/blockPack_spritesheet@2.png");
-
+		
 
 		FrameBufferSpecifications fbSpec;
 		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, FrameBufferTextureFormat::Depth };
@@ -456,17 +458,17 @@ namespace Blu
 
 		ImGui::Begin("Renderer2D Statistics");
 
-		if (GuiManager::BeginMenu("Renderer2D Statistics"))
+		if (ImGui::BeginMenu("Renderer2D Statistics"))
 		{
-			GuiManager::Text("Draw Calls: %d", Renderer2D::GetStats().DrawCalls); 
-			GuiManager::Text("Vertex Count: %d", Renderer2D::GetStats().GetTotalVertexCount());
-			GuiManager::Text("Quad Count: %d", Renderer2D::GetStats().QuadCount);
-			GuiManager::EndMenu();
+			ImGui::Text("Draw Calls: %d", Renderer2D::GetStats().DrawCalls); 
+			ImGui::Text("Vertex Count: %d", Renderer2D::GetStats().GetTotalVertexCount());
+			ImGui::Text("Quad Count: %d", Renderer2D::GetStats().QuadCount);
+			ImGui::EndMenu();
 		}
 		
 		ImGui::End();
 		
-		GuiManager::ClearColor();
+		
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
@@ -477,15 +479,19 @@ namespace Blu
 		if (m_ViewportSize != *(glm::vec2*)&viewportSize)
 		{
 			
-			
-			m_ViewportSize = { viewportSize.x, viewportSize.y };
-			if (m_ViewportSize != glm::vec2(0.0f, 0.0f))
+			if (viewportSize.x > 0 && viewportSize.y > 0)
 			{
+
+				m_ViewportSize = { viewportSize.x, viewportSize.y };
+			
+			
 				m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 				m_CameraController.ResizeCamera(m_ViewportSize.x, m_ViewportSize.y);
 				m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 
 			}
+
+			
 
 			
 		}
