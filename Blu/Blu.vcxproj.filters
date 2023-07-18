@@ -1422,9 +1422,6 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h">
       <Filter>src\Blu\Events</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\ImGui\GuiManager.h">
-      <Filter>src\Blu\ImGui</Filter>
-    </ClInclude>
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h">
       <Filter>src\Blu\ImGui</Filter>
     </ClInclude>
@@ -1568,9 +1565,6 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp">
       <Filter>src\Blu\Events</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\ImGui\GuiManager.cpp">
-      <Filter>src\Blu\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp">
       <Filter>src\Blu\ImGui</Filter>
