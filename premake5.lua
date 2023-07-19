@@ -9,19 +9,19 @@ workspace "Blu"
 		"Dist"
 	}
 	outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-	--Include directories relative to root folder(solutuin dir)
+	--Include directories relative to root folder(solution dir)
 	IncludeDir = {}
 	
-	IncludeDir["Glad"] = "Blu/engine/ExternalDependencies/Glad/include"
-	IncludeDir["GLFW"] = "Blu/engine/ExternalDependencies/GLFW/include"
-	IncludeDir["ImGui"] = "Blu/engine/ExternalDependencies/imgui"
-	IncludeDir["glm"] = "Blu/engine/ExternalDependencies/glm"
-	IncludeDir["stb_image"] = "Blu/engine/ExternalDependencies/stb_image"
-	IncludeDir["entt"] = "Blu/engine/ExternalDependencies/entt/include"
-	IncludeDir["yaml"] = "Blu/engine/ExternalDependencies/yaml/include"
-	IncludeDir["ImGuizmo"] = "Blu/engine/ExternalDependencies/ImGuizmo"
-	IncludeDir["box2d"] = "Blu/engine/ExternalDependencies/box2d/include"
-	IncludeDir["mono"] = "Blu/engine/ExternalDependencies/mono/include"
+	IncludeDir["Glad"] =		"Blu/engine/ExternalDependencies/Glad/include"
+	IncludeDir["GLFW"] =		"Blu/engine/ExternalDependencies/GLFW/include"
+	IncludeDir["ImGui"] =		"Blu/engine/ExternalDependencies/imgui"
+	IncludeDir["glm"] =			"Blu/engine/ExternalDependencies/glm"
+	IncludeDir["stb_image"] =	"Blu/engine/ExternalDependencies/stb_image"
+	IncludeDir["entt"] =		"Blu/engine/ExternalDependencies/entt/include"
+	IncludeDir["yaml"] =		"Blu/engine/ExternalDependencies/yaml/include"
+	IncludeDir["ImGuizmo"] =	"Blu/engine/ExternalDependencies/ImGuizmo"
+	IncludeDir["box2d"] =		"Blu/engine/ExternalDependencies/box2d/include"
+	IncludeDir["mono"] =		"Blu/engine/ExternalDependencies/mono/include"
 
 
 	LibraryDir = {}

@@ -1,5 +1,6 @@
 #include "Blupch.h"
 #include "ScriptEngine.h"
+#include "mono/jit/jit.h"
 
 
 namespace Blu
