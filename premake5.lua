@@ -21,9 +21,16 @@ workspace "Blu"
 	IncludeDir["yaml"] = "Blu/engine/ExternalDependencies/yaml/include"
 	IncludeDir["ImGuizmo"] = "Blu/engine/ExternalDependencies/ImGuizmo"
 	IncludeDir["box2d"] = "Blu/engine/ExternalDependencies/box2d/include"
+	IncludeDir["mono"] = "Blu/engine/ExternalDependencies/mono/include"
 
 
+	LibraryDir = {}
 
+	LibraryDir["mono"] = "$(SolutionDir)Blu/engine/ExternalDependencies/mono/lib/%{cfg.buildcfg}"
+
+	Library = {}
+
+	Library["mono"] = "%{LibraryDir.mono}/libmono-static-sgen.lib"
 
 	
 	include "Blu/engine/ExternalDependencies/GLFW"
@@ -78,6 +85,7 @@ project "Blu"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
+		"%{IncludeDir.mono}",
 		"%{IncludeDir.yaml}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.box2d}",
@@ -96,7 +104,8 @@ project "Blu"
 		"ImGui",
 		"yaml",
 		"dwmapi",
-		"box2d"
+		"box2d",
+		"%{Library.mono}"
 		
 	}
 	filter {"files:Blu/engine/ExternalDependencies/ImGuizmo/*.cpp"}

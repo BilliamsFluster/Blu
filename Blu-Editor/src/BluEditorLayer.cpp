@@ -523,7 +523,7 @@ namespace Blu
 						if (selectedEntity.GetComponent<CameraComponent>().Primary)
 						{
 							ImGui::SetNextWindowSizeConstraints(ImVec2(300, 200), ImVec2(800, 600));
-							ImGui::Begin("CameraViewWindow", nullptr, ImGuiWindowFlags_NoScrollbar);
+							ImGui::Begin("Camera View Window", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
 							uint32_t textureIDForCameraView = m_CameraViewFrameBuffer->GetColorAttachmentID();
 							ImGui::Image((void*)textureIDForCameraView, ImVec2{ ImGui::GetWindowWidth(), ImGui::GetWindowHeight() }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 							ImGui::End();

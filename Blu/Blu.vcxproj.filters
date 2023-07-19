@@ -67,6 +67,9 @@
     <Filter Include="src\Blu\Scene">
       <UniqueIdentifier>{FC0EC887-68CF-43BE-310A-8D3B9D89889A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Scripting">
+      <UniqueIdentifier>{61EE0219-CD04-01AF-167C-8CD082D1D136}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Blu\Utils">
       <UniqueIdentifier>{3FA3F587-AB63-71BE-749E-BA3BE01DB69A}</UniqueIdentifier>
     </Filter>
@@ -1392,6 +1395,9 @@
     <ClInclude Include="engine\src\Blu\Core\Timestep.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\UUID.h">
+      <Filter>src\Blu\Core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Window.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
@@ -1518,13 +1524,15 @@
     <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h">
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scripting\ScriptEngine.h">
+      <Filter>src\Blu\Scripting</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h">
       <Filter>src\Blu\Utils</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Core\UUID.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -1546,6 +1554,9 @@
       <Filter>src\Blu\Core</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp">
+      <Filter>src\Blu\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\UUID.cpp">
       <Filter>src\Blu\Core</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp">
@@ -1668,9 +1679,11 @@
     <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp">
       <Filter>src\Blu\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scripting\ScriptEngine.cpp">
+      <Filter>src\Blu\Scripting</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Core\UUID.cpp" />
   </ItemGroup>
 </Project>
