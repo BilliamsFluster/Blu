@@ -1,6 +1,6 @@
-C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Intermediates\Debug\Blu-ScriptCore.csproj.AssemblyReference.cache
 C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Intermediates\Debug\Blu-ScriptCore.csproj.CoreCompileInputs.cache
 C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Intermediates\Debug\Blu-ScriptCore.dll
 C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Intermediates\Debug\Blu-ScriptCore.pdb
 C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Blu-ScriptCore.dll
 C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Blu-ScriptCore.pdb
+C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Intermediates\Debug\Blu-ScriptCore.csproj.AssemblyReference.cache

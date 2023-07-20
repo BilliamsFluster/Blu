@@ -125,6 +125,7 @@ namespace Blu
 			}
 			return {};
 		}
+		return {};
 	}
 	Entity Scene::DuplicateEntity(Entity& targetEntity)
 	{

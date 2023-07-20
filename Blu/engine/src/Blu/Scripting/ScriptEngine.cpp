@@ -2,19 +2,102 @@
 #include "ScriptEngine.h"
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
+#include "ScriptJoiner.h"
+#include "Blu/Core/Core.h"
 
 
 namespace Blu
 {
+	namespace Utils
+	{
+		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
+		{
+			std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
+
+			if (!stream)
+			{
+				return nullptr;
+			}
+
+			std::streampos end = stream.tellg();
+			stream.seekg(0, std::ios::beg);
+			uint32_t size = end - stream.tellg();
+
+			if (size == 0)
+			{
+				return nullptr;
+			}
+
+			char* buffer = new char[size];
+			stream.read((char*)buffer, size);
+
+			*outSize = size;
+			return buffer;
+		}
+		MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
+		{
+			uint32_t fileSize = 0;
+			char* fileData = ReadBytes(assemblyPath, &fileSize);
+
+			MonoImageOpenStatus status;
+			MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
+
+			if (status != MONO_IMAGE_OK)
+			{
+				const char* errorMessage = mono_image_strerror(status);
+
+				return nullptr;
+			}
+			std::string path = assemblyPath.string();
+			MonoAssembly* assembly = mono_assembly_load_from_full(image, path.c_str(), &status, 0);
+			mono_image_close(image);
+			delete[] fileData;
+
+			return assembly;
+		}
+	}
+
+		
+	
+	
+
 	struct ScriptEngineData
 	{
 		MonoDomain* RootDomain = nullptr;
 		MonoDomain* AppDomain = nullptr;
 
 		MonoAssembly* CoreAssembly = nullptr;
+		MonoImage* CoreAssemblyImage = nullptr;
+
+		Shared<ScriptClass> EntityClass = nullptr;
 	}; 
 	
 	static ScriptEngineData* s_Data;
+
+	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className)
+		:m_ClassNamespace(classNamespace), m_ClassName(className)
+	{
+		m_MonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, classNamespace.c_str(), className.c_str());
+
+	}
+
+	MonoObject* ScriptClass::Instantiate()
+	{
+		return ScriptEngine::InstantiateClass(m_MonoClass);
+	}
+
+	MonoMethod* ScriptClass::GetMethod(const std::string& name, int parameterCount)
+	{
+		MonoMethod* method = mono_class_get_method_from_name(m_MonoClass, name.c_str(), parameterCount);
+		return method;
+
+	}
+
+	MonoObject* ScriptClass::InvokeMethod(MonoMethod* method, void* obj, void** params, MonoObject** exc)
+	{
+		return mono_runtime_invoke(method, obj, params, exc);
+
+	}
 
 	void ScriptEngine::Init()
 	{
@@ -22,51 +105,9 @@ namespace Blu
 		InitMono();
 	}
 
-	char* ReadBytes(const std::string& filepath, uint32_t* outSize)
-	{
-		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
+	
 
-		if (!stream)
-		{
-			return nullptr;
-		}
-
-		std::streampos end = stream.tellg();
-		stream.seekg(0, std::ios::beg);
-		uint32_t size = end - stream.tellg();
-
-		if (size == 0)
-		{
-			return nullptr;
-		}
-
-		char* buffer = new char[size];
-		stream.read((char*)buffer, size);
-
-		*outSize = size;
-		return buffer;
-	}
-
-	MonoAssembly* LoadCSharpAssembly(const std::string& assemblyPath)
-	{
-		uint32_t fileSize = 0;
-		char* fileData = ReadBytes(assemblyPath, &fileSize);
-
-		MonoImageOpenStatus status;
-		MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
-
-		if(status != MONO_IMAGE_OK)
-		{ 
-			const char* errorMessage = mono_image_strerror(status);
-
-			return nullptr;
-		}
-		MonoAssembly* assembly = mono_assembly_load_from_full(image, assemblyPath.c_str(), &status, 0);
-		mono_image_close(image);
-		delete[] fileData;
-
-		return assembly;
-	}
+	
 
 	void PrintAssemblyTypes(MonoAssembly* assembly)
 	{
@@ -91,6 +132,19 @@ namespace Blu
 		delete s_Data;
 
 	}
+	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
+	{
+		//Create App Domain
+		s_Data->AppDomain = mono_domain_create_appdomain(const_cast<char*>("BluScriptRuntime"), nullptr);
+		mono_domain_set(s_Data->AppDomain, true);
+
+
+		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
+		//PrintAssemblyTypes(s_Data->CoreAssembly); -- for debug
+		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+		
+	}
+	
 	void ScriptEngine::InitMono()
 	{
 		mono_set_assemblies_path("mono/lib"); // this is done first, you need to provide a path for mono
@@ -103,26 +157,26 @@ namespace Blu
 
 		s_Data->RootDomain = rootDomain;
 
-		//Create App Domain
-		s_Data->AppDomain = mono_domain_create_appdomain(const_cast<char*>("BluScriptRuntime"), nullptr);
-		mono_domain_set(s_Data->AppDomain, true);
+		
+		
+		LoadAssembly("Resources/Scripts/Blu-ScriptCore.dll");
+		ScriptJoiner::RegisterFunctions();
 
+		
+		s_Data->EntityClass =  std::make_shared<ScriptClass>("Blu", "Entity");
+		MonoObject* instance = s_Data->EntityClass->Instantiate();
 
-		s_Data->CoreAssembly = LoadCSharpAssembly("Resources/Scripts/Blu-ScriptCore.dll");
-		PrintAssemblyTypes(s_Data->CoreAssembly);
-
-		MonoImage* assemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
-		MonoClass* monoClass = mono_class_from_name(assemblyImage, "Blu", "Main");
-
+		MonoMethod* printFunction = s_Data->EntityClass->GetMethod("PrintMessage", 0);
+		s_Data->EntityClass->InvokeMethod(printFunction, instance, nullptr, nullptr);
+		
+	}
+	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
+	{
+		
 		// Create object then call constructor
 		MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);
 		mono_runtime_object_init(instance);
-
-		// call function
-		MonoMethod* printFunction = mono_class_get_method_from_name(monoClass, "PrintMessage", 0);
-		mono_runtime_invoke(printFunction, instance, nullptr, nullptr);
-
-		
+		return instance;
 	}
 	
 	void ScriptEngine::ShutdownMono()

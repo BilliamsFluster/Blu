@@ -629,6 +629,7 @@
     <ClInclude Include="engine\src\Blu\Scripting\ScriptEngine.h" />
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h" />
     <ClInclude Include="engine\src\Blupch.h" />
+    <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -685,6 +686,7 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">

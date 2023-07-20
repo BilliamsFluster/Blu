@@ -132,8 +132,8 @@ namespace Blu
 
 		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 		my = viewportSize.y - my;
-		int mouseX = (int)mx;
-		int mouseY = (int)my;
+		float mouseX = (float)mx;
+		float mouseY = (float)my;
 		m_MousePosX = mouseX;
 		m_MousePosY = mouseY;
 
