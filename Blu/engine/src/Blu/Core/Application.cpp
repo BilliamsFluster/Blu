@@ -58,6 +58,8 @@ namespace Blu
 	
 	Application::~Application()
 	{
+		ScriptEngine::Shutdown();
+		//need Renderer::Shutdown();
 	}
 
 	// Push a new layer into the application

@@ -87,7 +87,9 @@ namespace Blu
 	}
 	void ScriptEngine::Shutdown()
 	{
+		ShutdownMono();
 		delete s_Data;
+
 	}
 	void ScriptEngine::InitMono()
 	{
@@ -108,10 +110,27 @@ namespace Blu
 
 		s_Data->CoreAssembly = LoadCSharpAssembly("Resources/Scripts/Blu-ScriptCore.dll");
 		PrintAssemblyTypes(s_Data->CoreAssembly);
+
+		MonoImage* assemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+		MonoClass* monoClass = mono_class_from_name(assemblyImage, "Blu", "Main");
+
+		// Create object then call constructor
+		MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);
+		mono_runtime_object_init(instance);
+
+		// call function
+		MonoMethod* printFunction = mono_class_get_method_from_name(monoClass, "PrintMessage", 0);
+		mono_runtime_invoke(printFunction, instance, nullptr, nullptr);
+
+		
 	}
 	
 	void ScriptEngine::ShutdownMono()
 	{
+		//mono_domain_unload(s_Data->AppDomain);
+		s_Data->AppDomain = nullptr;
 
+		//mono_jit_cleanup(s_Data->RootDomain);
+		s_Data->RootDomain = nullptr;
 	}
 }

@@ -320,7 +320,7 @@ namespace Blu
 	void BluEditorLayer::NewScene()
 	{
 		m_ActiveScene = std::make_shared<Scene>();
-		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
@@ -402,7 +402,7 @@ namespace Blu
 		if (serializer.Deserialize(path.string()))
 		{
 			m_EditorScene = m_ActiveScene;
-			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			
 
