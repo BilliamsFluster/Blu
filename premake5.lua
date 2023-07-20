@@ -32,17 +32,42 @@ workspace "Blu"
 
 	Library["mono"] = "%{LibraryDir.mono}/libmono-static-sgen.lib"
 
+	--Windows
+	Library["WinSock"] = "Ws2_32.lib"
+	Library["Winmm"] = "Winmm.lib"
+	Library["Version"] = "Version.lib"
+	Library["Bcrypt"] = "Bcrypt.lib"
+	Library["ucrt"] = "ucrt.lib"
 	
+	
+	Library["libm"] = "libm.lib";
+	Library["libcmt"] = "libcmt.lib";
+	Library["libcmtd"] = "libcmtd.lib";
+	Library["libucrtd"] = "libucrtd.lib"
+	
+	Library["ucrt"] = "ucrt.lib";
+	Library["msvcrt"] = "msvcrt.lib";
+	Library["msvcrtd"] = "msvcrtd.lib";
+
+
+
+-- Setup multiple premake files per directory so we can include them in here
+group "Core"
+	--include "Blu"
+	include "Blu-ScriptCore"
+
+group "Tools"
+	--include "Blu-Editor"
+
+group "misc"
+	--include "Azure"
+
+group"Dependencies"
 	include "Blu/engine/ExternalDependencies/GLFW"
 	include "Blu/engine/ExternalDependencies/Glad"
 	include "Blu/engine/ExternalDependencies/imgui"
 	include "Blu/engine/ExternalDependencies/yaml"
 	include "Blu/engine/ExternalDependencies/box2d"
-	
-
-
-
-
 	
 
 
@@ -105,7 +130,8 @@ project "Blu"
 		"yaml",
 		"dwmapi",
 		"box2d",
-		"%{Library.mono}"
+		"%{Library.mono}",
+		
 		
 	}
 	filter {"files:Blu/engine/ExternalDependencies/ImGuizmo/*.cpp"}
@@ -118,7 +144,14 @@ project "Blu"
 	filter "system:windows"
 		systemversion "latest"
 
-	--links {"gdi32", "dwmapi", "User32" }
+		links 
+		{
+			"%{Library.WinSock}",
+			"%{Library.Winmm}",
+			"%{Library.Version}",
+			"%{Library.Bcrypt}",
+			
+		}
 		--"opengl32.lib"
 		defines
 		{
@@ -135,7 +168,7 @@ project "Blu"
 		defines "BLU_DEBUG"
 		buildoptions "/MTd"
 		symbols "on"
-		linkoptions { "/NODEFAULTLIB:MSVCRT" }
+		--linkoptions { "/NODEFAULTLIB:MSVCRT" }
 
 	filter "configurations:Release"
 		defines "BLU_RELEASE"
@@ -197,20 +230,46 @@ project "Azure"
 
 		defines
 		{
-			"BLU_PLATFORM_WINDOWS"
+			"BLU_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS"
+
 		}
 
 	filter "configurations:Debug"
 		defines "BLU_DEBUG"
 		symbols "on"
+		buildoptions "/MTd"
+		linkoptions { "/NODEFAULTLIB:\"MSVCRTD.lib\"" }
+		runtime "Debug"
+		buildoptions "/MTd"
+
+
+		links
+		{
+			"%{Library.msvcrtd}",
+		}
+
 
 	filter "configurations:Release"
 		defines "BLU_RELEASE"
 		optimize "on"
+		runtime "Release"
+		buildoptions "/MT"
+		links
+		{
+			"%{Library.msvcrt}",
+		}
 
 	filter "configurations:Dist"
 		defines "BLU_DIST"
 		optimize "on"
+
+
+
+
+
+
+
 
 project "Blu-Editor"
 	location "Blu-Editor"
@@ -269,19 +328,38 @@ project "Blu-Editor"
 
 	filter "system:windows"
 		systemversion "latest"
-
+		
 		defines
 		{
-			"BLU_PLATFORM_WINDOWS"
+			"BLU_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS"
+
 		}
 
 	filter "configurations:Debug"
 		defines "BLU_DEBUG"
 		symbols "on"
+		runtime "Debug"
+		buildoptions "/MTd"
+
+
+		links
+		{
+			"%{Library.msvcrtd}",
+			
+		}
 
 	filter "configurations:Release"
 		defines "BLU_RELEASE"
 		optimize "on"
+		runtime "Release"
+		buildoptions "/MT"
+
+		links
+		{
+			"%{Library.msvcrt}",
+		}
+
 
 	filter "configurations:Dist"
 		defines "BLU_DIST"

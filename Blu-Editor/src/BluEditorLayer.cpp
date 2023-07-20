@@ -423,9 +423,12 @@ namespace Blu
 	void BluEditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+		if (m_EditorScene)
+		{
+			m_ActiveScene = Scene::Copy(m_EditorScene);
+			m_ActiveScene->OnRuntimeStart();
 
-		m_ActiveScene = Scene::Copy(m_EditorScene);
-		m_ActiveScene->OnRuntimeStart();
+		}
 	}
 
 	void BluEditorLayer::OnScenePause()
