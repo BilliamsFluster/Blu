@@ -1,12 +1,13 @@
-project "Blu-ScriptCore"
-	location "Blu-ScriptCore"
-	kind "SharedLib"
-	language "C#"
-	dotnetframework "4.7.2"
 solutiondir = path.getabsolute("..")
 
-	targetdir (solutiondir .. "/Blu-Editor/Resources/Scripts")
-	objdir (solutiondir .. "/Blu-Editor/Resources/Scripts/Intermediates")
+project "Blu-ScriptCore"
+    location (solutiondir .. "/Blu-ScriptCore")
+    kind "SharedLib"
+    language "C#"
+    dotnetframework "4.7.2"
+
+    targetdir (solutiondir .. "/Blu-Editor/Resources/Scripts")
+    objdir (solutiondir .. "/Blu-Editor/Resources/Scripts/Intermediates")
 
 	files
 	{
@@ -25,7 +26,3 @@ solutiondir = path.getabsolute("..")
 	filter "configurations:Dist"
 		optimize "Full"
 		symbols "Off"
-
-group ""
-
-group "Tools"

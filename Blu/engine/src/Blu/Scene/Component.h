@@ -21,6 +21,8 @@ namespace Blu
 
 		IDComponent() = default;
 		IDComponent(const IDComponent&) = default;
+		IDComponent(UUID& uuid) : ID(uuid) {}
+
 	};
 	struct TransformComponent
 	{
@@ -122,6 +124,13 @@ namespace Blu
 		CameraComponent(const CameraComponent&) = default;
 		
 	};
+	struct ScriptComponent
+	{
+		std::string Name;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent&) = default;
+	};
 	struct NativeScriptComponent 
 	{
 
@@ -183,6 +192,16 @@ namespace Blu
 		CircleCollider2DComponent() = default;
 		CircleCollider2DComponent(const CircleCollider2DComponent& other) = default;
 	};
+
+	template<typename... Component>
+	struct Components
+	{
+
+	};
+	using AllComponents =
+		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
+		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
+		ScriptComponent, NativeScriptComponent, Rigidbody2DComponent>;
 
 
 

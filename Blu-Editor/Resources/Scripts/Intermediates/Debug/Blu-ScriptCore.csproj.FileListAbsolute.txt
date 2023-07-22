@@ -3,4 +3,3 @@ C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Intermediates\Debug\Blu-ScriptCor
 C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Intermediates\Debug\Blu-ScriptCore.pdb
 C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Blu-ScriptCore.dll
 C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Blu-ScriptCore.pdb
-C:\GameEngine\Blu\Blu-Editor\Resources\Scripts\Intermediates\Debug\Blu-ScriptCore.csproj.AssemblyReference.cache

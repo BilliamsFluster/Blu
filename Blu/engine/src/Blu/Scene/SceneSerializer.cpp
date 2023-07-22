@@ -142,6 +142,16 @@ namespace Blu
 			out << YAML::EndMap;
 
 		}*/
+
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			out << YAML::Key << "ScriptComponent";
+			out << YAML::BeginMap;
+			auto& sc = entity.GetComponent<ScriptComponent>();
+			out << YAML::Key << "Name" << YAML::Value << sc.Name;
+			out << YAML::EndMap;
+
+		}
 		if (entity.HasComponent<CameraComponent>())
 		{
 			out << YAML::Key << "CameraComponent";
@@ -311,10 +321,11 @@ namespace Blu
 				auto tagComponent = entity["TagComponent"];
 				if (tagComponent)
 				{
-					name = tagComponent["Tag"].as < std::string>();
+					name = tagComponent["Tag"].as<std::string>();
 				}
 
 				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
+				
 
 				auto transformComponent = entity["TransformComponent"];
 
@@ -325,6 +336,15 @@ namespace Blu
 					tc.Rotation = transformComponent["Rotation"].as<glm::vec3>();
 					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
 				}
+
+				auto scriptComponent = entity["ScriptComponent"];
+
+				if (scriptComponent)
+				{
+					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
+					sc.Name = scriptComponent["Name"].as<std::string>();
+				}
+
 				auto cameraComponent = entity["CameraComponent"];
 				if (cameraComponent)
 				{

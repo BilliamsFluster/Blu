@@ -12,6 +12,7 @@ namespace Blu
 		GLFWwindow* window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
 		auto state = glfwGetKey(window, keycode);
 		m_KeyCode = state;
+		std::cout << keycode << std::endl;
 		return state == GLFW_PRESS || state == GLFW_REPEAT; // is the key pressed or released
 	}
 	bool Input::IsMouseButtonPressed(int button)

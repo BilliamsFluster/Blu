@@ -3,7 +3,10 @@
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
 #include "ScriptJoiner.h"
-#include "Blu/Core/Core.h"
+#include <string>
+#include <format>
+#include "Blu/Scene/Scene.h"
+#include "Blu/Scene/Entity.h"
 
 
 namespace Blu
@@ -70,6 +73,10 @@ namespace Blu
 		MonoImage* CoreAssemblyImage = nullptr;
 
 		Shared<ScriptClass> EntityClass = nullptr;
+		Scene* SceneContext = nullptr;
+
+		std::unordered_map<std::string, Shared<ScriptClass>> Entities;
+		std::unordered_map<UUID, Shared<ScriptInstance>> EntityInstances;
 	}; 
 	
 	static ScriptEngineData* s_Data;
@@ -84,7 +91,10 @@ namespace Blu
 	MonoObject* ScriptClass::Instantiate()
 	{
 		return ScriptEngine::InstantiateClass(m_MonoClass);
+
 	}
+
+	
 
 	MonoMethod* ScriptClass::GetMethod(const std::string& name, int parameterCount)
 	{
@@ -120,17 +130,103 @@ namespace Blu
 			uint32_t cols[MONO_TYPEDEF_SIZE];
 			mono_metadata_decode_row(typeDefinitionTable, i, cols, MONO_TYPEDEF_SIZE);
 
+
+			const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
+			const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+			
+			printf("%s.%s \n", nameSpace, name);
+			
+		}
+	}
+
+
+	void ScriptEngine::LoadAssemblyClasses(MonoAssembly* assembly)
+	{
+		s_Data->Entities.clear();
+		MonoImage* image = mono_assembly_get_image(assembly);
+		const MonoTableInfo* typeDefinitionTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+		int32_t numTypes = mono_table_info_get_rows(typeDefinitionTable);
+		MonoClass* entityClass = mono_class_from_name(image, "Blu", "Entity");
+
+		for (int32_t i = 0; i < numTypes; i++)
+		{
+			uint32_t cols[MONO_TYPEDEF_SIZE];
+			mono_metadata_decode_row(typeDefinitionTable, i, cols, MONO_TYPEDEF_SIZE);
+
+
 			const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
 			const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
 
-			printf("%s.%s", nameSpace, name); 
+			std::string fullName;
+			if (strlen(nameSpace) != 0)
+			{
+				fullName = std::format("{}.{}", nameSpace, name);
+			}
+			else
+			{
+				fullName = name;
+			}
+
+			MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);
+
+			if (monoClass == entityClass)
+				continue;
+
+			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
+
+			if (isEntity)
+			{
+				s_Data->Entities[fullName] = std::make_shared<ScriptClass>(nameSpace, name);
+			}
+
+			printf("%s.%s \n", nameSpace, name);
+
 		}
+
 	}
 	void ScriptEngine::Shutdown()
 	{
 		ShutdownMono();
 		delete s_Data;
 
+	}
+	void ScriptEngine::OnRuntimeStart(Scene* scene)
+	{
+		s_Data->SceneContext = scene;
+	}
+	void ScriptEngine::OnRuntimeStop()
+	{
+		s_Data->SceneContext = nullptr;
+		s_Data->EntityInstances.clear();
+	}
+	void ScriptEngine::OnCreateEntity(Entity* entity)
+	{
+		const auto& sc = entity->GetComponent<ScriptComponent>();
+		if (EntityClassExists(sc.Name))
+		{
+			Shared<ScriptInstance> instance = std::make_shared<ScriptInstance>(s_Data->Entities[sc.Name], entity);
+			s_Data->EntityInstances[entity->GetUUID()] = instance;
+			instance->InvokeOnCreate();
+		}
+	}
+	void ScriptEngine::OnUpdateEntity(Entity* entity, float deltaTime)
+	{
+		UUID entityUUID = entity->GetUUID();
+		Shared<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
+		instance->InvokeOnUpdate(deltaTime);
+		
+	}
+	Scene* ScriptEngine::GetSceneContext()
+	{
+		return s_Data->SceneContext;
+	}
+	bool ScriptEngine::EntityClassExists(const std::string& fullName)
+	{
+		return s_Data->Entities.find(fullName) != s_Data->Entities.end();
+	}
+	std::unordered_map<std::string, Shared<ScriptClass>> ScriptEngine::GetEntities()
+	{
+		return s_Data->Entities;
 	}
 	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
 	{
@@ -161,13 +257,13 @@ namespace Blu
 		
 		LoadAssembly("Resources/Scripts/Blu-ScriptCore.dll");
 		ScriptJoiner::RegisterFunctions();
-
+		LoadAssemblyClasses(s_Data->CoreAssembly);
+		auto& classes = s_Data->Entities;
 		
 		s_Data->EntityClass =  std::make_shared<ScriptClass>("Blu", "Entity");
 		MonoObject* instance = s_Data->EntityClass->Instantiate();
 
-		MonoMethod* printFunction = s_Data->EntityClass->GetMethod("PrintMessage", 0);
-		s_Data->EntityClass->InvokeMethod(printFunction, instance, nullptr, nullptr);
+		
 		
 	}
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
@@ -186,5 +282,30 @@ namespace Blu
 
 		//mono_jit_cleanup(s_Data->RootDomain);
 		s_Data->RootDomain = nullptr;
+	}
+	ScriptInstance::ScriptInstance(Shared<ScriptClass> scriptClass, Entity* entity)
+		:m_ScriptClass(scriptClass)
+	{
+		m_Instance = scriptClass->Instantiate();
+
+		m_Constructor = s_Data->EntityClass->GetMethod(".ctor", 1);
+		m_OnCreateMethod = scriptClass->GetMethod("OnCreate", 0);
+		m_OnUpdateMethod = scriptClass->GetMethod("OnUpdate", 1);
+
+		{
+			UUID entityID = entity->GetUUID();
+			void* param = &entityID;
+			scriptClass->InvokeMethod(m_Constructor, m_Instance, &param, nullptr);
+		}
+	}
+	void ScriptInstance::InvokeOnCreate()
+	{
+		m_ScriptClass->InvokeMethod(m_OnCreateMethod, m_Instance, nullptr, nullptr);
+
+	}
+	void ScriptInstance::InvokeOnUpdate(float deltaTime)
+	{
+		void* param = &deltaTime;
+		m_ScriptClass->InvokeMethod(m_OnUpdateMethod, m_Instance, &param, nullptr);
 	}
 }

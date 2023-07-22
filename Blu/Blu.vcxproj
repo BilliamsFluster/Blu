@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\mono\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\mono\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -98,7 +98,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\mono\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\mono\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -123,7 +123,7 @@
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;engine\ExternalDependencies\GLFW\include;engine\ExternalDependencies\Glad\include;engine\ExternalDependencies\imgui;engine\ExternalDependencies\glm;engine\ExternalDependencies\stb_image;engine\ExternalDependencies\entt\include;engine\ExternalDependencies\mono\include;engine\ExternalDependencies\yaml\include;engine\ExternalDependencies\ImGuizmo;engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\mono\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -627,9 +627,9 @@
     <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h" />
     <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h" />
     <ClInclude Include="engine\src\Blu\Scripting\ScriptEngine.h" />
+    <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h" />
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h" />
     <ClInclude Include="engine\src\Blupch.h" />
-    <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -683,10 +683,10 @@
     <ClCompile Include="engine\src\Blu\Scene\SceneSerializer.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp" />
     <ClCompile Include="engine\src\Blu\Scripting\ScriptEngine.cpp" />
+    <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">

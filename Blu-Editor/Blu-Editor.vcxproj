@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;..\Blu\engine\ExternalDependencies\entt\include;..\Blu\engine\ExternalDependencies\yaml\include;..\Blu\engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -97,7 +97,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;..\Blu\engine\ExternalDependencies\entt\include;..\Blu\engine\ExternalDependencies\yaml\include;..\Blu\engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -119,7 +119,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;..\Blu\engine\ExternalDependencies\entt\include;..\Blu\engine\ExternalDependencies\yaml\include;..\Blu\engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>

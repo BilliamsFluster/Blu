@@ -1,31 +1,20 @@
 #pragma once
 #include <filesystem>
+#include <unordered_map>
+#include "Blu/Core/Core.h"
 
 extern "C"
 {
 	typedef struct _MonoClass MonoClass;
 	typedef struct _MonoObject MonoObject;
 	typedef struct _MonoMethod MonoMethod;
+	typedef struct _MonoAssembly MonoAssembly;
+	typedef struct _MonoImage MonoImage;
 }
 
 
 namespace Blu
 {
-	class ScriptEngine
-	{
-	public:
-		static void Init();
-		static void Shutdown();
-
-		static void LoadAssembly(const std::filesystem::path& filepath);
-	private:
-		static void InitMono();
-		static MonoObject* InstantiateClass(MonoClass* monoClass);
-		static void ShutdownMono();
-
-		friend class ScriptClass;
-	};
-	
 	class ScriptClass
 	{
 	public:
@@ -39,7 +28,46 @@ namespace Blu
 		const std::string m_ClassName;
 		MonoClass* m_MonoClass = nullptr;
 	};
+	class Scene;
+	class Entity;
+	class ScriptEngine
+	{
+	public:
+		static void Init();
+		static void Shutdown();
+		static void OnRuntimeStart(Scene* scene);
+		static void OnRuntimeStop();
+		static void OnCreateEntity(Entity* entity);
+		static void OnUpdateEntity(Entity* entity, float deltaTime);
+		static Scene* GetSceneContext();
+		static bool EntityClassExists(const std::string& fullName);
+		static std::unordered_map<std::string, Shared<ScriptClass>> GetEntities();
+
+		static void LoadAssembly(const std::filesystem::path& filepath);
+	private:
+		static void InitMono();
+		static MonoObject* InstantiateClass(MonoClass* monoClass);
+		static void LoadAssemblyClasses(MonoAssembly* assembly);
+		static void ShutdownMono();
+
+		friend class ScriptClass;
+	};
 	
+	
+	class ScriptInstance
+	{
+	public:
+		ScriptInstance(Shared<ScriptClass> scriptClass, Entity* entity);
+
+		void InvokeOnCreate();
+		void InvokeOnUpdate(float deltaTime);
+	private:
+		Shared<ScriptClass> m_ScriptClass;
+		MonoObject* m_Instance = nullptr;
+		MonoMethod* m_Constructor = nullptr;
+		MonoMethod* m_OnCreateMethod = nullptr;
+		MonoMethod* m_OnUpdateMethod = nullptr;
+	};
 
 }
 

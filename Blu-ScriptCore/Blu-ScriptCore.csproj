@@ -17,10 +17,11 @@
     <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\Blu-Editor\Resources\Scripts\</OutputPath>
-    <BaseIntermediateOutputPath>..\..\Blu-Editor\Resources\Scripts\Intermediates\Debug\</BaseIntermediateOutputPath>
+    <OutputPath>..\Blu-Editor\Resources\Scripts\</OutputPath>
+    <BaseIntermediateOutputPath>..\Blu-Editor\Resources\Scripts\Intermediates\Debug\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -28,10 +29,11 @@
     <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\Blu-Editor\Resources\Scripts\</OutputPath>
-    <BaseIntermediateOutputPath>..\..\Blu-Editor\Resources\Scripts\Intermediates\Release\</BaseIntermediateOutputPath>
+    <OutputPath>..\Blu-Editor\Resources\Scripts\</OutputPath>
+    <BaseIntermediateOutputPath>..\Blu-Editor\Resources\Scripts\Intermediates\Release\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -39,19 +41,22 @@
     <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\Blu-Editor\Resources\Scripts\</OutputPath>
-    <BaseIntermediateOutputPath>..\..\Blu-Editor\Resources\Scripts\Intermediates\Dist\</BaseIntermediateOutputPath>
+    <OutputPath>..\Blu-Editor\Resources\Scripts\</OutputPath>
+    <BaseIntermediateOutputPath>..\Blu-Editor\Resources\Scripts\Intermediates\Dist\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Source\Main.cs">
-      <Link>Source\Main.cs</Link>
-    </Compile>
+    <Compile Include="Source\Character.cs" />
+    <Compile Include="Source\Input.cs" />
+    <Compile Include="Source\KeyCodes.cs" />
+    <Compile Include="Source\Main.cs" />
+    <Compile Include="Source\Pawn.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

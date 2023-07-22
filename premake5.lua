@@ -1,6 +1,6 @@
 workspace "Blu"
 	architecture "x64"
-	startproject "Azure"
+	startproject "Blu-Editor"
 	
 	configurations
 	{
@@ -12,16 +12,16 @@ workspace "Blu"
 	--Include directories relative to root folder(solution dir)
 	IncludeDir = {}
 	
-	IncludeDir["Glad"] =		"Blu/engine/ExternalDependencies/Glad/include"
-	IncludeDir["GLFW"] =		"Blu/engine/ExternalDependencies/GLFW/include"
-	IncludeDir["ImGui"] =		"Blu/engine/ExternalDependencies/imgui"
-	IncludeDir["glm"] =			"Blu/engine/ExternalDependencies/glm"
-	IncludeDir["stb_image"] =	"Blu/engine/ExternalDependencies/stb_image"
-	IncludeDir["entt"] =		"Blu/engine/ExternalDependencies/entt/include"
-	IncludeDir["yaml"] =		"Blu/engine/ExternalDependencies/yaml/include"
-	IncludeDir["ImGuizmo"] =	"Blu/engine/ExternalDependencies/ImGuizmo"
-	IncludeDir["box2d"] =		"Blu/engine/ExternalDependencies/box2d/include"
-	IncludeDir["mono"] =		"Blu/engine/ExternalDependencies/mono/include"
+	IncludeDir["Glad"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/Glad/include"
+	IncludeDir["GLFW"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/GLFW/include"
+	IncludeDir["ImGui"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/imgui"
+	IncludeDir["glm"] =			"$(SolutionDir)/Blu/engine/ExternalDependencies/glm"
+	IncludeDir["stb_image"] =	"$(SolutionDir)/Blu/engine/ExternalDependencies/stb_image"
+	IncludeDir["entt"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/entt/include"
+	IncludeDir["yaml"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/yaml/include"
+	IncludeDir["ImGuizmo"] =	"$(SolutionDir)/Blu/engine/ExternalDependencies/ImGuizmo"
+	IncludeDir["box2d"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/box2d/include"
+	IncludeDir["mono"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/mono/include"
 
 
 	LibraryDir = {}
@@ -50,7 +50,12 @@ workspace "Blu"
 	Library["msvcrtd"] = "msvcrtd.lib";
 
 
-
+group"Dependencies"
+	include "Blu/engine/ExternalDependencies/GLFW"
+	include "Blu/engine/ExternalDependencies/Glad"
+	include "Blu/engine/ExternalDependencies/imgui"
+	include "Blu/engine/ExternalDependencies/yaml"
+	include "Blu/engine/ExternalDependencies/box2d"
 -- Setup multiple premake files per directory so we can include them in here
 group "Core"
 	--include "Blu"
@@ -62,12 +67,7 @@ group "Tools"
 group "misc"
 	--include "Azure"
 
-group"Dependencies"
-	include "Blu/engine/ExternalDependencies/GLFW"
-	include "Blu/engine/ExternalDependencies/Glad"
-	include "Blu/engine/ExternalDependencies/imgui"
-	include "Blu/engine/ExternalDependencies/yaml"
-	include "Blu/engine/ExternalDependencies/box2d"
+
 	
 
 
@@ -221,7 +221,6 @@ project "Azure"
 	links
 	{
 		"Blu"
-
 	}
 	--buildoptions { "/wd4251" } for dll
 
@@ -277,6 +276,8 @@ project "Blu-Editor"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "on" 
+	dependson { "Blu" }
+
 
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
@@ -328,7 +329,7 @@ project "Blu-Editor"
 
 	filter "system:windows"
 		systemversion "latest"
-		
+
 		defines
 		{
 			"BLU_PLATFORM_WINDOWS",

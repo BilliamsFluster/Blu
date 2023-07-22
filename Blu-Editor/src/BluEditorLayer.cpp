@@ -426,6 +426,7 @@ namespace Blu
 		if (m_EditorScene)
 		{
 			m_ActiveScene = Scene::Copy(m_EditorScene);
+			
 			m_ActiveScene->OnRuntimeStart();
 
 		}

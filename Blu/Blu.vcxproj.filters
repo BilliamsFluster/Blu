@@ -1527,13 +1527,15 @@
     <ClInclude Include="engine\src\Blu\Scripting\ScriptEngine.h">
       <Filter>src\Blu\Scripting</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h">
+      <Filter>src\Blu\Scripting</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h">
       <Filter>src\Blu\Utils</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -1683,9 +1685,11 @@
     <ClCompile Include="engine\src\Blu\Scripting\ScriptEngine.cpp">
       <Filter>src\Blu\Scripting</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp">
+      <Filter>src\Blu\Scripting</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp" />
   </ItemGroup>
 </Project>

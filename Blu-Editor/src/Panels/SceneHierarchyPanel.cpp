@@ -5,6 +5,7 @@
 #include "Blu/Rendering/Texture.h"
 #include <imgui_internal.h>
 #include <filesystem>
+#include "Blu/Scripting/ScriptEngine.h"
 
 namespace Blu
 {
@@ -294,14 +295,21 @@ namespace Blu
 				}
 
 			}
+			if (!m_SelectedEntity.HasComponent<ScriptComponent>())
+			{
+				if (ImGui::MenuItem("Script"))
+				{
+					m_SelectedEntity.AddComponent<ScriptComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
 			if (!m_SelectedEntity.HasComponent<SpriteRendererComponent>())
 			{
-			if (ImGui::MenuItem("Sprite Renderer"))
-			{
-				m_SelectedEntity.AddComponent<SpriteRendererComponent>();
-				ImGui::CloseCurrentPopup();
-			}
-
+				if (ImGui::MenuItem("Sprite Renderer"))
+				{
+					m_SelectedEntity.AddComponent<SpriteRendererComponent>();
+					ImGui::CloseCurrentPopup();
+				}
 			}
 			if (!m_SelectedEntity.HasComponent<CircleRendererComponent>())
 			{
@@ -361,6 +369,25 @@ namespace Blu
 				component.Rotation = glm::radians(rotation);
 				ImGui::Spacing();
 				DrawVec3Control("Scale", component.Scale, 1.0f);
+			});
+
+		DrawComponent<ScriptComponent>("Script", entity, [](auto& component)
+			{
+				bool scriptExists = ScriptEngine::EntityClassExists(component.Name);
+				const auto& entities = ScriptEngine::GetEntities();
+				if (!scriptExists)
+				{
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 0, 1));
+				}
+				static char buffer[64];
+				strcpy(buffer, component.Name.c_str());
+				if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+				{
+					component.Name = buffer;
+					
+				}
+				if (!scriptExists)
+					ImGui::PopStyleColor();
 			});
 		
 		DrawComponent<ParticleSystemComponent>("Particle System", entity, [&](auto& component)
