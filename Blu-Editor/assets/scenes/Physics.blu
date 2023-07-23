@@ -1,47 +1,37 @@
 Scene: Name
 Entities:
-  - Entity: 15331168643400094970
+  - Entity: 4777953925013219778
     TagComponent:
-      Tag: Empty
+      Tag: Cube 1
+    ScriptComponent:
+      Name: Azure.BoxPawn
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [-1.35629296, 0.0347428769, 0.177086934]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 9126341988753611511
-    TagComponent:
-      Tag: Circle
-    TransformComponent:
-      Translation: [-0.689507723, -6.23878622, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    CircleRendererComponent:
-      Color: [1, 1, 1, 1]
-      Radius: 0.5
-      Thickness: 1
-      Fade: 0.00499999989
+      Color: [0, 0.525096655, 1, 1]
     Rigidbody2DComponent:
       BodyType: 1
       FixedRotation: false
-    CircleCollider2DComponent:
+    BoxCollider2DComponent:
       Offset: [0, 0]
-      Radius: 1
+      Size: [1, 1]
       Density: 1
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
-  - Entity: 16854878493202120524
+  - Entity: 897275639439066834
     TagComponent:
-      Tag: Sprite
+      Tag: Cube 2
     TransformComponent:
-      Translation: [0, -11.928072, 0]
-      Rotation: [0, 0, 0]
-      Scale: [9.7912693, 1, 1]
+      Translation: [-0.00721002417, -7.55861425, 0]
+      Rotation: [0, 0, 0.000140375152]
+      Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
+      Color: [1, 0, 0, 1]
     Rigidbody2DComponent:
-      BodyType: 0
+      BodyType: 1
       FixedRotation: false
     BoxCollider2DComponent:
       Offset: [0, 0]
@@ -68,17 +58,17 @@ Entities:
       Translation: [0, -11.0939999, 11.1995163]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 897275639439066834
+  - Entity: 16854878493202120524
     TagComponent:
-      Tag: Cube 2
+      Tag: Sprite
     TransformComponent:
-      Translation: [-0.00721002417, -7.55861425, 0]
-      Rotation: [0, 0, 0.000140375152]
-      Scale: [1, 1, 1]
+      Translation: [0, -11.928072, 0]
+      Rotation: [0, 0, 0]
+      Scale: [9.7912693, 1, 1]
     SpriteRendererComponent:
-      Color: [1, 0, 0, 1]
+      Color: [1, 1, 1, 1]
     Rigidbody2DComponent:
-      BodyType: 1
+      BodyType: 0
       FixedRotation: false
     BoxCollider2DComponent:
       Offset: [0, 0]
@@ -87,24 +77,34 @@ Entities:
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
-  - Entity: 4777953925013219778
+  - Entity: 9126341988753611511
     TagComponent:
-      Tag: Cube 1
-    ScriptComponent:
-      Name: Azure.Pawn
+      Tag: Circle
     TransformComponent:
-      Translation: [-1.35629296, 0.0347428769, 0.177086934]
+      Translation: [-0.689507723, -6.23878622, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Radius: 0.5
+      Thickness: 1
+      Fade: 0.00499999989
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    CircleCollider2DComponent:
+      Offset: [0, 0]
+      Radius: 1
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 15331168643400094970
+    TagComponent:
+      Tag: Empty
+    TransformComponent:
+      Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [0, 0.525096655, 1, 1]
-    Rigidbody2DComponent:
-      BodyType: 1
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
+      Color: [1, 1, 1, 1]
