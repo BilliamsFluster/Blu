@@ -154,7 +154,7 @@ public:
 	Azure()
 	{
 		//PushLayer(new Engine());
-		PushLayer(std::make_shared<Azure2D>());
+		//PushLayer(std::make_shared<Azure2D>());
 
 		
 		

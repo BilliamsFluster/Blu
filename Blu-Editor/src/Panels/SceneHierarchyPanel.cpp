@@ -5,6 +5,7 @@
 #include "Blu/Rendering/Texture.h"
 #include <imgui_internal.h>
 #include <filesystem>
+#include "Blu/Scripting/ScriptEngine.h"
 
 namespace Blu
 {
@@ -260,6 +261,8 @@ namespace Blu
 
 		
 	}
+	
+	
 	//static std::map<int, ParticleSystemComponent> ParticleSystems;
 	static std::vector<ParticleSystemComponent> ParticleSystems(10);
 	void SceneHierarchyPanel::DrawEntityComponents(Entity entity)
@@ -294,14 +297,21 @@ namespace Blu
 				}
 
 			}
+			if (!m_SelectedEntity.HasComponent<ScriptComponent>())
+			{
+				if (ImGui::MenuItem("Script"))
+				{
+					m_SelectedEntity.AddComponent<ScriptComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
 			if (!m_SelectedEntity.HasComponent<SpriteRendererComponent>())
 			{
-			if (ImGui::MenuItem("Sprite Renderer"))
-			{
-				m_SelectedEntity.AddComponent<SpriteRendererComponent>();
-				ImGui::CloseCurrentPopup();
-			}
-
+				if (ImGui::MenuItem("Sprite Renderer"))
+				{
+					m_SelectedEntity.AddComponent<SpriteRendererComponent>();
+					ImGui::CloseCurrentPopup();
+				}
 			}
 			if (!m_SelectedEntity.HasComponent<CircleRendererComponent>())
 			{
@@ -361,6 +371,115 @@ namespace Blu
 				component.Rotation = glm::radians(rotation);
 				ImGui::Spacing();
 				DrawVec3Control("Scale", component.Scale, 1.0f);
+			});
+		
+		DrawComponent<ScriptComponent>("Script", entity, [](auto& component)
+			{
+				bool scriptExists = ScriptEngine::EntityClassExists(component.Name);
+				const auto& entities = ScriptEngine::GetEntities();
+				static std::unordered_map<std::string, Shared<ScriptClass>> searchResults;
+
+				std::string buttonLabel = component.Name.empty() ? "Add Script" : component.Name;
+				if (ImGui::Button(buttonLabel.c_str()))
+				{
+					ImGui::OpenPopup("AddScriptPopup");
+				}
+
+				ImGui::SameLine(); // Set next control on the same line
+
+				// Add the clear button
+				if (!component.Name.empty() && ImGui::Button("Clear Script"))
+				{
+					component.Name.clear();
+				}
+
+				ImGui::SetNextWindowSize(ImVec2(200, 100));
+				// The pop-up dialog
+				if (ImGui::BeginPopup("AddScriptPopup"))
+				{
+					// This is your search field
+					static char searchBuffer[64] = "";
+					static char lastSearchBuffer[64] = "";
+					ImGui::SetNextItemWidth(-1); // Set width to occupy all available space
+					if (ImGui::InputText("##Search", searchBuffer, sizeof(searchBuffer), ImGuiInputTextFlags_CharsNoBlank))
+					{
+						if (strcmp(searchBuffer, lastSearchBuffer) != 0) // Check if the search text has changed
+						{
+							// Clear the previous search results
+							searchResults.clear();
+
+							// Go through each entity and check if its name contains the search buffer
+							for (const auto& entity : entities)
+							{
+								if (entity.first.find(searchBuffer) != std::string::npos)
+								{
+									// If the entity's name contains the search buffer, add it to the search results
+									searchResults.insert(entity);
+								}
+							}
+
+							strcpy(lastSearchBuffer, searchBuffer); // Remember the last search text
+						}
+					}
+
+					ImGui::Separator(); // Add a separator for visual clarity
+
+					ImGui::BeginChild("EntityList", ImVec2(-1, -ImGui::GetFrameHeightWithSpacing())); // Auto-resizing child window
+
+					if (strlen(searchBuffer) == 0)
+					{
+						// If searchBuffer is empty, loop over the entities map
+						for (const auto& entity : entities)
+						{
+							std::string entityName = entity.first;
+
+							// Check if this entity is currently selected
+							bool isSelected = entityName == component.Name;
+
+							if (ImGui::Selectable(entityName.c_str(), isSelected))
+							{
+								component.Name = entityName;
+								ImGui::CloseCurrentPopup(); // Close the popup when an entity is selected
+
+							}
+
+							// If this entity is selected, make it default focused
+							if (isSelected)
+							{
+								ImGui::SetItemDefaultFocus();
+							}
+						}
+					}
+					else
+					{
+						// If searchBuffer is not empty, loop over the searchResults map
+						for (const auto& entity : searchResults)
+						{
+							std::string entityName = entity.first;
+
+							// Check if this entity is currently selected
+							bool isSelected = entityName == component.Name;
+
+							if (ImGui::Selectable(entityName.c_str(), isSelected))
+							{
+								component.Name = entityName;
+								ImGui::CloseCurrentPopup(); // Close the popup when an entity is selected
+
+							}
+
+							// If this entity is selected, make it default focused
+							if (isSelected)
+							{
+								ImGui::SetItemDefaultFocus();
+							}
+						}
+					}
+
+					ImGui::EndChild();
+					ImGui::EndPopup();
+				}
+
+
 			});
 		
 		DrawComponent<ParticleSystemComponent>("Particle System", entity, [&](auto& component)

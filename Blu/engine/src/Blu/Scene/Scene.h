@@ -17,7 +17,7 @@ namespace Blu
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		Entity GetPrimaryCameraEntity();
-		
+		Entity GetEntityByUUID(UUID id);
 		template<typename... Components>
 		auto GetAllEntitiesWith()
 		{
@@ -28,7 +28,12 @@ namespace Blu
 		
 
 		void OnRuntimeStart();
+		void OnPhysics2DStart();
 		void OnRuntimeStop();
+
+		void OnScriptSystemStart();
+		void OnScriptSystemStop();
+		void OnScriptSystemUpdate(Timestep deltaTime);
 		void UpdateActiveCameraComponent(Timestep deltaTime);
 
 		void DestroyEntity(Entity entity);
@@ -38,6 +43,7 @@ namespace Blu
 	private:
 		entt::registry m_Registry; // container for all of our entt components
 		float m_ViewportWidth = 0.0f, m_ViewportHeight = 0.0f;
+		std::unordered_map<UUID, entt::entity> m_EntityMap;
 
 		b2World* m_PhysicsWorld = nullptr;
 		friend class Entity;

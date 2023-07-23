@@ -15,8 +15,4 @@
       <Filter>Panels</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\shaders\Renderer2D_Quad.glsl" />
-    <None Include="assets\shaders\Renderer2D_Circle.glsl" />
-  </ItemGroup>
 </Project>

@@ -2,6 +2,10 @@
 .vs/
 bin/
 bin-int/
+Intermediates/
 
 #Files
 *.user
+Blu-Editor/BluProfile-Runtime.json
+Blu-Editor/BluProfile-Shutdown.json
+Blu-Editor/BluProfile-Startup.json

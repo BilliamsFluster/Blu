@@ -10,6 +10,7 @@
 #include "box2d/b2_fixture.h"
 #include "box2d/b2_polygon_shape.h"
 #include "box2d/b2_circle_shape.h"
+#include "Blu/Scripting/ScriptEngine.h"
 
 namespace Blu
 {
@@ -77,6 +78,7 @@ namespace Blu
 		for (auto e : idView)
 		{ 
 			UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
+			//std::cout << uuid << std::endl;
 			const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
 			Entity entity = newScene->CreateEntityWithUUID(uuid, name);
 			enttMap[uuid] = (entt::entity)entity;
@@ -94,6 +96,7 @@ namespace Blu
 		CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		
+		CopyComponent<ScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
@@ -105,13 +108,16 @@ namespace Blu
 	}
 	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
 	{
-		Entity entity = { m_Registry.create(), this };
-		entity.AddComponent<IDComponent>();
+		std::cout << uuid << std::endl;
+		Entity entity = { m_Registry.create(), this };		
+		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
-
+		m_EntityMap[uuid] = entity;
 		return entity;
+
+		
 	}
 	Entity Scene::GetPrimaryCameraEntity()
 	{
@@ -124,6 +130,14 @@ namespace Blu
 				return Entity{ entity, this };
 			}
 			return {};
+		}
+		return {};
+	}
+	Entity Scene::GetEntityByUUID(UUID id)
+	{
+		if (m_EntityMap.find(id) != m_EntityMap.end())
+		{
+			return { m_EntityMap.at(id), this };
 		}
 	}
 	Entity Scene::DuplicateEntity(Entity& targetEntity)
@@ -166,6 +180,12 @@ namespace Blu
 	}
 	void Scene::OnRuntimeStart()
 	{
+		OnPhysics2DStart();
+		ScriptEngine::OnRuntimeStart(this);
+		OnScriptSystemStart();
+	}
+	void Scene::OnPhysics2DStart()
+	{
 		m_PhysicsWorld = new b2World({ 0.0f, -0.0981f }); // gravity
 
 		auto view = m_Registry.view<Rigidbody2DComponent>();
@@ -190,7 +210,7 @@ namespace Blu
 				auto& bc = entity.GetComponent<BoxCollider2DComponent>();
 
 				b2PolygonShape boxShape;
-				float pixelToMetersScale = 0.5f;  
+				float pixelToMetersScale = 0.5f;
 				boxShape.SetAsBox(bc.Size.x * transform.Scale.x * pixelToMetersScale, bc.Size.y * transform.Scale.y * pixelToMetersScale);
 
 
@@ -200,7 +220,7 @@ namespace Blu
 				fixtureDef.friction = bc.Friction;
 				fixtureDef.restitution = bc.Restitution;
 				fixtureDef.restitutionThreshold = bc.RestitutionThreshold;
-				
+
 				body->CreateFixture(&fixtureDef);
 
 			}
@@ -210,8 +230,8 @@ namespace Blu
 
 				b2CircleShape circleShape;
 				float pixelToMetersScale = 0.5f;
-				circleShape.m_radius = cc.Radius * transform.Scale.x * pixelToMetersScale; 
-				
+				circleShape.m_radius = cc.Radius * transform.Scale.x * pixelToMetersScale;
+
 				b2FixtureDef fixtureDef;
 				fixtureDef.shape = &circleShape;
 				fixtureDef.density = cc.Density;
@@ -228,6 +248,35 @@ namespace Blu
 	{
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
+		ScriptEngine::OnRuntimeStop();
+
+	}
+	void Scene::OnScriptSystemStart()
+	{
+		auto view = m_Registry.view<ScriptComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, this };
+			ScriptEngine::OnCreateEntity(&entity);
+	
+		}
+
+	}
+	void Scene::OnScriptSystemStop()
+	{
+		ScriptEngine::OnRuntimeStop();
+	}
+	void Scene::OnScriptSystemUpdate(Timestep deltaTime)
+	{
+		auto view = m_Registry.view<ScriptComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, this };
+			auto n = entity.GetComponent<IDComponent>().ID;
+			auto en = entity.GetUUID();
+			ScriptEngine::OnUpdateEntity(&entity, deltaTime);
+
+		}
 	}
 	void Scene::UpdateActiveCameraComponent(Timestep deltaTime)
 	{
@@ -286,6 +335,7 @@ namespace Blu
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
+		m_EntityMap.erase(entity.GetUUID());
 	}
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
 	{
@@ -347,7 +397,7 @@ namespace Blu
 			const int32_t positionIterations = 2;
 
 			m_PhysicsWorld->Step(deltaTime, velocityIterations, positionIterations);
-
+			OnScriptSystemUpdate(deltaTime);
 			//retrieve transform form box 2d, the goal is to update the transform to the rigidbody component's transform
 			auto view = m_Registry.view<Rigidbody2DComponent>();
 			for (auto e : view)

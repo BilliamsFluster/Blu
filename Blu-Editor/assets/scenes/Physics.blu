@@ -1,15 +1,27 @@
 Scene: Name
 Entities:
-  - Entity: 13091489709502492819
+  - Entity: 4777953925013219778
     TagComponent:
       Tag: Cube 1
+    ScriptComponent:
+      Name: Azure.BoxPawn
     TransformComponent:
       Translation: [-1.35629296, 0.0347428769, 0.177086934]
-      Rotation: [-2.55042911, -0.622615337, 0.117435664]
-      Scale: [1.09999657, 1.09999204, 1.09998894]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
     SpriteRendererComponent:
       Color: [0, 0.525096655, 1, 1]
-  - Entity: 3044686693586449449
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 897275639439066834
     TagComponent:
       Tag: Cube 2
     TransformComponent:
@@ -28,7 +40,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
-  - Entity: 15653692006220263959
+  - Entity: 693401015653648987
     TagComponent:
       Tag: Camera
     CameraComponent:
@@ -46,7 +58,7 @@ Entities:
       Translation: [0, -11.0939999, 11.1995163]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 16673001270064344545
+  - Entity: 16854878493202120524
     TagComponent:
       Tag: Sprite
     TransformComponent:
@@ -65,7 +77,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
-  - Entity: 7001560352133199177
+  - Entity: 9126341988753611511
     TagComponent:
       Tag: Circle
     TransformComponent:
@@ -87,3 +99,12 @@ Entities:
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
+  - Entity: 15331168643400094970
+    TagComponent:
+      Tag: Empty
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]

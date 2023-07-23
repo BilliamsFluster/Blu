@@ -132,8 +132,8 @@ namespace Blu
 
 		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 		my = viewportSize.y - my;
-		int mouseX = (int)mx;
-		int mouseY = (int)my;
+		float mouseX = (float)mx;
+		float mouseY = (float)my;
 		m_MousePosX = mouseX;
 		m_MousePosY = mouseY;
 
@@ -320,7 +320,7 @@ namespace Blu
 	void BluEditorLayer::NewScene()
 	{
 		m_ActiveScene = std::make_shared<Scene>();
-		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
@@ -402,7 +402,7 @@ namespace Blu
 		if (serializer.Deserialize(path.string()))
 		{
 			m_EditorScene = m_ActiveScene;
-			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			
 
@@ -423,9 +423,13 @@ namespace Blu
 	void BluEditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+		if (m_EditorScene)
+		{
+			m_ActiveScene = Scene::Copy(m_EditorScene);
+			
+			m_ActiveScene->OnRuntimeStart();
 
-		m_ActiveScene = Scene::Copy(m_EditorScene);
-		m_ActiveScene->OnRuntimeStart();
+		}
 	}
 
 	void BluEditorLayer::OnScenePause()
@@ -523,7 +527,7 @@ namespace Blu
 						if (selectedEntity.GetComponent<CameraComponent>().Primary)
 						{
 							ImGui::SetNextWindowSizeConstraints(ImVec2(300, 200), ImVec2(800, 600));
-							ImGui::Begin("CameraViewWindow", nullptr, ImGuiWindowFlags_NoScrollbar);
+							ImGui::Begin("Camera View Window", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
 							uint32_t textureIDForCameraView = m_CameraViewFrameBuffer->GetColorAttachmentID();
 							ImGui::Image((void*)textureIDForCameraView, ImVec2{ ImGui::GetWindowWidth(), ImGui::GetWindowHeight() }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 							ImGui::End();

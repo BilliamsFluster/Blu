@@ -1,6 +1,6 @@
 workspace "Blu"
 	architecture "x64"
-	startproject "Azure"
+	startproject "Blu-Editor"
 	
 	configurations
 	{
@@ -9,31 +9,63 @@ workspace "Blu"
 		"Dist"
 	}
 	outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-	--Include directories relative to root folder(solutuin dir)
+	--Include directories relative to root folder(solution dir)
 	IncludeDir = {}
 	
-	IncludeDir["Glad"] = "Blu/engine/ExternalDependencies/Glad/include"
-	IncludeDir["GLFW"] = "Blu/engine/ExternalDependencies/GLFW/include"
-	IncludeDir["ImGui"] = "Blu/engine/ExternalDependencies/imgui"
-	IncludeDir["glm"] = "Blu/engine/ExternalDependencies/glm"
-	IncludeDir["stb_image"] = "Blu/engine/ExternalDependencies/stb_image"
-	IncludeDir["entt"] = "Blu/engine/ExternalDependencies/entt/include"
-	IncludeDir["yaml"] = "Blu/engine/ExternalDependencies/yaml/include"
-	IncludeDir["ImGuizmo"] = "Blu/engine/ExternalDependencies/ImGuizmo"
-	IncludeDir["box2d"] = "Blu/engine/ExternalDependencies/box2d/include"
+	IncludeDir["Glad"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/Glad/include"
+	IncludeDir["GLFW"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/GLFW/include"
+	IncludeDir["ImGui"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/imgui"
+	IncludeDir["glm"] =			"$(SolutionDir)/Blu/engine/ExternalDependencies/glm"
+	IncludeDir["stb_image"] =	"$(SolutionDir)/Blu/engine/ExternalDependencies/stb_image"
+	IncludeDir["entt"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/entt/include"
+	IncludeDir["yaml"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/yaml/include"
+	IncludeDir["ImGuizmo"] =	"$(SolutionDir)/Blu/engine/ExternalDependencies/ImGuizmo"
+	IncludeDir["box2d"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/box2d/include"
+	IncludeDir["mono"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/mono/include"
 
 
+	LibraryDir = {}
 
+	LibraryDir["mono"] = "$(SolutionDir)Blu/engine/ExternalDependencies/mono/lib/%{cfg.buildcfg}"
 
+	Library = {}
+
+	Library["mono"] = "%{LibraryDir.mono}/libmono-static-sgen.lib"
+
+	--Windows
+	Library["WinSock"] = "Ws2_32.lib"
+	Library["Winmm"] = "Winmm.lib"
+	Library["Version"] = "Version.lib"
+	Library["Bcrypt"] = "Bcrypt.lib"
+	Library["ucrt"] = "ucrt.lib"
 	
+	
+	Library["libm"] = "libm.lib";
+	Library["libcmt"] = "libcmt.lib";
+	Library["libcmtd"] = "libcmtd.lib";
+	Library["libucrtd"] = "libucrtd.lib"
+	
+	Library["ucrt"] = "ucrt.lib";
+	Library["msvcrt"] = "msvcrt.lib";
+	Library["msvcrtd"] = "msvcrtd.lib";
+
+
+group"Dependencies"
 	include "Blu/engine/ExternalDependencies/GLFW"
 	include "Blu/engine/ExternalDependencies/Glad"
 	include "Blu/engine/ExternalDependencies/imgui"
 	include "Blu/engine/ExternalDependencies/yaml"
 	include "Blu/engine/ExternalDependencies/box2d"
-	
+-- Setup multiple premake files per directory so we can include them in here
+group "Core"
+	--include "Blu"
+	include "Blu-ScriptCore"
 
+group "Tools"
+	--include "Blu-Editor"
 
+group "misc"
+	--include "Azure"
 
 
 	
@@ -78,6 +110,7 @@ project "Blu"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
+		"%{IncludeDir.mono}",
 		"%{IncludeDir.yaml}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.box2d}",
@@ -96,7 +129,9 @@ project "Blu"
 		"ImGui",
 		"yaml",
 		"dwmapi",
-		"box2d"
+		"box2d",
+		"%{Library.mono}",
+		
 		
 	}
 	filter {"files:Blu/engine/ExternalDependencies/ImGuizmo/*.cpp"}
@@ -109,7 +144,14 @@ project "Blu"
 	filter "system:windows"
 		systemversion "latest"
 
-	--links {"gdi32", "dwmapi", "User32" }
+		links 
+		{
+			"%{Library.WinSock}",
+			"%{Library.Winmm}",
+			"%{Library.Version}",
+			"%{Library.Bcrypt}",
+			
+		}
 		--"opengl32.lib"
 		defines
 		{
@@ -126,7 +168,7 @@ project "Blu"
 		defines "BLU_DEBUG"
 		buildoptions "/MTd"
 		symbols "on"
-		linkoptions { "/NODEFAULTLIB:MSVCRT" }
+		--linkoptions { "/NODEFAULTLIB:MSVCRT" }
 
 	filter "configurations:Release"
 		defines "BLU_RELEASE"
@@ -179,7 +221,6 @@ project "Azure"
 	links
 	{
 		"Blu"
-
 	}
 	--buildoptions { "/wd4251" } for dll
 
@@ -188,20 +229,46 @@ project "Azure"
 
 		defines
 		{
-			"BLU_PLATFORM_WINDOWS"
+			"BLU_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS"
+
 		}
 
 	filter "configurations:Debug"
 		defines "BLU_DEBUG"
 		symbols "on"
+		buildoptions "/MTd"
+		linkoptions { "/NODEFAULTLIB:\"MSVCRTD.lib\"" }
+		runtime "Debug"
+		buildoptions "/MTd"
+
+
+		links
+		{
+			"%{Library.msvcrtd}",
+		}
+
 
 	filter "configurations:Release"
 		defines "BLU_RELEASE"
 		optimize "on"
+		runtime "Release"
+		buildoptions "/MT"
+		links
+		{
+			"%{Library.msvcrt}",
+		}
 
 	filter "configurations:Dist"
 		defines "BLU_DIST"
 		optimize "on"
+
+
+
+
+
+
+
 
 project "Blu-Editor"
 	location "Blu-Editor"
@@ -209,6 +276,8 @@ project "Blu-Editor"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "on" 
+	dependson { "Blu" }
+
 
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
@@ -263,16 +332,35 @@ project "Blu-Editor"
 
 		defines
 		{
-			"BLU_PLATFORM_WINDOWS"
+			"BLU_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS"
+
 		}
 
 	filter "configurations:Debug"
 		defines "BLU_DEBUG"
 		symbols "on"
+		runtime "Debug"
+		buildoptions "/MTd"
+
+
+		links
+		{
+			"%{Library.msvcrtd}",
+			
+		}
 
 	filter "configurations:Release"
 		defines "BLU_RELEASE"
 		optimize "on"
+		runtime "Release"
+		buildoptions "/MT"
+
+		links
+		{
+			"%{Library.msvcrt}",
+		}
+
 
 	filter "configurations:Dist"
 		defines "BLU_DIST"
