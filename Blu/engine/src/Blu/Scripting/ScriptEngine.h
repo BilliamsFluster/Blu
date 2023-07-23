@@ -30,6 +30,7 @@ namespace Blu
 	};
 	class Scene;
 	class Entity;
+	class ScriptJoiner;
 	class ScriptEngine
 	{
 	public:
@@ -42,6 +43,7 @@ namespace Blu
 		static Scene* GetSceneContext();
 		static bool EntityClassExists(const std::string& fullName);
 		static std::unordered_map<std::string, Shared<ScriptClass>> GetEntities();
+		static MonoImage* GetCoreAssemblyImage();
 
 		static void LoadAssembly(const std::filesystem::path& filepath);
 	private:
@@ -51,6 +53,7 @@ namespace Blu
 		static void ShutdownMono();
 
 		friend class ScriptClass;
+		friend class ScriptJoiner;
 	};
 	
 	
@@ -67,6 +70,8 @@ namespace Blu
 		MonoMethod* m_Constructor = nullptr;
 		MonoMethod* m_OnCreateMethod = nullptr;
 		MonoMethod* m_OnUpdateMethod = nullptr;
+
+		
 	};
 
 }

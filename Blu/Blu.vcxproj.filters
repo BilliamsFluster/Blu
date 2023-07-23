@@ -52,6 +52,9 @@
     <Filter Include="src\Blu\Math">
       <UniqueIdentifier>{D8C62123-C429-B1C7-6DAF-E97D59F17C4A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Physics">
+      <UniqueIdentifier>{11992FC0-7D24-9D84-8635-2079F23FF984}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Blu\Platform">
       <UniqueIdentifier>{D38520C2-BF7E-3F14-E8B0-2499D4081F20}</UniqueIdentifier>
     </Filter>
@@ -1433,6 +1436,9 @@
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Math\Math.h">
       <Filter>src\Blu\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Physics\Physics2D.h">
+      <Filter>src\Blu\Physics</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>

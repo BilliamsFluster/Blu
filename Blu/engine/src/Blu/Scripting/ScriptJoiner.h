@@ -7,6 +7,7 @@ namespace Blu
 	{
 	public:
 		static void RegisterFunctions();
+		static void RegisterComponents();
 	};
 
 }

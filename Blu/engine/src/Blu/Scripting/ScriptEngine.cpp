@@ -72,6 +72,9 @@ namespace Blu
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
 
+		MonoAssembly* AppAssembly = nullptr;
+		MonoImage* AppAssemblyImage = nullptr;
+
 		Shared<ScriptClass> EntityClass = nullptr;
 		Scene* SceneContext = nullptr;
 
@@ -113,6 +116,7 @@ namespace Blu
 	{
 		s_Data = new ScriptEngineData();
 		InitMono();
+		ScriptJoiner::RegisterComponents();
 	}
 
 	
@@ -166,7 +170,7 @@ namespace Blu
 			{
 				fullName = name;
 			}
-
+			std::cout << nameSpace << std::endl;
 			MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);
 
 			if (monoClass == entityClass)
@@ -257,11 +261,12 @@ namespace Blu
 		
 		LoadAssembly("Resources/Scripts/Blu-ScriptCore.dll");
 		ScriptJoiner::RegisterFunctions();
-		LoadAssemblyClasses(s_Data->CoreAssembly);
 		auto& classes = s_Data->Entities;
 		
 		s_Data->EntityClass =  std::make_shared<ScriptClass>("Blu", "Entity");
 		MonoObject* instance = s_Data->EntityClass->Instantiate();
+		
+		LoadAssemblyClasses(s_Data->CoreAssembly);
 
 		
 		
@@ -282,6 +287,10 @@ namespace Blu
 
 		//mono_jit_cleanup(s_Data->RootDomain);
 		s_Data->RootDomain = nullptr;
+	}
+	MonoImage* ScriptEngine::GetCoreAssemblyImage()
+	{
+		return s_Data->CoreAssemblyImage;
 	}
 	ScriptInstance::ScriptInstance(Shared<ScriptClass> scriptClass, Entity* entity)
 		:m_ScriptClass(scriptClass)

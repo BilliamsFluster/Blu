@@ -8,46 +8,51 @@ using System.Threading.Tasks;
 using Blu;
 namespace Azure
 {
-    public class Pawn : Entity
+    public class Pawn : Actor
     {
+        private TransformComponent m_Transform;
+        private Rigidbody2DComponent m_Rigidbody;
         void OnCreate()
         {
+            m_Transform = GetComponent<TransformComponent>();
+            m_Rigidbody = GetComponent<Rigidbody2DComponent>();
+
+            
+           
         }
 
         void OnUpdate(float deltaTime)
         {
 
             float speed = 1.0f;
-            Vec3 velocity = Vec3.Zero;
+            Vector3 velocity = Vector3.Zero;
 
             if (Input.IsKeyDown(KeyCodes.W))
             {
-                velocity.Y = 1.0f;
+                velocity.Y = 0.1f;
                 Console.WriteLine("W pressed");
             }
             else if (Input.IsKeyDown(KeyCodes.S))
             {
-                velocity.Y = -1.0f;
+                velocity.Y = -0.1f;
                 Console.WriteLine("S pressed");
 
             }
             if (Input.IsKeyDown(KeyCodes.A))
             {
-                velocity.X = -1.0f;
+                velocity.X = -0.1f;
                 Console.WriteLine("A pressed");
 
             }
             else if (Input.IsKeyDown(KeyCodes.D))
             {
-                velocity.X = 1.0f;
+                velocity.X = 0.1f;
                 Console.WriteLine("D pressed");
 
             }
-
             velocity *= speed;
-            Vec3 translation = Translation;
-            translation += velocity * deltaTime;
-            Translation = translation;
+            m_Rigidbody.ApplyLinearImpulse(velocity.XY, Vector2.Zero, true);
+            
         }
 
     }

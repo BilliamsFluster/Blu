@@ -596,6 +596,7 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
     <ClInclude Include="engine\src\Blu\Math\Math.h" />
+    <ClInclude Include="engine\src\Blu\Physics\Physics2D.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.h" />

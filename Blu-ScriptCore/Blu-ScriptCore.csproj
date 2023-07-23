@@ -20,8 +20,7 @@
     <OutputPath>..\Blu-Editor\Resources\Scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\Blu-Editor\Resources\Scripts\Intermediates\Debug\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants></DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -32,8 +31,7 @@
     <OutputPath>..\Blu-Editor\Resources\Scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\Blu-Editor\Resources\Scripts\Intermediates\Release\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants></DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -44,19 +42,24 @@
     <OutputPath>..\Blu-Editor\Resources\Scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\Blu-Editor\Resources\Scripts\Intermediates\Dist\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants></DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Source\Character.cs" />
-    <Compile Include="Source\Input.cs" />
-    <Compile Include="Source\KeyCodes.cs" />
-    <Compile Include="Source\Main.cs" />
-    <Compile Include="Source\Pawn.cs" />
+    <Compile Include="Source\Blu\Input.cs" />
+    <Compile Include="Source\Blu\InternalCalls.cs" />
+    <Compile Include="Source\Blu\KeyCodes.cs" />
+    <Compile Include="Source\Blu\Vector2.cs" />
+    <Compile Include="Source\Blu\Vector3.cs" />
+    <Compile Include="Source\Blu\Vector4.cs" />
+    <Compile Include="Source\EntitySystem\Actor.cs" />
+    <Compile Include="Source\EntitySystem\Character.cs" />
+    <Compile Include="Source\EntitySystem\Entity.cs" />
+    <Compile Include="Source\EntitySystem\Pawn.cs" />
+    <Compile Include="Source\Scene\Components.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

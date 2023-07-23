@@ -202,7 +202,6 @@ namespace Blu
 		if (m_RendererID > 0 ) {
 			GLint current_fbo;
 			glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fbo);
-			std::cout << "Current FBO: " << current_fbo << std::endl;
 
 			if (glIsFramebuffer(m_RendererID)) {
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -210,9 +209,7 @@ namespace Blu
 				CheckOpenGLError("glDeleteFramebuffers"); // Check for errors
 				m_RendererID = 0;  // Reset m_RendererID after deletion
 			}
-			else {
-				std::cout << "FBO " << m_RendererID << " is not valid" << std::endl;
-			}
+			
 		}
 		if (m_Specification.Width != 0 && m_Specification.Height != 0)
 		{
