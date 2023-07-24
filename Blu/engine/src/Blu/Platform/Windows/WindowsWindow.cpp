@@ -55,7 +55,6 @@ namespace Blu
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();
 		
-		BLU_CORE_ASSERT(status, "Failed to init Glad");
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 

@@ -1,6 +1,7 @@
 #include "Blupch.h"
 #include "OpenGLFrameBuffer.h"
 #include <glad/glad.h>
+#include "Blu/Core/Log.h"
 
 #define GL_CALL(x) \
     x; \
@@ -90,7 +91,7 @@ namespace Blu
 
 					
 			}
-			BLU_CORE_ASSERT(false); //format invalid
+			BLU_CORE_ASSERT("",false); //format invalid
 			return 0;
 		}
 
@@ -104,7 +105,7 @@ namespace Blu
 
 
 			}
-			BLU_CORE_ASSERT(false); //format invalid
+			BLU_CORE_ASSERT("Format {0}",false); //format invalid
 			return 0;
 		}
 		
@@ -137,7 +138,7 @@ namespace Blu
 	int OpenGLFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
 	{
 		
-		BLU_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+		BLU_CORE_ASSERT("",attachmentIndex < m_ColorAttachments.size());
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		int pixelData;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
@@ -146,7 +147,7 @@ namespace Blu
 	void OpenGLFrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	{
 		
-		BLU_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+		BLU_CORE_ASSERT("",attachmentIndex < m_ColorAttachments.size());
 
 		auto& spec = m_ColorAttachmentSpecs[attachmentIndex];
 		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::BluTextureFormatToGL(spec.TextureFormat),Utils::GLDataType(spec.TextureFormat), &value);
@@ -267,7 +268,7 @@ namespace Blu
 
 			if (m_ColorAttachments.size() > 1)
 			{
-				BLU_CORE_ASSERT(m_ColorAttachments.size() <= 4);
+				BLU_CORE_ASSERT("",m_ColorAttachments.size() <= 4);
 				GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
 
 				glDrawBuffers(m_ColorAttachments.size(), buffers);

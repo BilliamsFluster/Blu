@@ -118,7 +118,7 @@ namespace Blu
 	}
 	static  void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{ 
-		BLU_CORE_ASSERT(entity.HasComponent<IDComponent>());
+		BLU_CORE_ASSERT("", entity.HasComponent<IDComponent>());
 		out << YAML::BeginMap;
 		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 
@@ -431,7 +431,6 @@ namespace Blu
 	}
 	bool SceneSerializer::DeserializeBinary(const std::string& filepath)
 	{
-		BLU_CORE_ASSERT(false);
 		return false;
 	}
 }

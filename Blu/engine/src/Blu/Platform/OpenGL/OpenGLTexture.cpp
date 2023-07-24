@@ -1,6 +1,7 @@
 #include "Blupch.h"
 #include "OpenGLTexture.h"
 #include "stb_image.h"
+#include "Blu/Core/Log.h"
 
 namespace Blu
 {

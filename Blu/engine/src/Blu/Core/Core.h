@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 
+
 #ifdef BLU_PLATFORM_WINDOWS
 #if BLU_DYNAMIC_LINK
 	#ifdef BLU_BUILD_DLL

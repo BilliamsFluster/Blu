@@ -13,11 +13,11 @@ namespace Blu
 		public:
 			Layer(const std::string& name = "Layer");
 			virtual ~Layer();
-			virtual void OnAttach(){}
-			virtual void OnDetach() {}
-			virtual void OnUpdate(Timestep deltaTime) {}
-			virtual void OnEvent(Blu::Events::Event& event) {}
-			virtual void OnGuiDraw() {}
+			virtual void OnAttach(){} // layer attached
+			virtual void OnDetach() {} // layer detatched
+			virtual void OnUpdate(Timestep deltaTime) {} // update layer
+			virtual void OnEvent(Blu::Events::Event& event) {} // events ffor layers
+			virtual void OnGuiDraw() {} // draw UI fofr the layer
 
 			inline const std::string& GetName() const { return m_DebugName;}
 		private:

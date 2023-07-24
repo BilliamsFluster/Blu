@@ -1,0 +1,20 @@
+Scene: Name
+Entities:
+  - Entity: 16705980609660671627
+    TagComponent:
+      Tag: Camera
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 45
+      Primary: true
+      FixedAspectRatio: false
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
