@@ -22,7 +22,24 @@ namespace Blu
     }
     std::string m_Filter;  // Add a filter string
     std::filesystem::path rightClickedItemPath;
+   
+    void RecursiveSearch(const std::filesystem::path& directory, const std::string& filter)
+    {
+        for (auto& p : std::filesystem::recursive_directory_iterator(directory))
+        {
+            const auto& path = p.path();
+            auto relativePath = std::filesystem::relative(path, directory);
+            std::string filenameString = relativePath.filename().string();
+            std::string extensionString = relativePath.extension().string();
 
+            // Apply filter
+            if (filenameString.find(filter) != std::string::npos ||
+                extensionString.find(filter) != std::string::npos)
+            {
+                // Display the file or folder, similar to how you do in the directory_iterator loop
+            }
+        }
+    }
     void ContentBrowserPanel::OnImGuiRender()
     {
         static std::filesystem::path s_RenamingPath;
@@ -153,27 +170,47 @@ namespace Blu
         m_ObjectClicked = false;
         ImGui::Columns(columnCount, nullptr, false);
         static std::string s_SelectedFilename;
-
-        for (auto& p : std::filesystem::directory_iterator(m_CurrentDirectory))
+        //
+        for (auto& p : std::filesystem::directory_iterator(m_CurrentDirectory)) 
         {
             const auto& path = p.path();
             auto relativePath = std::filesystem::relative(path, m_CurrentDirectory);
             std::string filenameString = relativePath.filename().string();
+            std::string extensionString = relativePath.extension().string();
 
+            // Filtering based on filter type
+            bool skip = false; // flag to skip the current file/directory
+            switch (currentFilterType) {
+            case 0: // Name filter
+                if (filenameString.find(filter) == std::string::npos)
+                    skip = true;
+                break;
 
-            // Check if filename matches filter
-            if (currentFilterType == 0 && std::string::npos == filenameString.find(filter))
-                continue;
+            case 1: // Date Modified filter
+                //  logic for date modified filter
+                break;
 
-            if (currentFilterType == 1 && std::string::npos == relativePath.extension().string().find(filter))
-                continue;
+            case 2: // Size filter
+                //  logic for size filter
+                break;
+
+            case 3: // Extension filter
+                if (extensionString != filter)
+                    skip = true;
+                break;
+
+            default:
+                break;
+            }
+
+            if (skip) continue;
 
             ImGui::BeginGroup();  // Begin group for icon and filename
-            
+    
             if (p.is_directory())
             {
 
-                
+
                 auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetRendererID()));
                 ImVec2 iconSize(50.0f, 50.0f);
 
@@ -184,7 +221,7 @@ namespace Blu
                 if (ImGui::InvisibleButton(filenameString.c_str(), iconSize))
                 {
                     s_SelectedFilename = filenameString;
-                    
+
                 }
                 if (s_SelectedFilename == filenameString) {
                     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -211,15 +248,15 @@ namespace Blu
                         m_ObjectClicked = true;
                     }
                 }
-                else if (ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered()) 
+                else if (ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered())
                 {
                     s_SelectedFilename = "";
                 }
-                
-                
-                   
-                    
-                
+
+
+
+
+
                 ImGui::PopID();
             }
             else
@@ -240,15 +277,15 @@ namespace Blu
                     ImDrawList* draw_list = ImGui::GetWindowDrawList();
                     ImVec2 min = ImGui::GetItemRectMin();
                     ImVec2 max = ImGui::GetItemRectMax();
-                    
 
-                    draw_list->AddRect(min, max, IM_COL32(30, 151, 201, 255), 1 ,0, 3);  // blue outline
+
+                    draw_list->AddRect(min, max, IM_COL32(30, 151, 201, 255), 1, 0, 3);  // blue outline
                 }
                 if (ImGui::IsItemHovered())
                 {
                     m_ObjectClicked = true;
 
-                    
+
                     if (ImGui::IsMouseClicked(1))
                     {
                         rightClickedItemPath = path;
@@ -262,7 +299,7 @@ namespace Blu
                 }
                 ImGui::PopID();
             }
-            
+
 
             if (ImGui::IsMouseClicked(1) && !m_ObjectClicked)
             {
@@ -270,12 +307,12 @@ namespace Blu
             }
 
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-                
+
                 std::string payloadPath = path.string();
 
                 // Set payload to carry the path of the file being dragged
                 ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", payloadPath.c_str(), payloadPath.size() + 1); // +1 to include the null terminator
-                
+
                 // Get current mouse position
                 ImVec2 mousePos = ImGui::GetMousePos();
 
@@ -332,14 +369,14 @@ namespace Blu
                             std::filesystem::rename(payloadPath, destinationPath);
                             // Refresh your directory viewer here
                         }
-                        catch (std::filesystem::filesystem_error& e) 
+                        catch (std::filesystem::filesystem_error& e)
                         {
                             BLU_CORE_ASSERT(false, e.what());
                         }
                     }
 
-                  
-                   
+
+
 
                 }
 
@@ -347,15 +384,15 @@ namespace Blu
             }
 
 
-            
-           
+
+
             // Display filename
             ImGui::TextWrapped("%s", filenameString.c_str());
-           
-            
-            
 
-            
+
+
+
+
             ImGui::EndGroup();  // End group for icon and filename
 
             if (ImGui::IsItemHovered())
@@ -364,11 +401,27 @@ namespace Blu
             }
 
             ImGui::NextColumn();
-        }
-        //ImGui::PopItemWidth(); // Reset the item width to the previous value
+         }
+        //
+        //for (auto& p : std::filesystem::directory_iterator(m_CurrentDirectory))
+        //{
+        //    const auto& path = p.path();
+        //    auto relativePath = std::filesystem::relative(path, m_CurrentDirectory);
+        //    std::string filenameString = relativePath.filename().string();
 
-        //ImGui::EndChild();
-       
+
+        //    // Check if filename matches filter
+        //    if (currentFilterType == 0 && std::string::npos == filenameString.find(filter))
+        //        continue;
+
+        //    if (currentFilterType == 1 && std::string::npos == relativePath.extension().string().find(filter))
+        //        continue;
+
+        //    ImGui::BeginGroup();  // Begin group for icon and filename
+        //    
+        //   if directory goes here
+        //}
+
         if (!rightClickedItemPath.empty() && ImGui::BeginPopupContextWindow())
         {
             if (ImGui::MenuItem("Rename"))

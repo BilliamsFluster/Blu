@@ -12,6 +12,9 @@ namespace Azure
     {
         private TransformComponent m_Transform;
         private Rigidbody2DComponent m_Rigidbody;
+        public float Speed = 0;
+        public float Billy = 0;
+        public float Boom = 0;
         void OnCreate()
         {
             m_Transform = GetComponent<TransformComponent>();
@@ -24,7 +27,7 @@ namespace Azure
         void OnUpdate(float deltaTime)
         {
 
-            float speed = 1.0f;
+            
             Vector3 velocity = Vector3.Zero;
 
             if (Input.IsKeyDown(KeyCodes.W))
@@ -50,7 +53,7 @@ namespace Azure
                 Console.WriteLine("D pressed");
 
             }
-            velocity *= speed;
+            velocity *= Speed;
             m_Rigidbody.ApplyLinearImpulse(velocity.XY, Vector2.Zero, true);
 
         }

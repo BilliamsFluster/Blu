@@ -7,10 +7,31 @@
 #include <format>
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Entity.h"
+#include "mono/metadata/tabledefs.h"
 
 
 namespace Blu
 {
+	static std::unordered_map< std::string, ScriptFieldType> s_ScriptFieldTypeMap =
+	{ 
+		{ "System.Single", ScriptFieldType::Float },
+		{ "System.Double", ScriptFieldType::Double },
+		{ "System.Boolean", ScriptFieldType::Bool },
+		{ "System.Char", ScriptFieldType::Char },
+		{ "System.Int16", ScriptFieldType::Short },
+		{ "System.Int32", ScriptFieldType::Int },
+		{ "System.Int64", ScriptFieldType::Long },
+		{ "System.Byte", ScriptFieldType::Byte },
+		{ "System.UInt16", ScriptFieldType::UShort },
+		{ "System.UInt32", ScriptFieldType::UInt },
+		{ "System.UInt64", ScriptFieldType::ULong },
+
+		{ "Hazel.Vector2", ScriptFieldType::Vector2 },
+		{ "Hazel.Vector3", ScriptFieldType::Vector3 },
+		{ "Hazel.Vector4", ScriptFieldType::Vector4 },
+
+		{ "Blu.Entity", ScriptFieldType::Entity },
+	};
 	namespace Utils
 	{
 		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
@@ -37,6 +58,12 @@ namespace Blu
 			*outSize = size;
 			return buffer;
 		}
+		ScriptFieldType MonoTypeToScriptFieldType(MonoType* type)
+		{
+			std::string typeName = mono_type_get_name(type);
+			return s_ScriptFieldTypeMap.at(typeName);
+
+		}
 		MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
 		{
 			uint32_t fileSize = 0;
@@ -58,6 +85,7 @@ namespace Blu
 
 			return assembly;
 		}
+		
 	}
 
 		
@@ -84,12 +112,20 @@ namespace Blu
 	
 	static ScriptEngineData* s_Data;
 
-	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore)
-		:m_ClassNamespace(classNamespace), m_ClassName(className)
+	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, std::unordered_map<std::string, ScriptField> fields, bool isCore)
+		:m_ClassNamespace(classNamespace), m_ClassName(className), m_Fields(fields)
 	{
 		m_MonoClass = mono_class_from_name(isCore ? s_Data->CoreAssemblyImage :s_Data->AppAssemblyImage, classNamespace.c_str(), className.c_str());
 
 	}
+	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore)
+		:m_ClassNamespace(classNamespace), m_ClassName(className)
+	{
+		m_MonoClass = mono_class_from_name(isCore ? s_Data->CoreAssemblyImage : s_Data->AppAssemblyImage, classNamespace.c_str(), className.c_str());
+
+	}
+	
+
 
 	MonoObject* ScriptClass::Instantiate()
 	{
@@ -177,16 +213,39 @@ namespace Blu
 
 			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
 
-			if (isEntity)
+			if (!isEntity)
+				continue;
+			Shared<ScriptClass> scriptClass = std::make_shared<ScriptClass>(nameSpace, name);
+			s_Data->Entities[fullName] = scriptClass;
+			
+			
+			int count = mono_class_num_fields(monoClass);
+			BLU_CORE_WARN("{} fields:", count);
+			void* iterator = nullptr;
+			
+			while (MonoClassField* field = mono_class_get_fields(monoClass, &iterator))
 			{
-				s_Data->Entities[fullName] = std::make_shared<ScriptClass>(nameSpace, name);
+				const char* fieldName = mono_field_get_name(field);
+				uint32_t flags = mono_field_get_flags(field);
+				if (flags & FIELD_ATTRIBUTE_PUBLIC)
+				{
+					MonoType* type = mono_field_get_type(field);
+					ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(type);
+					Utils::ScriptFieldTypeToString(fieldType);
+					BLU_CORE_WARN("{}, {}:", fieldName, Utils::ScriptFieldTypeToString(fieldType));
+
+					scriptClass->m_Fields[fieldName] = { fieldType, fieldName, field   };
+
+				}
 			}
+			
 
 			printf("%s.%s \n", nameSpace, name);
 
 		}
 
 	}
+	
 	void ScriptEngine::Shutdown()
 	{
 		ShutdownMono();
@@ -295,6 +354,55 @@ namespace Blu
 		//mono_jit_cleanup(s_Data->RootDomain);
 		s_Data->RootDomain = nullptr;
 	}
+	Shared<ScriptClass> ScriptEngine::GetEntityScriptClass(const std::string& className)
+	{
+		auto it = s_Data->Entities.find(className);
+		if (it != s_Data->Entities.end())
+		{
+			return it->second;
+		}
+
+		// If not found, return nullptr
+		return nullptr;
+	
+	}
+
+
+	Shared<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)
+	{
+		auto it = s_Data->EntityInstances.find(entityID);
+		if (it == s_Data->EntityInstances.end())
+			return nullptr;
+
+		return it->second;
+	}
+
+	bool ScriptInstance::GetFieldValueInternal(const std::string& name, void* buffer)
+	{
+		const auto& fields = m_ScriptClass->GetScriptFields();
+		auto it = fields.find(name);
+		if (it == fields.end())
+			return false;
+
+		const ScriptField& field = it->second;
+		mono_field_get_value(m_Instance, field.ClassField, buffer);
+		return true;
+
+	}
+
+	bool ScriptInstance::SetFieldValueInternal(const std::string& name, const void* value)
+	{
+		const auto& fields = m_ScriptClass->GetScriptFields();
+		auto it = fields.find(name);
+		if (it == fields.end())
+			return false;
+
+		const ScriptField& field = it->second;
+		mono_field_set_value(m_Instance, field.ClassField, (void*)value);
+		return true;
+
+	}
+
 	MonoImage* ScriptEngine::GetCoreAssemblyImage()
 	{
 		return s_Data->CoreAssemblyImage;

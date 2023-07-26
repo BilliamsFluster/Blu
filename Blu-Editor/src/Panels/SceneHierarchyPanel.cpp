@@ -373,12 +373,46 @@ namespace Blu
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
 		
-		DrawComponent<ScriptComponent>("Script", entity, [](auto& component)
+		DrawComponent<ScriptComponent>("Script", entity, [entity](auto& component) mutable
 			{
 				bool scriptExists = ScriptEngine::EntityClassExists(component.Name);
 				const auto& entities = ScriptEngine::GetEntities();
 				static std::unordered_map<std::string, Shared<ScriptClass>> searchResults;
+				Shared<ScriptClass> scriptClass = ScriptEngine::GetEntityScriptClass(component.Name);
 
+
+				Shared<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+				auto& fields = scriptClass->GetScriptFields();
+				if (scriptClass)
+				{
+					for (const auto& [name, field] : fields)
+					{
+						if (field.Type == ScriptFieldType::Float)
+						{
+							float data = scriptClass->GetFieldData<float>(name);
+
+							ImGui::Text("%s", name.c_str());
+							ImGui::SameLine();
+							ImGui::PushID(name.c_str()); // Add an ID to prevent conflicts with other ImGui widgets
+							ImGui::PushItemWidth(100); // Set the width of the next widget to 100
+							ImGui::DragFloat("##data", &data);
+							ImGui::PopItemWidth(); // Reset the width for subsequent widgets
+							ImGui::PopID();
+
+							scriptClass->SetFieldData<float>(name, data);
+
+							if (scriptInstance)
+							{
+								// Only try to set instance data if an instance exists
+								scriptInstance->SetFieldValue<float>(name, data);
+							}
+						}
+						// Handle other field types...
+					}
+					
+				}
+				
+				
 				std::string buttonLabel = component.Name.empty() ? "Add Script" : component.Name;
 				if (ImGui::Button(buttonLabel.c_str()))
 				{
