@@ -18,7 +18,9 @@ namespace Blu
 		inline unsigned int GetHeight() const override { return m_Data.Height; }
 		
 		virtual void* GetNativeWindow() const override { return m_Window; }
-
+		bool IsTitleBarHovered() const { return m_TitleBarHovered; }
+		void SetTitleBarHovered(bool hovered)  {m_TitleBarHovered = hovered; }
+		WindowProps GetWindowProps() const { return m_WindowProps; }
 		//Windows attributes
 	private:
 		virtual void Init(const WindowProps& props);
@@ -29,6 +31,9 @@ namespace Blu
 	private:
 		GLFWwindow* m_Window;
 		GraphicsContext* m_Context;
+		WindowProps m_WindowProps;
+		bool m_TitleBarHovered = false;
+
 
 		struct WindowData
 		{

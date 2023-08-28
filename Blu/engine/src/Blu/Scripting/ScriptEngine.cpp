@@ -7,6 +7,7 @@
 #include <format>
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Entity.h"
+#include "Blu/Scene/Component.h"
 #include "mono/metadata/tabledefs.h"
 
 
@@ -108,9 +109,15 @@ namespace Blu
 
 		std::unordered_map<std::string, Shared<ScriptClass>> Entities;
 		std::unordered_map<UUID, Shared<ScriptInstance>> EntityInstances;
+
 	}; 
 	
 	static ScriptEngineData* s_Data;
+
+	
+
+
+
 
 	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, std::unordered_map<std::string, ScriptField> fields, bool isCore)
 		:m_ClassNamespace(classNamespace), m_ClassName(className), m_Fields(fields)
@@ -122,7 +129,7 @@ namespace Blu
 		:m_ClassNamespace(classNamespace), m_ClassName(className)
 	{
 		m_MonoClass = mono_class_from_name(isCore ? s_Data->CoreAssemblyImage : s_Data->AppAssemblyImage, classNamespace.c_str(), className.c_str());
-
+		
 	}
 	
 
@@ -148,16 +155,21 @@ namespace Blu
 
 	}
 
+	std::any ScriptClass::GetFieldData(const std::string& fieldName)
+	{
+		return std::any();
+	}
+
+	void ScriptClass::SetFieldData(const std::string& fieldName, const std::any& value)
+	{
+	}
+
 	void ScriptEngine::Init()
 	{
 		s_Data = new ScriptEngineData();
 		InitMono();
 		ScriptJoiner::RegisterComponents();
 	}
-
-	
-
-	
 
 	void PrintAssemblyTypes(MonoAssembly* assembly)
 	{
@@ -234,7 +246,7 @@ namespace Blu
 					Utils::ScriptFieldTypeToString(fieldType);
 					BLU_CORE_WARN("{}, {}:", fieldName, Utils::ScriptFieldTypeToString(fieldType));
 
-					scriptClass->m_Fields[fieldName] = { fieldType, fieldName, field   };
+					scriptClass->m_Fields[fieldName] = { fieldType, fieldName, field }; // -- The more attributes you add to the script field make sure you update this 
 
 				}
 			}
@@ -245,7 +257,7 @@ namespace Blu
 		}
 
 	}
-	
+
 	void ScriptEngine::Shutdown()
 	{
 		ShutdownMono();

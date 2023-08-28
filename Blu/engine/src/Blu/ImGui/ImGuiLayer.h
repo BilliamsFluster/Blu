@@ -23,7 +23,6 @@ namespace Blu
 			virtual void OnGuiDraw() override;
 			void DrawDockspace();
 
-			void UpdateWindowSize();
 			void SetDarkColors();
 			void Begin();
 			void End();

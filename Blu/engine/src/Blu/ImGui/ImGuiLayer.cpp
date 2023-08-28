@@ -156,10 +156,11 @@ namespace Blu
 			}
 		}
 		
+
 		
 		void ImGuiLayer::DrawDockspace()
 		{
-			
+
 			static bool dockspaceOpen = true;
 			static bool opt_fullscreen = true;
 			static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -184,8 +185,14 @@ namespace Blu
 			ImGui::Begin("Blu Dockspace", &dockspaceOpen, window_flags);
 			ImGui::PopStyleVar();
 
+			GLFWwindow* window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+
+			
+			
 			if (opt_fullscreen)
 				ImGui::PopStyleVar(2);
+
+			
 
 			ImGuiStyle& style = ImGui::GetStyle();
 			float minWinSizeX = style.WindowMinSize.x;

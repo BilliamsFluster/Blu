@@ -14,6 +14,7 @@ namespace Blu
 		void SerializeBinary(const std::string& filepath);
 
 		bool Deserialize(const std::string& filepath);
+		bool DeserializeEntityScriptInstances(const std::string& filepath);
 		bool DeserializeBinary(const std::string& filepath);
 
 	private:

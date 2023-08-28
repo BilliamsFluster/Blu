@@ -5,6 +5,12 @@ Entities:
       Tag: Cube 1
     ScriptComponent:
       Name: Azure.BoxPawn
+      ScriptFields:
+        Speed: 9
+        Billy: 3
+        Boom: 6
+        Bye: 4
+        test: 128
     TransformComponent:
       Translation: [-1.35629296, 0.0347428769, 0.177086934]
       Rotation: [0, 0, 0]

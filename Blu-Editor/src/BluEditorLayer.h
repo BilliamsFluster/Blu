@@ -33,6 +33,8 @@ namespace Blu
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
 		void SaveSceneAs();
+		void SaveCurrentScene();
+		void UIDrawTitlebar(float& outTitlebarHeight);
 
 		void OnScenePlay();
 		void OnScenePause();
@@ -47,6 +49,7 @@ namespace Blu
 		Blu::ParticleProps m_ParticleProps;
 		float m_MousePosX, m_MousePosY;
 		Blu::Shared<Blu::Texture2D> m_Texture;
+		Blu::Shared<Blu::Texture2D> m_AppHeaderIcon;
 		Blu::Shared<Blu::VertexArray> m_VertexArray;
 		Blu::Shared< Blu::IndexBuffer> m_IndexBuffer;
 		Blu::Shared< Blu::VertexBuffer> m_VertexBuffer;
@@ -64,6 +67,7 @@ namespace Blu
 		bool enableTranslationSnap = false;
 		bool enableRotationSnap = false;
 		bool enableScaleSnap = false;
+		bool m_TitleBarHovered = false;
 
 		float translationSnapValue = 0.5f;
 		float rotationSnapValue = 10.0f;

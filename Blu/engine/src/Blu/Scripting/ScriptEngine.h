@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include "Blu/Core/Core.h"
 #include <any>
-
 extern "C"
 {
 	typedef struct _MonoClass MonoClass;
@@ -20,7 +19,9 @@ namespace Blu
 	class Scene;
 	class Entity;
 	class ScriptJoiner;
+	class ScriptClass;
 	class ScriptInstance;
+	class ScriptEngine;
 	class UUID;
 	
 	enum class ScriptFieldType
@@ -37,12 +38,12 @@ namespace Blu
 		ScriptFieldType Type;
 		std::string Name;
 		MonoClassField* ClassField;
-		std::any FieldData; 
 
 
 	};
-
 	
+	
+
 	class ScriptClass
 	{
 	public:
@@ -54,46 +55,11 @@ namespace Blu
 		MonoObject* InvokeMethod(MonoMethod* method, void* obj, void** params, MonoObject** exc);
 		const std::unordered_map<std::string, ScriptField>& GetScriptFields() const { return m_Fields; }
 		
-		template<typename T>
-		T GetFieldData(const std::string& fieldName)
-		{
-			if (m_Fields.find(fieldName) != m_Fields.end())
-			{
-				std::any& fieldData = m_Fields[fieldName].FieldData;
-				if (fieldData.type() == typeid(T))
-				{
-					return std::any_cast<T>(fieldData);
-				}
-				else
-				{
-					// Handle error: field data is not of type T
-				}
-			}
-			else
-			{
-				// Handle error: field not found
-			}
-		}
-
-		// Add this to set field data
-		template<typename T>
-		void SetFieldData(const std::string& fieldName, const T& value)
-		{
-			if (m_Fields.find(fieldName) != m_Fields.end())
-			{
-				m_Fields[fieldName].FieldData = value;
-			}
-			else
-			{
-				// Handle error: field not found
-			}
-		}
-		
-		
-		
+		std::any GetFieldData(const std::string& fieldName);
+		void SetFieldData(const std::string& fieldName, const std::any& value);
 
 	private:
-		const std::string m_ClassNamespace;
+		const std::string m_ClassNamespace;  
 		const std::string m_ClassName;
 		std::unordered_map<std::string, ScriptField> m_Fields; 
 
@@ -101,6 +67,7 @@ namespace Blu
 		MonoClass* m_MonoClass = nullptr;
 
 		friend class ScriptEngine;
+		friend class EditorScriptFieldAPI;
 	};
 
 	
@@ -115,6 +82,7 @@ namespace Blu
 		static void OnUpdateEntity(Entity* entity, float deltaTime);
 		static Scene* GetSceneContext();
 		static bool EntityClassExists(const std::string& fullName);
+
 		static std::unordered_map<std::string, Shared<ScriptClass>> GetEntities();
 		static MonoImage* GetCoreAssemblyImage();
 		static Shared<ScriptClass> GetEntityScriptClass(const std::string& className);
@@ -147,7 +115,8 @@ namespace Blu
 		template<typename T>
 		T GetFieldValue(const std::string& name)
 		{
-			
+			static_assert(sizeof(T) <= 8, "Type too large!");
+
 			bool success =  GetFieldValueInternal(name,s_FieldValueBuffer);
 			if (!success)
 				return T();
@@ -156,12 +125,14 @@ namespace Blu
 			return *(T*)s_FieldValueBuffer;
 		}
 		template<typename T>
-		void SetFieldValue(const std::string& name, const T& value)
+		void SetFieldValue(const std::string& name, T value)
 		{
-
+			//static_assert(sizeof(T) <= 8, "Type too large!");
+ 
 			SetFieldValueInternal(name, &value);
 			
 		}
+
 	private:
 		bool GetFieldValueInternal(const std::string& name, void* buffer);
 		bool SetFieldValueInternal(const std::string& name, const void* value);

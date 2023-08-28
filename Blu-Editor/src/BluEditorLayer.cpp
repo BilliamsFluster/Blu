@@ -12,6 +12,9 @@
 #include "Blu/Utils/PlatformUtils.h"
 #include "ImGuizmo.h"
 #include "Blu/Math/Math.h"
+#include "Blu/Core/Application.h"
+#include "Blu/Platform/Windows/WindowsWindow.h"
+#include "Blu/Scripting/ScriptEngine.h"
 
 
 
@@ -34,6 +37,7 @@ namespace Blu
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
+		m_AppHeaderIcon = Texture2D::Create("assets/textures/BluLogo.png");
 		
 
 		FrameBufferSpecifications fbSpec;
@@ -350,7 +354,9 @@ namespace Blu
 		{
 			if (ImGui::MenuItem("Play"))
 			{
+				SaveCurrentScene();
 				OnScenePlay();
+
 			}
 
 			if (ImGui::MenuItem("Play In New Window"))
@@ -404,6 +410,10 @@ namespace Blu
 			m_EditorScene = m_ActiveScene;
 			m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
+			m_ActiveScene->OnScriptSystemStart();
+			serializer.DeserializeEntityScriptInstances(path.string());
+
 			
 
 		}
@@ -420,13 +430,20 @@ namespace Blu
 		}
 	}
 
+	void BluEditorLayer::SaveCurrentScene()
+	{
+		SceneSerializer serializer(m_ActiveScene);
+		std::string filepath = m_EditorScene->GetSceneFilePath().string();
+		serializer.Serialize(filepath);
+	}
+
 	void BluEditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
 		if (m_EditorScene)
 		{
 			m_ActiveScene = Scene::Copy(m_EditorScene);
-			
+			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
 
 		}
@@ -440,7 +457,11 @@ namespace Blu
 	{
 		m_SceneState = SceneState::Edit;
 		m_ActiveScene->OnRuntimeStop();
+		SceneSerializer serializer(m_ActiveScene);
 		m_ActiveScene = m_EditorScene;
+		std::string filepath = m_EditorScene->GetSceneFilePath().string();
+		serializer.DeserializeEntityScriptInstances(filepath);
+
 
 	}
 
@@ -451,11 +472,40 @@ namespace Blu
 	void BluEditorLayer::OnSceneSimulate()
 	{
 	}
-
-	void BluEditorLayer::OnGuiDraw()
+	ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)
 	{
+		return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
+	}
+
+	ImVec2 operator*(const ImVec2& lhs, const float& rhs)
+	{
+		return ImVec2(lhs.x * rhs, lhs.y * rhs);
+	}
+
+	void BluEditorLayer::UIDrawTitlebar(float& outTitlebarHeight)
+	{
+		/*const float titlebarHeight = 58.0f;
+		const bool isMaximized = Application::Get().IsMaximized();
+		float titlebarVerticalOffset = isMaximized ? -6.0f : 0.0f;
+		const ImVec2 windowPadding = ImGui::GetCurrentWindow()->WindowPadding;
+
+		ImGui::SetCursorPos(ImVec2(windowPadding.x, windowPadding.y + titlebarVerticalOffset));
+		const ImVec2 titlebarMin = ImGui::GetCursorScreenPos();
+		const ImVec2 titlebarMax = { ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth() - windowPadding.y * 2.0f,
+									 ImGui::GetCursorScreenPos().y + titlebarHeight };
+		auto* bgDrawList = ImGui::GetBackgroundDrawList();
+		auto* fgDrawList = ImGui::GetForegroundDrawList();
+		bgDrawList->AddRectFilled(titlebarMin, titlebarMax, IM_COL32(255, 255, 255, 255));
+
+
+		float windowWidth = ImGui::GetWindowWidth();
+		float padding = windowPadding.y * 2.0f;
+		float frameHeight = ImGui::GetFrameHeightWithSpacing();*/
+
+		
 		if (ImGui::BeginMainMenuBar())
 		{
+			ImGui::Image((ImTextureID)m_AppHeaderIcon->GetRendererID(), ImVec2(30, 30), ImVec2(0, 1), ImVec2(1, 0));
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("New", "Ctrl+N"))
@@ -471,12 +521,56 @@ namespace Blu
 					SaveSceneAs();
 
 				}
+				if (ImGui::MenuItem("Save ...", "Ctrl+S"))
+				{
+					SaveCurrentScene();
+
+				}
 				if (ImGui::MenuItem("Exit")) Application::Get().Close();
 				ImGui::EndMenu();
 
 			}
 			ImGui::EndMainMenuBar();
 		}
+
+
+		//static float moveOffsetX;
+		//static float moveOffsetY;
+		//const float w = ImGui::GetContentRegionAvail().x;
+		//const float buttonsAreaWidth = 94;
+
+		//// Title bar drag area
+		//// On Windows we hook into the GLFW win32 window internals
+		//ImGui::SetCursorPos(ImVec2(windowPadding.x, windowPadding.y + titlebarVerticalOffset)); // Reset cursor pos
+		//// DEBUG DRAG BOUNDS
+		//// fgDrawList->AddRect(ImGui::GetCursorScreenPos(), ImVec2(ImGui::GetCursorScreenPos().x + w - buttonsAreaWidth, ImGui::GetCursorScreenPos().y + titlebarHeight), UI::Colors::Theme::invalidPrefab);
+		//ImGui::InvisibleButton("##titleBarDragZone", ImVec2(w - buttonsAreaWidth, titlebarHeight));
+
+		//m_TitleBarHovered = ImGui::IsItemHovered();
+
+		//if (isMaximized)
+		//{
+		//	float windowMousePosY = ImGui::GetMousePos().y - ImGui::GetCursorScreenPos().y;
+		//	if (windowMousePosY >= 0.0f && windowMousePosY <= 5.0f)
+		//		m_TitleBarHovered = true; // Account for the top-most pixels which don't register
+		//}
+
+		//{
+		//	// Centered Window title
+		//	ImVec2 currentCursorPos = ImGui::GetCursorPos();
+		//	ImVec2 textSize = ImGui::CalcTextSize("Blu-Editor");
+		//	ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - textSize.x * 0.5f, 2.0f + windowPadding.y + 6.0f));
+		//	ImGui::Text("%s", "Blu-Editor"); // Draw title
+		//	ImGui::SetCursorPos(currentCursorPos);
+		//}
+	}
+
+	void BluEditorLayer::OnGuiDraw()
+	{
+		float height = 5.0f;
+		UIDrawTitlebar(height);
+		
+		
 		m_SceneHierarchyPanel->OnImGuiRender();
 		m_ContentBrowserPanel->OnImGuiRender();
 
@@ -551,6 +645,7 @@ namespace Blu
 			{
 				std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
 				OpenScene(payloadPath);
+				m_ActiveScene->SetSceneFilePath(payloadPath);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -577,13 +672,6 @@ namespace Blu
 				float windowWidth = (float)ImGui::GetWindowWidth();
 				float windowHeight = (float)ImGui::GetWindowHeight();
 				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-				//// Runtime Camera
-				//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-				//const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-
-				//const glm::mat4& cameraProjection = camera.GetProjectionMatrix();
-				//glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
 
 				//Entity Transform
 				auto& tc = selectedEntity.GetComponent<TransformComponent>();
@@ -804,6 +892,10 @@ namespace Blu
 			if (control && shift)
 			{
 				SaveSceneAs();
+			}
+			if (control)
+			{
+				SaveCurrentScene();
 			}
 			break;
 		}

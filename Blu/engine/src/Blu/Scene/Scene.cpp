@@ -139,6 +139,8 @@ namespace Blu
 		{
 			return { m_EntityMap.at(id), this };
 		}
+
+		
 	}
 	Entity Scene::DuplicateEntity(Entity& targetEntity)
 	{
@@ -181,8 +183,8 @@ namespace Blu
 	void Scene::OnRuntimeStart()
 	{
 		OnPhysics2DStart();
-		ScriptEngine::OnRuntimeStart(this);
-		OnScriptSystemStart();
+		//ScriptEngine::OnRuntimeStart(this);
+		//OnScriptSystemStart();
 	}
 	void Scene::OnPhysics2DStart()
 	{
@@ -248,7 +250,7 @@ namespace Blu
 	{
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
-		ScriptEngine::OnRuntimeStop();
+		//ScriptEngine::OnRuntimeStop(); 
 
 	}
 	void Scene::OnScriptSystemStart()
@@ -310,7 +312,7 @@ namespace Blu
 
 				}
 			}
-			{
+			{	
 				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 				for (auto& entity : group)
 				{
@@ -334,8 +336,8 @@ namespace Blu
 	}
 	void Scene::DestroyEntity(Entity entity)
 	{
-		m_Registry.destroy(entity);
 		m_EntityMap.erase(entity.GetUUID());
+		m_Registry.destroy(entity);
 	}
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
 	{
