@@ -82,6 +82,7 @@ namespace Blu
 		static void OnUpdateEntity(Entity* entity, float deltaTime);
 		static Scene* GetSceneContext();
 		static bool EntityClassExists(const std::string& fullName);
+		static bool RemoveEntityInstance(Entity* entity);
 
 		static std::unordered_map<std::string, Shared<ScriptClass>> GetEntities();
 		static MonoImage* GetCoreAssemblyImage();

@@ -53,6 +53,8 @@ namespace Blu
         {
             ImGui::OpenPopup("AddNew");
         }
+        
+
         if (ImGui::BeginPopup("AddNew"))    
         {
             if (ImGui::MenuItem("New Folder"))

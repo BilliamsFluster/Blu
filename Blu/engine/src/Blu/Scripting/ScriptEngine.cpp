@@ -298,6 +298,24 @@ namespace Blu
 	{
 		return s_Data->Entities.find(fullName) != s_Data->Entities.end();
 	}
+	bool ScriptEngine::RemoveEntityInstance(Entity* entity)
+	{
+		if (entity)
+		{
+			UUID entityUUID = entity->GetUUID();
+			if (entityUUID)
+			{
+				if (s_Data->EntityInstances[entityUUID])
+				{
+					s_Data->EntityInstances[entityUUID].reset();
+					return true;
+				}
+
+			}
+
+		}
+		return false;
+	}
 	std::unordered_map<std::string, Shared<ScriptClass>> ScriptEngine::GetEntities()
 	{
 		return s_Data->Entities;

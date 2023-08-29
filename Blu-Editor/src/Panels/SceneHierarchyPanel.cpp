@@ -299,12 +299,14 @@ namespace Blu
 			}
 			if (!m_SelectedEntity.HasComponent<ScriptComponent>())
 			{
+				ScriptEngine::RemoveEntityInstance(&m_SelectedEntity);
 				if (ImGui::MenuItem("Script"))
 				{
 					m_SelectedEntity.AddComponent<ScriptComponent>();
 					ImGui::CloseCurrentPopup();
 				}
 			}
+			
 			if (!m_SelectedEntity.HasComponent<SpriteRendererComponent>())
 			{
 				if (ImGui::MenuItem("Sprite Renderer"))
@@ -448,12 +450,12 @@ namespace Blu
 							searchResults.clear();
 
 							// Go through each entity and check if its name contains the search buffer
-							for (const auto& entity : entities)
+							for (const auto& e : entities)
 							{
-								if (entity.first.find(searchBuffer) != std::string::npos)
+								if (e.first.find(searchBuffer) != std::string::npos)
 								{
 									// If the entity's name contains the search buffer, add it to the search results
-									searchResults.insert(entity);
+									searchResults.insert(e);
 								}
 							}
 
@@ -468,9 +470,9 @@ namespace Blu
 					if (strlen(searchBuffer) == 0)
 					{
 						// If searchBuffer is empty, loop over the entities map
-						for (const auto& entity : entities)
+						for (const auto& e : entities)
 						{
-							std::string entityName = entity.first;
+							std::string entityName = e.first;
 
 							// Check if this entity is currently selected
 							bool isSelected = entityName == component.Name;
@@ -479,6 +481,9 @@ namespace Blu
 							{
 								component.Name = entityName;
 								ImGui::CloseCurrentPopup(); // Close the popup when an entity is selected
+								UUID uuid = entity.GetUUID();
+								ScriptEngine::OnCreateEntity(&entity); // creates the scriptInstance
+
 
 							}
 
@@ -492,9 +497,9 @@ namespace Blu
 					else
 					{
 						// If searchBuffer is not empty, loop over the searchResults map
-						for (const auto& entity : searchResults)
+						for (const auto& e : searchResults)
 						{
-							std::string entityName = entity.first;
+							std::string entityName = e.first;
 
 							// Check if this entity is currently selected
 							bool isSelected = entityName == component.Name;
@@ -503,6 +508,8 @@ namespace Blu
 							{
 								component.Name = entityName;
 								ImGui::CloseCurrentPopup(); // Close the popup when an entity is selected
+								ScriptEngine::OnCreateEntity(&entity); // creates the scriptInstance
+
 
 							}
 

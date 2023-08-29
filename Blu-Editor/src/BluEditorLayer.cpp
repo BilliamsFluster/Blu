@@ -126,6 +126,7 @@ namespace Blu
 			}
 			case SceneState::Play:
 			{
+				
 				m_ActiveScene->OnUpdateRuntime(deltaTime);
 			}
 		}
@@ -382,7 +383,10 @@ namespace Blu
 			}
 			
 		}
-
+		if (m_SceneMissing)
+		{
+			DisplayMissingSceneWarning();
+		}
 		// Add more toolbar items here as needed
 		ImGui::End();
 	}
@@ -433,19 +437,28 @@ namespace Blu
 	void BluEditorLayer::SaveCurrentScene()
 	{
 		SceneSerializer serializer(m_ActiveScene);
-		std::string filepath = m_EditorScene->GetSceneFilePath().string();
-		serializer.Serialize(filepath);
+		if (m_EditorScene)
+		{
+			std::string filepath = m_EditorScene->GetSceneFilePath().string();
+			serializer.Serialize(filepath);
+
+		}
 	}
 
 	void BluEditorLayer::OnScenePlay()
 	{
-		m_SceneState = SceneState::Play;
 		if (m_EditorScene)
 		{
+			m_SceneState = SceneState::Play;
 			m_ActiveScene = Scene::Copy(m_EditorScene);
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
+			m_SceneMissing = false;
 
+		}
+		else
+		{
+			m_SceneMissing = true;
 		}
 	}
 
@@ -472,6 +485,41 @@ namespace Blu
 	void BluEditorLayer::OnSceneSimulate()
 	{
 	}
+	void BluEditorLayer::DisplayMissingSceneWarning()
+	{
+		glm::vec2 viewportSize = m_ViewportSize;
+
+		float windowWidth = viewportSize.x * 0.4f; // Adjust the factor as needed
+		float windowHeight = viewportSize.y * 0.4f; // Adjust the factor as needed
+
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+
+		ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
+
+		ImGui::Begin("MissingScene", nullptr, flags);
+
+
+		if (ImGui::Button("X", ImVec2(20, 22)))
+		{
+			m_SceneMissing = false;
+		}
+
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("Missing Scene").x) * 0.5f);
+		ImGui::SetWindowFontScale(1.5f); // Adjust the font size as needed
+		ImGui::Text("Missing Scene");
+
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("Scene may be missing or not active").x) * 0.5f);
+		ImGui::Text("Scene may be missing or not active");
+
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("Please use a valid scene").x) * 0.5f);
+		ImGui::Text("Please use a valid scene");
+
+		ImGui::SetWindowFontScale(1.0f); // Reset the font scale
+
+
+		ImGui::End();
+
+	}
 	ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)
 	{
 		return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
@@ -484,25 +532,7 @@ namespace Blu
 
 	void BluEditorLayer::UIDrawTitlebar(float& outTitlebarHeight)
 	{
-		/*const float titlebarHeight = 58.0f;
-		const bool isMaximized = Application::Get().IsMaximized();
-		float titlebarVerticalOffset = isMaximized ? -6.0f : 0.0f;
-		const ImVec2 windowPadding = ImGui::GetCurrentWindow()->WindowPadding;
 
-		ImGui::SetCursorPos(ImVec2(windowPadding.x, windowPadding.y + titlebarVerticalOffset));
-		const ImVec2 titlebarMin = ImGui::GetCursorScreenPos();
-		const ImVec2 titlebarMax = { ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth() - windowPadding.y * 2.0f,
-									 ImGui::GetCursorScreenPos().y + titlebarHeight };
-		auto* bgDrawList = ImGui::GetBackgroundDrawList();
-		auto* fgDrawList = ImGui::GetForegroundDrawList();
-		bgDrawList->AddRectFilled(titlebarMin, titlebarMax, IM_COL32(255, 255, 255, 255));
-
-
-		float windowWidth = ImGui::GetWindowWidth();
-		float padding = windowPadding.y * 2.0f;
-		float frameHeight = ImGui::GetFrameHeightWithSpacing();*/
-
-		
 		if (ImGui::BeginMainMenuBar())
 		{
 			ImGui::Image((ImTextureID)m_AppHeaderIcon->GetRendererID(), ImVec2(30, 30), ImVec2(0, 1), ImVec2(1, 0));
@@ -533,36 +563,6 @@ namespace Blu
 			ImGui::EndMainMenuBar();
 		}
 
-
-		//static float moveOffsetX;
-		//static float moveOffsetY;
-		//const float w = ImGui::GetContentRegionAvail().x;
-		//const float buttonsAreaWidth = 94;
-
-		//// Title bar drag area
-		//// On Windows we hook into the GLFW win32 window internals
-		//ImGui::SetCursorPos(ImVec2(windowPadding.x, windowPadding.y + titlebarVerticalOffset)); // Reset cursor pos
-		//// DEBUG DRAG BOUNDS
-		//// fgDrawList->AddRect(ImGui::GetCursorScreenPos(), ImVec2(ImGui::GetCursorScreenPos().x + w - buttonsAreaWidth, ImGui::GetCursorScreenPos().y + titlebarHeight), UI::Colors::Theme::invalidPrefab);
-		//ImGui::InvisibleButton("##titleBarDragZone", ImVec2(w - buttonsAreaWidth, titlebarHeight));
-
-		//m_TitleBarHovered = ImGui::IsItemHovered();
-
-		//if (isMaximized)
-		//{
-		//	float windowMousePosY = ImGui::GetMousePos().y - ImGui::GetCursorScreenPos().y;
-		//	if (windowMousePosY >= 0.0f && windowMousePosY <= 5.0f)
-		//		m_TitleBarHovered = true; // Account for the top-most pixels which don't register
-		//}
-
-		//{
-		//	// Centered Window title
-		//	ImVec2 currentCursorPos = ImGui::GetCursorPos();
-		//	ImVec2 textSize = ImGui::CalcTextSize("Blu-Editor");
-		//	ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - textSize.x * 0.5f, 2.0f + windowPadding.y + 6.0f));
-		//	ImGui::Text("%s", "Blu-Editor"); // Draw title
-		//	ImGui::SetCursorPos(currentCursorPos);
-		//}
 	}
 
 	void BluEditorLayer::OnGuiDraw()

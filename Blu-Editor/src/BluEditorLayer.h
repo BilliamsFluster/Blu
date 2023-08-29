@@ -42,6 +42,7 @@ namespace Blu
 		void OnScenePlayNewWindow();
 		void OnSceneSimulate();
 
+		void DisplayMissingSceneWarning();
 	private:
 		Blu::OrthographicCameraController m_CameraController;
 		Blu::EditorCamera m_EditorCamera;
@@ -68,6 +69,7 @@ namespace Blu
 		bool enableRotationSnap = false;
 		bool enableScaleSnap = false;
 		bool m_TitleBarHovered = false;
+		bool m_SceneMissing = false;
 
 		float translationSnapValue = 0.5f;
 		float rotationSnapValue = 10.0f;
