@@ -32,10 +32,10 @@ namespace Blu
 		Shared<Layers::ImGuiLayer> GetImGuiLayer() { return m_ImGuiLayer; }
 		Events::EventDispatcher& GetEventDispatcher() { return m_EventDispatcher; }
 		Layers::LayerStack& GetLayerStack() { return m_LayerStack; }
-
 		inline static Application& Get() { return *s_Instance; }
 		inline Window& GetWindow() { return *m_Window; }
-
+		bool IsMaximized() const;
+		
 	private:
 		Unique<Window> m_Window;
 		Shared<Layers::ImGuiLayer> m_ImGuiLayer;
@@ -44,11 +44,10 @@ namespace Blu
 		Events::EventDispatcher m_EventDispatcher;
 		unsigned int m_Texture, m_FrameBufferObject;
 		Vec4 m_Color;
-
+	
 		float m_LastFrameTime = 0.0f;
 	private:
 		static Application* s_Instance;
-		
 	};
 	
 	//needs to be defined in client

@@ -33,10 +33,18 @@ namespace Blu
 
 	Application* Application::s_Instance = nullptr;
 	
+	
+	bool Application::IsMaximized() const
+	{
+		return (bool)glfwGetWindowAttrib((GLFWwindow*)&m_Window, GLFW_MAXIMIZED);
+	}
+
+
 	Application::Application(const std::string& name)
 		
 	{
 		BLU_PROFILE_FUNCTION();
+		
 		
 		// Initialize the application's window and ImGui layer
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(name)));

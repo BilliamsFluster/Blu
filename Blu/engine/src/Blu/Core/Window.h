@@ -10,12 +10,13 @@ namespace Blu
 		std::string Title;
 		uint32_t Width;
 		uint32_t Height;
+		bool CustomTitleBar = true;
 
 		// This is for windows, should change it for different platforms
 		WindowProps(const std::string& title = "Blu Engine",
 			uint32_t width = GetSystemMetrics(SM_CXSCREEN),
-			uint32_t height = GetSystemMetrics(SM_CYSCREEN))
-			: Title(title), Width(width), Height(height)
+			uint32_t height = GetSystemMetrics(SM_CYSCREEN), bool customTitleBar = true)
+			: Title(title), Width(width), Height(height), CustomTitleBar(customTitleBar)
 		{
 		}
 	};

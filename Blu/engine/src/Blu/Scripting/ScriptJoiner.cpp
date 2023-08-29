@@ -52,13 +52,13 @@ namespace Blu
 	static bool Entity_HasComponent(UUID entityID, MonoReflectionType* componentType)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT(scene);
+		BLU_CORE_ASSERT("{0}", scene);
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT(entity);
+		BLU_CORE_ASSERT("{0}",entity);
 
 		
 		MonoType* managedType = mono_reflection_type_get_type(componentType);
-		BLU_CORE_ASSERT(s_EntityHasComponentFuncs.find(managedType) != s_EntityHasComponentFuncs.end());
+		BLU_CORE_ASSERT("{0}", s_EntityHasComponentFuncs.find(managedType) != s_EntityHasComponentFuncs.end());
 		return s_EntityHasComponentFuncs.at(managedType)(entity);
 	}
 
@@ -74,21 +74,25 @@ namespace Blu
 	static void Rigidbody2DComponent_ApplyLinearImpulse(UUID entityID, glm::vec2* impulse, glm::vec2* point, bool wake)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT(scene);
+		BLU_CORE_ASSERT("{0}",scene);
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT(entity);
+		BLU_CORE_ASSERT("{0}", entity);
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
-		body->ApplyLinearImpulse(b2Vec2(impulse->x, impulse->y), b2Vec2(point->x, point->y), wake);
+		if (body)
+		{
+			body->ApplyLinearImpulse(b2Vec2(impulse->x, impulse->y), b2Vec2(point->x, point->y), wake);
+
+		}
 	}
 
 	static void Rigidbody2DComponent_ApplyLinearImpulseToCenter(UUID entityID, glm::vec2* impulse, bool wake)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT(scene);
+		BLU_CORE_ASSERT("{0}", scene);
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT(entity);
+		BLU_CORE_ASSERT("{0}", entity);
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
@@ -98,9 +102,9 @@ namespace Blu
 	static void Rigidbody2DComponent_GetLinearVelocity(UUID entityID, glm::vec2* outLinearVelocity)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT(scene);
+		BLU_CORE_ASSERT("{0}", scene);
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT(entity);
+		BLU_CORE_ASSERT("{0}", entity);
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
@@ -111,9 +115,9 @@ namespace Blu
 	static Rigidbody2DComponent::BodyType Rigidbody2DComponent_GetType(UUID entityID)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT(scene);
+		BLU_CORE_ASSERT("{0}", scene);
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT(entity);
+		BLU_CORE_ASSERT("{0}", entity);
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
@@ -123,9 +127,9 @@ namespace Blu
 	static void Rigidbody2DComponent_SetType(UUID entityID, Rigidbody2DComponent::BodyType bodyType)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT(scene);
+		BLU_CORE_ASSERT("{0}", scene);
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT(entity);
+		BLU_CORE_ASSERT("{0}", entity);
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;

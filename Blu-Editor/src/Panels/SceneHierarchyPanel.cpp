@@ -278,7 +278,7 @@ namespace Blu
 			{
 				tag = std::string(buffer);
 			}
-			
+
 		}
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
@@ -299,12 +299,14 @@ namespace Blu
 			}
 			if (!m_SelectedEntity.HasComponent<ScriptComponent>())
 			{
+				ScriptEngine::RemoveEntityInstance(&m_SelectedEntity);
 				if (ImGui::MenuItem("Script"))
 				{
 					m_SelectedEntity.AddComponent<ScriptComponent>();
 					ImGui::CloseCurrentPopup();
 				}
 			}
+			
 			if (!m_SelectedEntity.HasComponent<SpriteRendererComponent>())
 			{
 				if (ImGui::MenuItem("Sprite Renderer"))
@@ -360,7 +362,7 @@ namespace Blu
 			}
 			ImGui::EndPopup();
 		}
-		
+
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 			{
 
@@ -372,12 +374,51 @@ namespace Blu
 				ImGui::Spacing();
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
-		
-		DrawComponent<ScriptComponent>("Script", entity, [](auto& component)
+
+		DrawComponent<ScriptComponent>("Script", entity, [entity](auto& component) mutable
 			{
 				bool scriptExists = ScriptEngine::EntityClassExists(component.Name);
 				const auto& entities = ScriptEngine::GetEntities();
 				static std::unordered_map<std::string, Shared<ScriptClass>> searchResults;
+				Shared<ScriptClass> scriptClass = ScriptEngine::GetEntityScriptClass(component.Name);
+
+
+				Shared<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+				
+				if (scriptClass)
+				{
+					if (scriptInstance) 
+					{
+						auto& fields = scriptClass->GetScriptFields();
+						for (const auto& [name, field] : fields)
+						{
+							if (field.Type == ScriptFieldType::Float)
+							{
+								float data = scriptInstance->GetFieldValue<float>(name);
+
+								ImGui::Text("%s", name.c_str());
+								ImGui::SameLine();
+								ImGui::PushID(name.c_str()); // Add an ID to prevent conflicts with other ImGui widgets
+								ImGui::PushItemWidth(100); // Set the width of the next widget to 100
+								
+								
+
+								if (ImGui::DragFloat("##data", &data))
+								{
+									scriptInstance->SetFieldValue<float>(name, data);
+									
+								}
+								ImGui::PopItemWidth(); // Reset the width for subsequent widgets
+								ImGui::PopID();
+								
+							}
+							// Handle other field types...
+						}
+					}
+					
+				}
+				
+
 
 				std::string buttonLabel = component.Name.empty() ? "Add Script" : component.Name;
 				if (ImGui::Button(buttonLabel.c_str()))
@@ -409,12 +450,12 @@ namespace Blu
 							searchResults.clear();
 
 							// Go through each entity and check if its name contains the search buffer
-							for (const auto& entity : entities)
+							for (const auto& e : entities)
 							{
-								if (entity.first.find(searchBuffer) != std::string::npos)
+								if (e.first.find(searchBuffer) != std::string::npos)
 								{
 									// If the entity's name contains the search buffer, add it to the search results
-									searchResults.insert(entity);
+									searchResults.insert(e);
 								}
 							}
 
@@ -429,9 +470,9 @@ namespace Blu
 					if (strlen(searchBuffer) == 0)
 					{
 						// If searchBuffer is empty, loop over the entities map
-						for (const auto& entity : entities)
+						for (const auto& e : entities)
 						{
-							std::string entityName = entity.first;
+							std::string entityName = e.first;
 
 							// Check if this entity is currently selected
 							bool isSelected = entityName == component.Name;
@@ -440,6 +481,9 @@ namespace Blu
 							{
 								component.Name = entityName;
 								ImGui::CloseCurrentPopup(); // Close the popup when an entity is selected
+								UUID uuid = entity.GetUUID();
+								ScriptEngine::OnCreateEntity(&entity); // creates the scriptInstance
+
 
 							}
 
@@ -453,9 +497,9 @@ namespace Blu
 					else
 					{
 						// If searchBuffer is not empty, loop over the searchResults map
-						for (const auto& entity : searchResults)
+						for (const auto& e : searchResults)
 						{
-							std::string entityName = entity.first;
+							std::string entityName = e.first;
 
 							// Check if this entity is currently selected
 							bool isSelected = entityName == component.Name;
@@ -464,6 +508,8 @@ namespace Blu
 							{
 								component.Name = entityName;
 								ImGui::CloseCurrentPopup(); // Close the popup when an entity is selected
+								ScriptEngine::OnCreateEntity(&entity); // creates the scriptInstance
+
 
 							}
 
@@ -481,7 +527,7 @@ namespace Blu
 
 
 			});
-		
+
 		DrawComponent<ParticleSystemComponent>("Particle System", entity, [&](auto& component)
 			{
 				static const char* particleSystems[] = { "Default", "Fountain", "Explosion", "RainFall" }; // Add more as needed
@@ -489,7 +535,7 @@ namespace Blu
 				static int lastParticleSystem = -1;
 				float itemWidth = 2.0f; // Adjust this value as needed
 				ImGui::PushItemWidth(ImGui::GetWindowWidth() / itemWidth);
-				
+
 				if (ImGui::Combo("Particle System", &currentParticleSystem, particleSystems, IM_ARRAYSIZE(particleSystems)))
 				{
 					// The user has selected a different particle system type.
@@ -504,7 +550,7 @@ namespace Blu
 
 					lastParticleSystem = currentParticleSystem;
 				}
-				
+
 
 				switch (currentParticleSystem)
 				{
@@ -521,15 +567,15 @@ namespace Blu
 					component.CurrentParticleSystem = [&]() { component.PSystem.EmitRainFall(component.ParticleSystemProps); };
 					break;
 				}
-				
+
 				DrawParticleSystemPanel(component);
-				 
+
 			});
 
-	
 
 
-		
+
+
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
 			{
 				float itemWidth = 2.0f; // Adjust this value as needed
@@ -542,7 +588,7 @@ namespace Blu
 				const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
 				if (ImGui::BeginCombo("Projection", currentProjectionTypeString))
 				{
-					
+
 					for (int i = 0; i < 2; i++)
 					{
 						bool isSelected = currentProjectionTypeString == projectionTypeStrings[i];
@@ -589,10 +635,10 @@ namespace Blu
 					camera.SetOrthographicFarClip(orthoFar);
 
 				}
-			
 
 
-			
+
+
 			});
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
 			{
@@ -604,7 +650,7 @@ namespace Blu
 				{
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 					{
-						
+
 						std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
 						component.Texture = Texture2D::Create(payloadPath.string());
 					}
@@ -626,7 +672,7 @@ namespace Blu
 				float itemWidth = 2.0f;
 				float itemHeight = 10.0f;
 				ImGui::PushItemWidth(ImGui::GetWindowWidth() / itemWidth);
-				
+
 
 				ImGui::Text("Offset");
 				ImGui::DragFloat2("##Offset", glm::value_ptr(component.Offset), 0.1f);
@@ -687,10 +733,10 @@ namespace Blu
 			});
 
 		float extraSpace = 200.0f;  // Extra space at the end in pixels
-		ImGui::Dummy(ImVec2(0.0f, extraSpace));  
+		ImGui::Dummy(ImVec2(0.0f, extraSpace));
 
 		ImGui::EndChild();
-
+		
 			
 		
 	}

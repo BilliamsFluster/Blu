@@ -5,6 +5,7 @@
 #include <fstream>
 #include <filesystem>
 #include "yaml-cpp/yaml.h"
+#include "Blu/Scripting/ScriptEngine.h"
 
 namespace YAML
 {
@@ -118,7 +119,7 @@ namespace Blu
 	}
 	static  void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{ 
-		BLU_CORE_ASSERT(entity.HasComponent<IDComponent>());
+		BLU_CORE_ASSERT("", entity.HasComponent<IDComponent>());
 		out << YAML::BeginMap;
 		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 
@@ -149,7 +150,34 @@ namespace Blu
 			out << YAML::BeginMap;
 			auto& sc = entity.GetComponent<ScriptComponent>();
 			out << YAML::Key << "Name" << YAML::Value << sc.Name;
-			out << YAML::EndMap;
+			
+
+			// we need to serialize the fields 
+			Shared<ScriptClass> scriptClass = ScriptEngine::GetEntityScriptClass(sc.Name);
+
+
+			Shared<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+
+			if (scriptClass)
+			{
+				if (scriptInstance)
+				{
+					out << YAML::Key << "ScriptFields" << YAML::Value;
+					out << YAML::BeginMap; // script fields
+					auto& fields = scriptClass->GetScriptFields();
+					for (const auto& [name, field] : fields)
+					{
+						if (field.Type == ScriptFieldType::Float)
+						{
+							float data = scriptInstance->GetFieldValue<float>(name);
+							out << YAML::Key << name << YAML::Value << data;
+
+						}
+					}
+					out << YAML::EndMap;
+				}
+			}
+			out << YAML::EndMap; // script component
 
 		}
 		if (entity.HasComponent<CameraComponent>())
@@ -338,11 +366,11 @@ namespace Blu
 				}
 
 				auto scriptComponent = entity["ScriptComponent"];
-
 				if (scriptComponent)
 				{
 					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
 					sc.Name = scriptComponent["Name"].as<std::string>();
+
 				}
 
 				auto cameraComponent = entity["CameraComponent"];
@@ -429,9 +457,64 @@ namespace Blu
 
 		return true;
 	}
+	bool SceneSerializer::DeserializeEntityScriptInstances(const std::string& filepath)
+	{
+		std::ifstream stream(filepath);
+		std::stringstream strStream;
+		strStream << stream.rdbuf();
+
+		YAML::Node data = YAML::Load(strStream.str());
+		if (!data["Scene"])
+			return false;
+
+		std::string sceneName = data["Scene"].as<std::string>();
+		auto entities = data["Entities"];
+		if (entities)
+		{
+			for (auto entity : entities)
+			{
+				uint64_t uuid = entity["Entity"].as<uint64_t>();
+				std::string name;
+
+
+
+				auto scriptComponent = entity["ScriptComponent"];
+				if (scriptComponent)
+				{
+
+
+					Entity entity = m_Scene->GetEntityByUUID(uuid);
+					auto& sc = entity.GetComponent<ScriptComponent>();
+					Shared<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(uuid);
+					sc.Name = scriptComponent["Name"].as<std::string>();
+					Shared<ScriptClass> scriptClass = ScriptEngine::GetEntityScriptClass(sc.Name);
+
+					auto scriptFields = scriptComponent["ScriptFields"];
+					for (auto it = scriptFields.begin(); it != scriptFields.end(); ++it)
+					{
+						const std::string& fieldName = it->first.as<std::string>();
+						auto fieldValue = it->second; // YAML will convert to appropriate C++ type
+						if (scriptInstance)
+						{
+							auto& fields = scriptClass->GetScriptFields();
+							auto fieldIt = fields.find(fieldName);
+							if (fieldIt != fields.end() && fieldIt->second.Type == ScriptFieldType::Float)
+							{
+								float data = fieldValue.as<float>();
+								scriptInstance->SetFieldValue<float>(fieldName, data);
+							}
+						}
+
+						// Handle other field types...
+					}
+
+
+				}
+			}
+		}
+	}
 	bool SceneSerializer::DeserializeBinary(const std::string& filepath)
 	{
-		BLU_CORE_ASSERT(false);
 		return false;
 	}
 }

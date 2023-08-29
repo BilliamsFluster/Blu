@@ -2,6 +2,7 @@
 #include "Shader.h"
 #include "Blu/Rendering/Renderer.h"
 #include "Blu/Platform/OpenGL/OpenGLShader.h"
+#include "Blu/Core/Log.h"
 
 namespace Blu
 {
@@ -39,7 +40,7 @@ namespace Blu
 
 	void ShaderLibrary::Add(const std::string& name, const Shared<Shader>& shader)
 	{
-		BLU_CORE_ASSERT(mShaders.find(name) == m_Shaders.end(), "Shader already exists!");
+		BLU_CORE_ASSERT(m_Shaders.find(name) == m_Shaders.end(), "Shader already exists!");
 		m_Shaders[name] = shader;
 	}
 
@@ -62,7 +63,7 @@ namespace Blu
 	}
 	Shared<Shader> ShaderLibrary::Get(const std::string& name)
 	{
-		BLU_CORE_ASSERT(mShaders.find(name) != m_Shaders.end(), "Shader not found!");
+		BLU_CORE_ASSERT(m_Shaders.find(name) != m_Shaders.end(), "Shader not found!");
 
 		return m_Shaders[name];
 	}

@@ -3,7 +3,7 @@
 
 #ifdef BLU_PLATFORM_WINDOWS
 extern  Blu::Application* Blu::CreateApplication();
-int main(int argc, char** argv)
+int main(int argc, char** argv) // main entry point
 {
 	Blu::Log::Init();
 	

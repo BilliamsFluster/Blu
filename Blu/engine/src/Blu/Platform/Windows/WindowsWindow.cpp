@@ -1,9 +1,14 @@
 #include "Blupch.h"
 #include "WindowsWindow.h"
+#include <glad/glad.h>
 #include "Blu/Core/Log.h"
 #include "Blu/Events/GLFWCallbacks.h"
 #include "Blu/Platform/OpenGL/OpenGLContext.h"
-#include <glad/glad.h>
+
+#include "imgui.h"
+#include "imgui_internal.h"
+
+
 
 namespace Blu
 {
@@ -11,11 +16,14 @@ namespace Blu
 
 	Window* Window::Create(const WindowProps& props)
 	{
+		
 		return new WindowsWindow(props);
 	}
 
 	Blu::WindowsWindow::WindowsWindow(const WindowProps& props)
+		:m_WindowProps(props)
 	{
+		
 		BLU_PROFILE_FUNCTION();
 		Init(props); // called once
 	}
@@ -39,7 +47,7 @@ namespace Blu
 	void Blu::WindowsWindow::Init(const WindowProps& props)
 	{
 		BLU_PROFILE_FUNCTION();
-
+		// make sure to check if we have  custom title bar
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
@@ -51,13 +59,22 @@ namespace Blu
 
 			s_GLFWInitialized = true;
 		}
+		if (props.CustomTitleBar)
+		{
+			glfwWindowHint(GLFW_TITLEBAR, false);
+		}
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();
 		
-		BLU_CORE_ASSERT(status, "Failed to init Glad");
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
+		glfwSetTitlebarHitTestCallback(m_Window, [](GLFWwindow* window, int x, int y, int* hit)
+			{
+				Application* app = (Application*)glfwGetWindowUserPointer(window);
+				WindowsWindow* activeWindow = (WindowsWindow*)Application::Get().GetWindow().GetNativeWindow();
+				*hit = activeWindow->IsTitleBarHovered();
+			});
 
 		glfwSetKeyCallback(m_Window, GLFWCallbacks::KeyCallback);
 		glfwSetMouseButtonCallback(m_Window, GLFWCallbacks::MouseButtonCallback);
@@ -76,5 +93,7 @@ namespace Blu
 		glfwDestroyWindow(m_Window);
 		delete m_Context;
 	}
+
+	
 
 }

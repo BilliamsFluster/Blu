@@ -12,6 +12,9 @@
 #include "Blu/Utils/PlatformUtils.h"
 #include "ImGuizmo.h"
 #include "Blu/Math/Math.h"
+#include "Blu/Core/Application.h"
+#include "Blu/Platform/Windows/WindowsWindow.h"
+#include "Blu/Scripting/ScriptEngine.h"
 
 
 
@@ -34,6 +37,7 @@ namespace Blu
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
+		m_AppHeaderIcon = Texture2D::Create("assets/textures/BluLogo.png");
 		
 
 		FrameBufferSpecifications fbSpec;
@@ -122,6 +126,7 @@ namespace Blu
 			}
 			case SceneState::Play:
 			{
+				
 				m_ActiveScene->OnUpdateRuntime(deltaTime);
 			}
 		}
@@ -350,7 +355,9 @@ namespace Blu
 		{
 			if (ImGui::MenuItem("Play"))
 			{
+				SaveCurrentScene();
 				OnScenePlay();
+
 			}
 
 			if (ImGui::MenuItem("Play In New Window"))
@@ -376,7 +383,10 @@ namespace Blu
 			}
 			
 		}
-
+		if (m_SceneMissing)
+		{
+			DisplayMissingSceneWarning();
+		}
 		// Add more toolbar items here as needed
 		ImGui::End();
 	}
@@ -404,6 +414,10 @@ namespace Blu
 			m_EditorScene = m_ActiveScene;
 			m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
+			m_ActiveScene->OnScriptSystemStart();
+			serializer.DeserializeEntityScriptInstances(path.string());
+
 			
 
 		}
@@ -420,15 +434,31 @@ namespace Blu
 		}
 	}
 
-	void BluEditorLayer::OnScenePlay()
+	void BluEditorLayer::SaveCurrentScene()
 	{
-		m_SceneState = SceneState::Play;
+		SceneSerializer serializer(m_ActiveScene);
 		if (m_EditorScene)
 		{
-			m_ActiveScene = Scene::Copy(m_EditorScene);
-			
-			m_ActiveScene->OnRuntimeStart();
+			std::string filepath = m_EditorScene->GetSceneFilePath().string();
+			serializer.Serialize(filepath);
 
+		}
+	}
+
+	void BluEditorLayer::OnScenePlay()
+	{
+		if (m_EditorScene)
+		{
+			m_SceneState = SceneState::Play;
+			m_ActiveScene = Scene::Copy(m_EditorScene);
+			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
+			m_ActiveScene->OnRuntimeStart();
+			m_SceneMissing = false;
+
+		}
+		else
+		{
+			m_SceneMissing = true;
 		}
 	}
 
@@ -440,7 +470,11 @@ namespace Blu
 	{
 		m_SceneState = SceneState::Edit;
 		m_ActiveScene->OnRuntimeStop();
+		SceneSerializer serializer(m_ActiveScene);
 		m_ActiveScene = m_EditorScene;
+		std::string filepath = m_EditorScene->GetSceneFilePath().string();
+		serializer.DeserializeEntityScriptInstances(filepath);
+
 
 	}
 
@@ -451,11 +485,57 @@ namespace Blu
 	void BluEditorLayer::OnSceneSimulate()
 	{
 	}
-
-	void BluEditorLayer::OnGuiDraw()
+	void BluEditorLayer::DisplayMissingSceneWarning()
 	{
+		glm::vec2 viewportSize = m_ViewportSize;
+
+		float windowWidth = viewportSize.x * 0.4f; // Adjust the factor as needed
+		float windowHeight = viewportSize.y * 0.4f; // Adjust the factor as needed
+
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+
+		ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
+
+		ImGui::Begin("MissingScene", nullptr, flags);
+
+
+		if (ImGui::Button("X", ImVec2(20, 22)))
+		{
+			m_SceneMissing = false;
+		}
+
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("Missing Scene").x) * 0.5f);
+		ImGui::SetWindowFontScale(1.5f); // Adjust the font size as needed
+		ImGui::Text("Missing Scene");
+
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("Scene may be missing or not active").x) * 0.5f);
+		ImGui::Text("Scene may be missing or not active");
+
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("Please use a valid scene").x) * 0.5f);
+		ImGui::Text("Please use a valid scene");
+
+		ImGui::SetWindowFontScale(1.0f); // Reset the font scale
+
+
+		ImGui::End();
+
+	}
+	ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)
+	{
+		return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
+	}
+
+	ImVec2 operator*(const ImVec2& lhs, const float& rhs)
+	{
+		return ImVec2(lhs.x * rhs, lhs.y * rhs);
+	}
+
+	void BluEditorLayer::UIDrawTitlebar(float& outTitlebarHeight)
+	{
+
 		if (ImGui::BeginMainMenuBar())
 		{
+			ImGui::Image((ImTextureID)m_AppHeaderIcon->GetRendererID(), ImVec2(30, 30), ImVec2(0, 1), ImVec2(1, 0));
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("New", "Ctrl+N"))
@@ -471,12 +551,26 @@ namespace Blu
 					SaveSceneAs();
 
 				}
+				if (ImGui::MenuItem("Save ...", "Ctrl+S"))
+				{
+					SaveCurrentScene();
+
+				}
 				if (ImGui::MenuItem("Exit")) Application::Get().Close();
 				ImGui::EndMenu();
 
 			}
 			ImGui::EndMainMenuBar();
 		}
+
+	}
+
+	void BluEditorLayer::OnGuiDraw()
+	{
+		float height = 5.0f;
+		UIDrawTitlebar(height);
+		
+		
 		m_SceneHierarchyPanel->OnImGuiRender();
 		m_ContentBrowserPanel->OnImGuiRender();
 
@@ -551,6 +645,7 @@ namespace Blu
 			{
 				std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
 				OpenScene(payloadPath);
+				m_ActiveScene->SetSceneFilePath(payloadPath);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -577,13 +672,6 @@ namespace Blu
 				float windowWidth = (float)ImGui::GetWindowWidth();
 				float windowHeight = (float)ImGui::GetWindowHeight();
 				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-				//// Runtime Camera
-				//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-				//const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-
-				//const glm::mat4& cameraProjection = camera.GetProjectionMatrix();
-				//glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
 
 				//Entity Transform
 				auto& tc = selectedEntity.GetComponent<TransformComponent>();
@@ -804,6 +892,10 @@ namespace Blu
 			if (control && shift)
 			{
 				SaveSceneAs();
+			}
+			if (control)
+			{
+				SaveCurrentScene();
 			}
 			break;
 		}

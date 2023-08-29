@@ -2,6 +2,7 @@
 #include "entt.hpp"
 #include "Component.h"
 #include "Blu/Core/Timestep.h"
+#include <filesystem>
 
 class b2World;
 namespace Blu
@@ -23,9 +24,16 @@ namespace Blu
 		{
 			return m_Registry.view<Components...>();
 		}
-
-		Entity DuplicateEntity(Entity& targetEntity);
 		
+		Entity DuplicateEntity(Entity& targetEntity);
+		const std::filesystem::path& GetSceneFilePath() const
+		{
+			return m_SceneFilePath;
+		}
+		void SetSceneFilePath(std::filesystem::path& filepath)
+		{
+			m_SceneFilePath = filepath;
+		}
 
 		void OnRuntimeStart();
 		void OnPhysics2DStart();
@@ -44,7 +52,7 @@ namespace Blu
 		entt::registry m_Registry; // container for all of our entt components
 		float m_ViewportWidth = 0.0f, m_ViewportHeight = 0.0f;
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
-
+		std::filesystem::path m_SceneFilePath;
 		b2World* m_PhysicsWorld = nullptr;
 		friend class Entity;
 		friend class SceneSerializer;

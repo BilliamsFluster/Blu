@@ -1,5 +1,6 @@
 #include "ContentBrowserPanel.h"
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <fstream>
 #include "Blu/Core/MouseCodes.h"
 #include "Blu/Core/Input.h"
@@ -21,12 +22,77 @@ namespace Blu
     }
     std::string m_Filter;  // Add a filter string
     std::filesystem::path rightClickedItemPath;
+   
+    void RecursiveSearch(const std::filesystem::path& directory, const std::string& filter)
+    {
+        for (auto& p : std::filesystem::recursive_directory_iterator(directory))
+        {
+            const auto& path = p.path();
+            auto relativePath = std::filesystem::relative(path, directory);
+            std::string filenameString = relativePath.filename().string();
+            std::string extensionString = relativePath.extension().string();
 
+            // Apply filter
+            if (filenameString.find(filter) != std::string::npos ||
+                extensionString.find(filter) != std::string::npos)
+            {
+                // Display the file or folder, similar to how you do in the directory_iterator loop
+            }
+        }
+    }
     void ContentBrowserPanel::OnImGuiRender()
     {
         static std::filesystem::path s_RenamingPath;
 
         ImGui::Begin("Content Browser");
+
+        // Split the window into 2 parts: left will be the directory tree view, right will be the directory content view
+        ImGui::BeginChild("left pane", ImVec2(ImGui::GetWindowWidth() * 0.3f, 0), true);
+
+        if (ImGui::Button("Add New"))
+        {
+            ImGui::OpenPopup("AddNew");
+        }
+        
+
+        if (ImGui::BeginPopup("AddNew"))    
+        {
+            if (ImGui::MenuItem("New Folder"))
+            {
+                std::filesystem::path newFolderPath = m_CurrentDirectory / "EmptyFolder";
+                int i = 0;
+                while (std::filesystem::exists(newFolderPath)) {
+                    newFolderPath = m_CurrentDirectory / ("EmptyFolder" + std::to_string(i++));
+                }
+                std::filesystem::create_directory(newFolderPath);
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::MenuItem("New File"))  // Add a delete option to the context menu
+            {
+                std::filesystem::path newFilePath = m_CurrentDirectory / "EmptyFile.txt";
+                int i = 0;
+                while (std::filesystem::exists(newFilePath)) {
+                    newFilePath = m_CurrentDirectory / ("EmptyFile" + std::to_string(i++) + ".txt");
+                }
+                std::ofstream newFile(newFilePath);
+                ImGui::CloseCurrentPopup();
+
+            }
+            ImGui::EndPopup();
+            
+            
+        }
+        // Show directory tree view for the root directory and any expanded directories
+        ShowDirectoryNodes(s_AssetsDirectory);
+
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        // Show directory content view
+
+       
+        ImGui::BeginChild("right pane", ImVec2(0, 0), true);
         for (auto it = m_NavigationHistory.begin(); it != m_NavigationHistory.end(); ++it)
         {
             // If this isn't the first directory in the history, add a separator
@@ -44,56 +110,30 @@ namespace Blu
                 break;
             }
         }
-        
-        // Split the window into 2 parts: left will be the directory tree view, right will be the directory content view
-        ImGui::BeginChild("left pane", ImVec2(ImGui::GetWindowWidth() * 0.3f, 0), true);
-
-        // Show directory tree view for the root directory and any expanded directories
-        ShowDirectoryNodes(s_AssetsDirectory);
-
-        ImGui::EndChild();
-
-        ImGui::SameLine();
-
-        // Show directory content view
-
-       
-        ImGui::BeginChild("right pane", ImVec2(0, 0), true);
 
         // Top operation panel
-        ImGui::BeginChild("Operation Panel", ImVec2(0, 60), true);
+        ImGui::BeginChild("Operation Panel", ImVec2(0, 40), true);
 
-        // Operations Text
-        ImGui::Text("Operations: ");
-        ImGui::SameLine();
-
-        // New File Button and its functionality
-        if (ImGui::Button("New File"))
-        {
-            CreateNewFile(m_CurrentDirectory, "EmptyFile.txt");
-        }
-        ImGui::SameLine();
-
-        // New Folder Button and its functionality
-        if (ImGui::Button("New Folder"))
-        {
-            CreateNewFolder(m_CurrentDirectory, "EmptyFolder");
-        }
-        ImGui::SameLine();
-
-        // Sort Selection Combo box
-        const char* items[] = { "Name", "Date Modified", "Size" };
-        static int item_current = 0;
-        ImGui::Combo("Sort", &item_current, items, IM_ARRAYSIZE(items));
-
-        // Filter Input Text box
-        static char filter[128] = "";
-        ImGui::InputText("Filter", filter, IM_ARRAYSIZE(filter));
+       
+       
 
         // Filter Type Selection Combo box
-        static const char* filterTypes[] = { "Name", "Extension" };
+        static const char* filterTypes[] = { "Name", "Date Modified", "Size", "Extension" };
         static int currentFilterType = 0;
-        ImGui::Combo("Filter Type", &currentFilterType, filterTypes, IM_ARRAYSIZE(filterTypes));
+        ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+        ImGui::PopStyleVar();
+        //ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f - 50.0f);
+        ImGui::PushItemWidth(100.0f);  // set width of the combo box
+        ImGui::Combo("##Filter Type", &currentFilterType, filterTypes, IM_ARRAYSIZE(filterTypes));
+        ImGui::PopItemWidth();  // reset width
+        ImGui::SameLine();
+        
+        // Filter Input Text box
+        static char filter[128] = "";
+        ImGui::PushItemWidth(contentRegionAvailable.x - 100.0f);  // set width of the combo box
+        ImGui::InputTextWithHint("##Filter", "Search Content", filter, IM_ARRAYSIZE(filter));
+        ImGui::PopItemWidth();  // reset width
 
         // Add logic for filtering and sorting here
 
@@ -131,29 +171,48 @@ namespace Blu
 
         m_ObjectClicked = false;
         ImGui::Columns(columnCount, nullptr, false);
-        //ImGui::BeginChild("Scrolling", ImVec2(ImGui::GetWindowWidth(), 0), true);
-
-
-        for (auto& p : std::filesystem::directory_iterator(m_CurrentDirectory))
+        static std::string s_SelectedFilename;
+        //
+        for (auto& p : std::filesystem::directory_iterator(m_CurrentDirectory)) 
         {
             const auto& path = p.path();
             auto relativePath = std::filesystem::relative(path, m_CurrentDirectory);
             std::string filenameString = relativePath.filename().string();
+            std::string extensionString = relativePath.extension().string();
 
+            // Filtering based on filter type
+            bool skip = false; // flag to skip the current file/directory
+            switch (currentFilterType) {
+            case 0: // Name filter
+                if (filenameString.find(filter) == std::string::npos)
+                    skip = true;
+                break;
 
-            // Check if filename matches filter
-            if (currentFilterType == 0 && std::string::npos == filenameString.find(filter))
-                continue;
+            case 1: // Date Modified filter
+                //  logic for date modified filter
+                break;
 
-            if (currentFilterType == 1 && std::string::npos == relativePath.extension().string().find(filter))
-                continue;
+            case 2: // Size filter
+                //  logic for size filter
+                break;
+
+            case 3: // Extension filter
+                if (extensionString != filter)
+                    skip = true;
+                break;
+
+            default:
+                break;
+            }
+
+            if (skip) continue;
 
             ImGui::BeginGroup();  // Begin group for icon and filename
-            
+    
             if (p.is_directory())
             {
 
-                
+
                 auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetRendererID()));
                 ImVec2 iconSize(50.0f, 50.0f);
 
@@ -163,10 +222,17 @@ namespace Blu
                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - iconSize.y);
                 if (ImGui::InvisibleButton(filenameString.c_str(), iconSize))
                 {
-                    //m_ObjectClicked |= ImGui::IsItemHovered();
+                    s_SelectedFilename = filenameString;
 
-                    
                 }
+                if (s_SelectedFilename == filenameString) {
+                    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                    ImVec2 min = ImGui::GetItemRectMin();
+                    ImVec2 max = ImGui::GetItemRectMax();
+
+                    draw_list->AddRect(min, max, IM_COL32(30, 151, 201, 255), 1, 0, 3);  // blue outline
+                }
+
                 if (ImGui::IsItemHovered())
                 {
 
@@ -184,11 +250,15 @@ namespace Blu
                         m_ObjectClicked = true;
                     }
                 }
-                
-                
-                   
-                    
-                
+                else if (ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered())
+                {
+                    s_SelectedFilename = "";
+                }
+
+
+
+
+
                 ImGui::PopID();
             }
             else
@@ -203,13 +273,21 @@ namespace Blu
                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - iconSize.y);
                 if (ImGui::InvisibleButton(filenameString.c_str(), iconSize))
                 {
-                    // Single click: Do something (if you want)
+                    s_SelectedFilename = filenameString;
+                }
+                if (s_SelectedFilename == filenameString) {
+                    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                    ImVec2 min = ImGui::GetItemRectMin();
+                    ImVec2 max = ImGui::GetItemRectMax();
+
+
+                    draw_list->AddRect(min, max, IM_COL32(30, 151, 201, 255), 1, 0, 3);  // blue outline
                 }
                 if (ImGui::IsItemHovered())
                 {
                     m_ObjectClicked = true;
 
-                    
+
                     if (ImGui::IsMouseClicked(1))
                     {
                         rightClickedItemPath = path;
@@ -217,10 +295,13 @@ namespace Blu
 
                     }
                 }
-                
+                else if (ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered())
+                {
+                    s_SelectedFilename = "";
+                }
                 ImGui::PopID();
             }
-            
+
 
             if (ImGui::IsMouseClicked(1) && !m_ObjectClicked)
             {
@@ -228,12 +309,12 @@ namespace Blu
             }
 
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-                
+
                 std::string payloadPath = path.string();
 
                 // Set payload to carry the path of the file being dragged
                 ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", payloadPath.c_str(), payloadPath.size() + 1); // +1 to include the null terminator
-                
+
                 // Get current mouse position
                 ImVec2 mousePos = ImGui::GetMousePos();
 
@@ -290,14 +371,14 @@ namespace Blu
                             std::filesystem::rename(payloadPath, destinationPath);
                             // Refresh your directory viewer here
                         }
-                        catch (std::filesystem::filesystem_error& e) 
+                        catch (std::filesystem::filesystem_error& e)
                         {
                             BLU_CORE_ASSERT(false, e.what());
                         }
                     }
 
-                  
-                   
+
+
 
                 }
 
@@ -305,15 +386,15 @@ namespace Blu
             }
 
 
-            
-           
+
+
             // Display filename
             ImGui::TextWrapped("%s", filenameString.c_str());
-           
-            
-            
 
-            
+
+
+
+
             ImGui::EndGroup();  // End group for icon and filename
 
             if (ImGui::IsItemHovered())
@@ -322,11 +403,27 @@ namespace Blu
             }
 
             ImGui::NextColumn();
-        }
-        //ImGui::PopItemWidth(); // Reset the item width to the previous value
+         }
+        //
+        //for (auto& p : std::filesystem::directory_iterator(m_CurrentDirectory))
+        //{
+        //    const auto& path = p.path();
+        //    auto relativePath = std::filesystem::relative(path, m_CurrentDirectory);
+        //    std::string filenameString = relativePath.filename().string();
 
-        //ImGui::EndChild();
-       
+
+        //    // Check if filename matches filter
+        //    if (currentFilterType == 0 && std::string::npos == filenameString.find(filter))
+        //        continue;
+
+        //    if (currentFilterType == 1 && std::string::npos == relativePath.extension().string().find(filter))
+        //        continue;
+
+        //    ImGui::BeginGroup();  // Begin group for icon and filename
+        //    
+        //   if directory goes here
+        //}
+
         if (!rightClickedItemPath.empty() && ImGui::BeginPopupContextWindow())
         {
             if (ImGui::MenuItem("Rename"))

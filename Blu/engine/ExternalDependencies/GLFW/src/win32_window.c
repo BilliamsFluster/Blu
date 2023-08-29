@@ -491,8 +491,8 @@ static void releaseMonitor(_GLFWwindow* window)
 static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
                                    WPARAM wParam, LPARAM lParam)
 {
-    static RECT border_thickness;
-
+    static RECT border_thickness = { 4, 4, 4, 4 };
+    BOOL hasThickFrame = GetWindowLongPtr(hWnd, GWL_STYLE) & WS_THICKFRAME;
     _GLFWwindow* window = GetPropW(hWnd, L"GLFW");
     if (!window)
     {
@@ -1016,13 +1016,26 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
 
         case  WM_NCCALCSIZE:
         {
-            if (_glfw.hints.window.titlebar)
+            if (_glfw.hints.window.titlebar || !hasThickFrame || !wParam)
                 break;
+
+            // For custom frames(Billy W)
+            const int resizeBorderX = GetSystemMetrics(SM_CXFRAME);
+            const int resizeBorderY = GetSystemMetrics(SM_CYFRAME);
+
+            NCCALCSIZE_PARAMS* params = (NCCALCSIZE_PARAMS*)lParam;
+            RECT* requestedClientRect = params->rgrc;
+
+            requestedClientRect->right -= resizeBorderX;
+            requestedClientRect->left += resizeBorderX;
+            requestedClientRect->bottom -= resizeBorderY;
+            requestedClientRect->top += 0;
 
             if (lParam)
                 return 0;
 
-            break;
+           // break;
+            return WVR_ALIGNTOP | WVR_ALIGNLEFT;
         }
         case WM_SIZE:
         {
@@ -1285,41 +1298,51 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
         }
         case WM_NCHITTEST:
         {
-            if (_glfw.hints.window.titlebar)
+            if (_glfw.hints.window.titlebar || !hasThickFrame)
                 break;
 
             POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
             ScreenToClient(hWnd, &pt);
-            RECT rc;
-            GetClientRect(hWnd, &rc);
-
-            int titlebarHittest = 0;
-            _glfwInputTitleBarHitTest(window, pt.x, pt.y, &titlebarHittest);
-
-            if (titlebarHittest)
+            
+            if (!window->win32.maximized)
             {
-                return HTCAPTION;
-            }
-            else
-            {
-                enum { left = 1, top = 2, right = 4, bottom = 8 };
-                int hit = 0;
-                if (pt.x < border_thickness.left)               hit |= left;
-                if (pt.x > rc.right - border_thickness.right)   hit |= right;
-                if (pt.y < border_thickness.top)                hit |= top;
-                if (pt.y > rc.bottom - border_thickness.bottom) hit |= bottom;
+                RECT rc;
+                GetClientRect(hWnd, &rc);
 
-                if (hit & top && hit & left)        return HTTOPLEFT;
-                if (hit & top && hit & right)       return HTTOPRIGHT;
-                if (hit & bottom && hit & left)     return HTBOTTOMLEFT;
-                if (hit & bottom && hit & right)    return HTBOTTOMRIGHT;
-                if (hit & left)                     return HTLEFT;
-                if (hit & top)                      return HTTOP;
-                if (hit & right)                    return HTRIGHT;
-                if (hit & bottom)                   return HTBOTTOM;
+                int titlebarHittest = 0;
+                _glfwInputTitleBarHitTest(window, pt.x, pt.y, &titlebarHittest);
 
-                return HTCLIENT;
+                if (titlebarHittest)
+                {
+                    return HTCAPTION;
+                }
+                else
+                {
+                    enum { left = 1, top = 2, right = 4, bottom = 8 };
+                    int hit = 0;
+                    if (pt.x < border_thickness.left)               hit |= left;
+                    if (pt.x > rc.right - border_thickness.right)   hit |= right;
+                    if (pt.y < border_thickness.top)                hit |= top;
+                    if (pt.y > rc.bottom - border_thickness.bottom) hit |= bottom;
+
+                    if (hit & top && hit & left)        return HTTOPLEFT;
+                    if (hit & top && hit & right)       return HTTOPRIGHT;
+                    if (hit & bottom && hit & left)     return HTBOTTOMLEFT;
+                    if (hit & bottom && hit & right)    return HTBOTTOMRIGHT;
+                    if (hit & left)                     return HTLEFT;
+                    if (hit & top)                      return HTTOP;
+                    if (hit & right)                    return HTRIGHT;
+                    if (hit & bottom)                   return HTBOTTOM;
+
+                    return HTCLIENT;
+                }
+                _glfwInputTitleBarHitTest(window, pt.x, pt.y, &titlebarHittest);
+                if (titlebarHittest)
+                    return HTCAPTION; // what windows calls the title bar, we are in the title bar
+
+                return HTCLIENT; // in the client area
             }
+           
         }
     }
 

@@ -130,6 +130,7 @@ namespace Blu
 
 		ScriptComponent() = default;
 		ScriptComponent(const ScriptComponent&) = default;
+		
 	};
 	struct NativeScriptComponent 
 	{
