@@ -204,6 +204,7 @@ namespace Blu
 	}
 	void ScriptJoiner::RegisterComponents()
 	{
+		s_EntityHasComponentFuncs.clear();
 		RegisterComponent(AllComponents{});
 		
 	}

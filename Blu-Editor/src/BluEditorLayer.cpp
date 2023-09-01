@@ -561,6 +561,19 @@ namespace Blu
 				ImGui::EndMenu();
 
 			}
+
+			if (ImGui::BeginMenu("Script"))
+			{
+				if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
+				{
+					SceneSerializer serializer(m_ActiveScene);
+					ScriptEngine::ReloadAssembly();
+					ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
+					m_ActiveScene->OnScriptSystemStart();
+					serializer.DeserializeEntityScriptInstances(m_ActiveScene->GetSceneFilePath().string());
+				}
+				ImGui::EndMenu();
+			}
 			ImGui::EndMainMenuBar();
 		}
 

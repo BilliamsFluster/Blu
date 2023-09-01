@@ -76,6 +76,7 @@ namespace Blu
 	public:
 		static void Init();
 		static void Shutdown();
+		static void ReloadAssembly();
 		static void OnRuntimeStart(Scene* scene);
 		static void OnRuntimeStop();
 		static void OnCreateEntity(Entity* entity);
@@ -83,6 +84,7 @@ namespace Blu
 		static Scene* GetSceneContext();
 		static bool EntityClassExists(const std::string& fullName);
 		static bool RemoveEntityInstance(Entity* entity);
+
 
 		static std::unordered_map<std::string, Shared<ScriptClass>> GetEntities();
 		static MonoImage* GetCoreAssemblyImage();
