@@ -76,6 +76,7 @@ namespace Blu
 	public:
 		static void Init();
 		static void Shutdown();
+		static void ReloadAssembly();
 		static void OnRuntimeStart(Scene* scene);
 		static void OnRuntimeStop();
 		static void OnCreateEntity(Entity* entity);
@@ -84,10 +85,10 @@ namespace Blu
 		static bool EntityClassExists(const std::string& fullName);
 		static bool RemoveEntityInstance(Entity* entity);
 
+
 		static std::unordered_map<std::string, Shared<ScriptClass>> GetEntities();
 		static MonoImage* GetCoreAssemblyImage();
 		static Shared<ScriptClass> GetEntityScriptClass(const std::string& className);
-
 
 		static void LoadAssembly(const std::filesystem::path& filepath);
 		static void LoadAppAssembly(const std::filesystem::path& filepath);
@@ -133,6 +134,8 @@ namespace Blu
 			SetFieldValueInternal(name, &value);
 			
 		}
+
+		MonoObject* GetInstance() { return m_Instance; }
 
 	private:
 		bool GetFieldValueInternal(const std::string& name, void* buffer);

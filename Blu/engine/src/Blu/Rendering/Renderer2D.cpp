@@ -20,10 +20,6 @@ namespace Blu
 		float TilingFactor;
 		float Thickness = 1.0f;
 		int EntityID;
-
-		
-		
-
 	};
 
 	struct CircleVertex
@@ -33,6 +29,14 @@ namespace Blu
 		glm::vec3 LocalPosition;
 		float Fade;
 		float Thicknes;
+		int EntityID;
+	};
+
+	struct LineVertex
+	{
+		glm::vec4 Color;
+		glm::vec3 Position;
+		float Thickness = 1.0f;
 		int EntityID;
 	};
 
@@ -49,6 +53,9 @@ namespace Blu
 
 		s_RendererData->CircleVertexArray = Blu::VertexArray::Create();
 		s_RendererData->CircleVertexBuffer = Blu::VertexBuffer::Create(s_RendererData->MaxVertices * sizeof(CircleVertex));
+
+		s_RendererData->LineVertexArray = Blu::VertexArray::Create();
+		s_RendererData->LineVertexBuffer = Blu::VertexBuffer::Create(s_RendererData->MaxVertices * sizeof(LineVertex));
 
 
 
@@ -73,13 +80,23 @@ namespace Blu
 			{Blu::ShaderDataType::Int, "a_EntityID"}
 		};
 
-		// Set the layouts for the quad and circle vertex buffers
+		// Circle layout
+		Blu::BufferLayout lineLayout = {
+			{Blu::ShaderDataType::Float4, "a_Color"},
+			{Blu::ShaderDataType::Float3, "a_Position"},
+			{Blu::ShaderDataType::Float, "a_Thickness"},
+			{Blu::ShaderDataType::Int, "a_EntityID"}
+		};
+
+		// Set the layouts for the quad and circle vertex buffers and line buffers
 		s_RendererData->QuadVertexBuffer->SetLayout(quadLayout);
 		s_RendererData->CircleVertexBuffer->SetLayout(circleLayout);
+		s_RendererData->LineVertexBuffer->SetLayout(lineLayout);
 
-		// Initialize the base vertex buffer for quad and circle objects
+		// Initialize the base vertex buffer for quad and circle objects plus line objects
 		s_RendererData->QuadVertexBufferBase = new QuadVertex[s_RendererData->MaxVertices];
 		s_RendererData->CircleVertexBufferBase = new CircleVertex[s_RendererData->MaxVertices];
+		s_RendererData->LineVertexBufferBase = new LineVertex[s_RendererData->MaxVertices];
 
 		// Initialize quad indices and set up the offsets
 
@@ -98,9 +115,10 @@ namespace Blu
 		}
 
 		
-		// Add vertex buffers to the quad and circle vertex arrays
+		// Add vertex buffers to the quad circle, and line vertex arrays
 		s_RendererData->QuadVertexArray->AddVertexBuffer(s_RendererData->QuadVertexBuffer);
 		s_RendererData->CircleVertexArray->AddVertexBuffer(s_RendererData->CircleVertexBuffer);
+		s_RendererData->LineVertexArray->AddVertexBuffer(s_RendererData->LineVertexBuffer);
 
 		// Create quad index buffer and add it to the quad and circle vertex arrays
 		Shared<IndexBuffer> quadIB = (Blu::IndexBuffer::Create(quadIndices, s_RendererData->MaxIndices ));
@@ -120,10 +138,12 @@ namespace Blu
 		// Load the shaders and bind the quad shader
 		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Quad.glsl");
 		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Circle.glsl");
+		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Line.glsl");
 		s_RendererData->QuadShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
+		s_RendererData->LineShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Line");
 		s_RendererData->CircleShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
+		
 		s_RendererData->QuadShader->Bind();
-
 		// Set the texture slots for the quad shader
 		s_RendererData->QuadShader->SetUniformIntArray("u_Textures", samplers.data(), s_RendererData->MaxTextureSlots);
 		
@@ -138,6 +158,8 @@ namespace Blu
 		s_RendererData->QuadVertexPositions[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
 		s_RendererData->QuadVertexPositions[2] = {  0.5f, 0.5f, 0.0f, 1.0f };
 		s_RendererData->QuadVertexPositions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };
+
+		s_RendererData->QuadShader->UnBind();
 		
 
 	}
@@ -164,6 +186,13 @@ namespace Blu
 		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
 		s_RendererData->CircleShader->UnBind();
 
+		// Bind the line shader, set the view projection matrix and initialize other data for line rendering
+		s_RendererData->LineShader->Bind();
+		s_RendererData->LineShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->LineVertexBufferPtr = s_RendererData->LineVertexBufferBase;
+		s_RendererData->LineVertexCount = 0;
+		s_RendererData->LineShader->UnBind();
+
 
 	}
 
@@ -185,6 +214,13 @@ namespace Blu
 		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
 		s_RendererData->CircleShader->UnBind();
 
+		// Bind the line shader, set the view projection matrix and initialize other data for line rendering
+		s_RendererData->LineShader->Bind();
+		s_RendererData->LineShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->LineVertexBufferPtr = s_RendererData->LineVertexBufferBase;
+		s_RendererData->LineVertexCount = 0;
+		s_RendererData->LineShader->UnBind();
+
 	}
 	static glm::mat4 viewProj;
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
@@ -205,6 +241,14 @@ namespace Blu
 		s_RendererData->CircleIndexCount = 0;
 		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
 		s_RendererData->CircleShader->UnBind();
+
+		// Bind the line shader, set the view projection matrix and initialize other data for line rendering
+		s_RendererData->LineShader->Bind();
+		s_RendererData->LineShader->SetUniformMat4("u_ViewProjectionMatrix", viewProj);
+		s_RendererData->LineVertexBufferPtr = s_RendererData->LineVertexBufferBase;
+		s_RendererData->LineVertexCount = 0;
+
+		s_RendererData->LineShader->UnBind();
 		
 		
 
@@ -232,6 +276,17 @@ namespace Blu
 		s_RendererData->Stats.DrawCalls++;
 	}
 
+	void Renderer2D::FlushLines()
+	{
+
+		s_RendererData->LineShader->Bind();
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_RendererData->LineVertexBufferPtr - (uint8_t*)s_RendererData->LineVertexBufferBase);
+		s_RendererData->LineVertexBuffer->SetData(s_RendererData->LineVertexBufferBase, dataSize);
+
+		RenderCommand::DrawLines(s_RendererData->LineVertexArray, s_RendererData->LineVertexCount);
+		s_RendererData->Stats.DrawCalls++;
+	}
+
 	void Renderer2D::FlushAndResetQuad()
 	{
 		EndScene();
@@ -246,6 +301,12 @@ namespace Blu
 		s_RendererData->CircleIndexCount = 0;
 		s_RendererData->CircleVertexBufferPtr = s_RendererData->CircleVertexBufferBase;
 	}
+	void Renderer2D::FlushAndResetLines()
+	{
+		EndScene();
+		s_RendererData->LineVertexCount = 0;
+		s_RendererData->LineVertexBufferPtr = s_RendererData->LineVertexBufferBase;
+	}
 
 	void Renderer2D::EndScene()
 	{
@@ -254,6 +315,7 @@ namespace Blu
 		s_RendererData->QuadVertexBuffer->SetData(s_RendererData->QuadVertexBufferBase, dataSize);
 		FlushQuad();
 		FlushCircle();
+		FlushLines();
 
 	}
 	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color, const float rotation)
@@ -356,12 +418,46 @@ namespace Blu
 		s_RendererData->Stats.QuadCount++;
 	}
 
+	void Renderer2D::DrawLine(const glm::vec3& p0, glm::vec3& p1, const glm::vec4& color, float thickness)
+	{
+		s_RendererData->LineVertexBufferPtr->Position = p0;
+		s_RendererData->LineVertexBufferPtr->Color = color;
+		s_RendererData->LineVertexBufferPtr->Thickness = thickness;
+		s_RendererData->LineVertexBufferPtr++;
+
+		s_RendererData->LineVertexBufferPtr->Position = p1;
+		s_RendererData->LineVertexBufferPtr->Color = color;
+		s_RendererData->LineVertexBufferPtr->Thickness = thickness;
+		s_RendererData->LineVertexBufferPtr++;
+
+		s_RendererData->LineVertexCount += 2;
+	}
+
+	void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness)
+	{
+		if (s_RendererData->LineVertexCount >= Renderer2DStorage::MaxVertices)
+		{
+			FlushAndResetLines();
+		}
+		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p1 = glm::vec3(position.x + size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p2 = glm::vec3(position.x + size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		glm::vec3 p3 = glm::vec3(position.x - size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+
+		DrawLine(p0, p1, color, thickness);
+		DrawLine(p1, p2, color, thickness);
+		DrawLine(p2, p3, color, thickness);
+		DrawLine(p3, p0, color, thickness);
+	}
+
 	void Renderer2D::DrawRect(const glm::mat4& transform, const glm::vec4& color, float thickness)
 	{
 		if (s_RendererData->QuadIndexCount >= Renderer2DStorage::MaxIndices)
 		{
 			FlushAndResetQuad();
 		}
+		
+
 		float textureIndex = 0.0f;
 		float tilingFactor = 1.0f;
 

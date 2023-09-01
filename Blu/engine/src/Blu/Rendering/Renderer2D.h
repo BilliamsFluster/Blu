@@ -19,6 +19,8 @@ namespace Blu
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
 		static void FlushQuad();
 		static void FlushCircle();
+		static void FlushLines();
+
 		static void EndScene();
 
 
@@ -26,7 +28,8 @@ namespace Blu
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int entityID = -1);
 		static void DrawQuad(const glm::mat4& transform, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor = 1.0f);
 		static void DrawRect(const glm::mat4& transform, const glm::vec4& color, float thickness);
-
+		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness);
+		static void DrawLine(const glm::vec3& p0, glm::vec3& p1, const glm::vec4& color, float thickness);
 
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor = 1.0f);
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor = 1.0f);
@@ -71,6 +74,7 @@ namespace Blu
 	private:
 		static void FlushAndResetQuad();
 		static void FlushAndResetCircle();
+		static void FlushAndResetLines();
 
 	private:
 		static Unique<Renderer2DStorage> s_RendererData;
@@ -92,6 +96,10 @@ namespace Blu
 		Shared<class VertexBuffer> CircleVertexBuffer;
 		Shared<class Shader> CircleShader;
 
+		Shared<class VertexArray> LineVertexArray;
+		Shared<class VertexBuffer> LineVertexBuffer;
+		Shared<class Shader> LineShader;
+
 		Shared<class Texture2D> WhiteTexture;
 		uint32_t QuadIndexCount = 0;
 		struct QuadVertex* QuadVertexBufferBase = nullptr;
@@ -101,6 +109,10 @@ namespace Blu
 		uint32_t CircleIndexCount = 0;
 		struct CircleVertex* CircleVertexBufferBase = nullptr;
 		CircleVertex* CircleVertexBufferPtr = nullptr;
+
+		uint32_t LineVertexCount = 0;
+		struct LineVertex* LineVertexBufferBase = nullptr;
+		LineVertex* LineVertexBufferPtr = nullptr;
 
 		std::array<Shared<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = WhiteTexture

@@ -48,7 +48,14 @@ namespace Blu
 		}
 		 
 	}
-
+	static MonoObject* GetScriptInstance(UUID entityID)
+	{
+		Shared<ScriptInstance> instance = ScriptEngine::GetEntityScriptInstance(entityID);
+		if (instance)
+			return instance->GetInstance();
+		return nullptr;
+		
+	}
 	static bool Entity_HasComponent(UUID entityID, MonoReflectionType* componentType)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
@@ -60,6 +67,17 @@ namespace Blu
 		MonoType* managedType = mono_reflection_type_get_type(componentType);
 		BLU_CORE_ASSERT("{0}", s_EntityHasComponentFuncs.find(managedType) != s_EntityHasComponentFuncs.end());
 		return s_EntityHasComponentFuncs.at(managedType)(entity);
+	}
+	static uint64_t Entity_FindEntityByName(MonoString* name)
+	{
+		char* cStr = mono_string_to_utf8(name);
+		Scene* scene = ScriptEngine::GetSceneContext();
+		BLU_CORE_ASSERT("{0}", scene);
+		Entity entity = scene->FindEntityByName(cStr);
+		mono_free(cStr);
+		if(entity)
+			return entity.GetUUID();
+		return 0;
 	}
 
 	static void TransformComponent_SetTranslation(UUID entityID, glm::vec3* translation)
@@ -139,7 +157,7 @@ namespace Blu
 	{
 		return Input::IsKeyPressed(keycode);
 	}
-
+	 
 	void ScriptJoiner::RegisterFunctions()
 	{
 		BLU_ADD_INTERNAL_CALL(Log);
@@ -147,6 +165,9 @@ namespace Blu
 		BLU_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
 		BLU_ADD_INTERNAL_CALL(Input_IsKeyDown);
 		BLU_ADD_INTERNAL_CALL(Entity_HasComponent);
+		BLU_ADD_INTERNAL_CALL(Entity_FindEntityByName);
+		BLU_ADD_INTERNAL_CALL(GetScriptInstance);
+		
 
 		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_ApplyLinearImpulse);
 		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_ApplyLinearImpulseToCenter);
@@ -183,6 +204,7 @@ namespace Blu
 	}
 	void ScriptJoiner::RegisterComponents()
 	{
+		s_EntityHasComponentFuncs.clear();
 		RegisterComponent(AllComponents{});
 		
 	}

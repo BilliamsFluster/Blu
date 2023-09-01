@@ -20,7 +20,8 @@
     <OutputPath>..\Scripts\Binaries\</OutputPath>
     <BaseIntermediateOutputPath>..\Scripts\Intermediates\Debug\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -31,7 +32,8 @@
     <OutputPath>..\Scripts\Binaries\</OutputPath>
     <BaseIntermediateOutputPath>..\Scripts\Intermediates\Release\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -42,7 +44,8 @@
     <OutputPath>..\Scripts\Binaries\</OutputPath>
     <BaseIntermediateOutputPath>..\Scripts\Intermediates\Dist\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -52,6 +55,8 @@
     <Compile Include="..\Scripts\Source\BoxPawn.cs">
       <Link>Scripts\Source\BoxPawn.cs</Link>
     </Compile>
+    <Compile Include="Scripts\Source\BoxPawn2.cs" />
+    <Compile Include="Scripts\Source\Camera.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Blu-ScriptCore\Blu-ScriptCore.csproj">

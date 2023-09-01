@@ -1,23 +1,5 @@
 Scene: Name
 Entities:
-  - Entity: 2819489235980105166
-    TagComponent:
-      Tag: Sprite
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 9888593648937096514
-    TagComponent:
-      Tag: Sprite
-    TransformComponent:
-      Translation: [0, 2, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
   - Entity: 5334141281449826391
     TagComponent:
       Tag: Camera
@@ -33,6 +15,24 @@ Entities:
       Primary: true
       FixedAspectRatio: false
     TransformComponent:
+      Translation: [0, 0, 5.34565401]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 9888593648937096514
+    TagComponent:
+      Tag: Sprite
+    TransformComponent:
+      Translation: [0, 2, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+  - Entity: 2819489235980105166
+    TagComponent:
+      Tag: Sprite
+    TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]

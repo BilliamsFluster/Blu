@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Blu;
 namespace Azure
 {
-    public class BoxPawn : Pawn
+    public class BoxPawn2 : Pawn
     {
         private TransformComponent m_Transform;
         private Rigidbody2DComponent m_Rigidbody;
@@ -20,57 +20,43 @@ namespace Azure
         {
             m_Transform = GetComponent<TransformComponent>();
             m_Rigidbody = GetComponent<Rigidbody2DComponent>();
-            
+
 
 
         }
 
         void OnUpdate(float deltaTime)
         {
-            
 
-            //cameraEntity = FindEntityByName("Camera");
-            //if (cameraEntity != null)
-            //{
-            //    camera = cameraEntity.As<Camera>();
 
-            //}
-            
+            cameraEntity = FindEntityByName("Camera");
+            if (cameraEntity != null)
+            {
+                camera = cameraEntity.As<Camera>();
+
+            }
+
             Vector3 velocity = Vector3.Zero;
 
-            if (Input.IsKeyDown(KeyCodes.W))
+            if (Input.IsKeyDown(KeyCodes.Up))
             {
                 velocity.Y = 0.1f;
-                Console.WriteLine("W pressed");
             }
-            else if (Input.IsKeyDown(KeyCodes.S))
+            else if (Input.IsKeyDown(KeyCodes.Down))
             {
                 velocity.Y = -0.1f;
-                Console.WriteLine("S pressed");
 
             }
-            if (Input.IsKeyDown(KeyCodes.A))
+            if (Input.IsKeyDown(KeyCodes.Left))
             {
                 velocity.X = -0.1f;
-                 
-                Console.WriteLine("A pressed");
-
             }
-            else if (Input.IsKeyDown(KeyCodes.D))
+            else if (Input.IsKeyDown(KeyCodes.Right))
             {
                 velocity.X = 0.1f;
-                Console.WriteLine("D pressed");
 
             }
-            //if (Input.IsKeyDown(KeyCodes.Q))
-            //{
-            //    camera.DistanceFromPlayer += Speed * deltaTime;
-            //}
-            //else if (Input.IsKeyDown(KeyCodes.E))
-            //{
-            //    camera.DistanceFromPlayer -= Speed * deltaTime;
-
-            //}
+            
             velocity *= Speed;
             m_Rigidbody.ApplyLinearImpulse(velocity.XY, Vector2.Zero, true);
 

@@ -101,6 +101,9 @@ namespace Blu
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
 
+		std::filesystem::path CoreAssemblyFilepath;
+		std::filesystem::path AppAssemblyFilepath;
+
 		MonoAssembly* AppAssembly = nullptr;
 		MonoImage* AppAssemblyImage = nullptr;
 
@@ -264,6 +267,21 @@ namespace Blu
 		delete s_Data;
 
 	}
+	
+	void ScriptEngine::ReloadAssembly()
+	{
+		mono_domain_set(mono_get_root_domain(), false);
+		mono_domain_unload(s_Data->AppDomain);
+
+		LoadAssembly(s_Data->CoreAssemblyFilepath);
+		LoadAppAssembly(s_Data->AppAssemblyFilepath);
+
+		LoadAssemblyClasses();
+
+		ScriptJoiner::RegisterComponents();
+		s_Data->EntityClass = std::make_shared<ScriptClass>("Blu", "Entity", true);
+
+	}
 	void ScriptEngine::OnRuntimeStart(Scene* scene)
 	{
 		s_Data->SceneContext = scene;
@@ -287,7 +305,8 @@ namespace Blu
 	{
 		UUID entityUUID = entity->GetUUID();
 		Shared<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
-		instance->InvokeOnUpdate(deltaTime);
+		if(instance)
+			instance->InvokeOnUpdate(deltaTime);
 		
 	}
 	Scene* ScriptEngine::GetSceneContext()
@@ -327,6 +346,7 @@ namespace Blu
 		mono_domain_set(s_Data->AppDomain, true);
 
 
+		s_Data->CoreAssemblyFilepath = filepath;
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
 		//PrintAssemblyTypes(s_Data->CoreAssembly); -- for debug
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
@@ -335,6 +355,7 @@ namespace Blu
 
 	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
 	{
+		s_Data->AppAssemblyFilepath = filepath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
 		//PrintAssemblyTypes(s_Data->CoreAssembly); -- for debug
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
@@ -354,16 +375,16 @@ namespace Blu
 
 		
 		
+		ScriptJoiner::RegisterFunctions();
 		LoadAssembly("Resources/Scripts/Blu-ScriptCore.dll");
 		LoadAppAssembly("AzureProject/Assets/Scripts/Binaries/Azure-Project.dll");
-		ScriptJoiner::RegisterFunctions();
 		auto& classes = s_Data->Entities;
 		
+		ScriptJoiner::RegisterComponents();
 		s_Data->EntityClass =  std::make_shared<ScriptClass>("Blu", "Entity", true);
 		MonoObject* instance = s_Data->EntityClass->Instantiate();
 		
 		LoadAssemblyClasses();
-
 		
 		
 	}
@@ -378,10 +399,11 @@ namespace Blu
 	
 	void ScriptEngine::ShutdownMono()
 	{
-		//mono_domain_unload(s_Data->AppDomain);
+		mono_domain_set(mono_get_root_domain(), false);
+		mono_domain_unload(s_Data->AppDomain);
 		s_Data->AppDomain = nullptr;
 
-		//mono_jit_cleanup(s_Data->RootDomain);
+		mono_jit_cleanup(s_Data->RootDomain);
 		s_Data->RootDomain = nullptr;
 	}
 	Shared<ScriptClass> ScriptEngine::GetEntityScriptClass(const std::string& className)
@@ -396,6 +418,8 @@ namespace Blu
 		return nullptr;
 	
 	}
+
+	
 
 
 	Shared<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)

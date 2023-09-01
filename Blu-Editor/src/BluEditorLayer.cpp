@@ -256,7 +256,9 @@ namespace Blu
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
 					* glm::rotate(glm::mat4(1.0f), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
 					* glm::scale(glm::mat4(1.0f), scale);
-				Renderer2D::DrawRect(transform, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.2f);
+
+				glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+				Renderer2D::DrawRect(translation, scale, color, 2);
 			}
 		}
 		{
@@ -454,6 +456,7 @@ namespace Blu
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
 			m_SceneMissing = false;
+			
 
 		}
 		else
@@ -559,6 +562,19 @@ namespace Blu
 				if (ImGui::MenuItem("Exit")) Application::Get().Close();
 				ImGui::EndMenu();
 
+			}
+
+			if (ImGui::BeginMenu("Script"))
+			{
+				if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
+				{
+					SceneSerializer serializer(m_ActiveScene);
+					ScriptEngine::ReloadAssembly();
+					ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
+					m_ActiveScene->OnScriptSystemStart();
+					serializer.DeserializeEntityScriptInstances(m_ActiveScene->GetSceneFilePath().string());
+				}
+				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
 		}
@@ -860,6 +876,7 @@ namespace Blu
 
 		bool control = Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL) || Input::IsKeyPressed(BLU_KEY_RIGHT_CONTROL);
 		bool shift = Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT) || Input::IsKeyPressed(BLU_KEY_RIGHT_SHIFT);
+		bool escape = Input::IsKeyPressed(BLU_KEY_ESCAPE);
 		switch (event.GetKeyCode())
 		{
 		case BLU_KEY_O:
@@ -869,6 +886,16 @@ namespace Blu
 				OpenScene();
 			}
 			break;
+		}
+		case BLU_KEY_ESCAPE:
+		{
+			if (shift)
+			{
+				if (m_SceneState == SceneState::Play)
+				{
+					OnSceneStop();
+				}
+			}
 		}
 		case BLU_KEY_D:
 		{
