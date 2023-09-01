@@ -287,7 +287,8 @@ namespace Blu
 	{
 		UUID entityUUID = entity->GetUUID();
 		Shared<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
-		instance->InvokeOnUpdate(deltaTime);
+		if(instance)
+			instance->InvokeOnUpdate(deltaTime);
 		
 	}
 	Scene* ScriptEngine::GetSceneContext()
@@ -396,6 +397,8 @@ namespace Blu
 		return nullptr;
 	
 	}
+
+	
 
 
 	Shared<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)

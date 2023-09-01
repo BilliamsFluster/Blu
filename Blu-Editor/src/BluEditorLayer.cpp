@@ -454,6 +454,7 @@ namespace Blu
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
 			m_SceneMissing = false;
+			
 
 		}
 		else
@@ -860,6 +861,7 @@ namespace Blu
 
 		bool control = Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL) || Input::IsKeyPressed(BLU_KEY_RIGHT_CONTROL);
 		bool shift = Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT) || Input::IsKeyPressed(BLU_KEY_RIGHT_SHIFT);
+		bool escape = Input::IsKeyPressed(BLU_KEY_ESCAPE);
 		switch (event.GetKeyCode())
 		{
 		case BLU_KEY_O:
@@ -869,6 +871,16 @@ namespace Blu
 				OpenScene();
 			}
 			break;
+		}
+		case BLU_KEY_ESCAPE:
+		{
+			if (shift)
+			{
+				if (m_SceneState == SceneState::Play)
+				{
+					OnSceneStop();
+				}
+			}
 		}
 		case BLU_KEY_D:
 		{

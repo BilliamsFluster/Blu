@@ -9,6 +9,10 @@ namespace Azure
 {
     public class Actor : Entity
     {
+        protected Actor() {  }
+        public Actor(ulong id) : base(id)
+        {
+        }
         void OnCreate()
         {
             Console.WriteLine("Actor Create");
@@ -18,5 +22,7 @@ namespace Azure
         void OnUpdate(float deltaTime)
         {
         }
+
+        
     }
 }

@@ -13,7 +13,7 @@ Entities:
     TagComponent:
       Tag: Circle
     TransformComponent:
-      Translation: [-13.8174047, -50.1961708, 0]
+      Translation: [-13.8174047, -1220.65942, 0]
       Rotation: [0, 0, 25.8839455]
       Scale: [1, 1, 1]
     CircleRendererComponent:
@@ -53,6 +53,10 @@ Entities:
   - Entity: 693401015653648987
     TagComponent:
       Tag: Camera
+    ScriptComponent:
+      Name: Azure.Camera
+      ScriptFields:
+        DistanceFromPlayer: 26
     CameraComponent:
       Camera:
         ProjectionType: 0
@@ -65,15 +69,15 @@ Entities:
       Primary: true
       FixedAspectRatio: false
     TransformComponent:
-      Translation: [0, -11.0939999, 11.1995163]
+      Translation: [-1.25724113, -10.9122629, 5]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
   - Entity: 897275639439066834
     TagComponent:
       Tag: Cube 2
     TransformComponent:
-      Translation: [0.111311033, -10.9145689, 0]
-      Rotation: [0, 0, -0.000445010781]
+      Translation: [0.111310974, -10.9141207, 0]
+      Rotation: [0, 0, -0.000237264467]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
       Color: [1, 0, 0, 1]
@@ -89,14 +93,11 @@ Entities:
       RestitutionThreshold: 0.5
   - Entity: 4777953925013219778
     TagComponent:
-      Tag: Cube 1
+      Tag: BoxPawn
     ScriptComponent:
       Name: Azure.BoxPawn
       ScriptFields:
-        Speed: 1
-        Billy: 3
-        Boom: 6
-        Bye: 4
+        Speed: 0.200000003
     TransformComponent:
       Translation: [-1.25724113, -10.9122629, 0.177086934]
       Rotation: [0, 0, -1.57241595]

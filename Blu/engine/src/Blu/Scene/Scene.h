@@ -18,6 +18,7 @@ namespace Blu
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		Entity GetPrimaryCameraEntity();
+		Entity FindEntityByName(std::string_view name);
 		Entity GetEntityByUUID(UUID id);
 		template<typename... Components>
 		auto GetAllEntitiesWith()

@@ -68,7 +68,7 @@ namespace Blu
 
 		newScene->m_ViewportHeight = scene->m_ViewportHeight;
 		newScene->m_ViewportWidth = scene->m_ViewportWidth;
-
+		newScene->m_SceneFilePath = scene->m_SceneFilePath;
 		std::unordered_map<UUID, entt::entity> enttMap;
 
 		auto& srcSceneRegistry = scene->m_Registry;
@@ -133,6 +133,17 @@ namespace Blu
 		}
 		return {};
 	}
+	Entity Scene::FindEntityByName(std::string_view name)
+	{
+		auto view = m_Registry.view<TagComponent>();
+		for (auto entity : view)
+		{
+			const TagComponent& tc = view.get<TagComponent>(entity);
+			if (tc.Tag == name)
+				return Entity{ entity, this };
+		}
+		return {};
+	}
 	Entity Scene::GetEntityByUUID(UUID id)
 	{
 		if (m_EntityMap.find(id) != m_EntityMap.end())
@@ -183,8 +194,7 @@ namespace Blu
 	void Scene::OnRuntimeStart()
 	{
 		OnPhysics2DStart();
-		//ScriptEngine::OnRuntimeStart(this);
-		//OnScriptSystemStart();
+		
 	}
 	void Scene::OnPhysics2DStart()
 	{
@@ -274,8 +284,7 @@ namespace Blu
 		for (auto e : view)
 		{
 			Entity entity = { e, this };
-			auto n = entity.GetComponent<IDComponent>().ID;
-			auto en = entity.GetUUID();
+			
 			ScriptEngine::OnUpdateEntity(&entity, deltaTime);
 
 		}

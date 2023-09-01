@@ -13,21 +13,28 @@ namespace Azure
         private TransformComponent m_Transform;
         private Rigidbody2DComponent m_Rigidbody;
         public float Speed = 0;
-        public float Billy = 3;
-        public float Boom = 6;
-        public float Bye = 4;
+
+        private Entity cameraEntity;
+        private Camera camera;
         void OnCreate()
         {
             m_Transform = GetComponent<TransformComponent>();
             m_Rigidbody = GetComponent<Rigidbody2DComponent>();
-
+            
 
 
         }
 
         void OnUpdate(float deltaTime)
         {
+            
 
+            cameraEntity = FindEntityByName("Camera");
+            if (cameraEntity != null)
+            {
+                camera = cameraEntity.As<Camera>();
+
+            }
             
             Vector3 velocity = Vector3.Zero;
 
@@ -45,6 +52,7 @@ namespace Azure
             if (Input.IsKeyDown(KeyCodes.A))
             {
                 velocity.X = -0.1f;
+                 
                 Console.WriteLine("A pressed");
 
             }
@@ -52,6 +60,15 @@ namespace Azure
             {
                 velocity.X = 0.1f;
                 Console.WriteLine("D pressed");
+
+            }
+            if (Input.IsKeyDown(KeyCodes.Q))
+            {
+                camera.DistanceFromPlayer += Speed * deltaTime;
+            }
+            else if (Input.IsKeyDown(KeyCodes.E))
+            {
+                camera.DistanceFromPlayer -= Speed * deltaTime;
 
             }
             velocity *= Speed;
