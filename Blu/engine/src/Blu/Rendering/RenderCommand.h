@@ -19,6 +19,10 @@ namespace Blu
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
 		}
+		inline static void DrawLines(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertexCount)
+		{
+			s_RendererAPI->DrawLines(vertexArray, vertexCount);
+		}
 		inline static void SetClearColor(const glm::vec4& color)
 		{
 			s_RendererAPI->SetClearColor(color);

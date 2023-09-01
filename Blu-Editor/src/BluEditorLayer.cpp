@@ -256,7 +256,9 @@ namespace Blu
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
 					* glm::rotate(glm::mat4(1.0f), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
 					* glm::scale(glm::mat4(1.0f), scale);
-				Renderer2D::DrawRect(transform, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.2f);
+
+				glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+				Renderer2D::DrawRect(translation, scale, color, 2);
 			}
 		}
 		{
