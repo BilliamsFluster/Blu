@@ -382,6 +382,16 @@ namespace Blu
 				OnSceneResume();
 			
 		}
+		if (m_SceneState == SceneState::Pause)
+		{
+			ImGui::SameLine();
+			if (ImGui::ImageButton((ImTextureID)m_StepIcon->GetRendererID(), ImVec2(size, size)))
+			{
+				m_ActiveScene->OnSceneStep(1);
+			}
+
+
+		}
 
 		ImGui::SameLine();
 		ImTextureID stopButton = m_SceneState == SceneState::Edit ? nullptr : (ImTextureID)m_StopIcon->GetRendererID();

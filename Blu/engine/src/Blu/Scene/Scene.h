@@ -49,6 +49,8 @@ namespace Blu
 		void OnUpdateEditor(Timestep deltaTime, class EditorCamera& camera);
 		void OnUpdateRuntime(Timestep deltaTime);
 		void OnUpdatePaused(Timestep deltaTime);
+		void OnSceneStep(int frames = 1);
+		void OnUpdateStep();
 		void OnViewportResize(float width, float height);
 		bool IsScenePaused() { return m_ScenePaused; }
 		void SetScenePaused(bool paused) {m_ScenePaused = paused; }
@@ -63,5 +65,6 @@ namespace Blu
 		friend class SceneHierarchyPanel;
 	private:
 		bool m_ScenePaused = false;
+		int m_StepFrames = 0;
 	};
 }

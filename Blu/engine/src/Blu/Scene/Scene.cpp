@@ -533,6 +533,29 @@ namespace Blu
 			Renderer2D::EndScene();
 		}
 	}
+	void Scene::OnSceneStep(int frames)
+	{
+		m_StepFrames = frames;
+		OnUpdateStep();
+	}
+
+	void Scene::OnUpdateStep()
+	{
+		// This function should be called when you want to advance the game by one step/frame.
+
+		// You can implement logic to pause the game if you've reached the desired step.
+		if (m_StepFrames <= 0) {
+			// Pause the game or take any other action.
+			return;
+		}
+		while (m_StepFrames > 0)
+		{
+			OnUpdateRuntime(1);
+			m_StepFrames--;
+
+		}
+	}
+
 	void Scene::OnViewportResize(float width, float height)
 	{
 		m_ViewportWidth = width;

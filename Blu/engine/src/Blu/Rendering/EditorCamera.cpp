@@ -31,14 +31,11 @@ namespace Blu
 		}
 		
 		
-		else if (Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_RIGHT))
+		if (Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_RIGHT))
 		{
 			MouseRotate(delta);
 		}
-		/*else if (Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_MIDDLE))
-		{
-			MouseZoom(delta.y);
-		}*/
+		
 		if (Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_RIGHT))
 		{
 			if (Blu::Input::IsKeyPressed(BLU_KEY_W))
@@ -46,25 +43,25 @@ namespace Blu
 				m_FocalPoint += GetForwardDirection() * m_CameraSpeed * deltaTime.GetSeconds();
 			}
 
-			else if (Blu::Input::IsKeyPressed(BLU_KEY_S))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_S))
 			{
 				m_FocalPoint -= GetForwardDirection() * m_CameraSpeed * deltaTime.GetSeconds();
 			}
 
-			else if (Blu::Input::IsKeyPressed(BLU_KEY_A))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_A))
 			{
 				m_FocalPoint -= GetRightDirection() * m_CameraSpeed * deltaTime.GetSeconds();
 			}
 
-			else if (Blu::Input::IsKeyPressed(BLU_KEY_D))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_D))
 			{
 				m_FocalPoint += GetRightDirection() * m_CameraSpeed * deltaTime.GetSeconds();
 			}
-			else if (Blu::Input::IsKeyPressed(BLU_KEY_E))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_E))
 			{
 				m_FocalPoint += GetUpDirection() * m_CameraSpeed * deltaTime.GetSeconds();
 			}
-			else if (Blu::Input::IsKeyPressed(BLU_KEY_Q))
+			if (Blu::Input::IsKeyPressed(BLU_KEY_Q))
 			{
 				m_FocalPoint -= GetUpDirection() * m_CameraSpeed * deltaTime.GetSeconds();
 			}
