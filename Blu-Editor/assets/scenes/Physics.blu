@@ -1,55 +1,51 @@
 Scene: Name
 Entities:
-  - Entity: 15331168643400094970
+  - Entity: 4777953925013219778
     TagComponent:
-      Tag: Empty
+      Tag: BoxPawn
+    ScriptComponent:
+      Name: Azure.BoxPawn
+      ScriptFields:
+        Speed: 0.300000012
     TransformComponent:
-      Translation: [3, 0, 0]
+      Translation: [0, -2.20000005, 0]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Scale: [0.999995053, 0.999995053, 1]
     SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 9126341988753611511
-    TagComponent:
-      Tag: Circle
-    TransformComponent:
-      Translation: [-13.8174047, -1220.65942, 0]
-      Rotation: [0, 0, 25.8839455]
-      Scale: [1, 1, 1]
-    CircleRendererComponent:
-      Color: [1, 1, 1, 1]
-      Radius: 0.5
-      Thickness: 1
-      Fade: 0.00499999989
+      Color: [0.100386143, 1, 0, 1]
     Rigidbody2DComponent:
       BodyType: 1
-      FixedRotation: false
-    CircleCollider2DComponent:
-      Offset: [0, 0]
-      Radius: 1
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
-  - Entity: 16854878493202120524
-    TagComponent:
-      Tag: Sprite
-    TransformComponent:
-      Translation: [0, -11.928072, 0]
-      Rotation: [0, 0, 0]
-      Scale: [9.7912693, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-    Rigidbody2DComponent:
-      BodyType: 0
       FixedRotation: false
     BoxCollider2DComponent:
       Offset: [0, 0]
       Size: [1, 1]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
+      Density: 10
+      Friction: 1
+      Restitution: 1
+      RestitutionThreshold: 1
+  - Entity: 897275639439066834
+    TagComponent:
+      Tag: Cube 2
+    ScriptComponent:
+      Name: Azure.BoxPawn2
+      ScriptFields:
+        Speed: 0.300000012
+    TransformComponent:
+      Translation: [4.32710695, -10.9130764, 0]
+      Rotation: [0, 0, 8.19164711e-07]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 0.625482559, 0, 1]
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 10
+      Friction: 1
+      Restitution: 1
+      RestitutionThreshold: 1
   - Entity: 693401015653648987
     TagComponent:
       Tag: Camera
@@ -69,52 +65,56 @@ Entities:
       Primary: true
       FixedAspectRatio: false
     TransformComponent:
-      Translation: [-1.25724113, -10.9122629, 19.4813728]
+      Translation: [-13.5300055, -15.8783646, 5]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 897275639439066834
+  - Entity: 16854878493202120524
     TagComponent:
-      Tag: Cube 2
-    ScriptComponent:
-      Name: Azure.BoxPawn2
-      ScriptFields:
-        Speed: 0.300000012
+      Tag: Sprite
     TransformComponent:
-      Translation: [4.32710695, -10.9151192, 0]
-      Rotation: [0, 0, -0.000237264467]
+      Translation: [0, -11.928072, 0]
+      Rotation: [0, 0, 0]
+      Scale: [72.7910004, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+    Rigidbody2DComponent:
+      BodyType: 0
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 9126341988753611511
+    TagComponent:
+      Tag: Circle
+    TransformComponent:
+      Translation: [-13.8174047, -1530.2489, 0]
+      Rotation: [0, 0, 25.8839455]
+      Scale: [1, 1, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Radius: 0.5
+      Thickness: 1
+      Fade: 0.00499999989
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    CircleCollider2DComponent:
+      Offset: [0, 0]
+      Radius: 1
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 15331168643400094970
+    TagComponent:
+      Tag: Empty
+    TransformComponent:
+      Translation: [3, 0, 0]
+      Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [1, 0, 0, 1]
-    Rigidbody2DComponent:
-      BodyType: 1
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 10
-      Friction: 1
-      Restitution: 1
-      RestitutionThreshold: 1
-  - Entity: 4777953925013219778
-    TagComponent:
-      Tag: BoxPawn
-    ScriptComponent:
-      Name: Azure.BoxPawn
-      ScriptFields:
-        Speed: 0.300000012
-    TransformComponent:
-      Translation: [-4.17110443, -10.9075432, 0.177086949]
-      Rotation: [0, 0, -1.57241595]
-      Scale: [0.99999547, 0.99999547, 1]
-    SpriteRendererComponent:
-      Color: [0, 0.525096655, 1, 1]
-    Rigidbody2DComponent:
-      BodyType: 1
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 10
-      Friction: 1
-      Restitution: 1
-      RestitutionThreshold: 1
+      Color: [1, 1, 1, 1]

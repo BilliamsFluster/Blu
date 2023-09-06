@@ -39,6 +39,14 @@ namespace Blu
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
 		m_AppHeaderIcon = Texture2D::Create("assets/textures/BluLogo.png");
 		
+		m_PlayIcon = Texture2D::Create("assets/textures/PlayButton.png");
+		m_PauseIcon = Texture2D::Create("assets/textures/PauseButton.png");
+		m_StopIcon = Texture2D::Create("assets/textures/StopButton.png");
+		m_ExpandPlayOptionsIcon = Texture2D::Create("assets/textures/VerticalElipisis.png");
+		m_StepIcon = Texture2D::Create("assets/textures/StepButton.png");
+		
+
+		
 
 		FrameBufferSpecifications fbSpec;
 		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, FrameBufferTextureFormat::Depth };
@@ -128,6 +136,11 @@ namespace Blu
 			{
 				
 				m_ActiveScene->OnUpdateRuntime(deltaTime);
+			}
+			case SceneState::Pause:
+			{
+
+				m_ActiveScene->OnUpdatePaused(deltaTime); // If you would like to do anything with the time argument
 			}
 		}
 		
@@ -234,7 +247,7 @@ namespace Blu
 	{
 
 
-		if (m_SceneState == SceneState::Play)
+		if (m_SceneState != SceneState::Edit)
 		{
 			Entity camera = m_ActiveScene->GetPrimaryCameraEntity();
 			Renderer2D::BeginScene(camera.GetComponent<CameraComponent>().Camera, camera.GetComponent<TransformComponent>().GetTransform());
@@ -257,7 +270,7 @@ namespace Blu
 					* glm::rotate(glm::mat4(1.0f), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
 					* glm::scale(glm::mat4(1.0f), scale);
 
-				glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+				glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); // Green
 				Renderer2D::DrawRect(translation, scale, color, 2);
 			}
 		}
@@ -345,25 +358,66 @@ namespace Blu
 		ImGui::Dummy(ImVec2(offset, 0)); // create an invisible widget to offset elements
 		ImGui::SameLine();
 
-		// Play button with drop-down options
-		if (ImGui::ArrowButton("##PlayOptions", ImGuiDir_Right))
+		ImTextureID playPauseButton;
+		if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Pause)
+			playPauseButton = (ImTextureID)m_PlayIcon->GetRendererID();
+		else if(m_SceneState == SceneState::Play)
+			playPauseButton = (ImTextureID)m_PauseIcon->GetRendererID();
+
+			
+		
+		
+		if (ImGui::ImageButton(playPauseButton, ImVec2(size, size)))
+		{
+			if (m_SceneState == SceneState::Edit)
+			{
+				SaveCurrentScene();
+				OnScenePlay();
+				
+			}
+			else if (m_SceneState == SceneState::Play)
+				OnScenePause();
+			
+			else if (m_SceneState == SceneState::Pause)
+				OnSceneResume();
+			
+		}
+
+		ImGui::SameLine();
+		ImTextureID stopButton = m_SceneState == SceneState::Edit ? nullptr : (ImTextureID)m_StopIcon->GetRendererID();
+		if (ImGui::ImageButton(stopButton, ImVec2(size, size)))
+		{
+			if (m_SceneState != SceneState::Edit)
+			{
+				OnSceneStop();
+			}
+
+		}
+		ImGui::SameLine();
+		if (ImGui::ImageButton((ImTextureID)m_ExpandPlayOptionsIcon->GetRendererID(), ImVec2(size - 5, size)))
 		{
 			ImGui::OpenPopup("PlayOptions");
 		}
 
+		if (m_SceneMissing)
+		{
+			DisplayMissingSceneWarning();
+		}
 		ImGui::SameLine();
-
+		
 		if (ImGui::BeginPopup("PlayOptions"))
 		{
 			if (ImGui::MenuItem("Play"))
 			{
 				SaveCurrentScene();
+				
 				OnScenePlay();
 
 			}
 
 			if (ImGui::MenuItem("Play In New Window"))
 			{
+				m_PlayButtonHit = true;
 				OnScenePlayNewWindow();
 			}
 
@@ -375,21 +429,6 @@ namespace Blu
 			ImGui::EndPopup();
 		}
 
-		ImGui::SameLine();
-
-		if (ImGui::ImageButton(nullptr, ImVec2(size, size)))
-		{
-			if (m_SceneState == SceneState::Play )
-			{
-				OnSceneStop();
-			}
-			
-		}
-		if (m_SceneMissing)
-		{
-			DisplayMissingSceneWarning();
-		}
-		// Add more toolbar items here as needed
 		ImGui::End();
 	}
 
@@ -431,8 +470,12 @@ namespace Blu
 		std::string filepath = FileDialogs::SaveFile("Blu Scene (*.blu)\0*.blu\0");
 		if (!filepath.empty())
 		{
-			SceneSerializer serializer(m_ActiveScene);
-			serializer.Serialize(filepath);
+			if (m_SceneState == SceneState::Edit)
+			{
+				SceneSerializer serializer(m_ActiveScene);
+				serializer.Serialize(filepath);
+
+			}
 		}
 	}
 
@@ -441,8 +484,12 @@ namespace Blu
 		SceneSerializer serializer(m_ActiveScene);
 		if (m_EditorScene)
 		{
-			std::string filepath = m_EditorScene->GetSceneFilePath().string();
-			serializer.Serialize(filepath);
+			if (m_SceneState == SceneState::Edit)
+			{
+				std::string filepath = m_EditorScene->GetSceneFilePath().string();
+				serializer.Serialize(filepath);
+
+			}
 
 		}
 	}
@@ -452,6 +499,7 @@ namespace Blu
 		if (m_EditorScene)
 		{
 			m_SceneState = SceneState::Play;
+			m_PlayButtonHit = true;
 			m_ActiveScene = Scene::Copy(m_EditorScene);
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
@@ -467,16 +515,31 @@ namespace Blu
 
 	void BluEditorLayer::OnScenePause()
 	{
+		m_SceneState = SceneState::Pause;
+		m_ActiveScene->SetScenePaused(true);
+
+	}
+
+	void BluEditorLayer::OnSceneResume()
+	{
+		m_SceneState = SceneState::Play;
+		m_ActiveScene->SetScenePaused(false);
 	}
 
 	void BluEditorLayer::OnSceneStop()
 	{
-		m_SceneState = SceneState::Edit;
-		m_ActiveScene->OnRuntimeStop();
-		SceneSerializer serializer(m_ActiveScene);
-		m_ActiveScene = m_EditorScene;
-		std::string filepath = m_EditorScene->GetSceneFilePath().string();
-		serializer.DeserializeEntityScriptInstances(filepath);
+		if (m_SceneState != SceneState::Edit)
+		{
+			m_ActiveScene->OnRuntimeStop();
+			SceneSerializer serializer(m_ActiveScene);
+			m_ActiveScene = m_EditorScene;
+			std::string filepath = m_EditorScene->GetSceneFilePath().string();
+			serializer.DeserializeEntityScriptInstances(filepath);
+			m_PlayButtonHit = false;
+			m_SceneState = SceneState::Edit;
+
+		}
+			
 
 
 	}
@@ -918,11 +981,13 @@ namespace Blu
 		{
 			if (control && shift)
 			{
-				SaveSceneAs();
+				if(m_SceneState == SceneState::Edit)
+					SaveSceneAs();
 			}
 			if (control)
 			{
-				SaveCurrentScene();
+				if (m_SceneState == SceneState::Edit)
+					SaveCurrentScene();
 			}
 			break;
 		}
