@@ -45,6 +45,15 @@ namespace Blu
 		m_ExpandPlayOptionsIcon = Texture2D::Create("assets/textures/VerticalElipisis.png");
 		m_StepIcon = Texture2D::Create("assets/textures/StepButton.png");
 		
+		m_TranslationIcon = Texture2D::Create("assets/textures/AxisIcon.png");
+		m_RotationIcon = Texture2D::Create("assets/textures/RotateIcon.png");
+		m_ScaleIcon = Texture2D::Create("assets/textures/ScaleIcon.png");
+		m_WorldSpaceIcon = Texture2D::Create("assets/textures/WorldSpaceIcon.png");
+		m_LocalSpaceIcon = Texture2D::Create("assets/textures/LocalSpaceIcon.png");
+		m_CameraIcon = Texture2D::Create("assets/textures/CameraIcon.png");
+		m_SelectIcon = Texture2D::Create("assets/textures/SelectIcon.png");
+		m_SnappingIcon = Texture2D::Create("assets/textures/ToolsIcon.png");
+		
 
 		
 
@@ -94,6 +103,7 @@ namespace Blu
 
 		m_EditorCamera = EditorCamera(30, 1.778f, 0.1f, 1000.0f);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+		m_OperationMode = ImGuizmo::MODE::LOCAL;
 	}
 
 	void BluEditorLayer::OnDetach()
@@ -314,25 +324,25 @@ namespace Blu
 		if (enableTranslationSnap && m_ImGuizmoType == ImGuizmo::OPERATION::TRANSLATE)
 		{
 			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-				(ImGuizmo::OPERATION)m_ImGuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, &translationSnapValue);
+				(ImGuizmo::OPERATION)m_ImGuizmoType, (ImGuizmo::MODE)m_OperationMode, glm::value_ptr(transform), nullptr, &translationSnapValue);
 			return;
 		}
 		else if (enableRotationSnap && m_ImGuizmoType == ImGuizmo::OPERATION::ROTATE)
 		{
 			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-				(ImGuizmo::OPERATION)m_ImGuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, &rotationSnapValue);
+				(ImGuizmo::OPERATION)m_ImGuizmoType, (ImGuizmo::MODE)m_OperationMode, glm::value_ptr(transform), nullptr, &rotationSnapValue);
 			return;
 		}
 		else if (enableScaleSnap && m_ImGuizmoType == ImGuizmo::OPERATION::SCALE)
 		{
 			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-				(ImGuizmo::OPERATION)m_ImGuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, &scaleSnapValue);
+				(ImGuizmo::OPERATION)m_ImGuizmoType, (ImGuizmo::MODE)m_OperationMode, glm::value_ptr(transform), nullptr, &scaleSnapValue);
 			return;
 		}
 		else
 		{
 			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-				(ImGuizmo::OPERATION)m_ImGuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr);
+				(ImGuizmo::OPERATION)m_ImGuizmoType, (ImGuizmo::MODE)m_OperationMode, glm::value_ptr(transform), nullptr);
 			return;
 		}
 	}
@@ -358,7 +368,7 @@ namespace Blu
 		ImGui::Dummy(ImVec2(offset, 0)); // create an invisible widget to offset elements
 		ImGui::SameLine();
 
-		ImTextureID playPauseButton;
+		ImTextureID playPauseButton = nullptr;
 		if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Pause)
 			playPauseButton = (ImTextureID)m_PlayIcon->GetRendererID();
 		else if(m_SceneState == SceneState::Play)
@@ -679,6 +689,167 @@ namespace Blu
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
+		static const char* items[] = { "Translation", "Rotation", "Scale" };
+		static int current_item = 0;
+
+		if (m_SceneState == SceneState::Edit)
+		{
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Set background color alpha to 0 for transparency
+			ImGui::BeginChild("Operations", ImVec2(m_ViewportSize.x, 25), false);
+		
+			const ImVec2 buttonSize(16,16);
+			//const float buttonSpacing = 10.0f;
+			// Create image buttons for translation, rotation, scale, and world space.
+			ImGui::SameLine(0, (m_ViewportSize.x - 280));
+			/*if (ImGui::ImageButton((ImTextureID)m_SelectIcon->GetRendererID(), buttonSize))
+			{
+				m_ImGuizmoType = ImGuizmo::OPERATION::BOUNDS;
+			}
+			ImGui::SameLine();*/
+			if (ImGui::ImageButton((ImTextureID)m_TranslationIcon->GetRendererID(), buttonSize))
+			{
+				m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Translate Selected Objects (W)"); // Tooltip text
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::ImageButton((ImTextureID)m_RotationIcon->GetRendererID(), buttonSize))
+			{
+				m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
+
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Rotate Selected Objects (E)"); // Tooltip text
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::ImageButton((ImTextureID)m_ScaleIcon->GetRendererID(), buttonSize))
+			{
+				m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
+			
+
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Scale Selected Objects (R)"); // Tooltip text
+			}
+
+			ImGui::SameLine(0, 40);
+			static bool isLocalMode = true;
+			ImTextureID spaceIcon = m_OperationMode == (int)ImGuizmo::MODE::LOCAL ? (ImTextureID)m_LocalSpaceIcon->GetRendererID() : (ImTextureID)m_WorldSpaceIcon->GetRendererID();
+			if (ImGui::ImageButton(spaceIcon, buttonSize))
+			{
+				isLocalMode = !isLocalMode; // Toggle the mode
+				m_OperationMode = isLocalMode ? (int)ImGuizmo::MODE::LOCAL : (int)ImGuizmo::MODE::WORLD;
+
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Toggle Local/World Space"); // Tooltip text
+			}
+			ImGui::SameLine(0, 40);
+			if (ImGui::ImageButton((ImTextureID)m_SnappingIcon->GetRendererID(), buttonSize))
+			{
+				ImGui::OpenPopup("Snapping");
+
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Snapping Options"); // Tooltip text
+			}
+			if (ImGui::BeginPopup("Snapping"))
+			{
+				// Snapping options for Translation, Rotation, and Scale
+				if (current_item >= 0 && current_item <= 2)
+				{
+					// Radio buttons for selecting the snapping mode
+					ImGui::RadioButton("Translation", &current_item, 0);
+					ImGui::SameLine();
+					ImGui::RadioButton("Rotation", &current_item, 1);
+					ImGui::SameLine();
+					ImGui::RadioButton("Scale", &current_item, 2);
+				
+				
+
+
+					// Display specific snapping options based on the selected mode
+					switch (current_item)
+					{
+					case 0: // Translation
+						// Common checkbox for enabling snapping
+						ImGui::Checkbox("Enabled", &enableTranslationSnap);
+						ImGui::Text(" Value");
+						ImGui::SameLine();
+
+						ImGui::PushItemWidth(50);
+						ImGui::DragFloat("##Value", &translationSnapValue, 0.1, 0, 10000, "%.3f");
+
+
+						ImGui::PopItemWidth();
+						break;
+
+					case 1: // Rotation
+						// Common checkbox for enabling snapping
+						ImGui::Checkbox("Enabled", &enableRotationSnap);
+						ImGui::Text(" Value");
+						ImGui::SameLine();
+						ImGui::PushItemWidth(50);
+						ImGui::DragFloat("##Value", &rotationSnapValue, 0.1, 0, 180, "%.3f");
+
+
+						ImGui::PopItemWidth();
+						break;
+
+					case 2: // Scale
+						// Common checkbox for enabling snapping
+						ImGui::Checkbox("Enabled", &enableScaleSnap);
+						ImGui::Text(" Value");
+						ImGui::SameLine();
+						ImGui::PushItemWidth(50);
+						ImGui::DragFloat("##Value", &scaleSnapValue, 0.1, 0, 100, "%.3f");
+
+						ImGui::PopItemWidth();
+						break;
+					}
+				}
+				ImGui::EndPopup();
+			}
+		
+			ImGui::SameLine();
+
+			// Camera options
+			if (ImGui::ImageButton((ImTextureID)m_CameraIcon->GetRendererID(), buttonSize))
+			{
+				ImGui::OpenPopup("Camera");
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Camera Speed"); // Tooltip text
+			}
+
+
+			if (ImGui::BeginPopup("Camera"))
+			{
+				ImGui::Text("Editor Camera");
+				ImGui::Text("Camera Speed");
+				ImGui::SameLine();
+				ImGui::PushItemWidth(50);
+				ImGui::DragFloat("##Value", &m_EditorCamera.GetCameraSpeed(), 0.1, 0, 32, "%.4f");
+
+				ImGui::PopItemWidth();
+				ImGui::EndPopup();
+			}
+			ImGui::EndChild();
+			ImGui::PopStyleColor();
+		}
+		ImGui::PopStyleVar();
 		
 		auto viewportOffset = ImGui::GetCursorPos();
 		m_ViewPortFocused = ImGui::IsWindowFocused();
@@ -752,7 +923,7 @@ namespace Blu
 
 		//Guizmos
 		Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
-		if (m_SceneState != SceneState::Play)
+		if (m_SceneState == SceneState::Edit)
 		{
 			if (selectedEntity && m_ImGuizmoType != -1)
 			{
@@ -790,94 +961,7 @@ namespace Blu
 			}
 		}
 		Toolbar();
-		static const char* items[] = { "Translation", "Rotation", "Scale" };
-		static int current_item = 0;
-
 		
-		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 110); 
-		ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 665);
-		
-		if (ImGui::Button("Snapping Options"))
-		{
-			ImGui::OpenPopup("Snapping");
-		}
-
-		if (ImGui::BeginPopup("Snapping"))
-		{
-			//ImGui::BeginChild("##SnappingChild", ImVec2(120, 120));
-			ImGui::Text("Snapping");
-			ImGui::Separator();
-
-			ImGui::PushItemWidth(100);
-			ImGui::Combo("##Snapping", &current_item, items, IM_ARRAYSIZE(items));
-			ImGui::PopItemWidth();
-			switch (current_item)
-			{
-			case 0: // Translation
-				ImGui::Checkbox("Enabled", &enableTranslationSnap);
-				ImGui::SameLine();
-				ImGui::Text("?"); if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enable or disable snapping for Translation");
-				if (enableTranslationSnap)
-				{
-					ImGui::Text(" Value");
-					ImGui::SameLine();
-					ImGui::PushItemWidth(50);
-					ImGui::InputFloat("##Value", &translationSnapValue);
-					ImGui::PopItemWidth();
-				}
-				break;
-
-			case 1: // Rotation
-				ImGui::Checkbox("Enabled", &enableRotationSnap);
-				ImGui::SameLine();
-				ImGui::Text("?"); if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enable or disable snapping for Rotation");
-				if (enableRotationSnap)
-				{
-					ImGui::Text(" Value");
-					ImGui::SameLine();
-					ImGui::PushItemWidth(50); 
-					ImGui::InputFloat("##Value", &rotationSnapValue);
-					ImGui::PopItemWidth();
-				}
-				break;
-
-			case 2: // Scale
-				ImGui::Checkbox("Enabled", &enableScaleSnap);
-				ImGui::SameLine();
-				ImGui::Text("?"); if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enable or disable snapping for Scale");
-				if (enableScaleSnap)
-				{
-					ImGui::Text(" Value");
-					ImGui::SameLine();
-					ImGui::PushItemWidth(50);
-					ImGui::InputFloat("##Value", &scaleSnapValue);
-					ImGui::PopItemWidth();
-				}
-				break;
-			}
-			
-			ImGui::EndPopup();
-		}
-
-		ImGui::PopStyleVar();
-
-		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 220);
-		ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 665);
-
-		if (ImGui::Button("Camera Options"))
-		{
-			ImGui::OpenPopup("Camera");
-		}
-		if (ImGui::BeginPopup("Camera"))
-		{
-			ImGui::Text("Editor Camera");
-			ImGui::Text("Camera Speed");
-			ImGui::SameLine();
-			ImGui::PushItemWidth(50);
-			ImGui::InputFloat("##Value", &m_EditorCamera.GetCameraSpeed());
-			ImGui::PopItemWidth();
-			ImGui::EndPopup();
-		}
 		ImGui::End();
 		
 	}

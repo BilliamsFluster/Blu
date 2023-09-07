@@ -113,8 +113,8 @@ Entities:
     TagComponent:
       Tag: Empty
     TransformComponent:
-      Translation: [3, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Translation: [2.92759728, 0.301723868, 0]
+      Rotation: [0, 0, 0.514725864]
+      Scale: [0.999999702, 0.999999702, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]

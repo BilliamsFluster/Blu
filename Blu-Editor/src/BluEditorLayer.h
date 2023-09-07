@@ -53,6 +53,9 @@ namespace Blu
 		float m_MousePosX, m_MousePosY;
 		Blu::Shared<Blu::Texture2D> m_Texture, m_AppHeaderIcon, m_PlayIcon, m_PauseIcon,
 			m_StopIcon, m_ExpandPlayOptionsIcon, m_StepIcon;
+		Blu::Shared<Blu::Texture2D> m_TranslationIcon, m_RotationIcon, m_ScaleIcon, 
+			m_WorldSpaceIcon, m_LocalSpaceIcon, m_CameraIcon, m_SelectIcon, m_SnappingIcon;
+
 		Blu::Shared<Blu::VertexArray> m_VertexArray;
 		Blu::Shared< Blu::IndexBuffer> m_IndexBuffer;
 		Blu::Shared< Blu::VertexBuffer> m_VertexBuffer;
@@ -67,6 +70,7 @@ namespace Blu
 		std::vector<Entity> Entities;
 		
 		int m_ImGuizmoType = -1;
+		int m_OperationMode;
 		bool enableTranslationSnap = false;
 		bool enableRotationSnap = false;
 		bool enableScaleSnap = false;
