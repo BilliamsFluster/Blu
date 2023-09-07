@@ -280,6 +280,8 @@ namespace Blu
 	}
 	void Scene::OnScriptSystemUpdate(Timestep deltaTime)
 	{
+		if (m_ScenePaused)
+			return;
 		auto view = m_Registry.view<ScriptComponent>();
 		for (auto e : view)
 		{
@@ -385,6 +387,8 @@ namespace Blu
 	}
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
+		
+		
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{
@@ -425,6 +429,9 @@ namespace Blu
 				transform.Rotation.z = body->GetAngle();
 			}
 		}
+		
+			
+
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
 		auto view = m_Registry.view<CameraComponent, TransformComponent>();
@@ -445,6 +452,8 @@ namespace Blu
 
 			Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), cameraTransform);
 			// Update particle systems
+			
+			
 			{
 				auto particleView = m_Registry.view<ParticleSystemComponent>();
 				for (auto& entity : particleView)
@@ -455,6 +464,7 @@ namespace Blu
 
 				}
 			}
+			
 			{
 				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 				for (auto& entity : group)
@@ -478,6 +488,74 @@ namespace Blu
 		}
 
 	}
+	void Scene::OnUpdatePaused(Timestep deltaTime)
+	{
+		Camera* mainCamera = nullptr;
+		glm::mat4 cameraTransform;
+		auto view = m_Registry.view<CameraComponent, TransformComponent>();
+		for (auto& entity : view)
+		{
+			auto [camera, transform] = view.get<CameraComponent, TransformComponent>(entity);
+			if (camera.Primary)
+			{
+				mainCamera = &camera.Camera;
+				cameraTransform = transform.GetTransform();
+				break;
+			}
+
+		}
+
+		if (mainCamera)
+		{
+
+
+			Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), cameraTransform);
+			//Pause Everything
+			{
+				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				for (auto& entity : group)
+				{
+					auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+					Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+				}
+			}
+			{
+				auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+				for (auto& entity : view)
+				{
+					auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+					Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+				}
+			}
+
+
+
+			Renderer2D::EndScene();
+		}
+	}
+	void Scene::OnSceneStep(int frames)
+	{
+		m_StepFrames = frames;
+		OnUpdateStep();
+	}
+
+	void Scene::OnUpdateStep()
+	{
+		// This function should be called when you want to advance the game by one step/frame.
+
+		// You can implement logic to pause the game if you've reached the desired step.
+		if (m_StepFrames <= 0) {
+			// Pause the game or take any other action.
+			return;
+		}
+		while (m_StepFrames > 0)
+		{
+			OnUpdateRuntime(1);
+			m_StepFrames--;
+
+		}
+	}
+
 	void Scene::OnViewportResize(float width, float height)
 	{
 		m_ViewportWidth = width;

@@ -48,7 +48,12 @@ namespace Blu
 		void DestroyEntity(Entity entity);
 		void OnUpdateEditor(Timestep deltaTime, class EditorCamera& camera);
 		void OnUpdateRuntime(Timestep deltaTime);
+		void OnUpdatePaused(Timestep deltaTime);
+		void OnSceneStep(int frames = 1);
+		void OnUpdateStep();
 		void OnViewportResize(float width, float height);
+		bool IsScenePaused() { return m_ScenePaused; }
+		void SetScenePaused(bool paused) {m_ScenePaused = paused; }
 	private:
 		entt::registry m_Registry; // container for all of our entt components
 		float m_ViewportWidth = 0.0f, m_ViewportHeight = 0.0f;
@@ -58,5 +63,8 @@ namespace Blu
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
+	private:
+		bool m_ScenePaused = false;
+		int m_StepFrames = 0;
 	};
 }
