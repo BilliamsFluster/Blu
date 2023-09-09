@@ -69,8 +69,8 @@ namespace Blu
 		Blu::Shared<Scene> m_EditorScene;
 		std::vector<Entity> Entities;
 		
-		int m_ImGuizmoType = -1;
-		int m_OperationMode;
+		int m_ImGuizmoType = 0;
+		int m_OperationMode = 0;
 		bool enableTranslationSnap = false;
 		bool enableRotationSnap = false;
 		bool enableScaleSnap = false;
@@ -87,6 +87,7 @@ namespace Blu
 		glm::vec2 m_ViewportBounds[2];
 		Shared<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Shared<ContentBrowserPanel> m_ContentBrowserPanel;
+		glm::vec2 m_ViewportOffset;
 		int m_DrawnEntityID;
 
 		enum class SceneState

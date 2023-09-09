@@ -33,6 +33,7 @@ namespace Blu
 		void SetCameraSpeed(float speed) { m_CameraSpeed = speed; }
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
+		float GetNormalizedDepthAtScreenCoordinate(float screenY, float viewportHeight) const;
 	private:
 		void UpdateProjectionMatrix();
 		void UpdateView();
