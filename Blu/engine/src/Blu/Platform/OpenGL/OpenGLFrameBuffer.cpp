@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 #include "Blu/Core/Log.h"
 
+
+// Define a macro for OpenGL function calls that checks for errors.
 #define GL_CALL(x) \
     x; \
     { \
@@ -15,6 +17,7 @@ namespace Blu
 {
 	namespace Utils
 	{
+		// Define utility functions for working with textures.
 		static bool IsDepthFormat(FrameBufferTextureFormat format)
 		{
 			switch (format)
@@ -37,8 +40,10 @@ namespace Blu
 			glBindTexture(TextureTarget(multisampled), id);
 		}
 		
+		// Function to attach a color texture to the framebuffer.
 		static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat,  GLenum format, uint32_t width, uint32_t height, int index)
 		{
+			// Check if the texture is multisampled.
 			bool multisampled = samples > 1;
 			if (multisampled)
 			{
@@ -48,19 +53,23 @@ namespace Blu
 			{
 				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_INT, nullptr);
 
+				// Set texture parameters.
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
-
+			
+			// Attach the texture to the framebuffer.
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);
 
 		}
-
+		
+		// Function to attach a depth texture to the framebuffer.
 		static void AttachDepthTexture(uint32_t id, int samples, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height )
-		{
+		{           
+			// Check if the texture is multisampled.
 			bool multisampled = samples > 1;
 			if (multisampled)
 			{
@@ -70,17 +79,19 @@ namespace Blu
 			{
 				glTexStorage2D(GL_TEXTURE_2D, 1, format, width, height);
 
+				// Set texture parameters
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
-
+			// Attach the texture to the framebuffer
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType , TextureTarget(multisampled), id, 0);
 
 		}
-
+		
+		// Function to map the texture format to OpenGL format
 		static GLenum BluTextureFormatToGL(FrameBufferTextureFormat format)
 		{
 			switch (format)
@@ -94,7 +105,8 @@ namespace Blu
 			BLU_CORE_ASSERT("",false); //format invalid
 			return 0;
 		}
-
+		
+		// Function to map your texture format to OpenGL data type
 		static GLenum GLDataType(FrameBufferTextureFormat format)
 		{
 			switch (format)
@@ -110,13 +122,16 @@ namespace Blu
 		}
 		
 	}
+	
+	// Implement the OpenGLFrameBuffer class
 	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpecifications& spec)
 		:m_Specification(spec)
 	{
+		// Initialize member variables.
 		m_RendererID = 0;
 		for (auto spec : m_Specification.Attachments.Attachments)
 		{
-			if (!Utils::IsDepthFormat(spec.TextureFormat))
+			if (!Utils::IsDepthFormat(spec.TextureFormat)) // if the texture format doesnt contain a depth format
 				m_ColorAttachmentSpecs.emplace_back(spec);
 			else
 				m_DepthAttachmentSpecs = spec;
@@ -128,6 +143,8 @@ namespace Blu
 		}
 		Invalidate();
 	}
+	
+	// Implement the Resize function
 	void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
 		
@@ -135,6 +152,8 @@ namespace Blu
 		m_Specification.Height = height;
 		Invalidate();
 	}
+	
+	// Implement the ReadPixel function
 	int OpenGLFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
 	{
 		
@@ -144,6 +163,18 @@ namespace Blu
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
 		return pixelData;
 	}
+
+	// Implement the ReadDepth function
+	float OpenGLFrameBuffer::ReadDepth(uint32_t attachmentIndex, int x, int y)
+	{
+		BLU_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		float depthValue;
+		glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue);
+		return depthValue;
+	}
+	
+	// Implement the ClearAttachment function
 	void OpenGLFrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	{
 		
@@ -152,12 +183,16 @@ namespace Blu
 		auto& spec = m_ColorAttachmentSpecs[attachmentIndex];
 		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::BluTextureFormatToGL(spec.TextureFormat),Utils::GLDataType(spec.TextureFormat), &value);
 	}
+	
+	// Implement the destructor
 	OpenGLFrameBuffer::~OpenGLFrameBuffer()
 	{
 		glDeleteFramebuffers(1, &m_RendererID);
 		glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
 		glDeleteTextures(1, &m_DepthAttachment);
 	}
+	
+	// Implement the Bind function
 	void OpenGLFrameBuffer::Bind()
 	{
 
@@ -170,12 +205,16 @@ namespace Blu
 
 		
 	}
+
+	// Implement the UnBind function
 	void OpenGLFrameBuffer::UnBind()
 	{
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	}
+
+	// Implement a utility function to check for OpenGL errors
 	static void CheckOpenGLError(const char* stmt)
 	{
 		GLenum err = glGetError();
@@ -184,8 +223,11 @@ namespace Blu
 			std::cout << "OpenGL error " << err << " at " << stmt << std::endl;
 		}
 	}
+
+	// Implement the Invalidate function
 	void OpenGLFrameBuffer::Invalidate()
 	{
+		// Cleanup existing resources if any
 		if (m_RendererID > 0 && glIsFramebuffer(m_RendererID))
 		{
 			glDeleteFramebuffers(1, &m_RendererID);
@@ -220,15 +262,16 @@ namespace Blu
 			if (error != GL_NO_ERROR) {
 				std::cout << "OpenGL error before glCreateFramebuffers: " << error << std::endl;
 			}
-			glCreateFramebuffers(1, &m_RendererID);
+			glCreateFramebuffers(1, &m_RendererID); // We create a framebuffer
 			CheckOpenGLError("glCreateFramebuffers"); // Check for errors
 			std::cout << m_RendererID << std::endl;
 
 			glObjectLabel(GL_FRAMEBUFFER, m_RendererID, -1, "Frame Buffer"); // debug
 
-			glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+			glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID); // use the framebuffer at renderer ID
 
 			bool multisample = m_Specification.Samples > 1;
+			
 			//Attachments
 			if (m_ColorAttachmentSpecs.size())
 			{

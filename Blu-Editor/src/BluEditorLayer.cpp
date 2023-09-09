@@ -103,7 +103,7 @@ namespace Blu
 
 		m_EditorCamera = EditorCamera(30, 1.778f, 0.1f, 1000.0f);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-		m_OperationMode = ImGuizmo::MODE::LOCAL;
+		m_OperationMode = 0; // local operation
 	}
 
 	void BluEditorLayer::OnDetach()
@@ -118,7 +118,7 @@ namespace Blu
 		Renderer2D::ResetStats();
 		{
 			BLU_PROFILE_SCOPE("Renderer2D::ResetStats: ");
-			m_FrameBuffer->Bind();
+			m_FrameBuffer->Bind(); 
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
 			
@@ -154,12 +154,21 @@ namespace Blu
 			}
 		}
 		
+		/* Clicking Functionality*/
+		// Get the mouse cursor position in screen coordinates
 		auto [mx, my] = ImGui::GetMousePos();
+
+		// Adjust for the viewport position
 		mx -= m_ViewportBounds[0].x;
 		my -= m_ViewportBounds[0].y;
 
+		// Adjust for camera position and zoom level
+		glm::vec3 cameraPosition = m_EditorCamera.GetPosition();
+		float zoomLevel = m_EditorCamera.GetDistance(); // Get the current zoom level
+
+		//std::cout << mx << ";" << my << std::endl;
 		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-		my = viewportSize.y - my;
+		my = viewportSize.y - my - m_ViewportOffset.y;
 		float mouseX = (float)mx;
 		float mouseY = (float)my;
 		m_MousePosX = mouseX;
@@ -167,10 +176,17 @@ namespace Blu
 
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
-			int data = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
+			int data = m_FrameBuffer->ReadPixel(1, mouseX, mouseY); // get the red int channel so the second attachment
+			//std::cout << data << std::endl;
 			m_DrawnEntityID = data;
-
 		}
+
+
+
+		
+
+		
+
 		OnOverlayRender();
 		m_FrameBuffer->UnBind();
 		
@@ -519,6 +535,9 @@ namespace Blu
 		if (m_EditorScene)
 		{
 			m_SceneState = SceneState::Play;
+			m_ViewPortFocused = true;
+			ImGui::SetWindowFocus("viewport"); 
+
 			m_PlayButtonHit = true;
 			m_ActiveScene = Scene::Copy(m_EditorScene);
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
@@ -701,11 +720,7 @@ namespace Blu
 			//const float buttonSpacing = 10.0f;
 			// Create image buttons for translation, rotation, scale, and world space.
 			ImGui::SameLine(0, (m_ViewportSize.x - 280));
-			/*if (ImGui::ImageButton((ImTextureID)m_SelectIcon->GetRendererID(), buttonSize))
-			{
-				m_ImGuizmoType = ImGuizmo::OPERATION::BOUNDS;
-			}
-			ImGui::SameLine();*/
+			
 			if (ImGui::ImageButton((ImTextureID)m_TranslationIcon->GetRendererID(), buttonSize))
 			{
 				m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
@@ -851,10 +866,22 @@ namespace Blu
 		}
 		ImGui::PopStyleVar();
 		
-		auto viewportOffset = ImGui::GetCursorPos();
 		m_ViewPortFocused = ImGui::IsWindowFocused();
+		/* Clicking */
+		m_ViewportOffset = glm::vec2(ImGui::GetCursorPos().x, ImGui::GetCursorPos().y);
+		auto windowSize = ImGui::GetWindowSize();
+		ImVec2 minBound = ImGui::GetWindowPos(); //352;120
+		minBound.x += m_ViewportOffset.x;
+		minBound.y += m_ViewportOffset.y;
+		ImVec2 maxBound = { minBound.x + windowSize.x , minBound.y + windowSize.y }; // 1568;818
+
+		m_ViewportBounds[0] = { minBound.x, minBound.y };
+		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
+
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-		if (m_ViewportSize != *(glm::vec2*)&viewportSize)
+
+		
+		if (m_ViewportSize != *(glm::vec2*)& viewportSize)
 		{
 			
 			if (viewportSize.x > 0 && viewportSize.y > 0)
@@ -864,6 +891,7 @@ namespace Blu
 			
 			
 				m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+				m_CameraViewFrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 				m_CameraController.ResizeCamera(m_ViewportSize.x, m_ViewportSize.y);
 				m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 
@@ -896,7 +924,7 @@ namespace Blu
 		
 		
 
-		uint32_t textureID = m_FrameBuffer->GetColorAttachmentID();
+		uint32_t textureID = m_FrameBuffer->GetColorAttachmentID();// Get the very first color attachment for rendering basic colors
 		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		if (ImGui::BeginDragDropTarget())
@@ -910,15 +938,6 @@ namespace Blu
 			ImGui::EndDragDropTarget();
 		}
 
-		/* Clicking */
-		auto windowSize = ImGui::GetWindowSize();
-		ImVec2 minBound = ImGui::GetWindowPos();
-		minBound.x += viewportOffset.x;
-		minBound.y += viewportOffset.y;
-
-		ImVec2 maxBound = { minBound.x + windowSize.x , minBound.y + windowSize.y};
-		m_ViewportBounds[0] = { minBound.x, minBound.y };
-		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
 
 
 		//Guizmos
@@ -930,12 +949,19 @@ namespace Blu
 				ImGuizmo::SetOrthographic(false);
 				ImGuizmo::SetDrawlist();
 				float windowWidth = (float)ImGui::GetWindowWidth();
-				float windowHeight = (float)ImGui::GetWindowHeight();
+				float windowHeight = (float)ImGui::GetWindowHeight() ;
 				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
+				
 				//Entity Transform
 				auto& tc = selectedEntity.GetComponent<TransformComponent>();
 				glm::mat4 transform = tc.GetTransform();
+				
+				/*glm::vec3 centerPoint = tc.Translation +(tc.Scale * 0.5f);
+				float gizmoOffsetY = centerPoint.y * (m_EditorCamera.GetDistance() / 100);
+				std::cout << gizmoOffsetY << std::endl;
+				transform[3][1] += gizmoOffsetY;*/
+
+				
 
 				//Editor Camera
 				const glm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
@@ -981,6 +1007,7 @@ namespace Blu
 				if (e.HasComponent<TransformComponent>())
 				{
 					m_SceneHierarchyPanel->SetSelectedEntity(e);
+					return true;
 
 				}
 

@@ -114,6 +114,16 @@ namespace Blu
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 
 	}
+	float EditorCamera::GetNormalizedDepthAtScreenCoordinate(float screenY, float viewportHeight) const
+	{
+		float normalizedDepth = screenY / viewportHeight; // Invert Y-axis
+		normalizedDepth = glm::clamp(normalizedDepth, 0.0f, 1.0f); // Ensure it's within [0, 1]
+
+		// Adjust the normalized depth based on the camera's zoom level
+		normalizedDepth = (1.0f - normalizedDepth) * m_Distance;
+
+		return normalizedDepth;
+	}
 	bool EditorCamera::OnMouseScroll(Events::MouseScrolledEvent& event)
 	{
 		float delta = event.GetYOffset() * 0.1f;
