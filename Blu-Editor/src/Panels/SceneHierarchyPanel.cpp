@@ -6,6 +6,7 @@
 #include <imgui_internal.h>
 #include <filesystem>
 #include "Blu/Scripting/ScriptEngine.h"
+#include "Blu/LightSystem/LightManager.h"
 
 namespace Blu
 {
@@ -315,6 +316,15 @@ namespace Blu
 					ImGui::CloseCurrentPopup();
 				}
 			}
+			if (!m_SelectedEntity.HasComponent<PointLightComponent>())
+			{
+				if (ImGui::MenuItem("PointLight"))
+				{
+					m_SelectedEntity.AddComponent<PointLightComponent>();
+					m_Context->m_LightManager->AddPointLight(m_SelectedEntity.GetComponent<PointLightComponent>());
+					ImGui::CloseCurrentPopup();
+				}
+			}
 			if (!m_SelectedEntity.HasComponent<CircleRendererComponent>())
 			{
 				if (ImGui::MenuItem("Circle Renderer"))
@@ -374,6 +384,59 @@ namespace Blu
 				ImGui::Spacing();
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
+		DrawComponent<PointLightComponent>("Point Light", entity, [](auto& light)
+			{
+				// Point Light Properties
+				ImGui::Text("Point Light Properties");
+
+				// Color
+				ImGui::ColorEdit4("Color##PointLight", glm::value_ptr(light.Color));
+				ImGui::SameLine();
+				ImGui::Text("Light color");
+
+				// Intensity
+				ImGui::SliderFloat("Intensity##PointLight", &light.Intensity, 0.0f, 10.0f);
+				ImGui::SameLine();
+				ImGui::Text("Light intensity");
+
+				// Radius
+				ImGui::SliderFloat("Radius##PointLight", &light.Radius, 0.0f, 100.0f);
+				ImGui::SameLine();
+				ImGui::Text("Light radius");
+
+				// Additional properties for Phong reflection model
+				ImGui::Text("Phong Reflection Model");
+
+				// Ambient Color
+				ImGui::ColorEdit3("Ambient Color##PointLight", glm::value_ptr(light.AmbientColor));
+				ImGui::SameLine();
+				ImGui::Text("Ambient light color");
+
+				// Diffuse Color
+				ImGui::ColorEdit3("Diffuse Color##PointLight", glm::value_ptr(light.DiffuseColor));
+				ImGui::SameLine();
+				ImGui::Text("Diffuse light color");
+
+				// Specular Color
+				ImGui::ColorEdit3("Specular Color##PointLight", glm::value_ptr(light.SpecularColor));
+				ImGui::SameLine();
+				ImGui::Text("Specular light color");
+
+				// Shininess
+				ImGui::SliderFloat("Shininess##PointLight", &light.Shininess, 1.0f, 128.0f);
+				ImGui::SameLine();
+				ImGui::Text("Shininess factor");
+				// Position
+				ImGui::DragFloat3("Position##PointLight", glm::value_ptr(light.Position), 0.1f);
+				ImGui::SameLine();
+				ImGui::Text("Position of the light source");
+
+
+				// You can add more UI controls as needed for your PointLightComponent
+			});
+
+
+
 
 		DrawComponent<ScriptComponent>("Script", entity, [entity](auto& component) mutable
 			{
@@ -653,6 +716,7 @@ namespace Blu
 
 						std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
 						component.Texture = Texture2D::Create(payloadPath.string());
+						component.Texture->GetTexturePath();
 					}
 					ImGui::EndDragDropTarget();
 				}

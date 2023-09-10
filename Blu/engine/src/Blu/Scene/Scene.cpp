@@ -11,6 +11,7 @@
 #include "box2d/b2_polygon_shape.h"
 #include "box2d/b2_circle_shape.h"
 #include "Blu/Scripting/ScriptEngine.h"
+#include "Blu/LightSystem/LightManager.h"
 
 namespace Blu
 {
@@ -38,12 +39,11 @@ namespace Blu
 
 	Scene::Scene()
 	{
-		
-
+		m_LightManager = std::make_shared<LightManager>();
 	}
 	Scene::~Scene()
 	{
-
+		m_LightManager = nullptr;
 	}
 	template<typename Component>
 	static void CopyComponent(entt::registry& dst, entt::registry& src, std::unordered_map<UUID, entt::entity> map)
@@ -354,8 +354,9 @@ namespace Blu
 	{
 		
 		Renderer2D::BeginScene(camera);
-		Renderer2D::GetRendererData()->QuadShader->Bind();
-		
+		//Renderer2D::GetRendererData()->QuadShader->Bind();
+		m_LightManager->UpdateLights();
+		m_LightManager->RenderLights();
 		{
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto& entity : group)
@@ -388,7 +389,8 @@ namespace Blu
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
 		
-		
+		m_LightManager->UpdateLights();
+		m_LightManager->RenderLights();
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{

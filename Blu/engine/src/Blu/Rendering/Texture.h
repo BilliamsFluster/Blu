@@ -22,6 +22,11 @@ namespace Blu
 	public:
 		static Shared<Texture2D> Create(const std::string& path);
 		static Shared<Texture2D> Create(uint32_t width, uint32_t height);
+
+		virtual std::string GetTexturePath() = 0;
+		virtual void ConfigureTexture() = 0;
+	
+
 	};
 
 }

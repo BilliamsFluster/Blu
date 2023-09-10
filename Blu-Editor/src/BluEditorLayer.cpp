@@ -36,6 +36,8 @@ namespace Blu
 		m_ActiveScene = std::make_shared<Scene>();
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
+		
+		
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
 		m_AppHeaderIcon = Texture2D::Create("assets/textures/BluLogo.png");
 		
@@ -291,13 +293,14 @@ namespace Blu
 
 				glm::vec3 translation = tc.Translation + glm::vec3(bc2d.Offset, 0.001f);
 				glm::vec3 scale = tc.Scale * glm::vec3(bc2d.Size, 1.0f);
+				glm::vec3 rotation = tc.Rotation;
 
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
 					* glm::rotate(glm::mat4(1.0f), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
 					* glm::scale(glm::mat4(1.0f), scale);
 
 				glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); // Green
-				Renderer2D::DrawRect(translation, scale, color, 2);
+				Renderer2D::DrawRect(translation, rotation, scale, color, 2);
 			}
 		}
 		{

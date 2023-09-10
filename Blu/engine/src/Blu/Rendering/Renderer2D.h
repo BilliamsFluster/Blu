@@ -28,7 +28,7 @@ namespace Blu
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int entityID = -1);
 		static void DrawQuad(const glm::mat4& transform, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor = 1.0f);
 		static void DrawRect(const glm::mat4& transform, const glm::vec4& color, float thickness);
-		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness);
+		static void DrawRect(const glm::vec3& position, const glm::vec3 rotation, const glm::vec2& size, const glm::vec4& color, float thickness);
 		static void DrawLine(const glm::vec3& p0, glm::vec3& p1, const glm::vec4& color, float thickness);
 
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor = 1.0f);
@@ -78,6 +78,7 @@ namespace Blu
 
 	private:
 		static Unique<Renderer2DStorage> s_RendererData;
+		friend class LightManager;
 	};
 
 	struct Renderer2DStorage

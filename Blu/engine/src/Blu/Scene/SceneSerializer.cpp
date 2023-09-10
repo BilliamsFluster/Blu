@@ -6,6 +6,7 @@
 #include <filesystem>
 #include "yaml-cpp/yaml.h"
 #include "Blu/Scripting/ScriptEngine.h"
+#include "Blu/Rendering/Texture.h"
 
 namespace YAML
 {
@@ -221,6 +222,9 @@ namespace Blu
 
 			auto& src = entity.GetComponent<SpriteRendererComponent>();
 			out << YAML::Key << "Color" << YAML::Value << src.Color;
+			if(src.Texture)
+				out << YAML::Key << "TexturePath" << YAML::Value << src.Texture->GetTexturePath();
+
 			out << YAML::EndMap;
 
 		}
@@ -403,6 +407,17 @@ namespace Blu
 				{
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
+					
+					// Check if the "TexturePath" key exists in the YAML node
+					if (spriteRendererComponent["TexturePath"])
+					{
+						// Create a new Texture2D instance with the provided path
+						std::string texturePath = spriteRendererComponent["TexturePath"].as<std::string>();
+						src.Texture = Texture2D::Create(texturePath);
+						src.Texture->ConfigureTexture();
+					}
+					
+
 				}
 				
 				auto circleRendererComponent = entity["CircleRendererComponent"];

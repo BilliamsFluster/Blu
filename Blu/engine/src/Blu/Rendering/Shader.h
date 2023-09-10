@@ -22,6 +22,10 @@ namespace Blu
 		virtual void SetUniformFloat4(const std::string& name, const glm::vec4& color) = 0;
 		virtual void SetUniformMat3(const std::string & name, const glm::mat3 & matrix) = 0;
 		virtual void SetUniformMat4(const std::string& name, const glm::mat4& matrix) = 0;
+		
+		virtual void SetUniformPointLight(const std::string& name, const struct PointLightComponent& light) = 0;
+		virtual void SetUniformDirectionalLight(const std::string& name, const struct DirectionalLightComponent& light) = 0;
+		virtual void SetUniformSpotlight(const std::string& name, const struct SpotlightComponent& light) = 0;
 	
 		virtual void Bind() const = 0;
 		virtual void UnBind() const = 0;
@@ -40,6 +44,7 @@ namespace Blu
 
 	private:
 		std::unordered_map<std::string, Shared<Shader>> m_Shaders;
+		friend class LightManager;
 	};
 }
 

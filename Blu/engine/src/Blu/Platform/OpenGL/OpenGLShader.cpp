@@ -4,10 +4,11 @@
 #include <fstream>
 #include "Blu/Core/Log.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "Blu/Scene/Component.h"
 
 namespace Blu
 {
-	static GLenum  ShaderTypeFromString(const std::string& type)
+	static GLenum ShaderTypeFromString(const std::string& type)
 	{
 		if (type == "vertex") return GL_VERTEX_SHADER;
 		if (type == "fragment" || type == "pixel") return GL_FRAGMENT_SHADER;
@@ -300,6 +301,69 @@ namespace Blu
 		m_UniformLocationCache[name] = location;
 		return location;
 	}
+
+	void OpenGLShader::SetUniformPointLight(const std::string& name, const PointLightComponent& light)
+	{
+		// Get the uniform location in the shader
+		int location = GetUniformLocation(name);
+
+		if (location != -1)
+		{
+			// Create a PointLight struct to hold the data
+			PointLightComponent pointLight;
+			pointLight.Color = light.Color;
+			pointLight.Intensity = light.Intensity;
+			pointLight.Radius = light.Radius;
+			pointLight.Position = light.Position;
+			pointLight.AmbientColor = light.AmbientColor;
+			pointLight.DiffuseColor = light.DiffuseColor;
+			pointLight.SpecularColor = light.SpecularColor;
+			pointLight.Shininess = light.Shininess;
+
+			// Set the uniform data using glUniform* functions
+			glUniform4fv(location, 1, glm::value_ptr(pointLight.Color));
+			glUniform1f(location + 1, pointLight.Intensity);
+			glUniform1f(location + 2, pointLight.Radius);
+			glUniform3fv(location + 3, 1, glm::value_ptr(pointLight.Position));
+			glUniform3fv(location + 4, 1, glm::value_ptr(pointLight.AmbientColor));
+			glUniform3fv(location + 5, 1, glm::value_ptr(pointLight.DiffuseColor));
+			glUniform3fv(location + 6, 1, glm::value_ptr(pointLight.SpecularColor));
+			glUniform1f(location + 7, pointLight.Shininess);
+		}
+	}
+
+	void OpenGLShader::SetUniformDirectionalLight(const std::string& name, const DirectionalLightComponent& light)
+	{
+		// Get the uniform location in the shader
+		int location = GetUniformLocation(name);
+
+		//if (location != -1)
+		//{
+		//	// Set the uniform data using glUniform* functions
+		//	glUniform3fv(location, 1, glm::value_ptr(light.Direction));
+		//	glUniform4fv(location + 1, 1, glm::value_ptr(light.Color));
+		//	// Set other DirectionalLight properties as needed...
+		//}
+	}
+
+	void OpenGLShader::SetUniformSpotlight(const std::string& name, const SpotlightComponent& light)
+	{
+		// Get the uniform location in the shader
+		int location = GetUniformLocation(name);
+
+		//if (location != -1)
+		//{
+		//	// Set the uniform data using glUniform* functions
+		//	glUniform3fv(location, 1, glm::value_ptr(light.Position));
+		//	glUniform3fv(location + 1, 1, glm::value_ptr(light.Direction));
+		//	glUniform4fv(location + 2, 1, glm::value_ptr(light.Color));
+		//	glUniform1f(location + 3, light.Intensity);
+		//	glUniform1f(location + 4, light.Cutoff);
+		//	glUniform1f(location + 5, light.OuterCutoff);
+		//	// Set other Spotlight properties as needed...
+		//}
+	}
+
 
 	
 

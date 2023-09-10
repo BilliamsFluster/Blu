@@ -1,57 +1,29 @@
 Scene: Name
 Entities:
-  - Entity: 4804197006088416331
+  - Entity: 9418544864656253045
     TagComponent:
-      Tag: Camera
-    CameraComponent:
-      Camera:
-        ProjectionType: 0
-        OrthographicFar: 1
-        OrthographicNear: -1
-        OrthographicSize: 10
-        PerspectiveFar: 1000
-        PerspectiveNear: 0.00999999978
-        PerspectiveFOV: 45
-      Primary: true
-      FixedAspectRatio: false
-    TransformComponent:
-      Translation: [0, -1.0836525, 5]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 1583520785709505240
-    TagComponent:
-      Tag: Floor
-    TransformComponent:
-      Translation: [0, -1.9287653, 0]
-      Rotation: [0, 0, 0]
-      Scale: [8.52273846, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-    Rigidbody2DComponent:
-      BodyType: 0
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
-  - Entity: 16579996429003500425
-    TagComponent:
-      Tag: Sprite
+      Tag: BoxPawn
     ScriptComponent:
       Name: Azure.BoxPawn
       ScriptFields:
-        Speed: 6
+        Speed: 0.100000001
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
+  - Entity: 3407520519802908797
+    TagComponent:
+      Tag: Sprite
+    TransformComponent:
+      Translation: [0, -4.49773407, -0.08963871]
+      Rotation: [0, 0, 0]
+      Scale: [19.7813168, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
     Rigidbody2DComponent:
-      BodyType: 1
+      BodyType: 0
       FixedRotation: false
     BoxCollider2DComponent:
       Offset: [0, 0]

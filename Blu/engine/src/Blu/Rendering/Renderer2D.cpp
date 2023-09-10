@@ -433,21 +433,34 @@ namespace Blu
 		s_RendererData->LineVertexCount += 2;
 	}
 
-	void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness)
+	void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec3 rotation, const glm::vec2& size, const glm::vec4& color, float thickness)
 	{
 		if (s_RendererData->LineVertexCount >= Renderer2DStorage::MaxVertices)
 		{
 			FlushAndResetLines();
 		}
-		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
-		glm::vec3 p1 = glm::vec3(position.x + size.x * 0.5f, position.y - size.y * 0.5f, position.z);
-		glm::vec3 p2 = glm::vec3(position.x + size.x * 0.5f, position.y + size.y * 0.5f, position.z);
-		glm::vec3 p3 = glm::vec3(position.x - size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::rotate(glm::mat4(1.0f), rotation.z, glm::vec3(0.0f, 0.0f, 1.0f)) *
+			glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
 
-		DrawLine(p0, p1, color, thickness);
-		DrawLine(p1, p2, color, thickness);
-		DrawLine(p2, p3, color, thickness);
-		DrawLine(p3, p0, color, thickness);
+		// Calculate the rotated corner points of the rectangle
+		glm::vec4 corners[] = {
+		glm::vec4(-0.5f, -0.5f, 0.0f, 1.0f),
+		glm::vec4(0.5f, -0.5f, 0.0f, 1.0f),
+		glm::vec4(0.5f, 0.5f, 0.0f, 1.0f),
+		glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f)
+		};
+
+		for (int i = 0; i < 4; ++i)
+		{
+			int nextIndex = (i + 1) % 4;
+			glm::vec4 p0 = transform * corners[i];
+			glm::vec4 p1 = transform * corners[nextIndex];
+
+			glm::vec3 startPoint(p0);
+			glm::vec3 endPoint(p1);
+			DrawLine(startPoint, endPoint, color, thickness);
+		}
 	}
 
 	void Renderer2D::DrawRect(const glm::mat4& transform, const glm::vec4& color, float thickness)

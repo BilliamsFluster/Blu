@@ -194,6 +194,40 @@ namespace Blu
 		CircleCollider2DComponent(const CircleCollider2DComponent& other) = default;
 	};
 
+	struct PointLightComponent
+	{
+		glm::vec3 Position{ 0.0f, 0.0f, 0.0f };
+		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float Intensity = 1.0f;
+		float Radius = 1.0f;
+
+		// Additional properties for Phong reflection model
+		glm::vec3 AmbientColor{ 0.1f, 0.1f, 0.1f }; // Ambient light color
+		glm::vec3 DiffuseColor{ 0.8f, 0.8f, 0.8f }; // Diffuse light color
+		glm::vec3 SpecularColor{ 1.0f, 1.0f, 1.0f }; // Specular light color
+		float Shininess = 32.0f; // Shininess factor for specular reflection
+
+		PointLightComponent() = default;
+		PointLightComponent(const glm::vec3& position, const glm::vec4& color, float intensity, float radius)
+			: Position(position), Color(color), Intensity(intensity), Radius(radius) {}
+	};
+
+	struct DirectionalLightComponent
+	{
+		glm::vec3 Direction = glm::vec3(0.0f, -1.0f, 0.0f); // Default direction is downward
+		glm::vec4 Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // Default color is white
+		float Intensity = 1.0f; // Default intensity is 1.0
+
+		DirectionalLightComponent() = default;
+
+		DirectionalLightComponent(const glm::vec3& direction, const glm::vec4& color, float intensity)
+			: Direction(direction), Color(color), Intensity(intensity) {}
+	};
+	struct SpotlightComponent
+	{
+
+	};
+
 	template<typename... Component>
 	struct Components
 	{
@@ -202,7 +236,7 @@ namespace Blu
 	using AllComponents =
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
-		ScriptComponent, NativeScriptComponent, Rigidbody2DComponent>;
+		ScriptComponent, NativeScriptComponent, Rigidbody2DComponent, PointLightComponent>;
 
 
 

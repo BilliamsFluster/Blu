@@ -59,6 +59,8 @@ namespace Blu
 		float m_ViewportWidth = 0.0f, m_ViewportHeight = 0.0f;
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
 		std::filesystem::path m_SceneFilePath;
+		Shared<class LightManager> m_LightManager;
+
 		b2World* m_PhysicsWorld = nullptr;
 		friend class Entity;
 		friend class SceneSerializer;
