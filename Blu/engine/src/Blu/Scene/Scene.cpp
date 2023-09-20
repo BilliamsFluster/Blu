@@ -287,7 +287,8 @@ namespace Blu
 		{
 			Entity entity = { e, this };
 			
-			ScriptEngine::OnUpdateEntity(&entity, deltaTime);
+			if(entity)
+				ScriptEngine::OnUpdateEntity(&entity, deltaTime);
 
 		}
 	}

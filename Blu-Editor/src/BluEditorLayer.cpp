@@ -106,6 +106,13 @@ namespace Blu
 		m_EditorCamera = EditorCamera(30, 1.778f, 0.1f, 1000.0f);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 		m_OperationMode = 0; // local operation
+		SceneSerializer loadSceneSerializer(m_EditorScene);
+
+		std::string scene = loadSceneSerializer.DeserializeLoadedScene();
+		if (!scene.empty())
+		{
+			OpenScene(scene);
+		}
 	}
 
 	void BluEditorLayer::OnDetach()
@@ -148,11 +155,13 @@ namespace Blu
 			{
 				
 				m_ActiveScene->OnUpdateRuntime(deltaTime);
+				break;
 			}
 			case SceneState::Pause:
 			{
 
 				m_ActiveScene->OnUpdatePaused(deltaTime); // If you would like to do anything with the time argument
+				break;
 			}
 		}
 		
@@ -496,6 +505,8 @@ namespace Blu
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
 			m_ActiveScene->OnScriptSystemStart();
+			std::filesystem::path scenePath = path;
+			m_ActiveScene->SetSceneFilePath(scenePath);
 			serializer.DeserializeEntityScriptInstances(path.string());
 
 			
@@ -527,7 +538,6 @@ namespace Blu
 			{
 				std::string filepath = m_EditorScene->GetSceneFilePath().string();
 				serializer.Serialize(filepath);
-
 			}
 
 		}
@@ -937,6 +947,9 @@ namespace Blu
 				std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
 				OpenScene(payloadPath);
 				m_ActiveScene->SetSceneFilePath(payloadPath);
+				SceneSerializer serializer(m_EditorScene);
+				serializer.SerializeLoadedScene(payloadPath.string());
+
 			}
 			ImGui::EndDragDropTarget();
 		}

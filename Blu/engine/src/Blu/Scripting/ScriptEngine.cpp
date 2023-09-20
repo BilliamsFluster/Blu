@@ -484,6 +484,7 @@ namespace Blu
 	void ScriptInstance::InvokeOnUpdate(float deltaTime)
 	{
 		void* param = &deltaTime;
-		m_ScriptClass->InvokeMethod(m_OnUpdateMethod, m_Instance, &param, nullptr);
+		if(m_ScriptClass && m_Instance)
+			m_ScriptClass->InvokeMethod(m_OnUpdateMethod, m_Instance, &param, nullptr);
 	}
 }

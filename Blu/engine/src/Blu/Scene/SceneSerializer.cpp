@@ -305,7 +305,7 @@ namespace Blu
 
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Scene" << YAML::Value << "Name";
+		out << YAML::Key << "Scene" << YAML::Value << filepath;
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
 			{
@@ -328,8 +328,43 @@ namespace Blu
 	}
 	void SceneSerializer::SerializeBinary(const std::string & filepath)
 	{
+		
+		
 	}
 
+	void SceneSerializer::SerializeLoadedScene(const std::string& filepath)
+	{
+		std::string saveScene = "LoadedScenes\\LoadScene.blu";
+		bool createdDirectory = std::filesystem::create_directories(std::filesystem::path(saveScene).remove_filename());
+		YAML::Emitter out;
+		out << YAML::BeginMap;
+		out << YAML::Key << "LastLoadedScene" << YAML::Value << filepath;
+		out << YAML::EndMap;
+
+		std::ofstream fout(saveScene);
+		if (!fout)
+		{
+			std::cerr << "Failed to create the file at: " << filepath << '\n';
+			return;
+		}
+		fout << out.c_str();
+
+	}
+	std::string SceneSerializer::DeserializeLoadedScene()
+	{
+		std::string filepath = "LoadedScenes\\LoadScene.blu";
+		std::ifstream stream(filepath);
+		std::stringstream strStream;
+		strStream << stream.rdbuf();
+
+		YAML::Node data = YAML::Load(strStream.str());
+		if (!data["LastLoadedScene"])
+			return "noScene";
+
+		std::string sceneName = data["LastLoadedScene"].as<std::string>();
+		return sceneName;
+		
+	}
 	bool SceneSerializer::Deserialize(const std::string& filepath)
 	{
 		std::ifstream stream(filepath);
@@ -472,6 +507,7 @@ namespace Blu
 
 		return true;
 	}
+	
 	bool SceneSerializer::DeserializeEntityScriptInstances(const std::string& filepath)
 	{
 		std::ifstream stream(filepath);

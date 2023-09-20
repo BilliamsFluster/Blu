@@ -12,8 +12,11 @@ namespace Blu
 
 		void Serialize(const std::string& filepath);
 		void SerializeBinary(const std::string& filepath);
+		void SerializeLoadedScene(const std::string& filepath);
 
 		bool Deserialize(const std::string& filepath);
+		std::string DeserializeLoadedScene();
+
 		bool DeserializeEntityScriptInstances(const std::string& filepath);
 		bool DeserializeBinary(const std::string& filepath);
 

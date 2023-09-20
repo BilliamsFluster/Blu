@@ -1,34 +1,3 @@
-Scene: Name
+Scene: assets\scenes\NewPhysicsTest.blu
 Entities:
-  - Entity: 9418544864656253045
-    TagComponent:
-      Tag: BoxPawn
-    ScriptComponent:
-      Name: Azure.BoxPawn
-      ScriptFields:
-        Speed: 0.100000001
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 3407520519802908797
-    TagComponent:
-      Tag: Sprite
-    TransformComponent:
-      Translation: [0, -4.49773407, -0.08963871]
-      Rotation: [0, 0, 0]
-      Scale: [19.7813168, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-    Rigidbody2DComponent:
-      BodyType: 0
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
+  []

@@ -1,24 +1,48 @@
-Scene: Name
+Scene: assets\scenes\DemoScene.blu
 Entities:
-  - Entity: 1234567890
+  - Entity: 1234567556890
     TagComponent:
       Tag: Cube 1
     TransformComponent:
-      Translation: [-1.35629296, 0.0347428769, 0.177086934]
-      Rotation: [-2.55042911, -0.622615337, 0.117435664]
-      Scale: [1.09999657, 1.09999204, 1.09998894]
+      Translation: [0.652997553, -2.99678802, 0]
+      Rotation: [0, 0, 0]
+      Scale: [10.7954626, 1.09999204, 1.09998894]
     SpriteRendererComponent:
       Color: [0, 0.525096655, 1, 1]
+    Rigidbody2DComponent:
+      BodyType: 0
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
   - Entity: 1234567890
     TagComponent:
       Tag: Cube 2
+    ScriptComponent:
+      Name: Azure.BoxPawn
+      ScriptFields:
+        Speed: 0.100000001
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
       Color: [1, 0, 0, 1]
-  - Entity: 1234567890
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 12343434567890
     TagComponent:
       Tag: Camera
     CameraComponent:
@@ -33,6 +57,6 @@ Entities:
       Primary: true
       FixedAspectRatio: false
     TransformComponent:
-      Translation: [0, 0, 3.0999999]
+      Translation: [0, -0.200000003, 11.1000004]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
