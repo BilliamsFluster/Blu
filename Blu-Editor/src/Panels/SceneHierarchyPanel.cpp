@@ -751,6 +751,7 @@ namespace Blu
 				ImGui::DragFloat("##Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
 				ImGui::Text("Restitution Threshold");
 				ImGui::DragFloat("##RestitutionThreshold", &component.RestitutionThreshold, 0.1f, 0.0f, 10.0f);
+				ImGui::Checkbox("Show Collision", &component.ShowCollision);
 
 
 			});
