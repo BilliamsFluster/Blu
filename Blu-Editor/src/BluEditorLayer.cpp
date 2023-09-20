@@ -309,7 +309,8 @@ namespace Blu
 					* glm::scale(glm::mat4(1.0f), scale);
 
 				glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); // Green
-				Renderer2D::DrawRect(translation, rotation, scale, color, 2);
+				if(bc2d.ShowCollision)
+					Renderer2D::DrawRect(translation, rotation, scale, color, 2);
 			}
 		}
 		{

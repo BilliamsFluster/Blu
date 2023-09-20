@@ -449,7 +449,6 @@ namespace Blu
 						// Create a new Texture2D instance with the provided path
 						std::string texturePath = spriteRendererComponent["TexturePath"].as<std::string>();
 						src.Texture = Texture2D::Create(texturePath);
-						src.Texture->ConfigureTexture();
 					}
 					
 

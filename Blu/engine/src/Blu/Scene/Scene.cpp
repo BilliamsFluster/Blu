@@ -199,6 +199,7 @@ namespace Blu
 	void Scene::OnPhysics2DStart()
 	{
 		m_PhysicsWorld = new b2World({ 0.0f, -0.0981f }); // gravity
+		m_PhysicsWorld->SetGravity(b2Vec2(0, - 0.0981f));
 
 		auto view = m_Registry.view<Rigidbody2DComponent>();
 

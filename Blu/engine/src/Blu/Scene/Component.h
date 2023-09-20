@@ -171,11 +171,12 @@ namespace Blu
 		float Friction = 0.5f;
 		float Restitution = 0.1f;
 		float RestitutionThreshold = 0.5f;
-
+		bool ShowCollision = false;
 		void* RuntimeFixture = nullptr;
 
 		BoxCollider2DComponent() = default;
 		BoxCollider2DComponent(const BoxCollider2DComponent& other) = default;
+		
 	};
 
 	struct CircleCollider2DComponent
@@ -187,6 +188,7 @@ namespace Blu
 		float Friction = 0.5f;
 		float Restitution = 0.1f;
 		float RestitutionThreshold = 0.5f;
+		bool ShowCollision = false;
 
 		void* RuntimeFixture = nullptr;
 
