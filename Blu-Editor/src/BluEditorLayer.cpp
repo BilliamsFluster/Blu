@@ -36,6 +36,8 @@ namespace Blu
 		m_ActiveScene = std::make_shared<Scene>();
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
+		
+		
 		m_Texture = Texture2D::Create("assets/textures/StickMan.png");
 		m_AppHeaderIcon = Texture2D::Create("assets/textures/BluLogo.png");
 		
@@ -104,6 +106,13 @@ namespace Blu
 		m_EditorCamera = EditorCamera(30, 1.778f, 0.1f, 1000.0f);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 		m_OperationMode = 0; // local operation
+		SceneSerializer loadSceneSerializer(m_EditorScene);
+
+		std::string scene = loadSceneSerializer.DeserializeLoadedScene();
+		if (!scene.empty())
+		{
+			OpenScene(scene);
+		}
 	}
 
 	void BluEditorLayer::OnDetach()
@@ -146,11 +155,13 @@ namespace Blu
 			{
 				
 				m_ActiveScene->OnUpdateRuntime(deltaTime);
+				break;
 			}
 			case SceneState::Pause:
 			{
 
 				m_ActiveScene->OnUpdatePaused(deltaTime); // If you would like to do anything with the time argument
+				break;
 			}
 		}
 		
@@ -291,13 +302,14 @@ namespace Blu
 
 				glm::vec3 translation = tc.Translation + glm::vec3(bc2d.Offset, 0.001f);
 				glm::vec3 scale = tc.Scale * glm::vec3(bc2d.Size, 1.0f);
+				glm::vec3 rotation = tc.Rotation;
 
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
 					* glm::rotate(glm::mat4(1.0f), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
 					* glm::scale(glm::mat4(1.0f), scale);
 
 				glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); // Green
-				Renderer2D::DrawRect(translation, scale, color, 2);
+				Renderer2D::DrawRect(translation, rotation, scale, color, 2);
 			}
 		}
 		{
@@ -493,6 +505,8 @@ namespace Blu
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
 			m_ActiveScene->OnScriptSystemStart();
+			std::filesystem::path scenePath = path;
+			m_ActiveScene->SetSceneFilePath(scenePath);
 			serializer.DeserializeEntityScriptInstances(path.string());
 
 			
@@ -524,7 +538,6 @@ namespace Blu
 			{
 				std::string filepath = m_EditorScene->GetSceneFilePath().string();
 				serializer.Serialize(filepath);
-
 			}
 
 		}
@@ -934,6 +947,9 @@ namespace Blu
 				std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
 				OpenScene(payloadPath);
 				m_ActiveScene->SetSceneFilePath(payloadPath);
+				SceneSerializer serializer(m_EditorScene);
+				serializer.SerializeLoadedScene(payloadPath.string());
+
 			}
 			ImGui::EndDragDropTarget();
 		}

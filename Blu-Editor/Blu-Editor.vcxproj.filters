@@ -15,4 +15,7 @@
       <Filter>Panels</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="assets\scenes\Lighting\Light.h" />
+  </ItemGroup>
 </Project>

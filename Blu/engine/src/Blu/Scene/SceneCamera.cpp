@@ -37,7 +37,12 @@ namespace Blu
 	{
 		if (m_ProjectionType == ProjectionType::Perspective)
 		{
-			m_ProjectionMatrix = glm::perspective(m_PerspectiveFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
+			if(m_AspectRatio > 0.0f)
+				m_ProjectionMatrix = glm::perspective(m_PerspectiveFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
+			else
+			{
+				m_AspectRatio = 1.0f;
+			}
 		}
 		if (m_ProjectionType == ProjectionType::Orthographic)
 		{

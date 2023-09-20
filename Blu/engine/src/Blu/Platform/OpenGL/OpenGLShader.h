@@ -29,6 +29,10 @@ namespace Blu
 		void SetUniformMat4(const std::string& name, const glm::mat4& matrix);
 		int GetUniformLocation(const std::string& name);
 
+		virtual void SetUniformPointLight(const std::string& name, const struct PointLightComponent& light) override;
+		virtual void SetUniformDirectionalLight(const std::string& name, const struct DirectionalLightComponent& light) override;
+		virtual void SetUniformSpotlight(const std::string& name, const struct SpotlightComponent& light) override;
+
 	private:
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 		std::string ReadFile(const std::string& filepath);

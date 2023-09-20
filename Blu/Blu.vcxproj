@@ -598,6 +598,7 @@
     <ClInclude Include="engine\src\Blu\Events\MouseEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h" />
     <ClInclude Include="engine\src\Blu\Math\Math.h" />
     <ClInclude Include="engine\src\Blu\Physics\Physics2D.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
@@ -654,6 +655,7 @@
     <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
+    <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp" />
     <ClCompile Include="engine\src\Blu\Math\Math.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp" />

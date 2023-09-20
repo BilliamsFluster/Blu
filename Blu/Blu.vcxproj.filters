@@ -1542,6 +1542,7 @@
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -1697,5 +1698,6 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp" />
   </ItemGroup>
 </Project>
