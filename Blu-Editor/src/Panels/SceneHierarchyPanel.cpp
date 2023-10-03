@@ -3,6 +3,7 @@
 #include "Blu/Scene/Component.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "Blu/Rendering/Texture.h"
+#include "Blu/Rendering/Material.h"
 #include <imgui_internal.h>
 #include <filesystem>
 #include "Blu/Scripting/ScriptEngine.h"
@@ -707,18 +708,60 @@ namespace Blu
 			{
 				float itemWidth = 2.0f; // Adjust this value as needed
 				ImGui::PushItemWidth(ImGui::GetWindowWidth() / itemWidth);
-				ImGui::ColorEdit4("Entity Color: ", glm::value_ptr(component.Color));
-				ImGui::Button("Texture", ImVec2(50.0f, 50.0f));
-				if (ImGui::BeginDragDropTarget())
+				
+				// New section for material
+				if (ImGui::CollapsingHeader("Material"))
 				{
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-					{
+					if (!component.MaterialInstance) return;
 
-						std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
-						component.Texture = Texture2D::Create(payloadPath.string());
-						component.Texture->GetTexturePath();
-					}
-					ImGui::EndDragDropTarget();
+					// Helper lambda to handle texture UI
+					auto HandleTextureUI = [&](const char* label, Shared<Texture2D>& texture)
+						{
+							if (texture)
+							{
+								ImGui::Text(label);
+								if (ImGui::IsItemHovered())
+								{
+									std::string tooltip = "Texture Path: " + std::string(texture->GetTexturePath());
+									ImGui::SetTooltip(tooltip.c_str());
+								}
+								ImGui::SameLine();
+								std::string buttonLabel = "X##" + std::string(label);
+								if (ImGui::Button(buttonLabel.c_str()))
+								{
+									texture = nullptr;
+								}
+								if (ImGui::IsItemHovered())
+								{
+									std::string tooltip = "Clear " + std::string(label);
+									ImGui::SetTooltip(tooltip.c_str());
+								}
+							}
+							else
+							{
+								ImGui::Button(label, ImVec2(50.0f, 50.0f));
+								if (ImGui::BeginDragDropTarget())
+								{
+									if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+									{
+										std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
+										texture = Texture2D::Create(payloadPath.string());
+										texture->GetTexturePath();
+									}
+									ImGui::EndDragDropTarget();
+								}
+							}
+						};
+
+					// Handle each texture type
+					HandleTextureUI("Albedo Map", component.MaterialInstance->AlbedoMap);
+					// Albedo Color
+					ImGui::ColorEdit4("Albedo Color: ", glm::value_ptr(component.Color));
+
+					HandleTextureUI("Diffuse Map", component.MaterialInstance->DiffuseMap);
+					HandleTextureUI("Specular Map", component.MaterialInstance->SpecularMap);
+					HandleTextureUI("Normal Map", component.MaterialInstance->NormalMap);
+
 				}
 			});
 
