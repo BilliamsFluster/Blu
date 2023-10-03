@@ -9,7 +9,7 @@ Entities:
       Scale: [72.7880402, 0.999976873, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Ground.png
+      AlbedoPath: assets\textures\Ground.png
     Rigidbody2DComponent:
       BodyType: 0
       FixedRotation: false
@@ -29,7 +29,7 @@ Entities:
       Scale: [200, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\rocks.png
+      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\rocks.png
   - Entity: 4777953925013219778
     TagComponent:
       Tag: BoxPawn
@@ -84,7 +84,7 @@ Entities:
       Scale: [72.7910004, 1, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Ground.png
+      AlbedoPath: assets\textures\Ground.png
     Rigidbody2DComponent:
       BodyType: 0
       FixedRotation: false
@@ -130,7 +130,7 @@ Entities:
       Scale: [100, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\sky.png
+      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\sky.png
   - Entity: 9114750310479479275
     TagComponent:
       Tag: Ground1
@@ -140,7 +140,7 @@ Entities:
       Scale: [200, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_1.png
+      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_1.png
   - Entity: 11845927707545961069
     TagComponent:
       Tag: Ground2
@@ -150,7 +150,7 @@ Entities:
       Scale: [200, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_2.png
+      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_2.png
   - Entity: 8914014460895932578
     TagComponent:
       Tag: Ground3
@@ -160,7 +160,7 @@ Entities:
       Scale: [200, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_3.png
+      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_3.png
   - Entity: 10816776463111091516
     TagComponent:
       Tag: Plant
@@ -170,7 +170,7 @@ Entities:
       Scale: [100, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\plant.png
+      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\plant.png
   - Entity: 10122208013910117312
     TagComponent:
       Tag: Clouds1
@@ -180,7 +180,7 @@ Entities:
       Scale: [100, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\clouds_1.png
+      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\clouds_1.png
   - Entity: 11425581211492664981
     TagComponent:
       Tag: Clouds2
@@ -190,7 +190,7 @@ Entities:
       Scale: [100, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\clouds_2.png
+      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\clouds_2.png
   - Entity: 1273781723573688431
     TagComponent:
       Tag: WallLeft
@@ -200,7 +200,7 @@ Entities:
       Scale: [72.7871475, 0.9999699, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\Ground.png
+      AlbedoPath: assets\textures\Ground.png
     Rigidbody2DComponent:
       BodyType: 0
       FixedRotation: false
