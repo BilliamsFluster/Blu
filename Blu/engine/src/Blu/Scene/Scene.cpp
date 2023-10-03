@@ -40,10 +40,12 @@ namespace Blu
 	Scene::Scene()
 	{
 		m_LightManager = std::make_shared<LightManager>();
+		OnRuntimeStop(); // make sure there are not any instances that may create compounding for gravity and etc
 	}
 	Scene::~Scene()
 	{
 		m_LightManager = nullptr;
+		OnRuntimeStop();
 	}
 	template<typename Component>
 	static void CopyComponent(entt::registry& dst, entt::registry& src, std::unordered_map<UUID, entt::entity> map)
@@ -259,9 +261,12 @@ namespace Blu
 	}
 	void Scene::OnRuntimeStop()
 	{
-		delete m_PhysicsWorld;
-		m_PhysicsWorld = nullptr;
-		//ScriptEngine::OnRuntimeStop(); 
+		if (m_PhysicsWorld)
+		{
+			delete m_PhysicsWorld;
+			m_PhysicsWorld = nullptr;
+		}
+
 
 	}
 	void Scene::OnScriptSystemStart()
