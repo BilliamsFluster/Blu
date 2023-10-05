@@ -20,6 +20,7 @@ namespace Blu
 		float TilingFactor;
 		float Thickness = 1.0f;
 		int EntityID;
+		glm::vec3 LightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 	};
 
 	struct CircleVertex
@@ -67,7 +68,8 @@ namespace Blu
 			{Blu::ShaderDataType::Float, "a_TexIndex"},
 			{Blu::ShaderDataType::Float, "a_TilingFactor"},
 			{Blu::ShaderDataType::Float, "a_Thickness"},
-			{Blu::ShaderDataType::Int, "a_EntityID"}
+			{Blu::ShaderDataType::Int, "a_EntityID"},
+			{Blu::ShaderDataType::Float3, "a_LightColor"}
 		};
 
 		// Circle layout
@@ -335,6 +337,7 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
 			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_RendererData->QuadVertexBufferPtr->LightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 			s_RendererData->QuadVertexBufferPtr++;
 		}
 

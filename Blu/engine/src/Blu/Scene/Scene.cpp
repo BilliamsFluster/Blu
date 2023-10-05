@@ -362,8 +362,7 @@ namespace Blu
 		
 		Renderer2D::BeginScene(camera);
 		//Renderer2D::GetRendererData()->QuadShader->Bind();
-		m_LightManager->UpdateLights();
-		m_LightManager->RenderLights();
+		
 		{
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto& entity : group)
@@ -396,8 +395,7 @@ namespace Blu
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
 		
-		m_LightManager->UpdateLights();
-		m_LightManager->RenderLights();
+		
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{
