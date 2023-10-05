@@ -1543,6 +1543,8 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Material.h" />
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLMaterial.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -1699,5 +1701,7 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLMaterial.cpp" />
   </ItemGroup>
 </Project>

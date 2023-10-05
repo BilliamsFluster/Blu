@@ -8,6 +8,7 @@
 #include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/Rendering/Texture.h"
 
+
 namespace YAML
 {
 	template<>
@@ -222,8 +223,21 @@ namespace Blu
 
 			auto& src = entity.GetComponent<SpriteRendererComponent>();
 			out << YAML::Key << "Color" << YAML::Value << src.Color;
-			if(src.Texture)
-				out << YAML::Key << "TexturePath" << YAML::Value << src.Texture->GetTexturePath();
+			if(!src.MaterialInstance)
+				src.MaterialInstance = Material::Create();
+			
+			auto serializeTexture = [&](const std::string& yamlKey, Shared<Texture2D>& texture)
+				{
+					if (texture)
+					{
+						out << YAML::Key << yamlKey << YAML::Value << texture->GetTexturePath();
+					}
+				};
+			// Check to see if texture paths are valid before we serialize them 
+			serializeTexture("AlbedoPath", src.MaterialInstance->AlbedoMap);
+			serializeTexture("NormalPath", src.MaterialInstance->NormalMap);
+			serializeTexture("DiffusePath", src.MaterialInstance->DiffuseMap);
+			serializeTexture("SpecularPath", src.MaterialInstance->SpecularMap);
 
 			out << YAML::EndMap;
 
@@ -443,13 +457,24 @@ namespace Blu
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 					
-					// Check if the "TexturePath" key exists in the YAML node
-					if (spriteRendererComponent["TexturePath"])
-					{
-						// Create a new Texture2D instance with the provided path
-						std::string texturePath = spriteRendererComponent["TexturePath"].as<std::string>();
-						src.Texture = Texture2D::Create(texturePath);
-					}
+					if (!src.MaterialInstance)
+						src.MaterialInstance = Material::Create();
+					// Lambda to handle texture assignment
+					auto assignTextureFromYAML = [&](const char* yamlKey, Shared<Texture2D>& texture)
+						{
+							if (spriteRendererComponent[yamlKey])
+							{
+								std::string texturePath = spriteRendererComponent[yamlKey].as<std::string>();
+								
+								texture = Texture2D::Create(texturePath);
+							}
+						};
+
+					// Use the lambda for each texture type
+					assignTextureFromYAML("AlbedoPath", src.MaterialInstance->AlbedoMap);
+					assignTextureFromYAML("DiffusePath", src.MaterialInstance->DiffuseMap);
+					assignTextureFromYAML("SpecularPath", src.MaterialInstance->SpecularMap);
+					assignTextureFromYAML("NormalPath", src.MaterialInstance->NormalMap);
 					
 
 				}

@@ -6,6 +6,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "Blu/Rendering/ParticleSystem.h"
 #include "Blu/Core/UUID.h"
+#include "Blu/Rendering/Material.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -77,11 +78,21 @@ namespace Blu
 	{
 		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
-		Shared<class Texture2D> Texture;
-		SpriteRendererComponent() = default;
+		
+		Shared<class Material> MaterialInstance;  
+
+		SpriteRendererComponent()
+		{
+			MaterialInstance = Material::Create();
+
+		}
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color)
-			:Color(color) {}
+			:Color(color) 
+		{
+			MaterialInstance = Material::Create();
+
+		}
 		
 	};
 
