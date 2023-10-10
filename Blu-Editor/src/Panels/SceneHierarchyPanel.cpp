@@ -55,6 +55,14 @@ namespace Blu
 						Entity.AddComponent<SpriteRendererComponent>();
 					}
 					ImGui::Separator();
+					if (ImGui::MenuItem("Point Light Entity"))
+					{
+						auto Entity = m_Context->CreateEntity("PointLight");
+						Entity.AddComponent<PointLightComponent>();
+						Entity.AddComponent<CircleRendererComponent>();
+						m_Context->GetLightManager()->AddPointLight(Entity);
+					}
+					ImGui::Separator();
 					if (ImGui::MenuItem("Empty Entity"))
 					{
 						m_Context->CreateEntity("Empty");
@@ -322,7 +330,7 @@ namespace Blu
 				if (ImGui::MenuItem("PointLight"))
 				{
 					m_SelectedEntity.AddComponent<PointLightComponent>();
-					m_Context->m_LightManager->AddPointLight(m_Context, m_SelectedEntity);
+					m_Context->m_LightManager->AddPointLight(m_SelectedEntity);
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -423,14 +431,7 @@ namespace Blu
 				ImGui::SameLine();
 				ImGui::Text("Specular light color");
 
-				// Shininess
-				ImGui::SliderFloat("Shininess##PointLight", &light.Shininess, 1.0f, 128.0f);
-				ImGui::SameLine();
-				ImGui::Text("Shininess factor");
-				// Position
-				ImGui::DragFloat3("Position##PointLight", glm::value_ptr(light.Position), 0.1f);
-				ImGui::SameLine();
-				ImGui::Text("Position of the light source");
+				
 
 
 				// You can add more UI controls as needed for your PointLightComponent
@@ -759,7 +760,12 @@ namespace Blu
 					ImGui::ColorEdit4("Albedo Color: ", glm::value_ptr(component.Color));
 
 					HandleTextureUI("Diffuse Map", component.MaterialInstance->DiffuseMap);
+					ImGui::ColorEdit4("Diffuse Color: ", glm::value_ptr(component.MaterialInstance->DiffuseColor));
+
 					HandleTextureUI("Specular Map", component.MaterialInstance->SpecularMap);
+					ImGui::ColorEdit4("Specular Color: ", glm::value_ptr(component.MaterialInstance->SpecularColor));
+					ImGui::ColorEdit4("Ambient Color: ", glm::value_ptr(component.MaterialInstance->AmbientColor));
+
 					HandleTextureUI("Normal Map", component.MaterialInstance->NormalMap);
 
 				}

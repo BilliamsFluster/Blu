@@ -3,7 +3,6 @@
 #include "Blu/Scene/Component.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Rendering/Shader.h"
-#include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Entity.h"
 
 Blu::LightManager::LightManager()
@@ -14,7 +13,7 @@ Blu::LightManager::~LightManager()
 {
 }
 
-void Blu::LightManager::AddPointLight(Shared<class Scene> scene,Entity& light)
+void Blu::LightManager::AddPointLight(Entity& light)
 {
     // Add the provided point light to the vector
     m_PointLights.push_back(light);
@@ -43,7 +42,7 @@ void Blu::LightManager::AddPointLight(Shared<class Scene> scene,Entity& light)
     
 }
 
-void Blu::LightManager::AddDirectionalLight(Shared<class Scene> scene, Entity& light)
+void Blu::LightManager::AddDirectionalLight(Entity& light)
 {
     
 }

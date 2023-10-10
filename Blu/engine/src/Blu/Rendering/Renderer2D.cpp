@@ -349,7 +349,7 @@ namespace Blu
 			{
 				s_RendererData->QuadVertexBufferPtr->LightPosition = lightManager->GetPointLights()[0].GetComponent<TransformComponent>().Translation;
 				s_RendererData->QuadVertexBufferPtr->LightColor = lightManager->GetPointLights()[0].GetComponent<PointLightComponent>().Color;
-
+				
 			}
 			s_RendererData->QuadVertexBufferPtr++;
 		}
@@ -359,12 +359,44 @@ namespace Blu
 	}
 	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
 	{
-		if (src.MaterialInstance->AlbedoMap)
+		if (src.MaterialInstance)
 		{
-			DrawTexturedQuad(transform, src.MaterialInstance->AlbedoMap, src.Color, entityID);
+			if(src.MaterialInstance->AlbedoMap)
+				DrawTexturedQuad(transform, src.MaterialInstance->AlbedoMap, src.Color, entityID);
+			PassMaterialPropertiesToShader(src.MaterialInstance);
 		}
+		
 		DrawQuad(transform, src.Color, entityID);
 
+	}
+	void Renderer2D::PassMaterialPropertiesToShader(Shared<Material> materialInstance)
+	{
+		if (materialInstance)
+		{
+			s_RendererData->QuadShader->Bind();
+			s_RendererData->QuadShader->SetUniformFloat3("o_Material.ambient", materialInstance->AmbientColor);
+			s_RendererData->QuadShader->SetUniformFloat3("o_Material.diffuse", materialInstance->DiffuseColor);
+			s_RendererData->QuadShader->SetUniformFloat3("o_Material.specular", materialInstance->SpecularColor);
+			s_RendererData->QuadShader->SetUniformFloat("o_Material.shininess", materialInstance->Shininess);
+			auto lightManager = Helpers::SceneHelpers::GetHelperActiveScene()->GetLightManager();
+			PassLightPropertiesToShader(lightManager);
+			s_RendererData->QuadShader->UnBind();
+
+
+
+
+		}
+	}
+	void Renderer2D::PassLightPropertiesToShader(Shared<LightManager> lightManager)
+	{
+		if (!lightManager->GetPointLights().size() > 0) return;
+
+		auto pointLight = lightManager->GetPointLights()[0].GetComponent<PointLightComponent>();
+		
+		
+		s_RendererData->QuadShader->SetUniformFloat3("o_Light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		s_RendererData->QuadShader->SetUniformFloat3("o_Light.diffuse", pointLight.DiffuseColor);
+		s_RendererData->QuadShader->SetUniformFloat3("o_Light.specular", pointLight.SpecularColor);
 	}
 
 	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade, int entityID)
@@ -442,6 +474,9 @@ namespace Blu
 		s_RendererData->Stats.QuadCount++;
 	}
 
+	
+
+	
 	void Renderer2D::DrawLine(const glm::vec3& p0, glm::vec3& p1, const glm::vec4& color, float thickness)
 	{
 		s_RendererData->LineVertexBufferPtr->Position = p0;

@@ -1,5 +1,6 @@
 #type vertex
 #version 330 core
+
 			
 layout(location = 0) in vec4 a_Color;
 layout(location = 1) in vec3 a_Position;
@@ -61,10 +62,29 @@ void main()
 #type fragment
 #version 330 core
 			
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+}; 
+struct Light {
+    vec3 position;
+  
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+
 layout(location = 0) out vec4 o_color;
 layout(location = 1) out int o_EntityID;
 
+  
 			
+uniform Material o_Material;
+uniform Light o_Light; 
+
 uniform sampler2D u_Textures[32];
 in vec2 v_TexCoord;
 in vec4 v_Color;
@@ -87,18 +107,21 @@ void main()
 	float ambientStrength = 0.1;
 	float specularStrength = 0.5;
 	
-	vec3 ambient = ambientStrength * v_LightColor;
+	
+	 //o_Light.position = v_LightPosition;
+	
+	vec3 ambient = v_LightColor * o_Material.ambient * o_Light.ambient;
 	
 	vec3 norm = normalize(v_Normal);
 	vec3 lightDir = normalize(v_LightPosition - v_FragPosition); 
 	float diff = max(dot(norm, lightDir), 0.0);
-	vec3 diffuse = diff * v_LightColor;
+	vec3 diffuse = v_LightColor * (diff * o_Material.diffuse) * o_Light.diffuse;
 
 	vec3 viewDir = normalize(v_Position - v_FragPosition);
 	vec3 reflectDir = reflect(-lightDir, norm); 
 
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-	vec3 specular = specularStrength * spec * v_LightColor;  
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), o_Material.shininess);
+	vec3 specular = v_LightColor * (spec * o_Material.specular) * o_Light.specular;  
 
 	// Combine ambient and diffuse lighting
     vec3 lightResult = ambient + diffuse + specular;

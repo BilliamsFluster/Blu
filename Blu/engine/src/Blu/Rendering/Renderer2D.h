@@ -35,7 +35,8 @@ namespace Blu
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float tilingFactor = 1.0f);
 		
 		static void DrawTexturedQuad(const glm::mat4& transform, const Shared<Texture2D>& texture, const glm::vec4& color, int entityID = -1, float tilingFactor = 1.0f);
-
+		static void PassMaterialPropertiesToShader(Shared<class Material> materialInstance);
+		static void PassLightPropertiesToShader(Shared<class LightManager> lightManager);
 
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor = 1.0f);
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture2D>& texture, float tilingFactor = 1.0f);

@@ -9,12 +9,10 @@ namespace Blu
     {
     public:
         // Common material properties
-        glm::vec3 AmbientColor;
-        glm::vec3 DiffuseColor;
-        glm::vec3 SpecularColor;
-        
-
-        float Shininess;
+        glm::vec3 AmbientColor = glm::vec3(1.0f, 0.5f, 0.31f);
+        glm::vec3 DiffuseColor = glm::vec3(1.0f, 0.5f, 0.31f);
+        glm::vec3 SpecularColor = glm::vec3(0.5f, 0.5f, 0.5f);
+        float Shininess = 32.0f;
 
         // Textures
         Shared<Texture2D> DiffuseMap;
