@@ -98,7 +98,7 @@ Entities:
       ScriptFields:
         Speed: 0.5
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [5.77253819, -2.02463818, 10.6258259]
       Rotation: [0, 0, 0.751203597]
       Scale: [1, 1, 1]
     CircleRendererComponent:

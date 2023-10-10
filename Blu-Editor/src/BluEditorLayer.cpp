@@ -15,6 +15,7 @@
 #include "Blu/Core/Application.h"
 #include "Blu/Platform/Windows/WindowsWindow.h"
 #include "Blu/Scripting/ScriptEngine.h"
+#include "Blu/Utils/Helpers.h"
 
 
 
@@ -502,6 +503,8 @@ namespace Blu
 		if (serializer.Deserialize(path.string()))
 		{
 			m_EditorScene = m_ActiveScene;
+			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
+
 			m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
@@ -554,9 +557,11 @@ namespace Blu
 
 			m_PlayButtonHit = true;
 			m_ActiveScene = Scene::Copy(m_EditorScene);
+
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
 			m_SceneMissing = false;
+			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 			
 
 		}
@@ -586,6 +591,7 @@ namespace Blu
 			m_ActiveScene->OnRuntimeStop();
 			SceneSerializer serializer(m_ActiveScene);
 			m_ActiveScene = m_EditorScene;
+			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 			std::string filepath = m_EditorScene->GetSceneFilePath().string();
 			serializer.DeserializeEntityScriptInstances(filepath);
 			m_PlayButtonHit = false;

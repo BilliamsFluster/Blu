@@ -1,4 +1,5 @@
 #pragma once
+#include "Blu/Core/Core.h"
 
 namespace Blu
 {
@@ -9,17 +10,19 @@ namespace Blu
         ~LightManager();
 
         // Add methods to create and manage different types of lights (point lights, directional lights, etc.)
-        void AddPointLight(const struct PointLightComponent& light);
-        void AddDirectionalLight(const struct DirectionalLightComponent& light);
+        void AddPointLight(Shared<class Scene> scene, class Entity& light);
+        void AddDirectionalLight(Shared<class Scene> scene, Entity& light);
         // ...
 
         // Update and render methods for the lights
         void UpdateLights();
         void RenderLights();
 
+        std::vector<Entity> GetPointLights() { return m_PointLights; }
+
     private:
-        std::vector<PointLightComponent> pointLights;
-        std::vector<DirectionalLightComponent> directionalLights;
+        std::vector<Entity> m_PointLights;
+        std::vector<Entity> m_DirectionalLights;
         friend class SceneHierarchyPanel;
     };
 

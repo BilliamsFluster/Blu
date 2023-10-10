@@ -1545,6 +1545,7 @@
     <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Material.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLMaterial.h" />
+    <ClInclude Include="engine\src\Blu\Utils\Helpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -1703,5 +1704,6 @@
     <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLMaterial.cpp" />
+    <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp" />
   </ItemGroup>
 </Project>

@@ -322,7 +322,7 @@ namespace Blu
 				if (ImGui::MenuItem("PointLight"))
 				{
 					m_SelectedEntity.AddComponent<PointLightComponent>();
-					m_Context->m_LightManager->AddPointLight(m_SelectedEntity.GetComponent<PointLightComponent>());
+					m_Context->m_LightManager->AddPointLight(m_Context, m_SelectedEntity);
 					ImGui::CloseCurrentPopup();
 				}
 			}

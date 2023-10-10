@@ -635,6 +635,7 @@
     <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h" />
     <ClInclude Include="engine\src\Blu\Scripting\ScriptEngine.h" />
     <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h" />
+    <ClInclude Include="engine\src\Blu\Utils\Helpers.h" />
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h" />
     <ClInclude Include="engine\src\Blupch.h" />
   </ItemGroup>
@@ -697,6 +698,7 @@
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">

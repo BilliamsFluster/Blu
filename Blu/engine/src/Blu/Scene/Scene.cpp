@@ -361,7 +361,7 @@ namespace Blu
 	{
 		
 		Renderer2D::BeginScene(camera);
-		//Renderer2D::GetRendererData()->QuadShader->Bind();
+		m_LightManager->UpdateLights();
 		
 		{
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);

@@ -54,12 +54,13 @@ namespace Blu
 		void OnViewportResize(float width, float height);
 		bool IsScenePaused() { return m_ScenePaused; }
 		void SetScenePaused(bool paused) {m_ScenePaused = paused; }
+		Shared<class LightManager> GetLightManager() { return m_LightManager; }
 	private:
 		entt::registry m_Registry; // container for all of our entt components
 		float m_ViewportWidth = 0.0f, m_ViewportHeight = 0.0f;
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
-		std::filesystem::path m_SceneFilePath;
-		Shared<class LightManager> m_LightManager;
+		std::filesystem::path m_SceneFilePath; 
+		Shared<LightManager> m_LightManager;
 
 		b2World* m_PhysicsWorld = nullptr;
 		friend class Entity;
