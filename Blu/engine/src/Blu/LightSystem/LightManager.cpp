@@ -17,29 +17,7 @@ void Blu::LightManager::AddPointLight(Entity& light)
 {
     // Add the provided point light to the vector
     m_PointLights.push_back(light);
-
-    //// Ensure that the vector does not exceed a maximum limit, e.g., 32 lights
-    //if (pointLights.size() > 32)
-    //{
-    //    // Handle the case where you have more lights than supported
-    //    // You can remove the oldest or least important light based on your game's logic.
-    //    // For example, you can remove the first light:
-    //   
-    //    pointLights.erase(pointLights.begin());
-    //}
-    //// Calculate the index of the newly added light
-    //int lightIndex = pointLights.size() - 1;
-    // Use the quad shader for rendering lights
-    // Use the quad shader for rendering lights
-    Shared<Shader> quadShader = Renderer2D::s_RendererData->QuadShader;
-    quadShader->Bind();
-    // Update the shader uniform using the calculated index
-    Renderer2D::s_RendererData->QuadShader->SetUniformFloat3("a_LightPosition", light.GetComponent<TransformComponent>().Translation);
-    
-    // Unbind the quad shader
-    quadShader->UnBind();
-
-    
+ 
 }
 
 void Blu::LightManager::AddDirectionalLight(Entity& light)
@@ -49,14 +27,7 @@ void Blu::LightManager::AddDirectionalLight(Entity& light)
 
 void Blu::LightManager::UpdateLights()
 {
-    if (m_PointLights.size() <= 0) return;
-
-    Shared<Shader> quadShader = Renderer2D::s_RendererData->QuadShader;
-    quadShader->Bind();
     
-
-    // Unbind the quad shader
-    quadShader->UnBind();
 }
 
 void Blu::LightManager::RenderLights()

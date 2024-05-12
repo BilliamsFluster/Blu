@@ -113,6 +113,7 @@ namespace Blu
 		if (!scene.empty())
 		{
 			OpenScene(scene);
+			
 		}
 	}
 
@@ -178,7 +179,7 @@ namespace Blu
 		glm::vec3 cameraPosition = m_EditorCamera.GetPosition();
 		float zoomLevel = m_EditorCamera.GetDistance(); // Get the current zoom level
 
-		//std::cout << mx << ";" << my << std::endl;
+		
 		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 		my = viewportSize.y - my - m_ViewportOffset.y;
 		float mouseX = (float)mx;
@@ -189,7 +190,7 @@ namespace Blu
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
 			int data = m_FrameBuffer->ReadPixel(1, mouseX, mouseY); // get the red int channel so the second attachment
-			//std::cout << data << std::endl;
+			
 			m_DrawnEntityID = data;
 		}
 
@@ -512,6 +513,7 @@ namespace Blu
 			std::filesystem::path scenePath = path;
 			m_ActiveScene->SetSceneFilePath(scenePath);
 			serializer.DeserializeEntityScriptInstances(path.string());
+			
 
 			
 
@@ -981,7 +983,7 @@ namespace Blu
 				
 				/*glm::vec3 centerPoint = tc.Translation +(tc.Scale * 0.5f);
 				float gizmoOffsetY = centerPoint.y * (m_EditorCamera.GetDistance() / 100);
-				std::cout << gizmoOffsetY << std::endl;
+				
 				transform[3][1] += gizmoOffsetY;*/
 
 				

@@ -1,54 +1,46 @@
 Scene: assets\scenes\BasicGame.blu
 Entities:
-  - Entity: 3221434739042461778
+  - Entity: 15866158409949666720
     TagComponent:
-      Tag: BoxPawn
+      Tag: NameManager
     ScriptComponent:
-      Name: Azure.BoxPawn
+      Name: Azure.GameRigidBodyChecker
       ScriptFields:
-        Speed: 2
+        {}
     TransformComponent:
-      Translation: [-0.0113941431, 0, 0]
+      Translation: [-4.50004148, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-    Rigidbody2DComponent:
-      BodyType: 1
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
-  - Entity: 2277957759481608135
+  - Entity: 1922356645327969536
     TagComponent:
-      Tag: Sprite
-    TransformComponent:
-      Translation: [0, -5.57232809, 0]
-      Rotation: [0, 0, 0]
-      Scale: [135.281631, 1, 1]
-    SpriteRendererComponent:
+      Tag: Light
+    PointLightComponent:
+      Position: [0, 0, 0]
       Color: [1, 1, 1, 1]
-    Rigidbody2DComponent:
-      BodyType: 0
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
+      Intensity: 1
+      Radius: 1
+      AmbientColor: [0.100000001, 0.100000001, 0.100000001]
+      DiffuseColor: [0.800000012, 0.800000012, 0.800000012]
+      SpecularColor: [1, 1, 1]
+      Shininess: 32
+    TransformComponent:
+      Translation: [2.56879878, 0, 1.2910521]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Radius: 0.5
+      Thickness: 1
+      Fade: 0.00499999989
   - Entity: 6406221041025502149
     TagComponent:
       Tag: Camera
     ScriptComponent:
       Name: Azure.Camera
       ScriptFields:
-        DistanceFromPlayer: 22
+        DistanceFromPlayer: 15
     CameraComponent:
       Camera:
         ProjectionType: 0
@@ -64,15 +56,45 @@ Entities:
       Translation: [2.87562943, 0, 5]
       Rotation: [0, 0, 0]
       Scale: [1, 0.99999994, 1]
-  - Entity: 14270457593519542896
+  - Entity: 2277957759481608135
     TagComponent:
-      Tag: PointLight
+      Tag: Sprite
     TransformComponent:
-      Translation: [0, 0, 6.8152895]
+      Translation: [0.0154364109, -5.57232809, 0]
+      Rotation: [0, 0, 0]
+      Scale: [135.281631, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+    Rigidbody2DComponent:
+      BodyType: 0
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 3221434739042461778
+    TagComponent:
+      Tag: BoxPawn
+    ScriptComponent:
+      Name: Azure.BoxPawn
+      ScriptFields:
+        Speed: 1
+    TransformComponent:
+      Translation: [3.22485828, 0, 0.028342247]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    CircleRendererComponent:
-      Color: [1, 1, 1, 1]
-      Radius: 0.5
-      Thickness: 1
-      Fade: 0.00499999989
+    SpriteRendererComponent:
+      Color: [0, 1, 0.61776042, 1]
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5

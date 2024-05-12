@@ -759,12 +759,16 @@ namespace Blu
 					// Albedo Color
 					ImGui::ColorEdit4("Albedo Color: ", glm::value_ptr(component.Color));
 
+					
+					
+					
+
 					HandleTextureUI("Diffuse Map", component.MaterialInstance->DiffuseMap);
-					ImGui::ColorEdit4("Diffuse Color: ", glm::value_ptr(component.MaterialInstance->DiffuseColor));
+					ImGui::ColorEdit4("Diffuse Color: ", glm::value_ptr(component.MaterialInstance->GetDiffuseColor()));
 
 					HandleTextureUI("Specular Map", component.MaterialInstance->SpecularMap);
-					ImGui::ColorEdit4("Specular Color: ", glm::value_ptr(component.MaterialInstance->SpecularColor));
-					ImGui::ColorEdit4("Ambient Color: ", glm::value_ptr(component.MaterialInstance->AmbientColor));
+					ImGui::ColorEdit4("Specular Color: ", glm::value_ptr(component.MaterialInstance->GetSpecularColor()));
+					ImGui::ColorEdit4("Ambient Color: ", glm::value_ptr(component.MaterialInstance->GetAmbientColor()));
 
 					HandleTextureUI("Normal Map", component.MaterialInstance->NormalMap);
 

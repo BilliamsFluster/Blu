@@ -14,6 +14,13 @@ namespace Blu
         internal extern static void TransformComponent_SetTranslation(ulong entityID, ref Vector3 translation);
         #endregion
 
+        #region TagComponent 
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void TagComponent_GetName(ulong entityID, out string name);
+        #endregion
+
+        
+
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static bool Input_IsKeyDown(KeyCodes keycode);
 
@@ -23,6 +30,9 @@ namespace Blu
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static ulong Entity_FindEntityByName(string name);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static ulong[] GetAllEntityIDs();
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static object GetScriptInstance(ulong entityID);
@@ -40,6 +50,8 @@ namespace Blu
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static void Rigidbody2DComponent_ApplyLinearImpulseToCenter(ulong entityID, ref Vector2 impulse, bool wake);
         #endregion
+
+
 
     }
 }

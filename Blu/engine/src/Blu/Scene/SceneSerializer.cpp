@@ -7,6 +7,8 @@
 #include "yaml-cpp/yaml.h"
 #include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/Rendering/Texture.h"
+#include "Blu/Utils/Helpers.h"
+#include "Blu/LightSystem/LightManager.h"
 
 
 namespace YAML
@@ -145,6 +147,26 @@ namespace Blu
 			out << YAML::EndMap;
 
 		}*/
+		if (entity.HasComponent<PointLightComponent>())
+		{
+			out << YAML::Key << "PointLightComponent";
+			out << YAML::BeginMap;
+			auto& sc = entity.GetComponent<PointLightComponent>();
+			out << YAML::Key << "Position" << YAML::Value << sc.Position;
+			out << YAML::Key << "Color" << YAML::Value << sc.Color;
+			out << YAML::Key << "Intensity" << YAML::Value << sc.Intensity;
+			out << YAML::Key << "Radius" << YAML::Value << sc.Radius;
+
+			out << YAML::Key << "AmbientColor" << YAML::Value << sc.AmbientColor;
+			out << YAML::Key << "DiffuseColor" << YAML::Value << sc.DiffuseColor;
+			out << YAML::Key << "SpecularColor" << YAML::Value << sc.SpecularColor;
+			out << YAML::Key << "Shininess" << YAML::Value << sc.Shininess;
+			out << YAML::EndMap;
+		}
+
+
+
+
 
 		if (entity.HasComponent<ScriptComponent>())
 		{
@@ -418,6 +440,9 @@ namespace Blu
 					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
 				}
 
+				
+
+
 				auto scriptComponent = entity["ScriptComponent"];
 				if (scriptComponent)
 				{
@@ -524,6 +549,23 @@ namespace Blu
 					cc.Friction = circleColliderComponent["Friction"].as<float>();
 					cc.Restitution = circleColliderComponent["Restitution"].as<float>();
 					cc.RestitutionThreshold = circleColliderComponent["RestitutionThreshold"].as<float>();
+				}
+				auto pointLightComponent = entity["PointLightComponent"];
+				if (pointLightComponent)
+				{
+					auto& pl = deserializedEntity.AddComponent<PointLightComponent>();
+					pl.Position = pointLightComponent["Position"].as<glm::vec3>();
+					pl.Color = pointLightComponent["Color"].as<glm::vec4>();
+
+					pl.Intensity = pointLightComponent["Intensity"].as<float>();
+					pl.Radius = pointLightComponent["Radius"].as<float>();
+
+					pl.AmbientColor = pointLightComponent["AmbientColor"].as<glm::vec3>();
+					pl.DiffuseColor = pointLightComponent["DiffuseColor"].as<glm::vec3>();
+					pl.SpecularColor = pointLightComponent["SpecularColor"].as<glm::vec3>();
+					pl.Shininess = pointLightComponent["Shininess"].as<float>();
+					
+					m_Scene->GetLightManager()->AddPointLight(deserializedEntity);
 				}
 
 			}

@@ -253,6 +253,11 @@ namespace Blu
 		GLint location = GetUniformLocation(name);
 		glUniform1iv(location, count, values);
 	}
+	void OpenGLShader::SetUniformVec3Array(const std::string& name, const glm::vec3* values, uint32_t count)
+	{
+		GLint location = GetUniformLocation(name);
+		glUniform3fv(location, count, glm::value_ptr(values[0]));
+	}
 	void OpenGLShader::SetUniformFloat(const std::string& name, float value)
 	{
 		GLint location = GetUniformLocation(name);

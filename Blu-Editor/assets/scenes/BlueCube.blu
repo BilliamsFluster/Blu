@@ -1,14 +1,49 @@
-Scene: Name
+Scene: assets\scenes\BlueCube.blu
 Entities:
-  - Entity: 1234567890
+  - Entity: 7549377713049716070
     TagComponent:
-      Tag: BlueCube
+      Tag: PointLight
+    PointLightComponent:
+      Position: [0, 0, 0]
+      Color: [1, 1, 1, 1]
+      Intensity: 1
+      Radius: 1
+      AmbientColor: [0.100000001, 0.100000001, 0.100000001]
+      DiffuseColor: [0.800000012, 0.800000012, 0.800000012]
+      SpecularColor: [1, 1, 1]
+      Shininess: 32
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Radius: 0.5
+      Thickness: 1
+      Fade: 0.00499999989
+  - Entity: 1234567890
+    TagComponent:
+      Tag: BlueCube
+    ScriptComponent:
+      Name: Azure.BoxPawn
+      ScriptFields:
+        Speed: 2
+    TransformComponent:
+      Translation: [0, 2.14063215, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
     SpriteRendererComponent:
       Color: [0, 0.501930714, 1, 1]
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
   - Entity: 1234567890
     TagComponent:
       Tag: Camera
@@ -24,6 +59,25 @@ Entities:
       Primary: true
       FixedAspectRatio: false
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [0, -0.205413938, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
+  - Entity: 16859502326705492458
+    TagComponent:
+      Tag: Sprite
+    TransformComponent:
+      Translation: [0, -2.59995842, 0]
+      Rotation: [0, 0, 0]
+      Scale: [34.0334625, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+    Rigidbody2DComponent:
+      BodyType: 0
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5

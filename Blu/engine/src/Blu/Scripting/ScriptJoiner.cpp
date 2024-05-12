@@ -48,6 +48,18 @@ namespace Blu
 		}
 		 
 	}
+
+	static void TagComponent_GetName(UUID entityID, std::string* outName )
+	{
+		Scene* scene = ScriptEngine::GetSceneContext();
+
+		Entity entity = scene->GetEntityByUUID(entityID);
+		if (entity)
+		{
+			*outName = entity.GetComponent<TagComponent>().Tag;
+
+		}
+	}
 	static MonoObject* GetScriptInstance(UUID entityID)
 	{
 		Shared<ScriptInstance> instance = ScriptEngine::GetEntityScriptInstance(entityID);
@@ -80,12 +92,33 @@ namespace Blu
 		return 0;
 	}
 
+	static MonoArray* GetAllEntityIDs()
+	{
+		Scene* scene = ScriptEngine::GetSceneContext();
+		BLU_CORE_ASSERT("{0}", scene);
+
+		auto view = scene->GetAllEntitiesWith<ScriptComponent>(); // Specific to ScriptComponent
+		MonoArray* entityIDsArray = mono_array_new(mono_domain_get(), mono_get_uint64_class(), view.size());
+
+		int i = 0;
+		for (auto entity : view)
+		{
+			uint64_t uuid = static_cast<uint64_t>(entity); // Assuming entity can be implicitly casted to UUID
+			mono_array_set(entityIDsArray, uint64_t, i, uuid);
+			i++;
+		}
+
+		return entityIDsArray;
+	}
+	 
+
+
 	static void TransformComponent_SetTranslation(UUID entityID, glm::vec3* translation)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
 
 		Entity entity = scene->GetEntityByUUID(entityID);
-		std::cout << translation->x << std::endl;
+		
 		entity.GetComponent<TransformComponent>().Translation = *translation;
 	}
 
@@ -172,6 +205,7 @@ namespace Blu
 		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_ApplyLinearImpulse);
 		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_ApplyLinearImpulseToCenter);
 		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_GetLinearVelocity);
+		BLU_ADD_INTERNAL_CALL(TagComponent_GetName);
 		//BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_GetType);
 		//BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_SetType);
 	}

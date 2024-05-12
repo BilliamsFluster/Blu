@@ -80,7 +80,7 @@ namespace Blu
 		for (auto e : idView)
 		{ 
 			UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
-			//std::cout << uuid << std::endl;
+			
 			const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
 			Entity entity = newScene->CreateEntityWithUUID(uuid, name);
 			enttMap[uuid] = (entt::entity)entity;
@@ -111,7 +111,7 @@ namespace Blu
 	}
 	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
 	{
-		std::cout << uuid << std::endl;
+		
 		Entity entity = { m_Registry.create(), this };		
 		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();

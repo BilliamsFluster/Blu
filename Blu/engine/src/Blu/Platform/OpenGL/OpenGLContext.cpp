@@ -18,9 +18,7 @@ namespace Blu
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
-		std::cout << glGetString(GL_RENDERER) << std::endl;
-		std::cout << glGetString(GL_VENDOR) << std::endl;
-		std::cout << glGetString(GL_VERSION);
+		
 
 	}
 	void OpenGLContext::SwapBuffers()

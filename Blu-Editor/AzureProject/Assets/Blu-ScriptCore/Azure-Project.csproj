@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="Scripts\Source\BoxPawn2.cs" />
     <Compile Include="Scripts\Source\Camera.cs" />
+    <Compile Include="Scripts\Source\GameColorChecker.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Blu-ScriptCore\Blu-ScriptCore.csproj">
