@@ -21,7 +21,7 @@ namespace Azure
             Entity player = FindEntityByName("BoxPawn");
             if(player != null)
             {
-                Console.WriteLine("Player not null");
+                
                 Translation = new Vector3 (player.Translation.XY, DistanceFromPlayer);
 
             }

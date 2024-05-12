@@ -103,7 +103,7 @@ Entities:
       ScriptFields:
         Speed: 0.5
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [5.77253819, -2.02463818, 10.7125063]
       Rotation: [0, 0, 0.751203597]
       Scale: [1, 1, 1]
     CircleRendererComponent:
@@ -125,7 +125,7 @@ Entities:
     TagComponent:
       Tag: Sky
     TransformComponent:
-      Translation: [-3.81469727e-06, -1.90734863e-06, -100]
+      Translation: [120.192818, -52.9235802, -77.1795654]
       Rotation: [0, 0, 0]
       Scale: [100, 100, 1]
     SpriteRendererComponent:

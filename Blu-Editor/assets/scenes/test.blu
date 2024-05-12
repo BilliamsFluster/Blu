@@ -1,5 +1,17 @@
-Scene: Name
+Scene: assets\scenes\test.blu
 Entities:
+  - Entity: 7933212198778553218
+    TagComponent:
+      Tag: PointLight
+    TransformComponent:
+      Translation: [0, 0, 1.04290628]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Radius: 0.5
+      Thickness: 1
+      Fade: 0.00499999989
   - Entity: 5334141281449826391
     TagComponent:
       Tag: Camera
@@ -26,7 +38,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
+      Color: [0.274131298, 0, 0, 1]
   - Entity: 2819489235980105166
     TagComponent:
       Tag: Sprite
@@ -35,4 +47,4 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
+      Color: [0.637065649, 0.191857606, 0.191857606, 1]

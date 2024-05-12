@@ -1,5 +1,6 @@
 using Azure;
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 
@@ -60,6 +61,17 @@ namespace Blu
         {
             object instance = InternalCalls.GetScriptInstance(ID);
             return instance as T;
+        }
+
+        public static List<Entity> GetAllEntities()
+        {
+            ulong[] ids = InternalCalls.GetAllEntityIDs();
+            var entities = new List<Entity>();
+            foreach (var id in ids)
+            {
+                entities.Add(new Entity(id));
+            }
+            return entities;
         }
 
 

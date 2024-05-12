@@ -15,7 +15,10 @@ namespace Blu
 		static Shared<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		
 		virtual void SetUniformInt(const std::string& name, int value) = 0;
+
 		virtual void SetUniformIntArray(const std::string& name, int* values, uint32_t count) = 0;
+		virtual void SetUniformVec3Array(const std::string& name, const glm::vec3* values, uint32_t count) = 0;
+
 		virtual void SetUniformFloat(const std::string& name, float value) = 0;
 		virtual void SetUniformFloat2(const std::string& name, const glm::vec2& value) = 0;
 		virtual void SetUniformFloat3(const std::string& name, const glm::vec3& value) = 0;
@@ -30,6 +33,7 @@ namespace Blu
 		virtual void Bind() const = 0;
 		virtual void UnBind() const = 0;
 		virtual const std::string& GetName() const = 0;
+		virtual uint32_t GetProgramID() = 0;
 
 	};
 	class ShaderLibrary

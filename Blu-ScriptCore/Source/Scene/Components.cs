@@ -57,4 +57,12 @@ namespace Blu
         }
 
     }
+    public class TagComponent: Component
+    {
+        public string GetName()
+        {
+            InternalCalls.TagComponent_GetName(Entity.ID, out string name);
+            return name;
+        }
+    }
 }

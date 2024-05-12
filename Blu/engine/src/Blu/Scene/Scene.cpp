@@ -80,7 +80,7 @@ namespace Blu
 		for (auto e : idView)
 		{ 
 			UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
-			//std::cout << uuid << std::endl;
+			
 			const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
 			Entity entity = newScene->CreateEntityWithUUID(uuid, name);
 			enttMap[uuid] = (entt::entity)entity;
@@ -101,6 +101,7 @@ namespace Blu
 		CopyComponent<ScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		return newScene;
 	}
@@ -110,7 +111,7 @@ namespace Blu
 	}
 	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
 	{
-		std::cout << uuid << std::endl;
+		
 		Entity entity = { m_Registry.create(), this };		
 		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
@@ -361,9 +362,8 @@ namespace Blu
 	{
 		
 		Renderer2D::BeginScene(camera);
-		//Renderer2D::GetRendererData()->QuadShader->Bind();
 		m_LightManager->UpdateLights();
-		m_LightManager->RenderLights();
+		
 		{
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto& entity : group)
@@ -396,8 +396,7 @@ namespace Blu
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
 		
-		m_LightManager->UpdateLights();
-		m_LightManager->RenderLights();
+		
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{

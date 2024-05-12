@@ -20,6 +20,8 @@ namespace Blu
 		void UnBind() const override;
 		void SetUniformInt(const std::string& name, int value);
 		void SetUniformIntArray(const std::string& name, int* values, uint32_t count) override;
+		void SetUniformVec3Array(const std::string& name, const glm::vec3* values, uint32_t count) override;
+
 		void SetUniformFloat(const std::string& name, float value);
 		void SetUniformFloat2(const std::string& name, const glm::vec2& value);
 		void SetUniformFloat3(const std::string& name, const glm::vec3& value);
@@ -32,7 +34,7 @@ namespace Blu
 		virtual void SetUniformPointLight(const std::string& name, const struct PointLightComponent& light) override;
 		virtual void SetUniformDirectionalLight(const std::string& name, const struct DirectionalLightComponent& light) override;
 		virtual void SetUniformSpotlight(const std::string& name, const struct SpotlightComponent& light) override;
-
+		virtual uint32_t GetProgramID() override { return m_RendererID;}
 	private:
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 		std::string ReadFile(const std::string& filepath);

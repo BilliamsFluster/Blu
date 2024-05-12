@@ -15,6 +15,7 @@
 #include "Blu/Core/Application.h"
 #include "Blu/Platform/Windows/WindowsWindow.h"
 #include "Blu/Scripting/ScriptEngine.h"
+#include "Blu/Utils/Helpers.h"
 
 
 
@@ -112,6 +113,7 @@ namespace Blu
 		if (!scene.empty())
 		{
 			OpenScene(scene);
+			
 		}
 	}
 
@@ -177,7 +179,7 @@ namespace Blu
 		glm::vec3 cameraPosition = m_EditorCamera.GetPosition();
 		float zoomLevel = m_EditorCamera.GetDistance(); // Get the current zoom level
 
-		//std::cout << mx << ";" << my << std::endl;
+		
 		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 		my = viewportSize.y - my - m_ViewportOffset.y;
 		float mouseX = (float)mx;
@@ -188,7 +190,7 @@ namespace Blu
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
 			int data = m_FrameBuffer->ReadPixel(1, mouseX, mouseY); // get the red int channel so the second attachment
-			//std::cout << data << std::endl;
+			
 			m_DrawnEntityID = data;
 		}
 
@@ -502,6 +504,8 @@ namespace Blu
 		if (serializer.Deserialize(path.string()))
 		{
 			m_EditorScene = m_ActiveScene;
+			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
+
 			m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
@@ -509,6 +513,7 @@ namespace Blu
 			std::filesystem::path scenePath = path;
 			m_ActiveScene->SetSceneFilePath(scenePath);
 			serializer.DeserializeEntityScriptInstances(path.string());
+			
 
 			
 
@@ -554,9 +559,11 @@ namespace Blu
 
 			m_PlayButtonHit = true;
 			m_ActiveScene = Scene::Copy(m_EditorScene);
+
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
 			m_SceneMissing = false;
+			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 			
 
 		}
@@ -586,6 +593,7 @@ namespace Blu
 			m_ActiveScene->OnRuntimeStop();
 			SceneSerializer serializer(m_ActiveScene);
 			m_ActiveScene = m_EditorScene;
+			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 			std::string filepath = m_EditorScene->GetSceneFilePath().string();
 			serializer.DeserializeEntityScriptInstances(filepath);
 			m_PlayButtonHit = false;
@@ -975,7 +983,7 @@ namespace Blu
 				
 				/*glm::vec3 centerPoint = tc.Translation +(tc.Scale * 0.5f);
 				float gizmoOffsetY = centerPoint.y * (m_EditorCamera.GetDistance() / 100);
-				std::cout << gizmoOffsetY << std::endl;
+				
 				transform[3][1] += gizmoOffsetY;*/
 
 				

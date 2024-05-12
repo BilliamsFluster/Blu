@@ -1,5 +1,6 @@
 #type vertex
 #version 330 core
+
 			
 layout(location = 0) in vec4 a_Color;
 layout(location = 1) in vec3 a_Position;
@@ -8,8 +9,13 @@ layout(location = 3) in float a_TexIndex;
 layout(location = 4) in float a_TilingFactor;
 layout(location = 5) in float a_Thickness;
 layout(location = 6) in int a_EntityID;
+
+layout(location = 7) in vec3 a_LightColor;
+layout(location = 8) in vec3 a_Normal;
+layout(location = 9) in vec3 a_LightPosition;
 			
 uniform mat4 u_ViewProjectionMatrix;
+
 
 out vec2 v_TexCoord;
 out vec4 v_Color;
@@ -19,28 +25,23 @@ flat out float v_Thickness;
 flat out int v_EntityID;
 out vec3 v_Position;
 
-// Define the PointLight
-struct PointLight {
-    vec4 Color;
-    float Intensity;
-    float Radius;
-    vec3 Position;
-    vec3 AmbientColor;
-    vec3 DiffuseColor;
-    vec3 SpecularColor;
-    float Shininess;
-};
-
-//Uniform array of PointLight structs
-uniform PointLight u_PointLights[32];
-
-
+out vec3 v_LightColor;
+out vec3 v_Normal;
+out vec3 v_LightPosition;
+out vec3 v_FragPosition;
 
 void main()
 {
-	
+	 // Assuming you have a model matrix, even if it's an identity matrix for quads
+    mat4 model = mat4(1.0); // Identity matrix, replace if you have a different model matrix
+
     v_Color = a_Color;
     v_Position = a_Position; 
+	
+	v_LightColor = a_LightColor;
+	v_LightPosition = a_LightPosition;
+	//v_LightPosition = vec3(10,-2,20);
+	v_Normal = a_Normal;
 
 	v_TexCoord = a_TexCoord;
 	v_TexIndex = a_TexIndex;
@@ -52,16 +53,38 @@ void main()
     
 
 
-	gl_Position = u_ViewProjectionMatrix * vec4(a_Position, 1.0);	
+	gl_Position = u_ViewProjectionMatrix * vec4(a_Position, 1.0);
+	v_FragPosition = vec3(model * vec4(a_Position, 1.0));
+
 }
 
 
 #type fragment
 #version 330 core
 			
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+}; 
+struct Light {
+    vec3 position;
+  
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+
 layout(location = 0) out vec4 o_color;
 layout(location = 1) out int o_EntityID;
+
+  
 			
+uniform Material o_Material;
+uniform Light o_Light; 
+
 uniform sampler2D u_Textures[32];
 in vec2 v_TexCoord;
 in vec4 v_Color;
@@ -71,45 +94,43 @@ in float v_TilingFactor;
 flat in float v_Thickness;
 flat in int v_EntityID;
 
+in vec3 v_LightColor;
+in vec3 v_LightPosition;
+in vec3 v_Normal;
+in vec3 v_FragPosition;
 
 
 void main()
 {
-	/*vec3 lightingColor = vec3(0.0); // Initialize with ambient light
-
-    for (int i = 0; i < 32; ++i) {
-        // Calculate the vector from the vertex to the light position
-        vec3 lightDir = u_PointLights[i].Position - v_Position;
-        
-        // Calculate the distance between the vertex and the light
-        float distance = length(lightDir);
-        
-        // Normalize the light direction
-        lightDir = normalize(lightDir);
-        
-        // Calculate diffuse lighting (Lambertian reflection)
-        float diffuse = max(dot(lightDir, a_Normal), 0.0);
-        
-        // Calculate attenuation based on distance
-        float attenuation = 1.0 / (u_PointLights[i].Constant + u_PointLights[i].Linear * distance + u_PointLights[i].Quadratic * (distance * distance));
-        
-        // Calculate specular reflection (Phong reflection)
-        vec3 viewDir = normalize(-v_Position); // View direction
-        vec3 reflectDir = reflect(-lightDir, a_Normal); // Reflected light direction
-        float specular = pow(max(dot(viewDir, reflectDir), 0.0), u_PointLights[i].Shininess);
-        
-        // Combine ambient, diffuse, and specular lighting
-        vec3 ambientColor = u_PointLights[i].AmbientColor;
-        vec3 diffuseColor = u_PointLights[i].DiffuseColor;
-        vec3 specularColor = u_PointLights[i].SpecularColor;
-        
-        vec3 light = (ambientColor + (diffuseColor * diffuse + specularColor * specular)) * attenuation;
-        
-        // Add the light contribution to the final color
-        lightingColor += light * v_Color.rgb;
-    }*/
+	
     // Set the final color to the modified lighting color
-	o_color = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color;
+	float ambientStrength = 0.1;
+	float specularStrength = 0.5;
+	
+	
+	 //o_Light.position = v_LightPosition;
+	
+	vec3 ambient = v_LightColor * o_Material.ambient * o_Light.ambient;
+	
+	vec3 norm = normalize(v_Normal);
+	vec3 lightDir = normalize(v_LightPosition - v_FragPosition); 
+	float diff = max(dot(norm, lightDir), 0.0);
+	vec3 diffuse = v_LightColor * (diff * o_Material.diffuse) * o_Light.diffuse;
+
+	vec3 viewDir = normalize(v_Position - v_FragPosition);
+	vec3 reflectDir = reflect(-lightDir, norm); 
+
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), o_Material.shininess);
+	vec3 specular = v_LightColor * (spec * o_Material.specular) * o_Light.specular;  
+
+	// Combine ambient and diffuse lighting
+    vec3 lightResult = ambient + diffuse + specular;
+
+    // Apply the lighting to the color
+    vec4 finalColor = vec4(lightResult, 1.0) * v_Color;
+
+
+	o_color = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * finalColor; 
 	o_EntityID = v_EntityID;
 	
 }
