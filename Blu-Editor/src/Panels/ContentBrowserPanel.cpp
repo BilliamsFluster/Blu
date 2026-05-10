@@ -213,7 +213,7 @@ namespace Blu
             {
 
 
-                auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetRendererID()));
+                auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetImTextureID()));
                 ImVec2 iconSize(50.0f, 50.0f);
 
                 ImGui::PushID(path.string().c_str());
@@ -264,7 +264,7 @@ namespace Blu
             else
             {
                 // Render file icon and make it selectable as necessary
-                auto fileID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FileIcons[".png"]->GetRendererID()));
+                auto fileID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FileIcons[".png"]->GetImTextureID()));
                 ImVec2 iconSize(50.0f, 50.0f);
 
                 ImGui::PushID(path.string().c_str());
@@ -341,11 +341,11 @@ namespace Blu
 
                 if (std::filesystem::is_directory(payloadPath))
                 {
-                    ImGui::Image((void*)(intptr_t)m_FolderOpenIcon->GetRendererID(), imageSize, ImVec2(0, 1), ImVec2(1, 0));
+                    ImGui::Image((void*)(intptr_t)m_FolderOpenIcon->GetImTextureID(), imageSize, ImVec2(0, 1), ImVec2(1, 0));
                 }
                 else
                 {
-                    ImGui::Image((void*)(intptr_t)m_FileIcons[".png"]->GetRendererID(), imageSize, ImVec2(0, 1), ImVec2(1, 0));
+                    ImGui::Image((void*)(intptr_t)m_FileIcons[".png"]->GetImTextureID(), imageSize, ImVec2(0, 1), ImVec2(1, 0));
                 }
                 ImGui::End();
                 ImGui::PopStyleVar();
@@ -526,8 +526,8 @@ namespace Blu
         bool expanded = dir_it != m_DirectoryExpandedState.end() ? dir_it->second : false;
 
         auto& io = ImGui::GetIO();
-        auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetRendererID()));  // Using the folder closed icon texture ID
-        auto openID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderOpenIcon->GetRendererID()));  // Using the folder open icon texture ID
+        auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetImTextureID()));  // Using the folder closed icon texture ID
+        auto openID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderOpenIcon->GetImTextureID()));  // Using the folder open icon texture ID
         ImVec2 iconSize(30.0f, 30.0f);
 
         // Select proper icon and set tree node flags

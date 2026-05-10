@@ -27,9 +27,9 @@ namespace Blu
 		{ "System.UInt32", ScriptFieldType::UInt },
 		{ "System.UInt64", ScriptFieldType::ULong },
 
-		{ "Hazel.Vector2", ScriptFieldType::Vector2 },
-		{ "Hazel.Vector3", ScriptFieldType::Vector3 },
-		{ "Hazel.Vector4", ScriptFieldType::Vector4 },
+		{ "Blu.Vector2", ScriptFieldType::Vector2 },
+		{ "Blu.Vector3", ScriptFieldType::Vector3 },
+		{ "Blu.Vector4", ScriptFieldType::Vector4 },
 
 		{ "Blu.Entity", ScriptFieldType::Entity },
 	};
@@ -62,8 +62,10 @@ namespace Blu
 		ScriptFieldType MonoTypeToScriptFieldType(MonoType* type)
 		{
 			std::string typeName = mono_type_get_name(type);
-			return s_ScriptFieldTypeMap.at(typeName);
-
+			auto it = s_ScriptFieldTypeMap.find(typeName);
+			if (it == s_ScriptFieldTypeMap.end())
+				return ScriptFieldType::None;
+			return it->second;
 		}
 		MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
 		{
@@ -246,10 +248,12 @@ namespace Blu
 				{
 					MonoType* type = mono_field_get_type(field);
 					ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(type);
+					if (fieldType == ScriptFieldType::None)
+						continue;
 					Utils::ScriptFieldTypeToString(fieldType);
 					BLU_CORE_WARN("{}, {}:", fieldName, Utils::ScriptFieldTypeToString(fieldType));
 
-					scriptClass->m_Fields[fieldName] = { fieldType, fieldName, field }; // -- The more attributes you add to the script field make sure you update this 
+					scriptClass->m_Fields[fieldName] = { fieldType, fieldName, field }; // -- The more attributes you add to the script field make sure you update this
 
 				}
 			}
@@ -291,14 +295,15 @@ namespace Blu
 		s_Data->SceneContext = nullptr;
 		s_Data->EntityInstances.clear();
 	}
-	void ScriptEngine::OnCreateEntity(Entity* entity)
+	void ScriptEngine::OnCreateEntity(Entity* entity, bool invokeOnCreate)
 	{
 		const auto& sc = entity->GetComponent<ScriptComponent>();
 		if (EntityClassExists(sc.Name))
 		{
 			Shared<ScriptInstance> instance = std::make_shared<ScriptInstance>(s_Data->Entities[sc.Name], entity);
 			s_Data->EntityInstances[entity->GetUUID()] = instance;
-			instance->InvokeOnCreate();
+			if (invokeOnCreate)
+				instance->InvokeOnCreate();
 		}
 	}
 	void ScriptEngine::OnUpdateEntity(Entity* entity, float deltaTime)
@@ -478,13 +483,13 @@ namespace Blu
 	}
 	void ScriptInstance::InvokeOnCreate()
 	{
-		m_ScriptClass->InvokeMethod(m_OnCreateMethod, m_Instance, nullptr, nullptr);
-
+		if (m_OnCreateMethod)
+			m_ScriptClass->InvokeMethod(m_OnCreateMethod, m_Instance, nullptr, nullptr);
 	}
 	void ScriptInstance::InvokeOnUpdate(float deltaTime)
 	{
 		void* param = &deltaTime;
-		if(m_ScriptClass && m_Instance)
+		if (m_ScriptClass && m_Instance && m_OnUpdateMethod)
 			m_ScriptClass->InvokeMethod(m_OnUpdateMethod, m_Instance, &param, nullptr);
 	}
 }

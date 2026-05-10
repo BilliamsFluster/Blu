@@ -40,7 +40,7 @@ namespace Blu
 		void OnPhysics2DStart();
 		void OnRuntimeStop();
 
-		void OnScriptSystemStart();
+		void OnScriptSystemStart(bool invokeOnCreate = true);
 		void OnScriptSystemStop();
 		void OnScriptSystemUpdate(Timestep deltaTime);
 		void UpdateActiveCameraComponent(Timestep deltaTime);

@@ -2,6 +2,7 @@
 #include "Renderer.h"
 #include "Blu/Rendering/Shader.h"
 #include "Renderer2D.h"
+#include "Renderer3D.h"
 
 namespace Blu
 {
@@ -21,6 +22,7 @@ namespace Blu
 
 		RenderCommand::Init();
 		Renderer2D::Init();
+		Renderer3D::Init();
 	}
 	void Renderer::Submit(const Shared<VertexArray>& vertexArray, const Shared<Shader>& shader, const glm::mat4& transform)
 	{

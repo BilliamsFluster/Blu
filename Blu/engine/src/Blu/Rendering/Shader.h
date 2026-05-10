@@ -30,8 +30,10 @@ namespace Blu
 		virtual void SetUniformDirectionalLight(const std::string& name, const struct DirectionalLightComponent& light) = 0;
 		virtual void SetUniformSpotlight(const std::string& name, const struct SpotlightComponent& light) = 0;
 	
-		virtual void Bind() const = 0;
+		virtual void Bind()   const = 0;
 		virtual void UnBind() const = 0;
+		// Flush any pending uniform data to the GPU (no-op for OpenGL)
+		virtual void Flush()  const {}
 		virtual const std::string& GetName() const = 0;
 		virtual uint32_t GetProgramID() = 0;
 

@@ -10,6 +10,9 @@ namespace Blu
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 		virtual uint32_t GetRendererID() const = 0;
+		// Returns a value safe to pass to ImGui::Image/ImageButton as ImTextureID.
+		// OpenGL: returns the GL texture handle. DX11: returns the SRV pointer as uint64.
+		virtual uint64_t GetImTextureID() const { return (uint64_t)GetRendererID(); }
 		virtual void SetData(void* data, uint32_t size) = 0;
 		virtual void Bind(uint32_t slot = 0) const = 0;
 		virtual bool operator ==(const Texture& other) const = 0;

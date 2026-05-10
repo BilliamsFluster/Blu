@@ -79,7 +79,7 @@ namespace Blu
 		static void ReloadAssembly();
 		static void OnRuntimeStart(Scene* scene);
 		static void OnRuntimeStop();
-		static void OnCreateEntity(Entity* entity);
+		static void OnCreateEntity(Entity* entity, bool invokeOnCreate = true);
 		static void OnUpdateEntity(Entity* entity, float deltaTime);
 		static Scene* GetSceneContext();
 		static bool EntityClassExists(const std::string& fullName);

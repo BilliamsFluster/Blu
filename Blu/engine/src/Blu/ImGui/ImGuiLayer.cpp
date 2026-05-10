@@ -6,14 +6,16 @@
 #include "Blu/Core/Application.h"
 #include "Blu/Events/EventDispatcher.h"
 #include "Blu/Rendering/Renderer2D.h"
+#include "Blu/Rendering/RendererAPI.h"
 #include <imgui.h>
 #include "ImGuizmo.h"
 
-
-//Temporary
-
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+
+#include <backends/imgui_impl_dx11.h>
+#include <backends/imgui_impl_glfw.h>
+#include "Blu/Platform/DirectX11/D3D11Context.h"
 
 namespace Blu
 {
@@ -66,13 +68,30 @@ namespace Blu
 				style.WindowRounding = 0.0f;
 				style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 			}
-			//ImGui_ImplGlfw_InitForOpenGL(window, true);
-			ImGui_ImplOpenGL3_Init("#version 410");
+			// Always initialize the GLFW backend so it installs GLFW callbacks and
+			// forwards input via io.AddKeyEvent() / io.AddMouseButtonEvent() etc.
+			// (the new ImGui API). This prevents the "not both APIs" assertion that
+			// fires when the application also writes legacy io.KeysDown[].
+			if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+			{
+				auto* ctx = D3D11Context::Get();
+				ImGui_ImplGlfw_InitForOther(window, true);
+				ImGui_ImplDX11_Init(ctx->GetDevice(), ctx->GetDeviceContext());
+			}
+			else
+			{
+				ImGui_ImplGlfw_InitForOpenGL(window, true);
+				ImGui_ImplOpenGL3_Init("#version 410");
+			}
 
 		}
 		void ImGuiLayer::OnDetach()
 		{
-			ImGui_ImplOpenGL3_Shutdown();
+			if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+				ImGui_ImplDX11_Shutdown();
+			else
+				ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();   // always present now
 			ImGui::DestroyContext();
 		}
 
@@ -133,26 +152,46 @@ namespace Blu
 		
 		void ImGuiLayer::Begin()
 		{
-			ImGui_ImplOpenGL3_NewFrame();
-			//ImGui_ImplGlfw_NewFrame();
+			if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+				ImGui_ImplDX11_NewFrame();
+			else
+				ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();   // always — processes GLFW input for ImGui
 			ImGui::NewFrame();
 			ImGuizmo::BeginFrame();
 		}
 		void ImGuiLayer::End()
 		{
 			ImGuiIO& io = ImGui::GetIO();
-			Application& app = Application::Get();
-			//io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 
 			ImGui::Render();
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
 			{
-				GLFWwindow* backup_current_context = glfwGetCurrentContext();
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
-				glfwMakeContextCurrent(backup_current_context);
+				auto* ctx = D3D11Context::Get();
+				auto* dc  = ctx->GetDeviceContext();
+				// Bind the main window backbuffer so ImGui draws onto it
+				ID3D11RenderTargetView* rtv = ctx->GetBackbufferRTV();
+				dc->OMSetRenderTargets(1, &rtv, nullptr);
+				ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+				if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+				{
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+				}
+			}
+			else
+			{
+				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+				if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+				{
+					GLFWwindow* backup_current_context = glfwGetCurrentContext();
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+					glfwMakeContextCurrent(backup_current_context);
+				}
 			}
 		}
 		

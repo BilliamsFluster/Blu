@@ -2,38 +2,29 @@
 #include "Shader.h"
 #include "Blu/Rendering/Renderer.h"
 #include "Blu/Platform/OpenGL/OpenGLShader.h"
+#include "Blu/Platform/DirectX11/D3D11Shader.h"
 #include "Blu/Core/Log.h"
 
 namespace Blu
 {
 	Shared<Shader> Shader::Create(const std::string& filepath)
 	{
-
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:
-		{
-			return nullptr;
-		}
-		case RendererAPI::API::OpenGL:
-		{
-			return std::make_shared<OpenGLShader>(filepath);
-		}
+		case RendererAPI::API::None:     return nullptr;
+		case RendererAPI::API::OpenGL:   return std::make_shared<OpenGLShader>(filepath);
+		case RendererAPI::API::Direct3D: return std::make_shared<D3D11Shader>(filepath);
 		}
 		return nullptr;
 	}
-	Shared<Shader> Shader::Create(const std::string& name,const std::string& vertexSrc, const std::string& fragmentSrc)
+
+	Shared<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:
-		{
-			return nullptr;
-		}
-		case RendererAPI::API::OpenGL:
-		{
-			return std::make_shared<OpenGLShader>(name,vertexSrc, fragmentSrc);
-		}
+		case RendererAPI::API::None:     return nullptr;
+		case RendererAPI::API::OpenGL:   return std::make_shared<OpenGLShader>(name, vertexSrc, fragmentSrc);
+		case RendererAPI::API::Direct3D: return std::make_shared<D3D11Shader>(name, vertexSrc, fragmentSrc);
 		}
 		return nullptr;
 	}

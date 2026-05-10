@@ -22,9 +22,7 @@ namespace Blu
 		float TilingFactor;
 		float Thickness = 1.0f;
 		int EntityID;
-		glm::vec3 LightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 		glm::vec3 Normal = glm::vec3(0.0f, 0.0f, 1.0f);
-		glm::vec3 LightPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	};
 
 	struct CircleVertex
@@ -73,9 +71,7 @@ namespace Blu
 			{Blu::ShaderDataType::Float, "a_TilingFactor"},
 			{Blu::ShaderDataType::Float, "a_Thickness"},
 			{Blu::ShaderDataType::Int, "a_EntityID"},
-			{Blu::ShaderDataType::Float3, "a_LightColor"},
 			{Blu::ShaderDataType::Float3, "a_Normal"},
-			{Blu::ShaderDataType::Float3, "a_LightPosition"},
 		};
 
 		// Circle layout
@@ -144,9 +140,20 @@ namespace Blu
 		}
 		
 		// Load the shaders and bind the quad shader
-		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Quad.glsl");
-		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Circle.glsl");
-		Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Line.glsl");
+		bool isDX11 = RendererAPI::GetAPI() == RendererAPI::API::Direct3D;
+		if (isDX11)
+		{
+			Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Renderer2D_Quad.hlsl");
+			// Circle and Line shaders fall back to quad for DX11 until HLSL versions exist
+			Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Renderer2D_Circle.hlsl");
+			Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Renderer2D_Line.hlsl");
+		}
+		else
+		{
+			Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Quad.glsl");
+			Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Circle.glsl");
+			Blu::Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer2D_Line.glsl");
+		}
 		s_RendererData->QuadShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
 		s_RendererData->LineShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Line");
 		s_RendererData->CircleShader = Blu::Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
@@ -182,6 +189,7 @@ namespace Blu
 		// Bind the quad shader, set the view projection matrix and initialize other data for quad rendering
 		s_RendererData->QuadShader->Bind();
 		s_RendererData->QuadShader->SetUniformMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_RendererData->QuadShader->SetUniformFloat3("u_ViewPos", camera.GetPosition());
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
@@ -234,11 +242,13 @@ namespace Blu
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		BLU_PROFILE_FUNCTION();
-		
-		viewProj = camera.GetProjectionMatrix() *glm::inverse(transform);
-		
+
+		viewProj = camera.GetProjectionMatrix() * glm::inverse(transform);
+		glm::vec3 viewPos = glm::vec3(transform[3]);
+
 		s_RendererData->QuadShader->Bind();
 		s_RendererData->QuadShader->SetUniformMat4("u_ViewProjectionMatrix", viewProj);
+		s_RendererData->QuadShader->SetUniformFloat3("u_ViewPos", viewPos);
 		s_RendererData->QuadIndexCount = 0;
 		s_RendererData->QuadVertexBufferPtr = s_RendererData->QuadVertexBufferBase;
 		s_RendererData->TextureSlotIndex = 1;
@@ -344,13 +354,6 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_RendererData->QuadVertexBufferPtr->Normal = glm::vec3(0.0f, 0.0f, 1.0f);
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			auto lightManager = Helpers::SceneHelpers::GetHelperActiveScene()->GetLightManager();
-			if (lightManager->GetPointLights().size() > 0)
-			{
-				s_RendererData->QuadVertexBufferPtr->LightPosition = lightManager->GetPointLights()[0].GetComponent<TransformComponent>().Translation;
-				s_RendererData->QuadVertexBufferPtr->LightColor = lightManager->GetPointLights()[0].GetComponent<PointLightComponent>().Color;
-				
-			}
 			s_RendererData->QuadVertexBufferPtr++;
 		}
 		
@@ -389,14 +392,22 @@ namespace Blu
 	}
 	void Renderer2D::PassLightPropertiesToShader(Shared<LightManager> lightManager)
 	{
-		if (!lightManager->GetPointLights().size() > 0) return;
+		auto lights = lightManager->GetPointLights();  // copy so elements are non-const
+		int numLights = (int)lights.size();
+		constexpr int MaxLights = 8;
+		s_RendererData->QuadShader->SetUniformInt("u_NumLights", std::min(numLights, MaxLights));
 
-		auto pointLight = lightManager->GetPointLights()[0].GetComponent<PointLightComponent>();
-		
-		
-		s_RendererData->QuadShader->SetUniformFloat3("o_Light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		s_RendererData->QuadShader->SetUniformFloat3("o_Light.diffuse", pointLight.DiffuseColor);
-		s_RendererData->QuadShader->SetUniformFloat3("o_Light.specular", pointLight.SpecularColor);
+		for (int i = 0; i < numLights && i < MaxLights; i++)
+		{
+			auto& tc  = lights[i].GetComponent<TransformComponent>();
+			auto& plc = lights[i].GetComponent<PointLightComponent>();
+
+			std::string p = "u_Lights[" + std::to_string(i) + "].";
+			s_RendererData->QuadShader->SetUniformFloat3(p + "position", tc.Translation);
+			s_RendererData->QuadShader->SetUniformFloat3(p + "ambient",  plc.AmbientColor);
+			s_RendererData->QuadShader->SetUniformFloat3(p + "diffuse",  plc.DiffuseColor);
+			s_RendererData->QuadShader->SetUniformFloat3(p + "specular", plc.SpecularColor);
+		}
 	}
 
 	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade, int entityID)
@@ -460,13 +471,6 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->Thickness = 1.0f;
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_RendererData->QuadVertexBufferPtr->Normal = glm::vec3(0.0f, 0.0f, 1.0f);
-			auto lightManager = Helpers::SceneHelpers::GetHelperActiveScene()->GetLightManager();
-			if (lightManager->GetPointLights().size() > 0)
-			{
-				s_RendererData->QuadVertexBufferPtr->LightPosition = lightManager->GetPointLights()[0].GetComponent<TransformComponent>().Translation;
-				s_RendererData->QuadVertexBufferPtr->LightColor = lightManager->GetPointLights()[0].GetComponent<PointLightComponent>().Color;
-
-			}
 			s_RendererData->QuadVertexBufferPtr++;
 		}
 
@@ -567,15 +571,7 @@ namespace Blu
 			s_RendererData->QuadVertexBufferPtr->TexCoord = texCoords[i];
 			s_RendererData->QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_RendererData->QuadVertexBufferPtr->Thickness = 1.0f;
-			auto lightManager = Helpers::SceneHelpers::GetHelperActiveScene()->GetLightManager();
 			s_RendererData->QuadVertexBufferPtr->Normal = glm::vec3(0.0f, 0.0f, 1.0f);
-			if (lightManager->GetPointLights().size() > 0)
-			{
-				s_RendererData->QuadVertexBufferPtr->LightPosition = lightManager->GetPointLights()[0].GetComponent<TransformComponent>().Translation;
-				s_RendererData->QuadVertexBufferPtr->LightColor = lightManager->GetPointLights()[0].GetComponent<PointLightComponent>().Color;
-			}
-
-
 			s_RendererData->QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			#ifdef MODE_EDITOR
 			s_RendererData->QuadVertexBufferPtr->EntityID = entityID;

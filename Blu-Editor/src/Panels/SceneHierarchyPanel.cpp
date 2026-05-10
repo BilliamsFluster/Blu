@@ -49,6 +49,13 @@ namespace Blu
 						auto Entity = m_Context->CreateEntity("Camera");
 						Entity.AddComponent<CameraComponent>();
 					}
+					if (ImGui::MenuItem("Mesh Entity"))
+					{
+						auto Entity = m_Context->CreateEntity("Mesh");
+						auto& mc = Entity.AddComponent<MeshComponent>();
+						mc.MeshData = Mesh::CreateCube();
+						mc.MaterialInstance = Material::Create();
+					}
 					if (ImGui::MenuItem("Sprite Entity"))
 					{
 						auto Entity = m_Context->CreateEntity("Sprite");
@@ -376,6 +383,16 @@ namespace Blu
 				if (ImGui::MenuItem("Circle Collider 2D"))
 				{
 					m_SelectedEntity.AddComponent<CircleCollider2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<MeshComponent>())
+			{
+				if (ImGui::MenuItem("Mesh Renderer"))
+				{
+					auto& mc = m_SelectedEntity.AddComponent<MeshComponent>();
+					mc.MeshData = Mesh::CreateCube();
+					mc.MaterialInstance = Material::Create();
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -848,6 +865,30 @@ namespace Blu
 					ImGui::EndCombo();
 				}
 				ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+			});
+
+		DrawComponent<MeshComponent>("Mesh Renderer", entity, [](auto& component)
+			{
+				static const char* meshTypes[] = { "Cube", "Quad" };
+				static int currentMeshType = 0;
+				if (ImGui::Combo("Mesh Type", &currentMeshType, meshTypes, IM_ARRAYSIZE(meshTypes)))
+				{
+					if (currentMeshType == 0)
+						component.MeshData = Mesh::CreateCube();
+					else
+						component.MeshData = Mesh::CreateQuad();
+				}
+
+				if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					if (!component.MaterialInstance)
+						component.MaterialInstance = Material::Create();
+
+					ImGui::ColorEdit3("Ambient##Mesh",  glm::value_ptr(component.MaterialInstance->GetAmbientColor()));
+					ImGui::ColorEdit3("Diffuse##Mesh",  glm::value_ptr(component.MaterialInstance->GetDiffuseColor()));
+					ImGui::ColorEdit3("Specular##Mesh", glm::value_ptr(component.MaterialInstance->GetSpecularColor()));
+					ImGui::DragFloat("Shininess##Mesh", &component.MaterialInstance->GetShininess(), 0.5f, 1.0f, 256.0f);
+				}
 			});
 
 		float extraSpace = 200.0f;  // Extra space at the end in pixels

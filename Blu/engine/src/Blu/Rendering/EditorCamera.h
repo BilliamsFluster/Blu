@@ -19,6 +19,15 @@ namespace Blu
 		inline float GetDistance() const { return m_Distance; }
 		inline void SetDistance(float distance) { m_Distance = distance; }
 
+		// Fly the camera to look at a world-space point from the current distance.
+		// Position is repositioned so the point is m_Distance units in front of us.
+		inline void SetFocalPoint(const glm::vec3& point)
+		{
+			m_FocalPoint = point;
+			m_Position   = point - GetForwardDirection() * m_Distance;
+			UpdateView();
+		}
+
 		inline void SetViewportSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; UpdateProjectionMatrix(); }
 
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }

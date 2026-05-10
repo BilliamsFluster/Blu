@@ -26,6 +26,7 @@
 // --------- Rendering --------
 
 #include "Blu/Rendering/Renderer.h"
+#include "Blu/Rendering/Renderer3D.h"
 #include "Blu/Rendering/RenderCommand.h"
 #include "Blu/Platform/OpenGL/OpenGLShader.h"
 #include "Blu/Rendering/VertexArray.h"
@@ -33,5 +34,6 @@
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Rendering/FrameBuffer.h"
 #include "Blu/Rendering/ParticleSystem.h"
+#include "Blu/Rendering/Mesh.h"
 
 

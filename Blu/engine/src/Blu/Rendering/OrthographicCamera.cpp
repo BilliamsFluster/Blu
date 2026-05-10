@@ -1,17 +1,26 @@
 #include "Blupch.h"
 #include "OrthographicCamera.h"
 #include<glm/gtc/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include "Blu/Rendering/RendererAPI.h"
 
 namespace Blu
 {
-	void OrthographicCamera::SetBounds(const OrthographicCameraBounds& bounds) 
+	static glm::mat4 MakeOrtho(float left, float right, float bottom, float top, float n, float f)
+	{
+		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+			return glm::orthoRH_ZO(left, right, bottom, top, n, f);
+		return glm::ortho(left, right, bottom, top, n, f);
+	}
+
+	void OrthographicCamera::SetBounds(const OrthographicCameraBounds& bounds)
 	{
 		m_Bounds = bounds;
-		m_ProjectionMatrix = glm::ortho(bounds.Left, bounds.Right, bounds.Bottom, bounds.Top, -1.0f, 1.0f);
+		m_ProjectionMatrix = MakeOrtho(bounds.Left, bounds.Right, bounds.Bottom, bounds.Top, -1.0f, 1.0f);
 		RecalculateViewMatrix();
 	}
 	OrthographicCamera::OrthographicCamera(const OrthographicCameraBounds& bounds)
-		:m_Bounds(bounds), m_ProjectionMatrix(glm::ortho(bounds.Left, bounds.Right, bounds.Bottom, bounds.Top,-1.0f,1.0f)),
+		:m_Bounds(bounds), m_ProjectionMatrix(MakeOrtho(bounds.Left, bounds.Right, bounds.Bottom, bounds.Top,-1.0f,1.0f)),
 		m_ViewMatrix(1.0f)
 	{
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
@@ -20,8 +29,8 @@ namespace Blu
 	{
 		BLU_PROFILE_FUNCTION();
 
-		m_ProjectionMatrix = glm::ortho(bounds.Left, bounds.Right, bounds.Bottom, bounds.Top, -1.0f, 1.0f);
-		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix; // needs to be in this order for it to work
+		m_ProjectionMatrix = MakeOrtho(bounds.Left, bounds.Right, bounds.Bottom, bounds.Top, -1.0f, 1.0f);
+		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
 
 	}
 

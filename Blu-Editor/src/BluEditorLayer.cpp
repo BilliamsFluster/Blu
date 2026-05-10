@@ -16,6 +16,10 @@
 #include "Blu/Platform/Windows/WindowsWindow.h"
 #include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/Utils/Helpers.h"
+#include "Blu/Rendering/RendererAPI.h"
+// D3D11Context.h already pulls in <d3d11.h> — include it last so Windows headers
+// don't stomp on the glad/GLFW type definitions established above.
+#include "Blu/Platform/DirectX11/D3D11Context.h"
 
 
 
@@ -26,9 +30,11 @@ namespace Blu
 	BluEditorLayer::BluEditorLayer()
 		:Layer("TestRenderingLayer"), m_CameraController(1280.0f / 720.0f, true)
 	{
-		GLenum error = glGetError();  // Consume any existing errors
-		if (error != GL_NO_ERROR) {
-			std::cout << "OpenGL error in Blu editor layer on construction: " << error << std::endl;
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+		{
+			GLenum error = glGetError();
+			if (error != GL_NO_ERROR)
+				std::cout << "OpenGL error in Blu editor layer on construction: " << error << std::endl;
 		}
 	}
 
@@ -73,31 +79,6 @@ namespace Blu
 		m_CameraViewFrameBuffer = FrameBuffer::Create(fbCameraSpec);
 
 		
-		ImGuiIO& io = ImGui::GetIO();
-
-		// Key map setup
-		io.KeyMap[ImGuiKey_Tab] = BLU_KEY_TAB; // And so on for all other keys...
-		io.KeyMap[ImGuiKey_LeftArrow] = BLU_KEY_LEFT;
-		io.KeyMap[ImGuiKey_RightArrow] = BLU_KEY_RIGHT;
-		io.KeyMap[ImGuiKey_UpArrow] = BLU_KEY_UP;
-		io.KeyMap[ImGuiKey_DownArrow] = BLU_KEY_DOWN;
-		io.KeyMap[ImGuiKey_PageUp] = BLU_KEY_PAGE_UP;
-		io.KeyMap[ImGuiKey_PageDown] = BLU_KEY_PAGE_DOWN;
-		io.KeyMap[ImGuiKey_Home] = BLU_KEY_HOME;
-		io.KeyMap[ImGuiKey_End] = BLU_KEY_END;
-		io.KeyMap[ImGuiKey_Insert] = BLU_KEY_INSERT;
-		io.KeyMap[ImGuiKey_Delete] = BLU_KEY_DELETE;
-		io.KeyMap[ImGuiKey_Backspace] = BLU_KEY_BACKSPACE;
-		io.KeyMap[ImGuiKey_Space] = BLU_KEY_SPACE;
-		io.KeyMap[ImGuiKey_Enter] = BLU_KEY_ENTER;
-		io.KeyMap[ImGuiKey_Escape] = BLU_KEY_ESCAPE;
-		io.KeyMap[ImGuiKey_A] = BLU_KEY_A;
-		io.KeyMap[ImGuiKey_C] = BLU_KEY_C;
-		io.KeyMap[ImGuiKey_V] = BLU_KEY_V;
-		io.KeyMap[ImGuiKey_X] = BLU_KEY_X;
-		io.KeyMap[ImGuiKey_Y] = BLU_KEY_Y;
-		io.KeyMap[ImGuiKey_Z] = BLU_KEY_Z;
-		
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<CameraComponent>();
@@ -107,32 +88,132 @@ namespace Blu
 		m_EditorCamera = EditorCamera(30, 1.778f, 0.1f, 1000.0f);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 		m_OperationMode = 0; // local operation
-		SceneSerializer loadSceneSerializer(m_EditorScene);
+		// Intentionally not auto-loading the last scene to avoid startup crashes from corrupted scene files.
+		// Use File > Open or drag a .blu file to load a scene.
 
-		std::string scene = loadSceneSerializer.DeserializeLoadedScene();
-		if (!scene.empty())
+		// ---- GPU timer setup ----
+		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
 		{
-			OpenScene(scene);
-			
+			D3D11Context* ctx = D3D11Context::Get();
+			if (ctx && ctx->GetDevice())
+			{
+				D3D11_QUERY_DESC tsDesc  = { D3D11_QUERY_TIMESTAMP,          0 };
+				D3D11_QUERY_DESC djDesc  = { D3D11_QUERY_TIMESTAMP_DISJOINT, 0 };
+				for (int i = 0; i < 2; ++i)
+				{
+					ctx->GetDevice()->CreateQuery(&djDesc, reinterpret_cast<ID3D11Query**>(&m_GPUDisjointQuery[i]));
+					ctx->GetDevice()->CreateQuery(&tsDesc, reinterpret_cast<ID3D11Query**>(&m_GPUTimestampBegin[i]));
+					ctx->GetDevice()->CreateQuery(&tsDesc, reinterpret_cast<ID3D11Query**>(&m_GPUTimestampEnd[i]));
+				}
+			}
+		}
+		else if (glGenQueries)   // guard: ensure GLAD loaded this entry-point
+		{
+			glGenQueries(2, m_GLTimeQuery);
 		}
 	}
 
 	void BluEditorLayer::OnDetach()
 	{
+		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+		{
+			for (int i = 0; i < 2; ++i)
+			{
+				if (m_GPUDisjointQuery[i])     { reinterpret_cast<ID3D11Query*>(m_GPUDisjointQuery[i])->Release();     m_GPUDisjointQuery[i] = nullptr; }
+				if (m_GPUTimestampBegin[i])    { reinterpret_cast<ID3D11Query*>(m_GPUTimestampBegin[i])->Release();    m_GPUTimestampBegin[i] = nullptr; }
+				if (m_GPUTimestampEnd[i])      { reinterpret_cast<ID3D11Query*>(m_GPUTimestampEnd[i])->Release();      m_GPUTimestampEnd[i] = nullptr; }
+			}
+		}
+		else
+		{
+			if (m_GLTimeQuery[0] && glDeleteQueries)
+				glDeleteQueries(2, m_GLTimeQuery);
+		}
 	}
 
 	void BluEditorLayer::OnUpdate(Timestep deltaTime)
 	{
-		
-		
-		
+		// ---- FPS / frame-time via wall-clock interval between OnUpdate calls ----
+		// deltaTime comes from the engine's physics loop and can include vsync/present
+		// blocking time, making it unreliable for display.  Measuring the wall-clock
+		// interval between consecutive OnUpdate entries gives the true frame period.
+		auto wallNow = std::chrono::high_resolution_clock::now();
+		if (m_GPUQueryFrame > 0)  // skip the first frame (no previous timestamp yet)
+		{
+			m_FrameTimeMs = std::chrono::duration<float, std::milli>(wallNow - m_CpuTimerStart).count();
+			m_FPS         = (m_FrameTimeMs > 0.001f) ? (1000.0f / m_FrameTimeMs) : 0.0f;
+
+			// Throttle graph samples so the lines scroll at a readable pace
+			// regardless of FPS.  kPlotIntervalMs controls the scroll speed.
+			m_PerfPlotAccumMs += m_FrameTimeMs;
+			if (m_PerfPlotAccumMs >= kPlotIntervalMs)
+			{
+				m_FrameTimePlot[m_PerfPlotOffset] = m_FrameTimeMs;
+				m_FpsPlot[m_PerfPlotOffset]       = m_FPS;
+				m_PerfPlotOffset  = (m_PerfPlotOffset + 1) % kPerfSamples;
+				m_PerfPlotAccumMs = 0.0f;
+			}
+		}
+		// Store this frame's wall-clock start; also serves as the CPU-work timer origin.
+		m_CpuTimerStart = wallNow;
+
+		// ---- GPU timer: read back the previous frame's result ----
+		const int writeIdx = m_GPUQueryFrame & 1;
+		const int readIdx  = 1 - writeIdx;
+
+		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D && m_GPUQueryFrame >= 2)
+		{
+			D3D11Context* ctx = D3D11Context::Get();
+			if (ctx && ctx->GetDeviceContext())
+			{
+				auto* dc = ctx->GetDeviceContext();
+				D3D11_QUERY_DATA_TIMESTAMP_DISJOINT djData{};
+				auto* djQuery = reinterpret_cast<ID3D11Query*>(m_GPUDisjointQuery[readIdx]);
+				if (djQuery && dc->GetData(djQuery, &djData, sizeof(djData), 0) == S_OK && !djData.Disjoint)
+				{
+					UINT64 tsBegin = 0, tsEnd = 0;
+					dc->GetData(reinterpret_cast<ID3D11Query*>(m_GPUTimestampBegin[readIdx]), &tsBegin, sizeof(UINT64), 0);
+					dc->GetData(reinterpret_cast<ID3D11Query*>(m_GPUTimestampEnd[readIdx]),   &tsEnd,   sizeof(UINT64), 0);
+					m_GpuTimeMs = static_cast<float>(tsEnd - tsBegin) / static_cast<float>(djData.Frequency) * 1000.0f;
+				}
+			}
+		}
+		else if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL && m_GPUQueryFrame >= 2
+		         && glGetQueryObjectuiv && glGetQueryObjectui64v)
+		{
+			GLuint available = 0;
+			glGetQueryObjectuiv(m_GLTimeQuery[readIdx], GL_QUERY_RESULT_AVAILABLE, &available);
+			if (available)
+			{
+				GLuint64 gpuNs = 0;
+				glGetQueryObjectui64v(m_GLTimeQuery[readIdx], GL_QUERY_RESULT, &gpuNs);
+				m_GpuTimeMs = static_cast<float>(gpuNs) / 1e6f;
+			}
+		}
+
+		// ---- GPU timer: begin this frame's queries ----
+		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D && m_GPUDisjointQuery[writeIdx])
+		{
+			D3D11Context* ctx = D3D11Context::Get();
+			if (ctx && ctx->GetDeviceContext())
+			{
+				auto* dc = ctx->GetDeviceContext();
+				dc->Begin(reinterpret_cast<ID3D11Query*>(m_GPUDisjointQuery[writeIdx]));
+				dc->End(reinterpret_cast<ID3D11Query*>(m_GPUTimestampBegin[writeIdx]));
+			}
+		}
+		else if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL && glBeginQuery && m_GLTimeQuery[writeIdx])
+		{
+			glBeginQuery(GL_TIME_ELAPSED, m_GLTimeQuery[writeIdx]);
+		}
+
 		Renderer2D::ResetStats();
 		{
 			BLU_PROFILE_SCOPE("Renderer2D::ResetStats: ");
-			m_FrameBuffer->Bind(); 
+			m_FrameBuffer->Bind();
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
-			
+
 			m_FrameBuffer->ClearAttachment(1, -1);
 		}
 
@@ -148,7 +229,11 @@ namespace Blu
 		{
 			case SceneState::Edit:
 			{
-				m_EditorCamera.OnUpdate(deltaTime);
+				// Only feed input to the camera when the user is actually inside the
+				// viewport — prevents accidental panning/rotating while typing in
+				// property fields or interacting with other ImGui panels.
+				if (m_ViewPortFocused || m_ViewPortHovered)
+					m_EditorCamera.OnUpdate(deltaTime);
 				m_ActiveScene->OnUpdateEditor(deltaTime, m_EditorCamera);
 				
 				break;
@@ -187,12 +272,8 @@ namespace Blu
 		m_MousePosX = mouseX;
 		m_MousePosY = mouseY;
 
-		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
-		{
-			int data = m_FrameBuffer->ReadPixel(1, mouseX, mouseY); // get the red int channel so the second attachment
-			
-			m_DrawnEntityID = data;
-		}
+		// m_DrawnEntityID is only needed on left-click (entity selection).
+		// ReadPixel is a synchronous GPU stall — do NOT call it every frame.
 
 
 
@@ -201,6 +282,28 @@ namespace Blu
 		
 
 		OnOverlayRender();
+
+		// ---- GPU timer: close this frame's queries ----
+		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D && m_GPUDisjointQuery[writeIdx])
+		{
+			D3D11Context* ctx = D3D11Context::Get();
+			if (ctx && ctx->GetDeviceContext())
+			{
+				auto* dc = ctx->GetDeviceContext();
+				dc->End(reinterpret_cast<ID3D11Query*>(m_GPUTimestampEnd[writeIdx]));
+				dc->End(reinterpret_cast<ID3D11Query*>(m_GPUDisjointQuery[writeIdx]));
+			}
+		}
+		else if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL && glEndQuery && m_GLTimeQuery[writeIdx])
+		{
+			glEndQuery(GL_TIME_ELAPSED);
+		}
+		++m_GPUQueryFrame;
+
+		// ---- CPU timer end ----
+		auto cpuEnd    = std::chrono::high_resolution_clock::now();
+		m_CpuTimeMs    = std::chrono::duration<float, std::milli>(cpuEnd - m_CpuTimerStart).count();
+
 		m_FrameBuffer->UnBind();
 		
 		m_CameraViewFrameBuffer->Bind();
@@ -401,9 +504,9 @@ namespace Blu
 
 		ImTextureID playPauseButton = nullptr;
 		if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Pause)
-			playPauseButton = (ImTextureID)m_PlayIcon->GetRendererID();
+			playPauseButton = (ImTextureID)m_PlayIcon->GetImTextureID();
 		else if(m_SceneState == SceneState::Play)
-			playPauseButton = (ImTextureID)m_PauseIcon->GetRendererID();
+			playPauseButton = (ImTextureID)m_PauseIcon->GetImTextureID();
 
 			
 		
@@ -426,7 +529,7 @@ namespace Blu
 		if (m_SceneState == SceneState::Pause)
 		{
 			ImGui::SameLine();
-			if (ImGui::ImageButton((ImTextureID)m_StepIcon->GetRendererID(), ImVec2(size, size)))
+			if (ImGui::ImageButton((ImTextureID)m_StepIcon->GetImTextureID(), ImVec2(size, size)))
 			{
 				m_ActiveScene->OnSceneStep(1);
 			}
@@ -435,7 +538,7 @@ namespace Blu
 		}
 
 		ImGui::SameLine();
-		ImTextureID stopButton = m_SceneState == SceneState::Edit ? nullptr : (ImTextureID)m_StopIcon->GetRendererID();
+		ImTextureID stopButton = m_SceneState == SceneState::Edit ? nullptr : (ImTextureID)m_StopIcon->GetImTextureID();
 		if (ImGui::ImageButton(stopButton, ImVec2(size, size)))
 		{
 			if (m_SceneState != SceneState::Edit)
@@ -445,7 +548,7 @@ namespace Blu
 
 		}
 		ImGui::SameLine();
-		if (ImGui::ImageButton((ImTextureID)m_ExpandPlayOptionsIcon->GetRendererID(), ImVec2(size - 5, size)))
+		if (ImGui::ImageButton((ImTextureID)m_ExpandPlayOptionsIcon->GetImTextureID(), ImVec2(size - 5, size)))
 		{
 			ImGui::OpenPopup("PlayOptions");
 		}
@@ -509,7 +612,6 @@ namespace Blu
 			m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
-			m_ActiveScene->OnScriptSystemStart();
 			std::filesystem::path scenePath = path;
 			m_ActiveScene->SetSceneFilePath(scenePath);
 			serializer.DeserializeEntityScriptInstances(path.string());
@@ -562,6 +664,7 @@ namespace Blu
 
 			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
+			m_ActiveScene->OnScriptSystemStart(true);
 			m_SceneMissing = false;
 			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 			
@@ -662,7 +765,7 @@ namespace Blu
 
 		if (ImGui::BeginMainMenuBar())
 		{
-			ImGui::Image((ImTextureID)m_AppHeaderIcon->GetRendererID(), ImVec2(30, 30), ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image((ImTextureID)m_AppHeaderIcon->GetImTextureID(), ImVec2(30, 30), ImVec2(0, 1), ImVec2(1, 0));
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("New", "Ctrl+N"))
@@ -695,7 +798,7 @@ namespace Blu
 					SceneSerializer serializer(m_ActiveScene);
 					ScriptEngine::ReloadAssembly();
 					ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
-					m_ActiveScene->OnScriptSystemStart();
+					m_ActiveScene->OnScriptSystemStart(false);
 					serializer.DeserializeEntityScriptInstances(m_ActiveScene->GetSceneFilePath().string());
 				}
 				ImGui::EndMenu();
@@ -714,16 +817,54 @@ namespace Blu
 		m_SceneHierarchyPanel->OnImGuiRender();
 		m_ContentBrowserPanel->OnImGuiRender();
 
-		ImGui::Begin("Renderer2D Statistics");
+		ImGui::Begin("Rendering");
 
-		if (ImGui::BeginMenu("Renderer2D Statistics"))
+		// ---- Performance ----
+		if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::Text("Draw Calls: %d", Renderer2D::GetStats().DrawCalls); 
-			ImGui::Text("Vertex Count: %d", Renderer2D::GetStats().GetTotalVertexCount());
-			ImGui::Text("Quad Count: %d", Renderer2D::GetStats().QuadCount);
-			ImGui::EndMenu();
+			ImGui::Text("FPS         %.1f",  m_FPS);
+			ImGui::Text("Frame Time  %.2f ms", m_FrameTimeMs);
+			ImGui::Text("CPU Time    %.2f ms", m_CpuTimeMs);
+			if (m_GpuTimeMs > 0.0f)
+				ImGui::Text("GPU Time    %.2f ms", m_GpuTimeMs);
+			else
+				ImGui::TextDisabled("GPU Time    --");
+
+			ImGui::Spacing();
+
+			// Frame-time graph
+			{
+				char overlay[32];
+				snprintf(overlay, sizeof(overlay), "%.1f ms", m_FrameTimeMs);
+				ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.35f, 0.85f, 0.35f, 1.0f));
+				ImGui::PlotLines("##ft", m_FrameTimePlot, kPerfSamples, m_PerfPlotOffset,
+				                 overlay, 0.0f, 50.0f,
+				                 ImVec2(ImGui::GetContentRegionAvail().x, 55.0f));
+				ImGui::PopStyleColor();
+				ImGui::TextDisabled("Frame Time");
+
+				ImGui::Spacing();
+
+				snprintf(overlay, sizeof(overlay), "%.0f fps", m_FPS);
+				ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.35f, 0.60f, 1.0f, 1.0f));
+				ImGui::PlotLines("##fps", m_FpsPlot, kPerfSamples, m_PerfPlotOffset,
+				                 overlay, 0.0f, 300.0f,
+				                 ImVec2(ImGui::GetContentRegionAvail().x, 55.0f));
+				ImGui::PopStyleColor();
+				ImGui::TextDisabled("FPS");
+			}
 		}
-		
+
+		ImGui::Spacing();
+
+		// ---- Draw Statistics ----
+		if (ImGui::CollapsingHeader("Draw Statistics", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::Text("Draw Calls  %d", Renderer2D::GetStats().DrawCalls);
+			ImGui::Text("Quad Count  %d", Renderer2D::GetStats().QuadCount);
+			ImGui::Text("Vertices    %d", Renderer2D::GetStats().GetTotalVertexCount());
+		}
+
 		ImGui::End();
 		
 		
@@ -743,7 +884,7 @@ namespace Blu
 			// Create image buttons for translation, rotation, scale, and world space.
 			ImGui::SameLine(0, (m_ViewportSize.x - 280));
 			
-			if (ImGui::ImageButton((ImTextureID)m_TranslationIcon->GetRendererID(), buttonSize))
+			if (ImGui::ImageButton((ImTextureID)m_TranslationIcon->GetImTextureID(), buttonSize))
 			{
 				m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
 
@@ -755,7 +896,7 @@ namespace Blu
 
 			ImGui::SameLine();
 
-			if (ImGui::ImageButton((ImTextureID)m_RotationIcon->GetRendererID(), buttonSize))
+			if (ImGui::ImageButton((ImTextureID)m_RotationIcon->GetImTextureID(), buttonSize))
 			{
 				m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
 
@@ -767,7 +908,7 @@ namespace Blu
 
 			ImGui::SameLine();
 
-			if (ImGui::ImageButton((ImTextureID)m_ScaleIcon->GetRendererID(), buttonSize))
+			if (ImGui::ImageButton((ImTextureID)m_ScaleIcon->GetImTextureID(), buttonSize))
 			{
 				m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
 			
@@ -780,7 +921,7 @@ namespace Blu
 
 			ImGui::SameLine(0, 40);
 			static bool isLocalMode = true;
-			ImTextureID spaceIcon = m_OperationMode == (int)ImGuizmo::MODE::LOCAL ? (ImTextureID)m_LocalSpaceIcon->GetRendererID() : (ImTextureID)m_WorldSpaceIcon->GetRendererID();
+			ImTextureID spaceIcon = m_OperationMode == (int)ImGuizmo::MODE::LOCAL ? (ImTextureID)m_LocalSpaceIcon->GetImTextureID() : (ImTextureID)m_WorldSpaceIcon->GetImTextureID();
 			if (ImGui::ImageButton(spaceIcon, buttonSize))
 			{
 				isLocalMode = !isLocalMode; // Toggle the mode
@@ -792,7 +933,7 @@ namespace Blu
 				ImGui::SetTooltip("Toggle Local/World Space"); // Tooltip text
 			}
 			ImGui::SameLine(0, 40);
-			if (ImGui::ImageButton((ImTextureID)m_SnappingIcon->GetRendererID(), buttonSize))
+			if (ImGui::ImageButton((ImTextureID)m_SnappingIcon->GetImTextureID(), buttonSize))
 			{
 				ImGui::OpenPopup("Snapping");
 
@@ -862,7 +1003,7 @@ namespace Blu
 			ImGui::SameLine();
 
 			// Camera options
-			if (ImGui::ImageButton((ImTextureID)m_CameraIcon->GetRendererID(), buttonSize))
+			if (ImGui::ImageButton((ImTextureID)m_CameraIcon->GetImTextureID(), buttonSize))
 			{
 				ImGui::OpenPopup("Camera");
 			}
@@ -889,6 +1030,7 @@ namespace Blu
 		ImGui::PopStyleVar();
 		
 		m_ViewPortFocused = ImGui::IsWindowFocused();
+		m_ViewPortHovered = ImGui::IsWindowHovered();
 		/* Clicking */
 		m_ViewportOffset = glm::vec2(ImGui::GetCursorPos().x, ImGui::GetCursorPos().y);
 		auto windowSize = ImGui::GetWindowSize();
@@ -932,8 +1074,8 @@ namespace Blu
 						{
 							ImGui::SetNextWindowSizeConstraints(ImVec2(300, 200), ImVec2(800, 600));
 							ImGui::Begin("Camera View Window", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-							uint32_t textureIDForCameraView = m_CameraViewFrameBuffer->GetColorAttachmentID();
-							ImGui::Image((void*)textureIDForCameraView, ImVec2{ ImGui::GetWindowWidth(), ImGui::GetWindowHeight() }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+							uint64_t textureIDForCameraView = m_CameraViewFrameBuffer->GetColorAttachmentID();
+							ImGui::Image((ImTextureID)textureIDForCameraView, ImVec2{ ImGui::GetWindowWidth(), ImGui::GetWindowHeight() }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 							ImGui::End();
 
 						}
@@ -946,8 +1088,14 @@ namespace Blu
 		
 		
 
-		uint32_t textureID = m_FrameBuffer->GetColorAttachmentID();// Get the very first color attachment for rendering basic colors
-		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		uint64_t textureID = m_FrameBuffer->GetColorAttachmentID();
+		// OpenGL textures are stored bottom-up → flip V so Y+ appears at the top of the screen.
+		// DX11 render targets are stored top-down → no flip needed (flip would invert the image
+		// and also misalign ImGuizmo, whose screen-space math uses the un-flipped coordinate).
+		const bool isDX11 = RendererAPI::GetAPI() == RendererAPI::API::Direct3D;
+		ImVec2 uv0 = isDX11 ? ImVec2{0, 0} : ImVec2{0, 1};
+		ImVec2 uv1 = isDX11 ? ImVec2{1, 1} : ImVec2{1, 0};
+		ImGui::Image((ImTextureID)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y}, uv0, uv1);
 
 		if (ImGui::BeginDragDropTarget())
 		{
@@ -973,9 +1121,13 @@ namespace Blu
 			{
 				ImGuizmo::SetOrthographic(false);
 				ImGuizmo::SetDrawlist();
-				float windowWidth = (float)ImGui::GetWindowWidth();
-				float windowHeight = (float)ImGui::GetWindowHeight() ;
-				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+				// Use the actual viewport image bounds (excludes the toolbar strip at the
+				// top of the panel window) so ImGuizmo's screen-space projection lines up
+				// with what the camera rendered.  Using GetWindowPos() without the toolbar
+				// offset shifts the gizmo up by the toolbar height, making it drift away
+				// from the mesh as the camera moves.
+				ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y,
+				                  m_ViewportSize.x,      m_ViewportSize.y);
 				
 				//Entity Transform
 				auto& tc = selectedEntity.GetComponent<TransformComponent>();
@@ -1019,29 +1171,24 @@ namespace Blu
 
 	bool BluEditorLayer::OnMouseButtonPressed(Events::MouseButtonPressedEvent& event)
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		io.MouseDown[event.GetButton()] = true;
-		
 		if (m_MousePosX >= 0 && m_MousePosY >= 0 && m_MousePosX < (int)m_ViewportSize.x && m_MousePosY < (int)m_ViewportSize.y)
 		{
-			
 			if (m_ViewPortFocused)
 			{
+				// Read the entity-ID pixel exactly once at click time.
+				// This is a synchronous GPU stall so we do it here (once per click)
+				// rather than every frame.
+				m_DrawnEntityID = m_FrameBuffer->ReadPixel(1, (int)m_MousePosX, (int)m_MousePosY);
 
 				Entity e = Entity{ (entt::entity)m_DrawnEntityID, m_ActiveScene.get() };
 				if (e.HasComponent<TransformComponent>())
 				{
 					m_SceneHierarchyPanel->SetSelectedEntity(e);
 					return true;
-
 				}
-
 			}
-			
-
 		}
 		event.Handled = true;
-
 		return false;
 
 
@@ -1050,39 +1197,25 @@ namespace Blu
 
 	bool BluEditorLayer::OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event)
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		io.MouseDown[event.GetButton()] = false;
 		event.Handled = true;
 		return false;
-
-
 	}
 	bool BluEditorLayer::OnMouseScrolledEvent(Events::MouseScrolledEvent& event)
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		io.MouseWheel = event.GetYOffset();
-		io.MouseWheelH = event.GetXOffset();
 		event.Handled = true;
 		return false;
-
 	}
 	bool BluEditorLayer::OnMouseMovedEvent(Events::MouseMovedEvent& event)
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		io.MousePos = ImVec2(event.GetX(), event.GetY());
 		event.Handled = true;
 		return false;
 	}
 
 	bool BluEditorLayer::OnKeyPressedEvent(Events::KeyPressedEvent& event)
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		io.KeysDown[event.GetKeyCode()] = true;
-		io.KeyCtrl = io.KeysDown[BLU_KEY_LEFT_CONTROL] || io.KeysDown[BLU_KEY_RIGHT_CONTROL];
-		io.KeyShift = io.KeysDown[BLU_KEY_LEFT_SHIFT] || io.KeysDown[BLU_KEY_RIGHT_SHIFT];
-		io.KeyAlt = io.KeysDown[BLU_KEY_LEFT_ALT] || io.KeysDown[BLU_KEY_RIGHT_ALT];
-		io.KeySuper = io.KeysDown[BLU_KEY_LEFT_SUPER] || io.KeysDown[BLU_KEY_RIGHT_SUPER];
-
+		// ImGui input (KeysDown, MouseDown, etc.) is now handled entirely by the
+		// ImGui GLFW backend (install_callbacks=true). Do NOT write to the legacy
+		// io.KeysDown[] here — mixing both APIs triggers an ImGui assertion.
 		bool control = Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL) || Input::IsKeyPressed(BLU_KEY_RIGHT_CONTROL);
 		bool shift = Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT) || Input::IsKeyPressed(BLU_KEY_RIGHT_SHIFT);
 		bool escape = Input::IsKeyPressed(BLU_KEY_ESCAPE);
@@ -1149,7 +1282,21 @@ namespace Blu
 		case BLU_KEY_R:
 			m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
 			break;
-		
+		case BLU_KEY_F:
+		{
+			// Focus the editor camera's orbit pivot on the selected entity.
+			// This makes the camera orbit around the entity rather than a stale focal point.
+			if (m_ViewPortFocused || m_ViewPortHovered)
+			{
+				Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
+				if (selectedEntity && selectedEntity.HasComponent<TransformComponent>())
+				{
+					const auto& tc = selectedEntity.GetComponent<TransformComponent>();
+					m_EditorCamera.SetFocalPoint(tc.Translation);
+				}
+			}
+			break;
+		}
 		}
 		event.Handled = true;
 		return false;
@@ -1158,11 +1305,8 @@ namespace Blu
 
 	bool BluEditorLayer::OnKeyReleasedEvent(Events::KeyReleasedEvent& event)
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		io.KeysDown[event.GetKeyCode()] = false;
 		event.Handled = true;
 		return false;
-
 	}
 
 	bool BluEditorLayer::OnKeyTypedEvent(Events::KeyTypedEvent& event)

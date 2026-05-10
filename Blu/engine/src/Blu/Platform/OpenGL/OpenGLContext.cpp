@@ -16,6 +16,7 @@ namespace Blu
 		BLU_PROFILE_FUNCTION();
 
 		glfwMakeContextCurrent(m_WindowHandle);
+		glfwSwapInterval(0);  // disable VSync — uncapped frame rate
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 		

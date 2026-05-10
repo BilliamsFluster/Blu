@@ -1,11 +1,87 @@
-#Directories
-.vs/
+# -----------------------------------------------------------------------
+# Build output
+# -----------------------------------------------------------------------
 bin/
 bin-int/
 Intermediates/
 
-#Files
+# -----------------------------------------------------------------------
+# Visual Studio
+# -----------------------------------------------------------------------
+.vs/
 *.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+*.ncb
+*.sdf
+*.opensdf
+ipch/
+
+# Visual Studio project temp / cache files
+*.vcxproj.filters
+*.vcxproj.user
+*.tlog/
+*.lastbuildstate
+*.unsuccessfulbuild
+
+# MSBuild / NuGet
+*.cache
+*.nupkg
+packages/
+project.lock.json
+
+# Design-time build caches  (Roslyn / C# tooling)
+**/Intermediates/
+**/*.cache
+**/*DesignTimeResolveAssemblyReferences*
+**/*AssemblyReference.cache
+
+# -----------------------------------------------------------------------
+# Rider / JetBrains
+# -----------------------------------------------------------------------
+.idea/
+*.DotSettings.user
+
+# -----------------------------------------------------------------------
+# C++ compiled artefacts
+# -----------------------------------------------------------------------
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+*.exe
+# Keep .lib/.dll that are checked-in dependencies — but exclude build output
+# (override per-folder with !path/to/dep.lib if needed)
+
+# -----------------------------------------------------------------------
+# DirectX / HLSL
+# -----------------------------------------------------------------------
+*.cso          # compiled shader object
+*.fxo
+
+# -----------------------------------------------------------------------
+# Blu profiler snapshots
+# -----------------------------------------------------------------------
 Blu-Editor/BluProfile-Runtime.json
 Blu-Editor/BluProfile-Shutdown.json
 Blu-Editor/BluProfile-Startup.json
+
+# -----------------------------------------------------------------------
+# OS noise
+# -----------------------------------------------------------------------
+Thumbs.db
+Desktop.ini
+.DS_Store
+*~
+
+# -----------------------------------------------------------------------
+# Logs & temp files
+# -----------------------------------------------------------------------
+*.log
+*.tmp
+*.temp

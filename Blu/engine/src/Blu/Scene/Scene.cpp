@@ -1,6 +1,7 @@
 #include "Blupch.h"
 #include "Scene.h"
 #include "Blu/Rendering/Renderer2D.h"
+#include "Blu/Rendering/Renderer3D.h"
 #include "Blu/Scene/ScriptableEntity.h"
 #include "Entity.h"
 #include "Blu/Rendering/EditorCamera.h"
@@ -102,6 +103,7 @@ namespace Blu
 		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<MeshComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		return newScene;
 	}
@@ -153,8 +155,7 @@ namespace Blu
 		{
 			return { m_EntityMap.at(id), this };
 		}
-
-		
+		return {};
 	}
 	Entity Scene::DuplicateEntity(Entity& targetEntity)
 	{
@@ -270,16 +271,14 @@ namespace Blu
 
 
 	}
-	void Scene::OnScriptSystemStart()
+	void Scene::OnScriptSystemStart(bool invokeOnCreate)
 	{
 		auto view = m_Registry.view<ScriptComponent>();
 		for (auto e : view)
 		{
 			Entity entity = { e, this };
-			ScriptEngine::OnCreateEntity(&entity);
-	
+			ScriptEngine::OnCreateEntity(&entity, invokeOnCreate);
 		}
-
 	}
 	void Scene::OnScriptSystemStop()
 	{
@@ -360,10 +359,10 @@ namespace Blu
 	}
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
 	{
-		
-		Renderer2D::BeginScene(camera);
 		m_LightManager->UpdateLights();
-		
+
+		// 2D pass
+		Renderer2D::BeginScene(camera);
 		{
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto& entity : group)
@@ -386,12 +385,22 @@ namespace Blu
 			{
 				auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
 				particleSystem.Update(deltaTime);
-
-
 			}
 		}
 		Renderer2D::EndScene();
 
+		// 3D pass
+		Renderer3D::BeginScene(camera);
+		Renderer3D::SetLights(m_LightManager);
+		{
+			auto view = m_Registry.view<TransformComponent, MeshComponent>();
+			for (auto& entity : view)
+			{
+				auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+				Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+			}
+		}
+		Renderer3D::EndScene();
 	}
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
@@ -490,9 +499,20 @@ namespace Blu
 				}
 			}
 
-			
-
 			Renderer2D::EndScene();
+
+			// 3D pass
+			Renderer3D::BeginScene(*mainCamera, cameraTransform);
+			Renderer3D::SetLights(m_LightManager);
+			{
+				auto meshView = m_Registry.view<TransformComponent, MeshComponent>();
+				for (auto& e : meshView)
+				{
+					auto [transform, mesh] = meshView.get<TransformComponent, MeshComponent>(e);
+					Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)e);
+				}
+			}
+			Renderer3D::EndScene();
 		}
 
 	}
@@ -539,6 +559,19 @@ namespace Blu
 
 
 			Renderer2D::EndScene();
+
+			// 3D pass
+			Renderer3D::BeginScene(*mainCamera, cameraTransform);
+			Renderer3D::SetLights(m_LightManager);
+			{
+				auto meshView = m_Registry.view<TransformComponent, MeshComponent>();
+				for (auto& e : meshView)
+				{
+					auto [transform, mesh] = meshView.get<TransformComponent, MeshComponent>(e);
+					Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)e);
+				}
+			}
+			Renderer3D::EndScene();
 		}
 	}
 	void Scene::OnSceneStep(int frames)

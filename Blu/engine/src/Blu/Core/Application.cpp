@@ -8,6 +8,7 @@
 #include "Blu/Rendering/Buffer.h"
 #include "Blu/Rendering/VertexArray.h"
 #include "Blu/Rendering/Renderer.h"
+#include "Blu/Rendering/RendererAPI.h"
 #include "Blu/Core/Timestep.h"
 #include <GLFW/glfw3.h>
 #include "Blu/Events/WindowEvent.h"
@@ -23,11 +24,11 @@ namespace Blu
 {
 	static void CheckOpenGLError()
 	{
+		if (RendererAPI::GetAPI() != RendererAPI::API::OpenGL) return;
 		GLenum err;
 		while ((err = glGetError()) != GL_NO_ERROR)
 		{
 			BLU_CORE_ERROR("Error {0}", err);
-
 		}
 	}
 
@@ -55,10 +56,7 @@ namespace Blu
 		Renderer::Init();
 		ScriptEngine::Init();
 		PushOverlay(m_ImGuiLayer);
-		GLenum error = glGetError();  // Consume any existing errors
-		if (error != GL_NO_ERROR) {
-			std::cout << "OpenGL error Application::Application: " << error << std::endl;
-		}
+		CheckOpenGLError();
 		
 		
 
@@ -75,10 +73,7 @@ namespace Blu
 	{
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
-		GLenum error = glGetError();  // Consume any existing errors
-		if (error != GL_NO_ERROR) {
-			std::cout << "OpenGL error Application::PushLayer: " << error << std::endl;
-		}
+		CheckOpenGLError();
 	}
 
 	// Push a new overlay into the application
@@ -99,19 +94,26 @@ namespace Blu
 	void Application::Run()
 	{
 		BLU_PROFILE_FUNCTION();
-		// Initialize the time and timestep variables
-		float time = glfwGetTime(); // need platform class Platform::GetTime()
-		Timestep timestep = time - m_LastFrameTime; // get delta time
-		m_LastFrameTime = time;
-		
+
+		// Seed the last-frame timestamp so the very first deltaTime is ~0
+		// instead of the entire startup duration.
+		m_LastFrameTime = (float)glfwGetTime();
+
 		// Main application loop
 		while (m_Running)
 		{
-			// If the window is valid we can update it 
+			// If the window is valid we can update it
 			if (m_Window)
 			{
 				BLU_PROFILE_SCOPE("RunLoop");
-				
+
+				// Recalculate deltaTime every frame inside the loop.
+				// Previously this was done once before the loop, so every frame
+				// received the same stale timestep (whatever the startup time was).
+				float time      = (float)glfwGetTime();
+				Timestep timestep = time - m_LastFrameTime;
+				m_LastFrameTime   = time;
+
 				// Update the window and check if it should be closed
 				m_Window->OnUpdate();
 				m_Running = !m_Window->ShouldClose();

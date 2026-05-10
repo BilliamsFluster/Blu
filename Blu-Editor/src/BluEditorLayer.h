@@ -2,6 +2,7 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Blu/Rendering/EditorCamera.h"
+#include <chrono>
 
 
 #pragma once
@@ -64,7 +65,8 @@ namespace Blu
 		Blu::Shared<Blu::FrameBuffer> m_CameraViewFrameBuffer;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		Entity m_CameraEntity;
-		bool m_ViewPortFocused = false;
+		bool m_ViewPortFocused  = false;
+		bool m_ViewPortHovered  = false;
 		Blu::Shared<Scene> m_ActiveScene;
 		Blu::Shared<Scene> m_EditorScene;
 		std::vector<Entity> Entities;
@@ -99,6 +101,31 @@ namespace Blu
 		};
 
 		SceneState m_SceneState = SceneState::Edit;
+
+		// ---- Performance stats ----------------------------------------
+		float m_FPS         = 0.0f;
+		float m_FrameTimeMs = 0.0f;
+		float m_CpuTimeMs   = 0.0f;
+		float m_GpuTimeMs   = 0.0f;
+
+		static constexpr int kPerfSamples = 128;
+		float m_FrameTimePlot[kPerfSamples]{};
+		float m_FpsPlot[kPerfSamples]{};
+		int   m_PerfPlotOffset = 0;
+
+		std::chrono::high_resolution_clock::time_point m_CpuTimerStart;
+		float m_PerfPlotAccumMs = 0.0f;          // time since last graph sample
+		static constexpr float kPlotIntervalMs = 50.0f; // sample every ~50 ms → ~20 Hz scroll
+
+		// DX11 GPU timestamp queries (double-buffered).
+		// Stored as void* so we don't need to pull d3d11.h into this header.
+		void* m_GPUDisjointQuery[2]      = {};
+		void* m_GPUTimestampBegin[2]     = {};
+		void* m_GPUTimestampEnd[2]       = {};
+		int   m_GPUQueryFrame            = 0;
+
+		// OpenGL timer queries (double-buffered)
+		uint32_t m_GLTimeQuery[2]  = {};
 	};
 }
 

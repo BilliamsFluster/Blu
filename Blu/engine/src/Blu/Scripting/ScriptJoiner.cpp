@@ -49,16 +49,14 @@ namespace Blu
 		 
 	}
 
-	static void TagComponent_GetName(UUID entityID, std::string* outName )
+	static void TagComponent_GetName(UUID entityID, std::string* outName)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-
+		if (!scene) return;
 		Entity entity = scene->GetEntityByUUID(entityID);
-		if (entity)
-		{
-			*outName = entity.GetComponent<TagComponent>().Tag;
-
-		}
+		if (!entity) return;
+		if (!entity.HasComponent<TagComponent>()) return;
+		*outName = entity.GetComponent<TagComponent>().Tag;
 	}
 	static MonoObject* GetScriptInstance(UUID entityID)
 	{
@@ -71,20 +69,27 @@ namespace Blu
 	static bool Entity_HasComponent(UUID entityID, MonoReflectionType* componentType)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT("{0}", scene);
+		if (!scene)
+			return false;
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT("{0}",entity);
+		if (!entity)
+			return false;
 
-		
 		MonoType* managedType = mono_reflection_type_get_type(componentType);
-		BLU_CORE_ASSERT("{0}", s_EntityHasComponentFuncs.find(managedType) != s_EntityHasComponentFuncs.end());
-		return s_EntityHasComponentFuncs.at(managedType)(entity);
+		auto it = s_EntityHasComponentFuncs.find(managedType);
+		if (it == s_EntityHasComponentFuncs.end())
+			return false;
+		return it->second(entity);
 	}
 	static uint64_t Entity_FindEntityByName(MonoString* name)
 	{
 		char* cStr = mono_string_to_utf8(name);
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT("{0}", scene);
+		if (!scene)
+		{
+			mono_free(cStr);
+			return 0;
+		}
 		Entity entity = scene->FindEntityByName(cStr);
 		mono_free(cStr);
 		if(entity)
@@ -95,7 +100,7 @@ namespace Blu
 	static MonoArray* GetAllEntityIDs()
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT("{0}", scene);
+		if (!scene) return nullptr;
 
 		auto view = scene->GetAllEntitiesWith<ScriptComponent>(); // Specific to ScriptComponent
 		MonoArray* entityIDsArray = mono_array_new(mono_domain_get(), mono_get_uint64_class(), view.size());
@@ -116,49 +121,51 @@ namespace Blu
 	static void TransformComponent_SetTranslation(UUID entityID, glm::vec3* translation)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-
+		if (!scene) return;
 		Entity entity = scene->GetEntityByUUID(entityID);
-		
+		if (!entity) return;
 		entity.GetComponent<TransformComponent>().Translation = *translation;
 	}
 
 	static void Rigidbody2DComponent_ApplyLinearImpulse(UUID entityID, glm::vec2* impulse, glm::vec2* point, bool wake)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT("{0}",scene);
+		if (!scene) return;
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT("{0}", entity);
+		if (!entity) return;
+		if (!entity.HasComponent<Rigidbody2DComponent>()) return;
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
 		if (body)
-		{
 			body->ApplyLinearImpulse(b2Vec2(impulse->x, impulse->y), b2Vec2(point->x, point->y), wake);
-
-		}
 	}
 
 	static void Rigidbody2DComponent_ApplyLinearImpulseToCenter(UUID entityID, glm::vec2* impulse, bool wake)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT("{0}", scene);
+		if (!scene) return;
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT("{0}", entity);
+		if (!entity) return;
+		if (!entity.HasComponent<Rigidbody2DComponent>()) return;
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
-		body->ApplyLinearImpulseToCenter(b2Vec2(impulse->x, impulse->y), wake);
+		if (body)
+			body->ApplyLinearImpulseToCenter(b2Vec2(impulse->x, impulse->y), wake);
 	}
 
 	static void Rigidbody2DComponent_GetLinearVelocity(UUID entityID, glm::vec2* outLinearVelocity)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT("{0}", scene);
+		if (!scene) return;
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT("{0}", entity);
+		if (!entity) return;
+		if (!entity.HasComponent<Rigidbody2DComponent>()) return;
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
+		if (!body) return;
 		const b2Vec2& linearVelocity = body->GetLinearVelocity();
 		*outLinearVelocity = glm::vec2(linearVelocity.x, linearVelocity.y);
 	}
@@ -166,25 +173,29 @@ namespace Blu
 	static Rigidbody2DComponent::BodyType Rigidbody2DComponent_GetType(UUID entityID)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT("{0}", scene);
+		if (!scene) return Rigidbody2DComponent::BodyType::Static;
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT("{0}", entity);
+		if (!entity) return Rigidbody2DComponent::BodyType::Static;
+		if (!entity.HasComponent<Rigidbody2DComponent>()) return Rigidbody2DComponent::BodyType::Static;
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
+		if (!body) return Rigidbody2DComponent::BodyType::Static;
 		return Utils::Rigidbody2DTypeFromBox2DBody(body->GetType());
 	}
 
 	static void Rigidbody2DComponent_SetType(UUID entityID, Rigidbody2DComponent::BodyType bodyType)
 	{
 		Scene* scene = ScriptEngine::GetSceneContext();
-		BLU_CORE_ASSERT("{0}", scene);
+		if (!scene) return;
 		Entity entity = scene->GetEntityByUUID(entityID);
-		BLU_CORE_ASSERT("{0}", entity);
+		if (!entity) return;
+		if (!entity.HasComponent<Rigidbody2DComponent>()) return;
 
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 		b2Body* body = (b2Body*)rb2d.RuntimeBody;
-		body->SetType(Utils::Rigidbody2DTypeToBox2DBody(bodyType));
+		if (body)
+			body->SetType(Utils::Rigidbody2DTypeToBox2DBody(bodyType));
 	}
 	static bool Input_IsKeyDown(int keycode)
 	{
@@ -205,9 +216,10 @@ namespace Blu
 		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_ApplyLinearImpulse);
 		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_ApplyLinearImpulseToCenter);
 		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_GetLinearVelocity);
+		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_GetType);
+		BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_SetType);
 		BLU_ADD_INTERNAL_CALL(TagComponent_GetName);
-		//BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_GetType);
-		//BLU_ADD_INTERNAL_CALL(Rigidbody2DComponent_SetType);
+		BLU_ADD_INTERNAL_CALL(GetAllEntityIDs);
 	}
 
 	template<typename... Component>

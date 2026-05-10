@@ -601,6 +601,7 @@ namespace Blu
 
 
 					Entity entity = m_Scene->GetEntityByUUID(uuid);
+					if (!entity) continue;
 					auto& sc = entity.GetComponent<ScriptComponent>();
 					Shared<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(uuid);
 					sc.Name = scriptComponent["Name"].as<std::string>();

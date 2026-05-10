@@ -94,19 +94,21 @@ project "Blu"
 		"%{prj.name}/engine/ExternalDependencies/glm/**.inl",
 		"%{prj.name}/engine/ExternalDependencies/stb_image/**.h",
 		"%{prj.name}/engine/ExternalDependencies/ImGuizmo/ImGuizmo.h",
-		"%{prj.name}/engine/ExternalDependencies/ImGuizmo/ImGuizmo.cpp"
-
-
-
+		"%{prj.name}/engine/ExternalDependencies/ImGuizmo/ImGuizmo.cpp",
+		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_dx11.h",
+		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_dx11.cpp",
+		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_glfw.h",
+		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_glfw.cpp"
 	}   
 
-	includedirs 
+	includedirs
 	{
 		"$(SolutionDir)/Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/src",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
+		"$(SolutionDir)/Blu/engine/ExternalDependencies/imgui/backends",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
@@ -131,11 +133,17 @@ project "Blu"
 		"dwmapi",
 		"box2d",
 		"%{Library.mono}",
-		
-		
+		-- DirectX 11
+		"d3d11",
+		"dxgi",
+		"d3dcompiler",
+		"dxguid",
 	}
 	filter {"files:Blu/engine/ExternalDependencies/ImGuizmo/*.cpp"}
-	flags {"NoPCH"}
+		flags {"NoPCH"}
+
+	filter {"files:Blu/engine/ExternalDependencies/imgui/backends/*.cpp"}
+		flags {"NoPCH"}
 
 	
 	--buildoptions { "/wd4251" } for dll

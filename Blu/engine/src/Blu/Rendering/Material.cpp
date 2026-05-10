@@ -2,6 +2,7 @@
 #include "Material.h"
 #include "Blu/Rendering/Renderer.h"
 #include "Blu/Platform/OpenGL/OpenGLMaterial.h"
+#include "Blu/Platform/DirectX11/D3D11Material.h"
 
 namespace Blu
 {
@@ -9,11 +10,9 @@ namespace Blu
     {
         switch (Renderer::GetAPI())
         {
-        case RendererAPI::API::None:
-            return nullptr;
-        case RendererAPI::API::OpenGL:
-            return std::make_shared<OpenGLMaterial>(shader);
-            
+        case RendererAPI::API::None:      return nullptr;
+        case RendererAPI::API::OpenGL:    return std::make_shared<OpenGLMaterial>(shader);
+        case RendererAPI::API::Direct3D:  return std::make_shared<D3D11Material>(shader);
         }
         return nullptr;
     }
@@ -22,11 +21,9 @@ namespace Blu
     {
         switch (Renderer::GetAPI())
         {
-        case RendererAPI::API::None:
-            return nullptr;
-        case RendererAPI::API::OpenGL:
-            return std::make_shared<OpenGLMaterial>();
-
+        case RendererAPI::API::None:      return nullptr;
+        case RendererAPI::API::OpenGL:    return std::make_shared<OpenGLMaterial>();
+        case RendererAPI::API::Direct3D:  return std::make_shared<D3D11Material>();
         }
         return nullptr;
     }

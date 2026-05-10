@@ -7,6 +7,7 @@
 #include "Blu/Rendering/ParticleSystem.h"
 #include "Blu/Core/UUID.h"
 #include "Blu/Rendering/Material.h"
+#include "Blu/Rendering/Mesh.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -110,9 +111,13 @@ namespace Blu
 
 	};
 
-	struct MeshComponent 
+	struct MeshComponent
 	{
+		Shared<class Mesh> MeshData;
+		Shared<class Material> MaterialInstance;
 
+		MeshComponent() = default;
+		MeshComponent(const MeshComponent&) = default;
 	};
 
 	struct TagComponent 
@@ -249,7 +254,7 @@ namespace Blu
 	using AllComponents =
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
-		ScriptComponent, NativeScriptComponent, Rigidbody2DComponent, PointLightComponent>;
+		ScriptComponent, NativeScriptComponent, Rigidbody2DComponent, PointLightComponent, MeshComponent>;
 
 
 

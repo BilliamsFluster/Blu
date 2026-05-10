@@ -4,6 +4,8 @@
 #include "Blu/Core/Log.h"
 #include "Blu/Events/GLFWCallbacks.h"
 #include "Blu/Platform/OpenGL/OpenGLContext.h"
+#include "Blu/Platform/DirectX11/D3D11Context.h"
+#include "Blu/Rendering/RendererAPI.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -63,8 +65,18 @@ namespace Blu
 		{
 			glfwWindowHint(GLFW_TITLEBAR, false);
 		}
+
+		// Suppress GLFW's OpenGL context when using DX11 — the context is managed by D3D11Context
+		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		m_Context = new OpenGLContext(m_Window);
+
+		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+			m_Context = new D3D11Context(m_Window);
+		else
+			m_Context = new OpenGLContext(m_Window);
+
 		m_Context->Init();
 		
 
