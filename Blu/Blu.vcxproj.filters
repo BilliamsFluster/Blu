@@ -49,6 +49,9 @@
     <Filter Include="src\Blu\ImGui">
       <UniqueIdentifier>{09171887-75D7-93BD-3E12-DD3AAA91D899}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\LightSystem">
+      <UniqueIdentifier>{AB0DA7D2-176F-84E0-A0DC-CA920C3DBB9F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Blu\Math">
       <UniqueIdentifier>{D8C62123-C429-B1C7-6DAF-E97D59F17C4A}</UniqueIdentifier>
     </Filter>
@@ -1434,6 +1437,9 @@
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h">
       <Filter>src\Blu\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h">
+      <Filter>src\Blu\LightSystem</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Math\Math.h">
       <Filter>src\Blu\Math</Filter>
     </ClInclude>
@@ -1450,6 +1456,9 @@
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLFrameBuffer.h">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLMaterial.h">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.h">
@@ -1480,6 +1489,9 @@
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Material.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h">
@@ -1536,16 +1548,15 @@
     <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h">
       <Filter>src\Blu\Scripting</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Utils\Helpers.h">
+      <Filter>src\Blu\Utils</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h">
       <Filter>src\Blu\Utils</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blupch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Material.h" />
-    <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLMaterial.h" />
-    <ClInclude Include="engine\src\Blu\Utils\Helpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
@@ -1596,6 +1607,9 @@
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp">
       <Filter>src\Blu\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp">
+      <Filter>src\Blu\LightSystem</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Math\Math.cpp">
       <Filter>src\Blu\Math</Filter>
     </ClCompile>
@@ -1609,6 +1623,9 @@
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLFrameBuffer.cpp">
+      <Filter>src\Blu\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLMaterial.cpp">
       <Filter>src\Blu\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLRendererAPI.cpp">
@@ -1642,6 +1659,9 @@
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Material.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp">
@@ -1698,12 +1718,11 @@
     <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp">
       <Filter>src\Blu\Scripting</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp">
+      <Filter>src\Blu\Utils</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blupch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
-    <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLMaterial.cpp" />
-    <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp" />
   </ItemGroup>
 </Project>
