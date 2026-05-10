@@ -695,10 +695,10 @@
     <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp" />
     <ClCompile Include="engine\src\Blu\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp" />
+    <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="engine\ExternalDependencies\GLFW\GLFW.vcxproj">
