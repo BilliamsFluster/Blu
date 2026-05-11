@@ -3,27 +3,22 @@
 
 namespace Blu
 {
+    // LightManager is now a thin helper.  Actual light data is collected
+    // directly from the ECS each frame in Scene::OnUpdateEditor/Runtime via
+    // GatherLights() — no stale entity references.
     class LightManager
     {
     public:
-        LightManager();
-        ~LightManager();
+        LightManager()  = default;
+        ~LightManager() = default;
 
-        // Add methods to create and manage different types of lights (point lights, directional lights, etc.)
-        void AddPointLight(class Entity& light);
-        void AddDirectionalLight(Entity& light);
-        // ...
+        // Legacy stubs kept for call-sites that haven't been removed yet.
+        // They are no-ops: lights are discovered from the ECS automatically.
+        void AddPointLight(class Entity&)       {}
+        void AddDirectionalLight(class Entity&) {}
+        void AddSpotLight(class Entity&)        {}
 
-        // Update and render methods for the lights
-        void UpdateLights();
-        void RenderLights();
-
-        std::vector<Entity> GetPointLights() { return m_PointLights; }
-
-    private:
-        std::vector<Entity> m_PointLights;
-        std::vector<Entity> m_DirectionalLights;
-        friend class SceneHierarchyPanel;
+        void UpdateLights() {}
+        void RenderLights() {}
     };
-
 }

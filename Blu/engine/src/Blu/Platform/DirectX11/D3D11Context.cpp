@@ -68,6 +68,22 @@ namespace Blu
         BLU_CORE_ASSERT(SUCCEEDED(hr), "D3D11CreateDeviceAndSwapChain failed");
 
         CreateBackbuffer();
+
+        // Solid-fill rasterizer (default)
+        D3D11_RASTERIZER_DESC rsDesc = {};
+        rsDesc.FillMode              = D3D11_FILL_SOLID;
+        rsDesc.CullMode              = D3D11_CULL_BACK;
+        rsDesc.FrontCounterClockwise = FALSE;
+        rsDesc.DepthClipEnable       = TRUE;
+        m_Device->CreateRasterizerState(&rsDesc, m_RSSolid.GetAddressOf());
+
+        // Wireframe rasterizer (no culling so back-faces show through)
+        rsDesc.FillMode = D3D11_FILL_WIREFRAME;
+        rsDesc.CullMode = D3D11_CULL_NONE;
+        m_Device->CreateRasterizerState(&rsDesc, m_RSWireframe.GetAddressOf());
+
+        m_DeviceContext->RSSetState(m_RSSolid.Get());
+
         BLU_CORE_INFO("D3D11 context initialised (feature level 0x{0:X})", (uint32_t)chosenLevel);
     }
 
@@ -109,6 +125,12 @@ namespace Blu
         vp.Height   = (float)bbDesc.Height;
         vp.MaxDepth = 1.0f;
         m_DeviceContext->RSSetViewports(1, &vp);
+    }
+
+    void D3D11Context::SetWireframe(bool wireframe)
+    {
+        if (m_DeviceContext)
+            m_DeviceContext->RSSetState(wireframe ? m_RSWireframe.Get() : m_RSSolid.Get());
     }
 
     void D3D11Context::SwapBuffers()

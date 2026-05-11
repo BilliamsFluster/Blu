@@ -212,38 +212,63 @@ namespace Blu
 		CircleCollider2DComponent(const CircleCollider2DComponent& other) = default;
 	};
 
-	struct PointLightComponent : TransformComponent
+	// ─── Point Light ──────────────────────────────────────────────────────────
+	// Position is taken from the entity's TransformComponent::Translation.
+	// Attenuation formula: att = 1 / (Constant + Linear*d + Quadratic*d²)
+	// Typical presets (d = range in world units):
+	//   Range 7    → Constant 1.0 / Linear 0.7  / Quadratic 1.8
+	//   Range 50   → Constant 1.0 / Linear 0.09 / Quadratic 0.032
+	//   Range 200  → Constant 1.0 / Linear 0.022/ Quadratic 0.0019
+	struct PointLightComponent
 	{
-		glm::vec3 Position{ 0.0f, 0.0f, 0.0f };
-		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
-		float Intensity = 1.0f;
-		float Radius = 1.0f;
-
-		// Additional properties for Phong reflection model
-		glm::vec3 AmbientColor{ 0.1f, 0.1f, 0.1f }; // Ambient light color
-		glm::vec3 DiffuseColor{ 0.8f, 0.8f, 0.8f }; // Diffuse light color
-		glm::vec3 SpecularColor{ 1.0f, 1.0f, 1.0f }; // Specular light color
-		float Shininess = 32.0f; // Shininess factor for specular reflection
+		glm::vec3 Ambient   = glm::vec3(0.05f, 0.05f, 0.05f);
+		glm::vec3 Diffuse   = glm::vec3(1.00f, 1.00f, 1.00f);
+		glm::vec3 Specular  = glm::vec3(1.00f, 1.00f, 1.00f);
+		float     Intensity    = 1.0f;
+		float     Range        = 20.0f;
+		// Attenuation coefficients
+		float     AttConstant  = 1.0f;
+		float     AttLinear    = 0.09f;
+		float     AttQuadratic = 0.032f;
 
 		PointLightComponent() = default;
-		PointLightComponent(const glm::vec3& position, const glm::vec4& color, float intensity, float radius)
-			: Position(position), Color(color), Intensity(intensity), Radius(radius) {}
+		PointLightComponent(const PointLightComponent&) = default;
 	};
 
+	// ─── Directional Light ────────────────────────────────────────────────────
+	// Infinite-distance source (sun / sky).  No position, no attenuation.
 	struct DirectionalLightComponent
 	{
-		glm::vec3 Direction = glm::vec3(0.0f, -1.0f, 0.0f); // Default direction is downward
-		glm::vec4 Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // Default color is white
-		float Intensity = 1.0f; // Default intensity is 1.0
+		glm::vec3 Direction = glm::normalize(glm::vec3(-0.2f, -1.0f, -0.3f));
+		glm::vec3 Ambient   = glm::vec3(0.10f, 0.10f, 0.10f);
+		glm::vec3 Diffuse   = glm::vec3(0.80f, 0.80f, 0.80f);
+		glm::vec3 Specular  = glm::vec3(0.50f, 0.50f, 0.50f);
+		float     Intensity = 1.0f;
 
 		DirectionalLightComponent() = default;
-
-		DirectionalLightComponent(const glm::vec3& direction, const glm::vec4& color, float intensity)
-			: Direction(direction), Color(color), Intensity(intensity) {}
+		DirectionalLightComponent(const DirectionalLightComponent&) = default;
 	};
-	struct SpotlightComponent
-	{
 
+	// ─── Spot Light ───────────────────────────────────────────────────────────
+	// Position comes from TransformComponent::Translation.
+	// InnerConeAngle / OuterConeAngle in degrees; shader pre-computes cos values.
+	// Smooth falloff between inner (full intensity) and outer (zero) edges.
+	struct SpotLightComponent
+	{
+		glm::vec3 Ambient        = glm::vec3(0.00f, 0.00f, 0.00f);
+		glm::vec3 Diffuse        = glm::vec3(1.00f, 1.00f, 1.00f);
+		glm::vec3 Specular       = glm::vec3(1.00f, 1.00f, 1.00f);
+		glm::vec3 Direction      = glm::vec3(0.0f, -1.0f, 0.0f);
+		float     Intensity      = 1.0f;
+		float     Range          = 30.0f;
+		float     InnerConeAngle = 12.5f;   // degrees
+		float     OuterConeAngle = 17.5f;   // degrees
+		float     AttConstant    = 1.0f;
+		float     AttLinear      = 0.09f;
+		float     AttQuadratic   = 0.032f;
+
+		SpotLightComponent() = default;
+		SpotLightComponent(const SpotLightComponent&) = default;
 	};
 
 	template<typename... Component>
@@ -254,7 +279,8 @@ namespace Blu
 	using AllComponents =
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
-		ScriptComponent, NativeScriptComponent, Rigidbody2DComponent, PointLightComponent, MeshComponent>;
+		ScriptComponent, NativeScriptComponent, Rigidbody2DComponent,
+		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent>;
 
 
 

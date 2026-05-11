@@ -16,8 +16,8 @@ namespace Blu
         :m_CurrentDirectory(s_AssetsDirectory)
     {
         m_FileIcons[".png"] = (Blu::Texture2D::Create("assets/textures/FileIcon.png"));
-        m_FolderOpenIcon = (Blu::Texture2D::Create("assets/textures/FolderOpen.png"));
-        m_FolderClosedIcon = (Blu::Texture2D::Create("assets/textures/FolderClosed.png"));
+        m_FolderOpenIcon   = Blu::Texture2D::Create("assets/textures/FolderOpen.png");
+        m_FolderClosedIcon = Blu::Texture2D::Create("assets/textures/Folder.png");
 
     }
     std::string m_Filter;  // Add a filter string
@@ -162,7 +162,7 @@ namespace Blu
 
         // Show content of the current directory
         static float padding = 10.0f;
-        static float thumbnailSize = 80.0f;
+        static float thumbnailSize = 100.0f;
         float cellSize = thumbnailSize + padding;
         float panelWidth = ImGui::GetContentRegionAvail().x;
 
@@ -214,7 +214,7 @@ namespace Blu
 
 
                 auto closedID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetImTextureID()));
-                ImVec2 iconSize(50.0f, 50.0f);
+                ImVec2 iconSize(72.0f, 72.0f);
 
                 ImGui::PushID(path.string().c_str());
                 ImGui::Image(closedID, iconSize, ImVec2(0, 1), ImVec2(1, 0));
@@ -265,7 +265,7 @@ namespace Blu
             {
                 // Render file icon and make it selectable as necessary
                 auto fileID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FileIcons[".png"]->GetImTextureID()));
-                ImVec2 iconSize(50.0f, 50.0f);
+                ImVec2 iconSize(72.0f, 72.0f);
 
                 ImGui::PushID(path.string().c_str());
                 ImGui::Image(fileID, iconSize, ImVec2(0, 1), ImVec2(1, 0));

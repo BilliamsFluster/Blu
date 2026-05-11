@@ -33,7 +33,7 @@ namespace Blu
 
 		virtual void SetUniformPointLight(const std::string& name, const struct PointLightComponent& light) override;
 		virtual void SetUniformDirectionalLight(const std::string& name, const struct DirectionalLightComponent& light) override;
-		virtual void SetUniformSpotlight(const std::string& name, const struct SpotlightComponent& light) override;
+		virtual void SetUniformSpotlight(const std::string& name, const struct SpotLightComponent& light) override;
 		virtual uint32_t GetProgramID() override { return m_RendererID;}
 	private:
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);

@@ -307,34 +307,10 @@ namespace Blu
 		return location;
 	}
 
-	void OpenGLShader::SetUniformPointLight(const std::string& name, const PointLightComponent& light)
+	void OpenGLShader::SetUniformPointLight(const std::string& /*name*/, const PointLightComponent& /*light*/)
 	{
-		// Get the uniform location in the shader
-		int location = GetUniformLocation(name);
-
-		if (location != -1)
-		{
-			// Create a PointLight struct to hold the data
-			PointLightComponent pointLight;
-			pointLight.Color = light.Color;
-			pointLight.Intensity = light.Intensity;
-			pointLight.Radius = light.Radius;
-			pointLight.Position = light.Position;
-			pointLight.AmbientColor = light.AmbientColor;
-			pointLight.DiffuseColor = light.DiffuseColor;
-			pointLight.SpecularColor = light.SpecularColor;
-			pointLight.Shininess = light.Shininess;
-
-			// Set the uniform data using glUniform* functions
-			glUniform4fv(location, 1, glm::value_ptr(pointLight.Color));
-			glUniform1f(location + 1, pointLight.Intensity);
-			glUniform1f(location + 2, pointLight.Radius);
-			glUniform3fv(location + 3, 1, glm::value_ptr(pointLight.Position));
-			glUniform3fv(location + 4, 1, glm::value_ptr(pointLight.AmbientColor));
-			glUniform3fv(location + 5, 1, glm::value_ptr(pointLight.DiffuseColor));
-			glUniform3fv(location + 6, 1, glm::value_ptr(pointLight.SpecularColor));
-			glUniform1f(location + 7, pointLight.Shininess);
-		}
+		// No longer used: lighting is now uploaded via named SetUniformFloat3 calls
+		// in Renderer3D::PassLights.  Kept as a stub to satisfy the virtual interface.
 	}
 
 	void OpenGLShader::SetUniformDirectionalLight(const std::string& name, const DirectionalLightComponent& light)
@@ -351,7 +327,7 @@ namespace Blu
 		//}
 	}
 
-	void OpenGLShader::SetUniformSpotlight(const std::string& name, const SpotlightComponent& light)
+	void OpenGLShader::SetUniformSpotlight(const std::string& name, const SpotLightComponent& light)
 	{
 		// Get the uniform location in the shader
 		int location = GetUniformLocation(name);

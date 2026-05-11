@@ -28,7 +28,7 @@ namespace Blu
 		
 		virtual void SetUniformPointLight(const std::string& name, const struct PointLightComponent& light) = 0;
 		virtual void SetUniformDirectionalLight(const std::string& name, const struct DirectionalLightComponent& light) = 0;
-		virtual void SetUniformSpotlight(const std::string& name, const struct SpotlightComponent& light) = 0;
+		virtual void SetUniformSpotlight(const std::string& name, const struct SpotLightComponent& light) = 0;
 	
 		virtual void Bind()   const = 0;
 		virtual void UnBind() const = 0;

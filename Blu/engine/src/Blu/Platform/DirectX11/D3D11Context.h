@@ -37,6 +37,9 @@ namespace Blu
         void SetClearColorValue(const glm::vec4& color) { m_ClearColor = color; }
         const glm::vec4& GetClearColorValue()     const { return m_ClearColor; }
 
+        // Toggle between solid-fill and wireframe rasterizer states.
+        void SetWireframe(bool wireframe);
+
     private:
         void CreateBackbuffer();
 
@@ -53,6 +56,9 @@ namespace Blu
         SIZE_T      m_CurrentVSBytecodeSize = 0;
 
         glm::vec4 m_ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RSSolid;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RSWireframe;
 
         static D3D11Context* s_Instance;
     };

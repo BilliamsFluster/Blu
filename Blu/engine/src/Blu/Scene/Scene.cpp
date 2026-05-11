@@ -13,6 +13,7 @@
 #include "box2d/b2_circle_shape.h"
 #include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/LightSystem/LightManager.h"
+#include <glm/gtc/matrix_transform.hpp>  // glm::radians, glm::cos, etc.
 
 namespace Blu
 {
@@ -103,6 +104,8 @@ namespace Blu
 		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<DirectionalLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<SpotLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<MeshComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		return newScene;
@@ -357,10 +360,72 @@ namespace Blu
 		m_EntityMap.erase(entity.GetUUID());
 		m_Registry.destroy(entity);
 	}
+	// ─── Helper: collect all lights from the ECS into typed render data ─────────
+	static void GatherLights(entt::registry& reg,
+	    std::vector<DirLightData>&   outDir,
+	    std::vector<PointLightData>& outPoint,
+	    std::vector<SpotLightData>&  outSpot)
+	{
+	    // Directional lights
+	    {
+	        auto view = reg.view<TransformComponent, DirectionalLightComponent>();
+	        for (auto e : view)
+	        {
+	            auto& dlc = view.get<DirectionalLightComponent>(e);
+	            DirLightData d;
+	            d.Direction = glm::normalize(dlc.Direction);
+	            d.Ambient   = dlc.Ambient   * dlc.Intensity;
+	            d.Diffuse   = dlc.Diffuse   * dlc.Intensity;
+	            d.Specular  = dlc.Specular  * dlc.Intensity;
+	            d.Intensity = dlc.Intensity;
+	            outDir.push_back(d);
+	        }
+	    }
+	    // Point lights
+	    {
+	        auto view = reg.view<TransformComponent, PointLightComponent>();
+	        for (auto e : view)
+	        {
+	            auto&& [tc, plc] = view.get<TransformComponent, PointLightComponent>(e);
+	            PointLightData p;
+	            p.Position     = tc.Translation;
+	            p.Ambient      = plc.Ambient   * plc.Intensity;
+	            p.Diffuse      = plc.Diffuse   * plc.Intensity;
+	            p.Specular     = plc.Specular  * plc.Intensity;
+	            p.Intensity    = plc.Intensity;
+	            p.Range        = plc.Range;
+	            p.AttConstant  = plc.AttConstant;
+	            p.AttLinear    = plc.AttLinear;
+	            p.AttQuadratic = plc.AttQuadratic;
+	            outPoint.push_back(p);
+	        }
+	    }
+	    // Spot lights
+	    {
+	        auto view = reg.view<TransformComponent, SpotLightComponent>();
+	        for (auto e : view)
+	        {
+	            auto&& [tc, slc] = view.get<TransformComponent, SpotLightComponent>(e);
+	            SpotLightData s;
+	            s.Position       = tc.Translation;
+	            s.Direction      = glm::normalize(slc.Direction);
+	            s.Ambient        = slc.Ambient  * slc.Intensity;
+	            s.Diffuse        = slc.Diffuse  * slc.Intensity;
+	            s.Specular       = slc.Specular * slc.Intensity;
+	            s.Intensity      = slc.Intensity;
+	            s.Range          = slc.Range;
+	            s.InnerCutoffCos = glm::cos(glm::radians(slc.InnerConeAngle));
+	            s.OuterCutoffCos = glm::cos(glm::radians(slc.OuterConeAngle));
+	            s.AttConstant    = slc.AttConstant;
+	            s.AttLinear      = slc.AttLinear;
+	            s.AttQuadratic   = slc.AttQuadratic;
+	            outSpot.push_back(s);
+	        }
+	    }
+	}
+
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
 	{
-		m_LightManager->UpdateLights();
-
 		// 2D pass
 		Renderer2D::BeginScene(camera);
 		{
@@ -390,17 +455,24 @@ namespace Blu
 		Renderer2D::EndScene();
 
 		// 3D pass
-		Renderer3D::BeginScene(camera);
-		Renderer3D::SetLights(m_LightManager);
 		{
-			auto view = m_Registry.view<TransformComponent, MeshComponent>();
-			for (auto& entity : view)
+			std::vector<DirLightData>   dirLights;
+			std::vector<PointLightData> pointLights;
+			std::vector<SpotLightData>  spotLights;
+			GatherLights(m_Registry, dirLights, pointLights, spotLights);
+
+			Renderer3D::BeginScene(camera);
+			Renderer3D::SetLights(dirLights, pointLights, spotLights);
 			{
-				auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
-				Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+				auto view = m_Registry.view<TransformComponent, MeshComponent>();
+				for (auto& entity : view)
+				{
+					auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+					Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+				}
 			}
+			Renderer3D::EndScene();
 		}
-		Renderer3D::EndScene();
 	}
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
@@ -502,17 +574,24 @@ namespace Blu
 			Renderer2D::EndScene();
 
 			// 3D pass
-			Renderer3D::BeginScene(*mainCamera, cameraTransform);
-			Renderer3D::SetLights(m_LightManager);
 			{
-				auto meshView = m_Registry.view<TransformComponent, MeshComponent>();
-				for (auto& e : meshView)
+				std::vector<DirLightData>   dirLights;
+				std::vector<PointLightData> pointLights;
+				std::vector<SpotLightData>  spotLights;
+				GatherLights(m_Registry, dirLights, pointLights, spotLights);
+
+				Renderer3D::BeginScene(*mainCamera, cameraTransform);
+				Renderer3D::SetLights(dirLights, pointLights, spotLights);
 				{
-					auto [transform, mesh] = meshView.get<TransformComponent, MeshComponent>(e);
-					Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)e);
+					auto meshView = m_Registry.view<TransformComponent, MeshComponent>();
+					for (auto& e : meshView)
+					{
+						auto [transform, mesh] = meshView.get<TransformComponent, MeshComponent>(e);
+						Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)e);
+					}
 				}
+				Renderer3D::EndScene();
 			}
-			Renderer3D::EndScene();
 		}
 
 	}
@@ -561,17 +640,24 @@ namespace Blu
 			Renderer2D::EndScene();
 
 			// 3D pass
-			Renderer3D::BeginScene(*mainCamera, cameraTransform);
-			Renderer3D::SetLights(m_LightManager);
 			{
-				auto meshView = m_Registry.view<TransformComponent, MeshComponent>();
-				for (auto& e : meshView)
+				std::vector<DirLightData>   dirLights;
+				std::vector<PointLightData> pointLights;
+				std::vector<SpotLightData>  spotLights;
+				GatherLights(m_Registry, dirLights, pointLights, spotLights);
+
+				Renderer3D::BeginScene(*mainCamera, cameraTransform);
+				Renderer3D::SetLights(dirLights, pointLights, spotLights);
 				{
-					auto [transform, mesh] = meshView.get<TransformComponent, MeshComponent>(e);
-					Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)e);
+					auto meshView = m_Registry.view<TransformComponent, MeshComponent>();
+					for (auto& e : meshView)
+					{
+						auto [transform, mesh] = meshView.get<TransformComponent, MeshComponent>(e);
+						Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)e);
+					}
 				}
+				Renderer3D::EndScene();
 			}
-			Renderer3D::EndScene();
 		}
 	}
 	void Scene::OnSceneStep(int frames)

@@ -42,6 +42,14 @@ namespace Blu
 		void SetCameraSpeed(float speed) { m_CameraSpeed = speed; }
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
+		float GetFOV() const { return m_FOV; }
+
+		// Orthographic / perspective toggle
+		bool IsOrthographic() const { return m_IsOrthographic; }
+		void SetOrthographic(bool ortho) { m_IsOrthographic = ortho; UpdateProjectionMatrix(); }
+
+		// Set camera orientation directly (for cardinal ortho views).
+		void SetPitchYaw(float pitch, float yaw) { m_Pitch = pitch; m_Yaw = yaw; UpdateView(); }
 		float GetNormalizedDepthAtScreenCoordinate(float screenY, float viewportHeight) const;
 	private:
 		void UpdateProjectionMatrix();
@@ -62,6 +70,7 @@ namespace Blu
 
 	private:
 		float m_FOV = 45.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 1000.0f;
+		bool  m_IsOrthographic = false;
 		float m_CameraSpeed = 2.0f;
 		glm::mat4 m_ViewMatrix;
 		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };

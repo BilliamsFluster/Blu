@@ -13,7 +13,9 @@ namespace Blu
 		void SetContext(const Shared<Scene>& scene);
 		Entity GetSelectedEntity() const { return m_SelectedEntity; }
 		void SetSelectedEntity(Entity entity);
-		void OnImGuiRender();
+		// pShowOutliner / pShowDetails: optional bool* passed to ImGui::Begin so the
+		// title-bar close button hides the panel (Window menu keeps them in sync).
+		void OnImGuiRender(bool* pShowOutliner = nullptr, bool* pShowDetails = nullptr);
 	private:
 		void DrawEntityNode(Entity entity);
 		void DrawEntityComponents(Entity entity);
@@ -21,6 +23,7 @@ namespace Blu
 		Shared<Scene> m_Context;
 		Entity m_SelectedEntity;
 		bool m_EntityHovered = false;
+		char m_SearchBuffer[256] = {};
 	};
 
 }

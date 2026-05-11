@@ -20,6 +20,18 @@
 // D3D11Context.h already pulls in <d3d11.h> — include it last so Windows headers
 // don't stomp on the glad/GLFW type definitions established above.
 #include "Blu/Platform/DirectX11/D3D11Context.h"
+#include "Blu/Platform/Windows/WindowsWindow.h"
+
+// stb_image is compiled into the engine (ExternalDependencies/stb_image/stb_image.cpp).
+// Forward-declare the two symbols we need so we don't have to add the include
+// directory to the editor project's search paths.
+extern "C"
+{
+    unsigned char* stbi_load(const char* filename, int* x, int* y,
+                             int* channels_in_file, int desired_channels);
+    void           stbi_image_free(void* retval_from_stbi_load);
+    void           stbi_set_flip_vertically_on_load(int flag_true_if_should_flip);
+}
 
 
 
@@ -110,6 +122,30 @@ namespace Blu
 		else if (glGenQueries)   // guard: ensure GLAD loaded this entry-point
 		{
 			glGenQueries(2, m_GLTimeQuery);
+		}
+
+		// ---- Output Log: attach editor sink to both spdlog loggers ----
+		EditorLog::RegisterSinks();
+		BLU_CORE_INFO("Blu Editor started.");
+
+		// ---- Window icon (taskbar / alt-tab) --------------------------------
+		// Load the Blu logo as RGBA and hand it to GLFW so the OS shows it in
+		// the taskbar, alt-tab switcher, and the window's system menu.
+		{
+			GLFWwindow* glfwWin =
+			    (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+			// Icons must be loaded top-down; disable the global flip that the
+			// texture system enables for OpenGL's bottom-left origin.
+			stbi_set_flip_vertically_on_load(0);
+			int iconW = 0, iconH = 0, iconCh = 0;
+			unsigned char* iconPx =
+			    stbi_load("assets/textures/BluLogo.png", &iconW, &iconH, &iconCh, 4);
+			if (iconPx)
+			{
+				GLFWimage icon{ iconW, iconH, iconPx };
+				glfwSetWindowIcon(glfwWin, 1, &icon);
+				stbi_image_free(iconPx);
+			}
 		}
 	}
 
@@ -225,6 +261,16 @@ namespace Blu
 		}
 		
 		
+		// ---- Apply view mode (wireframe / lit) ----
+		const bool wantWireframe = (m_ViewMode == ViewMode::Wireframe);
+		if (wantWireframe)
+		{
+			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL && glPolygonMode)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			else if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+				if (auto* ctx = D3D11Context::Get()) ctx->SetWireframe(true);
+		}
+
 		switch (m_SceneState)
 		{
 			case SceneState::Edit:
@@ -235,12 +281,12 @@ namespace Blu
 				if (m_ViewPortFocused || m_ViewPortHovered)
 					m_EditorCamera.OnUpdate(deltaTime);
 				m_ActiveScene->OnUpdateEditor(deltaTime, m_EditorCamera);
-				
+
 				break;
 			}
 			case SceneState::Play:
 			{
-				
+
 				m_ActiveScene->OnUpdateRuntime(deltaTime);
 				break;
 			}
@@ -260,13 +306,11 @@ namespace Blu
 		mx -= m_ViewportBounds[0].x;
 		my -= m_ViewportBounds[0].y;
 
-		// Adjust for camera position and zoom level
-		glm::vec3 cameraPosition = m_EditorCamera.GetPosition();
-		float zoomLevel = m_EditorCamera.GetDistance(); // Get the current zoom level
-
-		
+		// DX11 render targets are stored top-down: screen Y == framebuffer row, no flip needed.
+		// OpenGL framebuffers are stored bottom-up: flip Y so row 0 maps to the bottom of the viewport.
 		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-		my = viewportSize.y - my - m_ViewportOffset.y;
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+			my = viewportSize.y - my - m_ViewportOffset.y;
 		float mouseX = (float)mx;
 		float mouseY = (float)my;
 		m_MousePosX = mouseX;
@@ -280,6 +324,15 @@ namespace Blu
 		
 
 		
+
+		// ---- Restore solid fill for overlay (collider outlines etc.) ----
+		if (wantWireframe)
+		{
+			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL && glPolygonMode)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			else if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+				if (auto* ctx = D3D11Context::Get()) ctx->SetWireframe(false);
+		}
 
 		OnOverlayRender();
 
@@ -328,7 +381,11 @@ namespace Blu
 	void BluEditorLayer::OnEvent(Events::Event& event)
 	{
 		m_CameraController.OnEvent(event);
-		m_EditorCamera.OnEvent(event);
+		// Only forward events to the editor camera when the viewport is hovered.
+		// Without this guard, scroll-wheel events zoom the camera even when the
+		// mouse is over a detail panel, properties window, etc.
+		if (m_ViewPortHovered)
+			m_EditorCamera.OnEvent(event);
 		switch (event.GetType())
 		{
 			case Events::Event::Type::MouseMoved:
@@ -387,8 +444,6 @@ namespace Blu
 
 	void BluEditorLayer::OnOverlayRender()
 	{
-
-
 		if (m_SceneState != SceneState::Edit)
 		{
 			Entity camera = m_ActiveScene->GetPrimaryCameraEntity();
@@ -397,24 +452,19 @@ namespace Blu
 		else
 		{
 			Renderer2D::BeginScene(m_EditorCamera);
-
 		}
+
+		// ── 2D physics collider outlines ─────────────────────────────────────────
 		{
 			auto view = m_ActiveScene->GetAllEntitiesWith<TransformComponent, BoxCollider2DComponent>();
 			for (auto e : view)
 			{
 				auto [tc, bc2d] = view.get<TransformComponent, BoxCollider2DComponent>(e);
-
 				glm::vec3 translation = tc.Translation + glm::vec3(bc2d.Offset, 0.001f);
 				glm::vec3 scale = tc.Scale * glm::vec3(bc2d.Size, 1.0f);
 				glm::vec3 rotation = tc.Rotation;
-
-				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
-					* glm::rotate(glm::mat4(1.0f), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
-					* glm::scale(glm::mat4(1.0f), scale);
-
-				glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); // Green
-				if(bc2d.ShowCollision)
+				glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+				if (bc2d.ShowCollision)
 					Renderer2D::DrawRect(translation, rotation, scale, color, 2);
 			}
 		}
@@ -423,15 +473,184 @@ namespace Blu
 			for (auto e : view)
 			{
 				auto [tc, cc2d] = view.get<TransformComponent, CircleCollider2DComponent>(e);
-
 				glm::vec3 translation = tc.Translation + glm::vec3(cc2d.Offset, 0.001f);
 				glm::vec3 scale = tc.Scale * glm::vec3(cc2d.Radius);
-
-				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation) * glm::scale(glm::mat4(1.0f), scale);
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
+					* glm::scale(glm::mat4(1.0f), scale);
 				Renderer2D::DrawCircle(transform, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.05f);
 			}
-
 		}
+
+		// ── Light gizmos (Unreal-style) — editor view only ─────────────────────
+		// Lambda helpers are defined in dependency order so each can capture the ones before it.
+		if (m_SceneState == SceneState::Edit)
+		{
+			constexpr float   kTwoPi        = 6.283185307f;
+			constexpr int     kCircleSeg    = 32;   // segments per wire circle
+			constexpr int     kSpokeCount   = 8;    // cone/sphere spokes
+
+			const glm::vec3   camRight   = m_EditorCamera.GetRightDirection();
+			const glm::vec3   camUp      = m_EditorCamera.GetUpDirection();
+			const glm::vec3   camForward = m_EditorCamera.GetForwardDirection();
+
+			// ── Wire circle on an arbitrary plane (axis1/axis2 are orthogonal) ────
+			auto DrawWireCircle = [&](const glm::vec3& center, float radius,
+			                          const glm::vec3& axis1, const glm::vec3& axis2,
+			                          const glm::vec4& color, float thickness = 1.5f)
+			{
+				for (int i = 0; i < kCircleSeg; ++i)
+				{
+					float a0 = kTwoPi *  i      / kCircleSeg;
+					float a1 = kTwoPi * (i + 1) / kCircleSeg;
+					glm::vec3 p0 = center + (axis1 * glm::cos(a0) + axis2 * glm::sin(a0)) * radius;
+					glm::vec3 p1 = center + (axis1 * glm::cos(a1) + axis2 * glm::sin(a1)) * radius;
+					Renderer2D::DrawLine(p0, p1, color, thickness);
+				}
+			};
+
+			// ── Attenuation sphere: 3 orthogonal wire circles ─────────────────────
+			auto DrawWireSphere = [&](const glm::vec3& center, float radius,
+			                          const glm::vec4& color)
+			{
+				DrawWireCircle(center, radius, glm::vec3(1,0,0), glm::vec3(0,1,0), color); // XY
+				DrawWireCircle(center, radius, glm::vec3(1,0,0), glm::vec3(0,0,1), color); // XZ
+				DrawWireCircle(center, radius, glm::vec3(0,1,0), glm::vec3(0,0,1), color); // YZ
+			};
+
+			// ── Spot light cone: outer (bright) + inner (dim) + spokes ────────────
+			auto DrawSpotCone = [&](const glm::vec3& apex, const glm::vec3& dir,
+			                        float range, float innerDeg, float outerDeg,
+			                        const glm::vec4& color)
+			{
+				glm::vec3 d = glm::normalize(dir);
+
+				// Build an orthonormal basis (right/up) perpendicular to the cone axis
+				glm::vec3 worldUp  = std::abs(d.y) < 0.99f ? glm::vec3(0,1,0) : glm::vec3(1,0,0);
+				glm::vec3 coneRight = glm::normalize(glm::cross(d, worldUp));
+				glm::vec3 coneUp    = glm::normalize(glm::cross(coneRight, d));
+
+				glm::vec3  baseCenter = apex + d * range;
+				float outerR = glm::tan(glm::radians(outerDeg)) * range;
+				float innerR = glm::tan(glm::radians(innerDeg)) * range;
+
+				// Outer circle + full spokes (full brightness)
+				DrawWireCircle(baseCenter, outerR, coneRight, coneUp, color, 1.5f);
+				for (int i = 0; i < kSpokeCount; ++i)
+				{
+					float     a    = kTwoPi * i / kSpokeCount;
+					glm::vec3 rim  = baseCenter + (coneRight * glm::cos(a) + coneUp * glm::sin(a)) * outerR;
+					glm::vec3 apexCopy = apex;  // local lvalue for non-const DrawLine p0
+					Renderer2D::DrawLine(apexCopy, rim, color, 1.5f);
+				}
+
+				// Inner circle + 4 spokes (dim, showing the inner cone boundary)
+				glm::vec4 innerColor = glm::vec4(color.r, color.g, color.b, color.a * 0.45f);
+				DrawWireCircle(baseCenter, innerR, coneRight, coneUp, innerColor, 1.0f);
+				for (int i = 0; i < 4; ++i)
+				{
+					float     a    = kTwoPi * i / 4;
+					glm::vec3 rim  = baseCenter + (coneRight * glm::cos(a) + coneUp * glm::sin(a)) * innerR;
+					glm::vec3 apexCopy = apex;
+					Renderer2D::DrawLine(apexCopy, rim, innerColor, 1.0f);
+				}
+			};
+
+			// ── Billboard transform: a quad always facing the camera ──────────────
+			constexpr float kIconSize = 0.35f;
+			auto MakeBillboard = [&](const glm::vec3& pos) -> glm::mat4
+			{
+				glm::mat4 t(1.0f);
+				t[0] = glm::vec4(camRight   * kIconSize, 0.0f);
+				t[1] = glm::vec4(camUp      * kIconSize, 0.0f);
+				t[2] = glm::vec4(camForward * kIconSize, 0.0f);
+				t[3] = glm::vec4(pos, 1.0f);
+				return t;
+			};
+
+			// ── Draw a sun/light icon: filled disk + 8 radiating spokes ──────────
+			// entityID is written to the pick buffer so clicking the icon selects the entity.
+			auto DrawLightIcon = [&](const glm::vec3& pos, const glm::vec4& color, int entityID)
+			{
+				// Filled disk (body of the icon) — entity ID makes it clickable
+				Renderer2D::DrawCircle(MakeBillboard(pos), color, 1.0f, 0.05f, entityID);
+
+				// 8 short rays extending beyond the disk in camera-space
+				const float kInnerR = kIconSize * 0.65f;
+				const float kOuterR = kIconSize * 1.15f;
+				for (int i = 0; i < 8; ++i)
+				{
+					float     angle  = kTwoPi * i / 8;
+					glm::vec3 dir2d  = camRight * glm::cos(angle) + camUp * glm::sin(angle);
+					glm::vec3 p0     = pos + dir2d * kInnerR;
+					glm::vec3 p1     = pos + dir2d * kOuterR;
+					Renderer2D::DrawLine(p0, p1, color, 1.5f);
+				}
+			};
+
+			// ── Draw icons for every light entity in the scene ────────────────────
+
+			// Point lights — warm yellow
+			{
+				const glm::vec4 kColor(1.0f, 0.87f, 0.27f, 0.95f);
+				auto view = m_ActiveScene->GetAllEntitiesWith<TransformComponent, PointLightComponent>();
+				for (auto e : view)
+				{
+					auto&& [tc, plc] = view.get<TransformComponent, PointLightComponent>(e);
+					DrawLightIcon(tc.Translation, kColor, (int)(uint32_t)e);
+				}
+			}
+
+			// Spot lights — cool cyan
+			{
+				const glm::vec4 kColor(0.35f, 0.82f, 1.0f, 0.95f);
+				auto view = m_ActiveScene->GetAllEntitiesWith<TransformComponent, SpotLightComponent>();
+				for (auto e : view)
+				{
+					auto&& [tc, slc] = view.get<TransformComponent, SpotLightComponent>(e);
+					DrawLightIcon(tc.Translation, kColor, (int)(uint32_t)e);
+				}
+			}
+
+			// Directional lights — soft white/gold
+			{
+				const glm::vec4 kColor(1.0f, 0.97f, 0.80f, 0.95f);
+				auto view = m_ActiveScene->GetAllEntitiesWith<TransformComponent, DirectionalLightComponent>();
+				for (auto e : view)
+				{
+					auto&& [tc, dlc] = view.get<TransformComponent, DirectionalLightComponent>(e);
+					DrawLightIcon(tc.Translation, kColor, (int)(uint32_t)e);
+				}
+			}
+
+			// ── Extra debug gizmos for the selected entity ────────────────────────
+			Entity sel = m_SceneHierarchyPanel->GetSelectedEntity();
+			if (sel)
+			{
+				// Point light: wire-sphere showing attenuation range
+				if (sel.HasComponent<TransformComponent>() && sel.HasComponent<PointLightComponent>())
+				{
+					auto& tc  = sel.GetComponent<TransformComponent>();
+					auto& plc = sel.GetComponent<PointLightComponent>();
+					DrawWireSphere(tc.Translation, plc.Range, glm::vec4(1.0f, 0.87f, 0.27f, 0.85f));
+				}
+
+				// Spot light: inner + outer cone wireframe
+				if (sel.HasComponent<TransformComponent>() && sel.HasComponent<SpotLightComponent>())
+				{
+					auto& tc  = sel.GetComponent<TransformComponent>();
+					auto& slc = sel.GetComponent<SpotLightComponent>();
+					const glm::vec4 coneColor(0.35f, 0.82f, 1.0f, 0.85f);
+					DrawSpotCone(
+						tc.Translation,
+						slc.Direction,
+						slc.Range,
+						slc.InnerConeAngle,
+						slc.OuterConeAngle,
+						coneColor);
+				}
+			}
+		}
+
 		Renderer2D::EndScene();
 	}
 		
@@ -762,62 +981,275 @@ namespace Blu
 
 	void BluEditorLayer::UIDrawTitlebar(float& outTitlebarHeight)
 	{
+		// ── Style: make the bar taller and give it a flat dark background ──────
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,   ImVec2(5.f, 9.f));
+		ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
 
-		if (ImGui::BeginMainMenuBar())
+		if (!ImGui::BeginMainMenuBar())
 		{
-			ImGui::Image((ImTextureID)m_AppHeaderIcon->GetImTextureID(), ImVec2(30, 30), ImVec2(0, 1), ImVec2(1, 0));
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("New", "Ctrl+N"))
-				{
-					NewScene();
-				}
-				if (ImGui::MenuItem("Open...", "Ctrl+O"))
-				{
-					OpenScene();
-				}
-				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
-				{
-					SaveSceneAs();
-
-				}
-				if (ImGui::MenuItem("Save ...", "Ctrl+S"))
-				{
-					SaveCurrentScene();
-
-				}
-				if (ImGui::MenuItem("Exit")) Application::Get().Close();
-				ImGui::EndMenu();
-
-			}
-
-			if (ImGui::BeginMenu("Script"))
-			{
-				if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
-				{
-					SceneSerializer serializer(m_ActiveScene);
-					ScriptEngine::ReloadAssembly();
-					ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
-					m_ActiveScene->OnScriptSystemStart(false);
-					serializer.DeserializeEntityScriptInstances(m_ActiveScene->GetSceneFilePath().string());
-				}
-				ImGui::EndMenu();
-			}
-			ImGui::EndMainMenuBar();
+			ImGui::PopStyleColor();
+			ImGui::PopStyleVar();
+			return;
 		}
 
+		const float barH    = ImGui::GetWindowHeight();
+		const float barW    = ImGui::GetWindowWidth();
+		outTitlebarHeight   = barH;
+
+		// ── App logo ────────────────────────────────────────────────────────────
+		const float logoSz = barH - 10.f;
+		ImGui::SetCursorPosY((barH - logoSz) * 0.5f);
+		ImGui::Image((ImTextureID)m_AppHeaderIcon->GetImTextureID(),
+		             ImVec2(logoSz, logoSz), ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::SameLine(0, 8.f);
+
+		// ── Menus ───────────────────────────────────────────────────────────────
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("New",        "Ctrl+N"))         NewScene();
+			if (ImGui::MenuItem("Open...",    "Ctrl+O"))         OpenScene();
+			if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))   SaveSceneAs();
+			if (ImGui::MenuItem("Save",       "Ctrl+S"))         SaveCurrentScene();
+			ImGui::Separator();
+			if (ImGui::MenuItem("Exit")) Application::Get().Close();
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Script"))
+		{
+			if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
+			{
+				SceneSerializer serializer(m_ActiveScene);
+				ScriptEngine::ReloadAssembly();
+				ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
+				m_ActiveScene->OnScriptSystemStart(false);
+				serializer.DeserializeEntityScriptInstances(
+				    m_ActiveScene->GetSceneFilePath().string());
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Window"))
+		{
+			ImGui::MenuItem("Outliner",        nullptr, &m_ShowOutliner);
+			ImGui::MenuItem("Details",         nullptr, &m_ShowDetails);
+			ImGui::MenuItem("Content Browser", nullptr, &m_ShowContentBrowser);
+			ImGui::MenuItem("Output Log",      nullptr, &m_ShowOutputLog);
+			ImGui::MenuItem("Rendering",       nullptr, &m_ShowRendering);
+			ImGui::EndMenu();
+		}
+
+		// ── Centred app / scene title ────────────────────────────────────────────
+		{
+			// Show active scene name if one is loaded, otherwise just the app name.
+			std::string titleStr = "Blu Editor";
+			if (m_EditorScene)
+			{
+				auto p = m_EditorScene->GetSceneFilePath();
+				if (!p.empty())
+					titleStr = p.stem().string();
+			}
+			const float titleW = ImGui::CalcTextSize(titleStr.c_str()).x;
+			const float ctrlTotal = 45.f * 3.f;
+			const float menuEndX  = ImGui::GetCursorPosX();
+			const float centerX   = (barW - titleW) * 0.5f;
+			if (centerX > menuEndX && (centerX + titleW) < (barW - ctrlTotal))
+			{
+				ImGui::SameLine(centerX);
+				ImGui::TextDisabled("%s", titleStr.c_str());
+			}
+		}
+
+		// ── Window controls (right-aligned, drawn with ImDrawList) ──────────────
+		{
+			GLFWwindow* glfwWin =
+			    (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+			const bool  maxed  = (bool)glfwGetWindowAttrib(glfwWin, GLFW_MAXIMIZED);
+
+			// In windowed (non-maximised) mode the WS_THICKFRAME border pixels are
+			// still client area but live inside the resize-hit zone.  Pull the
+			// controls left by that width so they don't land under the resize handle
+			// and the close button doesn't clip against the physical screen edge.
+			float rightInset = 0.f;
+			if (!maxed)
+			{
+				rightInset = (float)(GetSystemMetrics(SM_CXSIZEFRAME)
+				                   + GetSystemMetrics(SM_CXPADDEDBORDER));
+			}
+
+			constexpr float ctrlW = 45.f;
+			ImDrawList*     dl    = ImGui::GetWindowDrawList();
+			const ImU32     kIcon = IM_COL32(210, 210, 210, 255);
+			const float     iconR = 5.f;   // half-extent of each drawn symbol
+
+			// Helper: invisible button at current cursor, background + custom icon
+			bool controlHovered = false;
+			auto MakeCtrl = [&](const char* id, ImVec4 hoverBg, ImVec4 activeBg,
+			                    auto drawIcon) -> bool
+			{
+				ImGui::InvisibleButton(id, ImVec2(ctrlW, barH));
+				bool clicked = ImGui::IsItemClicked();
+				bool hov     = ImGui::IsItemHovered();
+				bool act     = ImGui::IsItemActive();
+				if (hov) controlHovered = true;
+
+				ImVec2 mn = ImGui::GetItemRectMin();
+				ImVec2 mx = ImGui::GetItemRectMax();
+				if (act)
+					dl->AddRectFilled(mn, mx, ImGui::ColorConvertFloat4ToU32(activeBg));
+				else if (hov)
+					dl->AddRectFilled(mn, mx, ImGui::ColorConvertFloat4ToU32(hoverBg));
+
+				ImVec2 c = { (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f };
+				drawIcon(dl, c, kIcon);
+				return clicked;
+			};
+
+			// Jump to right-side start, inset from the frame border
+			ImGui::SameLine(barW - ctrlW * 3.f - rightInset);
+
+			// Minimize ─
+			if (MakeCtrl("##min",
+			             ImVec4(0.22f, 0.22f, 0.22f, 1.f),
+			             ImVec4(0.35f, 0.35f, 0.35f, 1.f),
+			             [&](ImDrawList* d, ImVec2 c, ImU32 col)
+			             {
+			                 d->AddLine({ c.x - iconR, c.y + 2.f },
+			                            { c.x + iconR, c.y + 2.f }, col, 1.5f);
+			             }))
+				glfwIconifyWindow(glfwWin);
+
+			ImGui::SameLine(0, 0);
+
+			// Maximize □ / Restore ❐
+			if (MakeCtrl("##max",
+			             ImVec4(0.22f, 0.22f, 0.22f, 1.f),
+			             ImVec4(0.35f, 0.35f, 0.35f, 1.f),
+			             [&](ImDrawList* d, ImVec2 c, ImU32 col)
+			             {
+			                 if (!maxed)
+			                 {
+			                     d->AddRect({ c.x - iconR, c.y - iconR },
+			                                { c.x + iconR, c.y + iconR }, col, 0, 0, 1.5f);
+			                 }
+			                 else
+			                 {
+			                     // Restore: two overlapping squares
+			                     constexpr float o = 2.5f;
+			                     d->AddRect({ c.x - iconR + o, c.y - iconR     },
+			                                { c.x + iconR,     c.y + iconR - o }, col, 0, 0, 1.5f);
+			                     d->AddRect({ c.x - iconR,     c.y - iconR + o },
+			                                { c.x + iconR - o, c.y + iconR     }, col, 0, 0, 1.5f);
+			                 }
+			             }))
+			{
+				if (maxed) glfwRestoreWindow(glfwWin);
+				else       glfwMaximizeWindow(glfwWin);
+			}
+
+			ImGui::SameLine(0, 0);
+
+			// Close ✕ (red on hover)
+			if (MakeCtrl("##cls",
+			             ImVec4(0.85f, 0.12f, 0.12f, 1.f),
+			             ImVec4(0.65f, 0.08f, 0.08f, 1.f),
+			             [&](ImDrawList* d, ImVec2 c, ImU32 col)
+			             {
+			                 d->AddLine({ c.x - iconR, c.y - iconR },
+			                            { c.x + iconR, c.y + iconR }, col, 1.5f);
+			                 d->AddLine({ c.x + iconR, c.y - iconR },
+			                            { c.x - iconR, c.y + iconR }, col, 1.5f);
+			             }))
+				Application::Get().Close();
+
+			// Update titlebar hover for GLFW drag.
+			// Must exclude:
+			//   - the min/max/close control buttons (controlHovered)
+			//   - any hovered ImGui item (menu labels, logo image, etc.)
+			//     so that clicking "File/Script/Window" yields HTCLIENT to Windows,
+			//     not HTCAPTION — otherwise WM_NCHITTEST swallows the click as a
+			//     title-bar drag and the menu popup never opens.
+			m_TitleBarHovered = ImGui::IsWindowHovered()
+			                 && !controlHovered
+			                 && !ImGui::IsAnyItemHovered();
+			static_cast<WindowsWindow&>(Application::Get().GetWindow())
+			    .SetTitleBarHovered(m_TitleBarHovered);
+		}
+
+		ImGui::EndMainMenuBar();
+		ImGui::PopStyleColor(); // MenuBarBg
+		ImGui::PopStyleVar();   // FramePadding
 	}
 
 	void BluEditorLayer::OnGuiDraw()
 	{
 		float height = 5.0f;
 		UIDrawTitlebar(height);
-		
-		
-		m_SceneHierarchyPanel->OnImGuiRender();
-		m_ContentBrowserPanel->OnImGuiRender();
 
-		ImGui::Begin("Rendering");
+		// Always pass pointers so ImGui::Begin handles hide/show from both the
+		// Window menu checkboxes and the title-bar close (X) button.
+		m_SceneHierarchyPanel->OnImGuiRender(&m_ShowOutliner, &m_ShowDetails);
+
+		if (m_ShowContentBrowser)
+			m_ContentBrowserPanel->OnImGuiRender();
+
+		// ---- Output Log ----
+		if (m_ShowOutputLog)
+		{
+			if (ImGui::Begin("Output Log", &m_ShowOutputLog))
+			{
+				// Filter toggles
+				if (ImGui::Button("Clear"))
+					EditorLog::Get().Clear();
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+				ImGui::Checkbox("Trace", &m_LogShowTrace);
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				ImGui::Checkbox("Info",  &m_LogShowInfo);
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.0f, 1.0f));
+				ImGui::Checkbox("Warn",  &m_LogShowWarn);
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.35f, 0.35f, 1.0f));
+				ImGui::Checkbox("Error", &m_LogShowError);
+				ImGui::PopStyleColor();
+
+				ImGui::Separator();
+
+				ImGui::BeginChild("##log_scroll", ImVec2(0, 0), false,
+				                  ImGuiWindowFlags_HorizontalScrollbar);
+
+				const auto& messages = EditorLog::Get().GetMessages();
+				for (const auto& entry : messages)
+				{
+					bool show = false;
+					if (entry.Level == EditorLogLevel::Trace && m_LogShowTrace) show = true;
+					if (entry.Level == EditorLogLevel::Info  && m_LogShowInfo)  show = true;
+					if (entry.Level == EditorLogLevel::Warn  && m_LogShowWarn)  show = true;
+					if (entry.Level == EditorLogLevel::Error && m_LogShowError) show = true;
+					if (!show) continue;
+
+					ImVec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+					if      (entry.Level == EditorLogLevel::Trace) color = { 0.55f, 0.55f, 0.55f, 1.0f };
+					else if (entry.Level == EditorLogLevel::Warn)  color = { 1.00f, 0.85f, 0.00f, 1.0f };
+					else if (entry.Level == EditorLogLevel::Error) color = { 1.00f, 0.35f, 0.35f, 1.0f };
+
+					ImGui::PushStyleColor(ImGuiCol_Text, color);
+					ImGui::TextUnformatted(entry.Text.c_str());
+					ImGui::PopStyleColor();
+				}
+
+				if (EditorLog::Get().ConsumeScrollToBottom())
+					ImGui::SetScrollHereY(1.0f);
+
+				ImGui::EndChild();
+			}
+			ImGui::End();
+		}
+
+		if (m_ShowRendering)
+		{
+		ImGui::Begin("Rendering", &m_ShowRendering);
 
 		// ---- Performance ----
 		if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))
@@ -865,169 +1297,266 @@ namespace Blu
 			ImGui::Text("Vertices    %d", Renderer2D::GetStats().GetTotalVertexCount());
 		}
 
-		ImGui::End();
+		ImGui::End(); // Rendering
+		} // if (m_ShowRendering)
 		
 		
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
-		static const char* items[] = { "Translation", "Rotation", "Scale" };
-		static int current_item = 0;
 
-		if (m_SceneState == SceneState::Edit)
+		// ---- Viewport toolbar (always visible, UE-style) ----
 		{
-			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Set background color alpha to 0 for transparency
-			ImGui::BeginChild("Operations", ImVec2(m_ViewportSize.x, 25), false);
-		
-			const ImVec2 buttonSize(16,16);
-			//const float buttonSpacing = 10.0f;
-			// Create image buttons for translation, rotation, scale, and world space.
-			ImGui::SameLine(0, (m_ViewportSize.x - 280));
-			
-			if (ImGui::ImageButton((ImTextureID)m_TranslationIcon->GetImTextureID(), buttonSize))
-			{
-				m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.10f, 0.10f, 0.10f, 0.92f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3.f, 3.f));
+			ImGui::BeginChild("##VPToolbar", ImVec2(m_ViewportSize.x, 30.f), false,
+			                  ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-			}
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltip("Translate Selected Objects (W)"); // Tooltip text
-			}
+			const ImVec2 iconSz(16.f, 16.f);
+			// Colors for active tool highlight (blue) and active snap (orange)
+			const ImVec4 kColActive { 0.20f, 0.45f, 0.85f, 1.f };
+			const ImVec4 kColActHov { 0.30f, 0.55f, 0.95f, 1.f };
+			const ImVec4 kColSnapOn { 0.85f, 0.55f, 0.10f, 1.f };
+			const ImVec4 kColSnapHov{ 0.95f, 0.65f, 0.20f, 1.f };
 
-			ImGui::SameLine();
-
-			if (ImGui::ImageButton((ImTextureID)m_RotationIcon->GetImTextureID(), buttonSize))
-			{
-				m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
-
-			}
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltip("Rotate Selected Objects (E)"); // Tooltip text
-			}
-
-			ImGui::SameLine();
-
-			if (ImGui::ImageButton((ImTextureID)m_ScaleIcon->GetImTextureID(), buttonSize))
-			{
-				m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
-			
-
-			}
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltip("Scale Selected Objects (R)"); // Tooltip text
-			}
-
-			ImGui::SameLine(0, 40);
-			static bool isLocalMode = true;
-			ImTextureID spaceIcon = m_OperationMode == (int)ImGuizmo::MODE::LOCAL ? (ImTextureID)m_LocalSpaceIcon->GetImTextureID() : (ImTextureID)m_WorldSpaceIcon->GetImTextureID();
-			if (ImGui::ImageButton(spaceIcon, buttonSize))
-			{
-				isLocalMode = !isLocalMode; // Toggle the mode
-				m_OperationMode = isLocalMode ? (int)ImGuizmo::MODE::LOCAL : (int)ImGuizmo::MODE::WORLD;
-
-			}
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltip("Toggle Local/World Space"); // Tooltip text
-			}
-			ImGui::SameLine(0, 40);
-			if (ImGui::ImageButton((ImTextureID)m_SnappingIcon->GetImTextureID(), buttonSize))
-			{
-				ImGui::OpenPopup("Snapping");
-
-			}
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltip("Snapping Options"); // Tooltip text
-			}
-			if (ImGui::BeginPopup("Snapping"))
-			{
-				// Snapping options for Translation, Rotation, and Scale
-				if (current_item >= 0 && current_item <= 2)
-				{
-					// Radio buttons for selecting the snapping mode
-					ImGui::RadioButton("Translation", &current_item, 0);
-					ImGui::SameLine();
-					ImGui::RadioButton("Rotation", &current_item, 1);
-					ImGui::SameLine();
-					ImGui::RadioButton("Scale", &current_item, 2);
-				
-				
-
-
-					// Display specific snapping options based on the selected mode
-					switch (current_item)
-					{
-					case 0: // Translation
-						// Common checkbox for enabling snapping
-						ImGui::Checkbox("Enabled", &enableTranslationSnap);
-						ImGui::Text(" Value");
-						ImGui::SameLine();
-
-						ImGui::PushItemWidth(50);
-						ImGui::DragFloat("##Value", &translationSnapValue, 0.1, 0, 10000, "%.3f");
-
-
-						ImGui::PopItemWidth();
-						break;
-
-					case 1: // Rotation
-						// Common checkbox for enabling snapping
-						ImGui::Checkbox("Enabled", &enableRotationSnap);
-						ImGui::Text(" Value");
-						ImGui::SameLine();
-						ImGui::PushItemWidth(50);
-						ImGui::DragFloat("##Value", &rotationSnapValue, 0.1, 0, 180, "%.3f");
-
-
-						ImGui::PopItemWidth();
-						break;
-
-					case 2: // Scale
-						// Common checkbox for enabling snapping
-						ImGui::Checkbox("Enabled", &enableScaleSnap);
-						ImGui::Text(" Value");
-						ImGui::SameLine();
-						ImGui::PushItemWidth(50);
-						ImGui::DragFloat("##Value", &scaleSnapValue, 0.1, 0, 100, "%.3f");
-
-						ImGui::PopItemWidth();
-						break;
-					}
+			// Helper: push 3 button colours when active
+			auto PushActive = [&](bool active, bool snap = false) {
+				if (active) {
+					const ImVec4& c  = snap ? kColSnapOn  : kColActive;
+					const ImVec4& ch = snap ? kColSnapHov : kColActHov;
+					ImGui::PushStyleColor(ImGuiCol_Button,        c);
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ch);
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive,  c);
 				}
-				ImGui::EndPopup();
-			}
-		
-			ImGui::SameLine();
+			};
+			auto PopActive = [&](bool active) {
+				if (active) ImGui::PopStyleColor(3);
+			};
 
-			// Camera options
-			if (ImGui::ImageButton((ImTextureID)m_CameraIcon->GetImTextureID(), buttonSize))
+			// ---- LEFT: tool buttons ----
+			// Select (no gizmo)
 			{
-				ImGui::OpenPopup("Camera");
+				bool a = (m_ImGuizmoType == -1);
+				PushActive(a);
+				if (ImGui::ImageButton("##sel", (ImTextureID)m_SelectIcon->GetImTextureID(), iconSz))
+					m_ImGuizmoType = -1;
+				PopActive(a);
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("Select (Q)");
 			}
-			if (ImGui::IsItemHovered())
+			ImGui::SameLine(0, 4);
+			ImGui::TextDisabled("|");
+			ImGui::SameLine(0, 4);
+
+			// Translate
 			{
-				ImGui::SetTooltip("Camera Speed"); // Tooltip text
+				bool a = (m_ImGuizmoType == ImGuizmo::OPERATION::TRANSLATE);
+				PushActive(a);
+				if (ImGui::ImageButton("##trans", (ImTextureID)m_TranslationIcon->GetImTextureID(), iconSz))
+					m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+				PopActive(a);
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("Translate (W)");
+			}
+			ImGui::SameLine(0, 2);
+			// Rotate
+			{
+				bool a = (m_ImGuizmoType == ImGuizmo::OPERATION::ROTATE);
+				PushActive(a);
+				if (ImGui::ImageButton("##rot", (ImTextureID)m_RotationIcon->GetImTextureID(), iconSz))
+					m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
+				PopActive(a);
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("Rotate (E)");
+			}
+			ImGui::SameLine(0, 2);
+			// Scale
+			{
+				bool a = (m_ImGuizmoType == ImGuizmo::OPERATION::SCALE);
+				PushActive(a);
+				if (ImGui::ImageButton("##scl", (ImTextureID)m_ScaleIcon->GetImTextureID(), iconSz))
+					m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
+				PopActive(a);
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("Scale (R)");
+			}
+			ImGui::SameLine(0, 6);
+			ImGui::TextDisabled("|");
+			ImGui::SameLine(0, 6);
+
+			// World / Local space toggle
+			{
+				bool isLocal = (m_OperationMode == (int)ImGuizmo::MODE::LOCAL);
+				ImTextureID spIcon = isLocal
+					? (ImTextureID)m_LocalSpaceIcon->GetImTextureID()
+					: (ImTextureID)m_WorldSpaceIcon->GetImTextureID();
+				if (ImGui::ImageButton("##space", spIcon, iconSz))
+					m_OperationMode = isLocal ? (int)ImGuizmo::MODE::WORLD : (int)ImGuizmo::MODE::LOCAL;
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip(isLocal ? "Local Space (click for World)" : "World Space (click for Local)");
+			}
+			ImGui::SameLine(0, 6);
+			ImGui::TextDisabled("|");
+			ImGui::SameLine(0, 6);
+
+			// ---- SNAP BUTTONS (toggle + preset dropdown) ----
+			// Preset tables
+			static const char* kGLabels[] = { "1","2","5","10","25","50","100" };
+			static const float kGVals[]   = { 1.f,2.f,5.f,10.f,25.f,50.f,100.f };
+			static const char* kRLabels[] = { "5","10","15","22.5","45","90" };
+			static const float kRVals[]   = { 5.f,10.f,15.f,22.5f,45.f,90.f };
+			static const char* kSLabels[] = { "0.0625","0.125","0.25","0.5","1" };
+			static const float kSVals[]   = { 0.0625f,0.125f,0.25f,0.5f,1.f };
+
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.f, 2.f));
+
+			// Grid / Translation snap — snapshot bool BEFORE button so push/pop use the same value
+			{ bool was = enableTranslationSnap;
+			PushActive(was, /*snap=*/true);
+			if (ImGui::ImageButton("##snapG", (ImTextureID)m_SnappingIcon->GetImTextureID(), ImVec2(14,14)))
+				enableTranslationSnap = !enableTranslationSnap;
+			PopActive(was); }
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Toggle Translation Snap");
+			ImGui::SameLine(0, 1);
+			{
+				char lbl[24]; snprintf(lbl, sizeof(lbl), "%.4g##tval", translationSnapValue);
+				if (ImGui::Button(lbl)) ImGui::OpenPopup("##tsnap");
+				if (ImGui::BeginPopup("##tsnap")) {
+					ImGui::TextDisabled("Grid Snap (cm)");
+					ImGui::Separator();
+					for (int i = 0; i < IM_ARRAYSIZE(kGVals); i++) {
+						bool s = (fabsf(translationSnapValue - kGVals[i]) < 0.001f);
+						if (ImGui::Selectable(kGLabels[i], s)) translationSnapValue = kGVals[i];
+					}
+					ImGui::EndPopup();
+				}
+			}
+			ImGui::SameLine(0, 6);
+
+			// Rotation snap
+			{ bool was = enableRotationSnap;
+			PushActive(was, true);
+			if (ImGui::ImageButton("##snapR", (ImTextureID)m_RotationIcon->GetImTextureID(), ImVec2(14,14)))
+				enableRotationSnap = !enableRotationSnap;
+			PopActive(was); }
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Toggle Rotation Snap");
+			ImGui::SameLine(0, 1);
+			{
+				char lbl[24]; snprintf(lbl, sizeof(lbl), "%.4g\xc2\xb0##rval", rotationSnapValue); // °
+				if (ImGui::Button(lbl)) ImGui::OpenPopup("##rsnap");
+				if (ImGui::BeginPopup("##rsnap")) {
+					ImGui::TextDisabled("Rotation Snap (\xc2\xb0)");
+					ImGui::Separator();
+					for (int i = 0; i < IM_ARRAYSIZE(kRVals); i++) {
+						bool s = (fabsf(rotationSnapValue - kRVals[i]) < 0.001f);
+						char rl[16]; snprintf(rl, sizeof(rl), "%s\xc2\xb0", kRLabels[i]);
+						if (ImGui::Selectable(rl, s)) rotationSnapValue = kRVals[i];
+					}
+					ImGui::EndPopup();
+				}
+			}
+			ImGui::SameLine(0, 6);
+
+			// Scale snap
+			{ bool was = enableScaleSnap;
+			PushActive(was, true);
+			if (ImGui::ImageButton("##snapS", (ImTextureID)m_ScaleIcon->GetImTextureID(), ImVec2(14,14)))
+				enableScaleSnap = !enableScaleSnap;
+			PopActive(was); }
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Toggle Scale Snap");
+			ImGui::SameLine(0, 1);
+			{
+				char lbl[24]; snprintf(lbl, sizeof(lbl), "%.4g##sval", scaleSnapValue);
+				if (ImGui::Button(lbl)) ImGui::OpenPopup("##ssnap");
+				if (ImGui::BeginPopup("##ssnap")) {
+					ImGui::TextDisabled("Scale Snap");
+					ImGui::Separator();
+					for (int i = 0; i < IM_ARRAYSIZE(kSVals); i++) {
+						bool s = (fabsf(scaleSnapValue - kSVals[i]) < 0.001f);
+						if (ImGui::Selectable(kSLabels[i], s)) scaleSnapValue = kSVals[i];
+					}
+					ImGui::EndPopup();
+				}
 			}
 
-
-			if (ImGui::BeginPopup("Camera"))
-			{
-				ImGui::Text("Editor Camera");
+			// Camera speed (kept but compact)
+			ImGui::SameLine(0, 6);
+			ImGui::TextDisabled("|");
+			ImGui::SameLine(0, 6);
+			if (ImGui::ImageButton("##cam", (ImTextureID)m_CameraIcon->GetImTextureID(), ImVec2(14,14)))
+				ImGui::OpenPopup("##camspd");
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Camera Speed");
+			if (ImGui::BeginPopup("##camspd")) {
 				ImGui::Text("Camera Speed");
-				ImGui::SameLine();
-				ImGui::PushItemWidth(50);
-				ImGui::DragFloat("##Value", &m_EditorCamera.GetCameraSpeed(), 0.1, 0, 32, "%.4f");
-
+				ImGui::PushItemWidth(80.f);
+				ImGui::DragFloat("##cs", &m_EditorCamera.GetCameraSpeed(), 0.05f, 0.05f, 500.f, "%.2f");
 				ImGui::PopItemWidth();
 				ImGui::EndPopup();
 			}
+
+			ImGui::PopStyleVar(); // FramePadding 2,2
+
+			// ---- RIGHT: Perspective + Lit dropdowns ----
+			{
+				const char* perspStr = m_EditorCamera.IsOrthographic() ? "Orthographic" : "Perspective";
+				const char* litStr   = (m_ViewMode == ViewMode::Wireframe) ? "Wireframe"
+				                     : (m_ViewMode == ViewMode::Unlit)     ? "Unlit" : "Lit";
+
+				// Compute right-side button widths so we can right-align them.
+				// Use SameLine(rightX) instead of SetCursorPosX so ImGui correctly
+				// jumps to the target X even if the cursor is already past it from
+				// the accumulated SameLine calls on the left side.
+				float perspW = ImGui::CalcTextSize(perspStr).x + 14.f;
+				float litW   = ImGui::CalcTextSize(litStr).x   + 14.f;
+				float rightX = ImGui::GetWindowWidth() - perspW - litW - 12.f;
+				ImGui::SameLine(rightX);
+
+				// Perspective / Orthographic dropdown
+				if (ImGui::Button(perspStr, ImVec2(perspW, 0)))
+					ImGui::OpenPopup("##persp");
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("Camera Projection");
+				if (ImGui::BeginPopup("##persp")) {
+					ImGui::TextDisabled("PERSPECTIVE");
+					if (ImGui::Selectable("Perspective", !m_EditorCamera.IsOrthographic())) {
+						m_EditorCamera.SetOrthographic(false);
+					}
+					ImGui::Separator();
+					ImGui::TextDisabled("ORTHOGRAPHIC");
+					// Cardinal view entries: name, pitch, yaw, switch to ortho
+					struct CardinalView { const char* name; float pitch; float yaw; };
+					static const CardinalView kViews[] = {
+						{ "Top",    glm::radians( 90.f), 0.f                  },
+						{ "Bottom", glm::radians(-90.f), 0.f                  },
+						{ "Front",  0.f,                 0.f                  },
+						{ "Back",   0.f,                 glm::radians(180.f)  },
+						{ "Left",   0.f,                 glm::radians(-90.f)  },
+						{ "Right",  0.f,                 glm::radians( 90.f)  },
+					};
+					for (const auto& v : kViews) {
+						if (ImGui::Selectable(v.name)) {
+							m_EditorCamera.SetOrthographic(true);
+							m_EditorCamera.SetPitchYaw(v.pitch, v.yaw);
+						}
+					}
+					ImGui::EndPopup();
+				}
+				ImGui::SameLine(0, 4);
+
+				// Lit / Unlit / Wireframe dropdown
+				if (ImGui::Button(litStr, ImVec2(litW, 0)))
+					ImGui::OpenPopup("##litmode");
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("View Mode");
+				if (ImGui::BeginPopup("##litmode")) {
+					ImGui::TextDisabled("VIEW MODE");
+					ImGui::Separator();
+					if (ImGui::Selectable("Lit",       m_ViewMode == ViewMode::Lit))       m_ViewMode = ViewMode::Lit;
+					if (ImGui::Selectable("Unlit",     m_ViewMode == ViewMode::Unlit))     m_ViewMode = ViewMode::Unlit;
+					if (ImGui::Selectable("Wireframe", m_ViewMode == ViewMode::Wireframe)) m_ViewMode = ViewMode::Wireframe;
+					ImGui::EndPopup();
+				}
+			}
+
 			ImGui::EndChild();
-			ImGui::PopStyleColor();
+			ImGui::PopStyleVar();  // FramePadding 3,3
+			ImGui::PopStyleColor(); // ChildBg
 		}
-		ImGui::PopStyleVar();
+		ImGui::PopStyleVar(); // WindowPadding from outer Begin("Viewport")
 		
 		m_ViewPortFocused = ImGui::IsWindowFocused();
 		m_ViewPortHovered = ImGui::IsWindowHovered();
@@ -1057,6 +1586,7 @@ namespace Blu
 				m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 				m_CameraViewFrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 				m_CameraController.ResizeCamera(m_ViewportSize.x, m_ViewportSize.y);
+				m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
 				m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 
 			}
@@ -1173,8 +1703,12 @@ namespace Blu
 	{
 		if (m_MousePosX >= 0 && m_MousePosY >= 0 && m_MousePosX < (int)m_ViewportSize.x && m_MousePosY < (int)m_ViewportSize.y)
 		{
-			if (m_ViewPortFocused)
+			if (m_ViewPortHovered)
 			{
+				// Don't select when clicking a gizmo handle — let ImGuizmo consume the input.
+				if (ImGuizmo::IsOver() && m_ImGuizmoType != -1)
+					return false;
+
 				// Read the entity-ID pixel exactly once at click time.
 				// This is a synchronous GPU stall so we do it here (once per click)
 				// rather than every frame.

@@ -101,7 +101,21 @@ namespace Blu
 	void EditorCamera::UpdateProjectionMatrix()
 	{
 		m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
-		m_ProjectionMatrix = MakePerspective(glm::radians(m_FOV), m_AspectRatio, m_NearClip, m_FarClip);
+
+		if (m_IsOrthographic)
+		{
+			// Scale orthographic size with distance so scroll-to-zoom still works.
+			float halfH = m_Distance * 0.5f;
+			float halfW = halfH * m_AspectRatio;
+			if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+				m_ProjectionMatrix = glm::orthoRH_ZO(-halfW, halfW, -halfH, halfH, m_NearClip, m_FarClip);
+			else
+				m_ProjectionMatrix = glm::ortho(-halfW, halfW, -halfH, halfH, m_NearClip, m_FarClip);
+		}
+		else
+		{
+			m_ProjectionMatrix = MakePerspective(glm::radians(m_FOV), m_AspectRatio, m_NearClip, m_FarClip);
+		}
 	}
 
 	void EditorCamera::UpdateView()

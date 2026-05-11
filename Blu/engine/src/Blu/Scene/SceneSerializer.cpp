@@ -152,15 +152,44 @@ namespace Blu
 			out << YAML::Key << "PointLightComponent";
 			out << YAML::BeginMap;
 			auto& sc = entity.GetComponent<PointLightComponent>();
-			out << YAML::Key << "Position" << YAML::Value << sc.Position;
-			out << YAML::Key << "Color" << YAML::Value << sc.Color;
+			out << YAML::Key << "Ambient"      << YAML::Value << sc.Ambient;
+			out << YAML::Key << "Diffuse"      << YAML::Value << sc.Diffuse;
+			out << YAML::Key << "Specular"     << YAML::Value << sc.Specular;
+			out << YAML::Key << "Intensity"    << YAML::Value << sc.Intensity;
+			out << YAML::Key << "Range"        << YAML::Value << sc.Range;
+			out << YAML::Key << "AttConstant"  << YAML::Value << sc.AttConstant;
+			out << YAML::Key << "AttLinear"    << YAML::Value << sc.AttLinear;
+			out << YAML::Key << "AttQuadratic" << YAML::Value << sc.AttQuadratic;
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<DirectionalLightComponent>())
+		{
+			out << YAML::Key << "DirectionalLightComponent";
+			out << YAML::BeginMap;
+			auto& sc = entity.GetComponent<DirectionalLightComponent>();
+			out << YAML::Key << "Direction" << YAML::Value << sc.Direction;
+			out << YAML::Key << "Ambient"   << YAML::Value << sc.Ambient;
+			out << YAML::Key << "Diffuse"   << YAML::Value << sc.Diffuse;
+			out << YAML::Key << "Specular"  << YAML::Value << sc.Specular;
 			out << YAML::Key << "Intensity" << YAML::Value << sc.Intensity;
-			out << YAML::Key << "Radius" << YAML::Value << sc.Radius;
-
-			out << YAML::Key << "AmbientColor" << YAML::Value << sc.AmbientColor;
-			out << YAML::Key << "DiffuseColor" << YAML::Value << sc.DiffuseColor;
-			out << YAML::Key << "SpecularColor" << YAML::Value << sc.SpecularColor;
-			out << YAML::Key << "Shininess" << YAML::Value << sc.Shininess;
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<SpotLightComponent>())
+		{
+			out << YAML::Key << "SpotLightComponent";
+			out << YAML::BeginMap;
+			auto& sc = entity.GetComponent<SpotLightComponent>();
+			out << YAML::Key << "Direction"      << YAML::Value << sc.Direction;
+			out << YAML::Key << "Ambient"        << YAML::Value << sc.Ambient;
+			out << YAML::Key << "Diffuse"        << YAML::Value << sc.Diffuse;
+			out << YAML::Key << "Specular"       << YAML::Value << sc.Specular;
+			out << YAML::Key << "Intensity"      << YAML::Value << sc.Intensity;
+			out << YAML::Key << "Range"          << YAML::Value << sc.Range;
+			out << YAML::Key << "InnerConeAngle" << YAML::Value << sc.InnerConeAngle;
+			out << YAML::Key << "OuterConeAngle" << YAML::Value << sc.OuterConeAngle;
+			out << YAML::Key << "AttConstant"    << YAML::Value << sc.AttConstant;
+			out << YAML::Key << "AttLinear"      << YAML::Value << sc.AttLinear;
+			out << YAML::Key << "AttQuadratic"   << YAML::Value << sc.AttQuadratic;
 			out << YAML::EndMap;
 		}
 
@@ -554,18 +583,41 @@ namespace Blu
 				if (pointLightComponent)
 				{
 					auto& pl = deserializedEntity.AddComponent<PointLightComponent>();
-					pl.Position = pointLightComponent["Position"].as<glm::vec3>();
-					pl.Color = pointLightComponent["Color"].as<glm::vec4>();
-
-					pl.Intensity = pointLightComponent["Intensity"].as<float>();
-					pl.Radius = pointLightComponent["Radius"].as<float>();
-
-					pl.AmbientColor = pointLightComponent["AmbientColor"].as<glm::vec3>();
-					pl.DiffuseColor = pointLightComponent["DiffuseColor"].as<glm::vec3>();
-					pl.SpecularColor = pointLightComponent["SpecularColor"].as<glm::vec3>();
-					pl.Shininess = pointLightComponent["Shininess"].as<float>();
-					
-					m_Scene->GetLightManager()->AddPointLight(deserializedEntity);
+					// New field names — fall back to defaults if loading an old scene
+					if (pointLightComponent["Ambient"])      pl.Ambient      = pointLightComponent["Ambient"].as<glm::vec3>();
+					if (pointLightComponent["Diffuse"])      pl.Diffuse      = pointLightComponent["Diffuse"].as<glm::vec3>();
+					if (pointLightComponent["Specular"])     pl.Specular     = pointLightComponent["Specular"].as<glm::vec3>();
+					if (pointLightComponent["Intensity"])    pl.Intensity    = pointLightComponent["Intensity"].as<float>();
+					if (pointLightComponent["Range"])        pl.Range        = pointLightComponent["Range"].as<float>();
+					if (pointLightComponent["AttConstant"])  pl.AttConstant  = pointLightComponent["AttConstant"].as<float>();
+					if (pointLightComponent["AttLinear"])    pl.AttLinear    = pointLightComponent["AttLinear"].as<float>();
+					if (pointLightComponent["AttQuadratic"]) pl.AttQuadratic = pointLightComponent["AttQuadratic"].as<float>();
+				}
+				auto dirLightComponent = entity["DirectionalLightComponent"];
+				if (dirLightComponent)
+				{
+					auto& dl = deserializedEntity.AddComponent<DirectionalLightComponent>();
+					if (dirLightComponent["Direction"]) dl.Direction = dirLightComponent["Direction"].as<glm::vec3>();
+					if (dirLightComponent["Ambient"])   dl.Ambient   = dirLightComponent["Ambient"].as<glm::vec3>();
+					if (dirLightComponent["Diffuse"])   dl.Diffuse   = dirLightComponent["Diffuse"].as<glm::vec3>();
+					if (dirLightComponent["Specular"])  dl.Specular  = dirLightComponent["Specular"].as<glm::vec3>();
+					if (dirLightComponent["Intensity"]) dl.Intensity = dirLightComponent["Intensity"].as<float>();
+				}
+				auto spotLightComponent = entity["SpotLightComponent"];
+				if (spotLightComponent)
+				{
+					auto& sl = deserializedEntity.AddComponent<SpotLightComponent>();
+					if (spotLightComponent["Direction"])      sl.Direction      = spotLightComponent["Direction"].as<glm::vec3>();
+					if (spotLightComponent["Ambient"])        sl.Ambient        = spotLightComponent["Ambient"].as<glm::vec3>();
+					if (spotLightComponent["Diffuse"])        sl.Diffuse        = spotLightComponent["Diffuse"].as<glm::vec3>();
+					if (spotLightComponent["Specular"])       sl.Specular       = spotLightComponent["Specular"].as<glm::vec3>();
+					if (spotLightComponent["Intensity"])      sl.Intensity      = spotLightComponent["Intensity"].as<float>();
+					if (spotLightComponent["Range"])          sl.Range          = spotLightComponent["Range"].as<float>();
+					if (spotLightComponent["InnerConeAngle"]) sl.InnerConeAngle = spotLightComponent["InnerConeAngle"].as<float>();
+					if (spotLightComponent["OuterConeAngle"]) sl.OuterConeAngle = spotLightComponent["OuterConeAngle"].as<float>();
+					if (spotLightComponent["AttConstant"])    sl.AttConstant    = spotLightComponent["AttConstant"].as<float>();
+					if (spotLightComponent["AttLinear"])      sl.AttLinear      = spotLightComponent["AttLinear"].as<float>();
+					if (spotLightComponent["AttQuadratic"])   sl.AttQuadratic   = spotLightComponent["AttQuadratic"].as<float>();
 				}
 
 			}

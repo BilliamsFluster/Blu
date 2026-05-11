@@ -2,6 +2,7 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Blu/Rendering/EditorCamera.h"
+#include "EditorLog.h"
 #include <chrono>
 
 
@@ -100,6 +101,9 @@ namespace Blu
 			Simulate = 3
 		};
 
+		enum class ViewMode { Lit = 0, Unlit, Wireframe };
+		ViewMode m_ViewMode = ViewMode::Lit;
+
 		SceneState m_SceneState = SceneState::Edit;
 
 		// ---- Performance stats ----------------------------------------
@@ -126,6 +130,19 @@ namespace Blu
 
 		// OpenGL timer queries (double-buffered)
 		uint32_t m_GLTimeQuery[2]  = {};
+
+		// ---- Panel visibility (toggled via Window menu) --------------------
+		bool m_ShowOutliner       = true;
+		bool m_ShowDetails        = true;
+		bool m_ShowContentBrowser = true;
+		bool m_ShowOutputLog      = true;
+		bool m_ShowRendering      = true;
+
+		// ---- Output Log panel state ----------------------------------------
+		bool m_LogShowTrace = true;
+		bool m_LogShowInfo  = true;
+		bool m_LogShowWarn  = true;
+		bool m_LogShowError = true;
 	};
 }
 

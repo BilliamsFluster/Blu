@@ -6,6 +6,9 @@
 #include "Blu/Rendering/Material.h"
 #include <imgui_internal.h>
 #include <filesystem>
+#include <algorithm>
+#include <cctype>
+#include <cstring>
 #include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/LightSystem/LightManager.h"
 
@@ -25,72 +28,102 @@ namespace Blu
 		m_SelectedEntity = entity;
 
 	}
-	void SceneHierarchyPanel::OnImGuiRender()
+	void SceneHierarchyPanel::OnImGuiRender(bool* pShowOutliner, bool* pShowDetails)
 	{
 		m_EntityHovered = false;
-		ImGui::Begin("Scene Hierarchy");
-		m_Context->m_Registry.each([&](auto entityID)
-		{
-			Entity entity{ entityID, m_Context.get() };
-			DrawEntityNode(entity);
-			
-		});
-		
 
-		if (!m_EntityHovered)
+		// ------------------------------------------------------------------
+		// Outliner (formerly "Scene Hierarchy")
+		// ------------------------------------------------------------------
+		if (ImGui::Begin("Outliner", pShowOutliner))
 		{
+			// ---- Search bar ----
+			ImGui::SetNextItemWidth(-1.0f);
+			ImGui::InputTextWithHint("##search", "Search...", m_SearchBuffer, sizeof(m_SearchBuffer));
+			ImGui::Separator();
 
-			if (ImGui::BeginPopupContextWindow())
+			// ---- Entity list ----
+			m_Context->m_Registry.each([&](auto entityID)
 			{
-				if (ImGui::BeginMenu("Create Entity"))
+				Entity entity{ entityID, m_Context.get() };
+
+				// Filter by search string (case-insensitive substring match).
+				if (m_SearchBuffer[0] != '\0')
 				{
-					if (ImGui::MenuItem("Camera Entity"))
-					{
-						auto Entity = m_Context->CreateEntity("Camera");
-						Entity.AddComponent<CameraComponent>();
-					}
-					if (ImGui::MenuItem("Mesh Entity"))
-					{
-						auto Entity = m_Context->CreateEntity("Mesh");
-						auto& mc = Entity.AddComponent<MeshComponent>();
-						mc.MeshData = Mesh::CreateCube();
-						mc.MaterialInstance = Material::Create();
-					}
-					if (ImGui::MenuItem("Sprite Entity"))
-					{
-						auto Entity = m_Context->CreateEntity("Sprite");
-						Entity.AddComponent<SpriteRendererComponent>();
-					}
-					ImGui::Separator();
-					if (ImGui::MenuItem("Point Light Entity"))
-					{
-						auto Entity = m_Context->CreateEntity("PointLight");
-						Entity.AddComponent<PointLightComponent>();
-						Entity.AddComponent<CircleRendererComponent>();
-						m_Context->GetLightManager()->AddPointLight(Entity);
-					}
-					ImGui::Separator();
-					if (ImGui::MenuItem("Empty Entity"))
-					{
-						m_Context->CreateEntity("Empty");
-					}
-					ImGui::EndMenu();
+					const auto& tag = entity.GetComponent<TagComponent>().Tag;
+					// Simple case-insensitive search using std::search + tolower lambda.
+					auto it = std::search(
+						tag.begin(), tag.end(),
+						m_SearchBuffer, m_SearchBuffer + strlen(m_SearchBuffer),
+						[](char a, char b) { return std::tolower((unsigned char)a) == std::tolower((unsigned char)b); });
+					if (it == tag.end())
+						return; // skip non-matching entities
 				}
-				ImGui::EndPopup();
+
+				DrawEntityNode(entity);
+			});
+
+			if (!m_EntityHovered)
+			{
+				if (ImGui::BeginPopupContextWindow())
+				{
+					if (ImGui::BeginMenu("Create Entity"))
+					{
+						if (ImGui::MenuItem("Camera Entity"))
+						{
+							auto Entity = m_Context->CreateEntity("Camera");
+							Entity.AddComponent<CameraComponent>();
+						}
+						if (ImGui::MenuItem("Mesh Entity"))
+						{
+							auto Entity = m_Context->CreateEntity("Mesh");
+							auto& mc = Entity.AddComponent<MeshComponent>();
+							mc.MeshData = Mesh::CreateCube();
+							mc.MaterialInstance = Material::Create();
+						}
+						if (ImGui::MenuItem("Sprite Entity"))
+						{
+							auto Entity = m_Context->CreateEntity("Sprite");
+							Entity.AddComponent<SpriteRendererComponent>();
+						}
+						ImGui::Separator();
+						if (ImGui::MenuItem("Point Light"))
+						{
+							auto Entity = m_Context->CreateEntity("PointLight");
+							Entity.AddComponent<PointLightComponent>();
+						}
+						if (ImGui::MenuItem("Directional Light"))
+						{
+							auto Entity = m_Context->CreateEntity("DirectionalLight");
+							Entity.AddComponent<DirectionalLightComponent>();
+						}
+						if (ImGui::MenuItem("Spot Light"))
+						{
+							auto Entity = m_Context->CreateEntity("SpotLight");
+							Entity.AddComponent<SpotLightComponent>();
+						}
+						ImGui::Separator();
+						if (ImGui::MenuItem("Empty Entity"))
+						{
+							m_Context->CreateEntity("Empty");
+						}
+						ImGui::EndMenu();
+					}
+					ImGui::EndPopup();
+				}
 			}
 		}
-		
+		ImGui::End(); // Outliner
 
-		ImGui::End();
-		ImGui::Begin("Properties");
-
-		if (m_SelectedEntity)
+		// ------------------------------------------------------------------
+		// Details (formerly "Properties")
+		// ------------------------------------------------------------------
+		if (ImGui::Begin("Details", pShowDetails))
 		{
-			DrawEntityComponents(m_SelectedEntity);
-			
+			if (m_SelectedEntity)
+				DrawEntityComponents(m_SelectedEntity);
 		}
-
-		ImGui::End();
+		ImGui::End(); // Details
 	}
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
 	{
@@ -334,10 +367,25 @@ namespace Blu
 			}
 			if (!m_SelectedEntity.HasComponent<PointLightComponent>())
 			{
-				if (ImGui::MenuItem("PointLight"))
+				if (ImGui::MenuItem("Point Light"))
 				{
 					m_SelectedEntity.AddComponent<PointLightComponent>();
-					m_Context->m_LightManager->AddPointLight(m_SelectedEntity);
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<DirectionalLightComponent>())
+			{
+				if (ImGui::MenuItem("Directional Light"))
+				{
+					m_SelectedEntity.AddComponent<DirectionalLightComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<SpotLightComponent>())
+			{
+				if (ImGui::MenuItem("Spot Light"))
+				{
+					m_SelectedEntity.AddComponent<SpotLightComponent>();
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -410,48 +458,171 @@ namespace Blu
 				ImGui::Spacing();
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
-		DrawComponent<PointLightComponent>("Point Light", entity, [](auto& light)
+		// ── Point Light ─────────────────────────────────────────────────────────
+		DrawComponent<PointLightComponent>("Point Light", entity, [](auto& L)
 			{
-				// Point Light Properties
-				ImGui::Text("Point Light Properties");
+				// Two-column layout: label (fixed 80 px) | control (fill)
+				constexpr float kLabelW = 80.0f;
+				ImGui::Columns(2, "PLCols", false);
+				ImGui::SetColumnWidth(0, kLabelW);
 
-				// Color
-				ImGui::ColorEdit4("Color##PointLight", glm::value_ptr(light.Color));
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Ambient");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##PL_Ambient",  glm::value_ptr(L.Ambient));  ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Diffuse");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##PL_Diffuse",  glm::value_ptr(L.Diffuse));  ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Specular");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##PL_Specular", glm::value_ptr(L.Specular)); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Intensity");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##PL_Intensity", &L.Intensity, 0.05f, 0.0f, 20.0f, "%.2f"); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Range");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##PL_Range",     &L.Range,     0.5f,  0.1f, 500.0f, "%.1f"); ImGui::NextColumn();
+
+				ImGui::Columns(1);
+
+				ImGui::Spacing();
+				ImGui::TextDisabled("Attenuation  (1 / (c + l*d + q*d\xc2\xb2))");
+
+				ImGui::Columns(2, "PLAttCols", false);
+				ImGui::SetColumnWidth(0, kLabelW);
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Constant");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##PL_Const",  &L.AttConstant,  0.001f,  0.0f, 5.0f, "%.4f"); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Linear");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##PL_Lin",    &L.AttLinear,    0.001f,  0.0f, 5.0f, "%.4f"); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Quadratic");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##PL_Quad",   &L.AttQuadratic, 0.0001f, 0.0f, 5.0f, "%.5f"); ImGui::NextColumn();
+
+				ImGui::Columns(1);
+
+				ImGui::Spacing();
+				ImGui::TextDisabled("Range Presets");
+				if (ImGui::Button("Range 7##PL"))   { L.Range=7;   L.AttConstant=1.0f; L.AttLinear=0.70f;  L.AttQuadratic=1.80f;   }
 				ImGui::SameLine();
-				ImGui::Text("Light color");
-
-				// Intensity
-				ImGui::SliderFloat("Intensity##PointLight", &light.Intensity, 0.0f, 10.0f);
+				if (ImGui::Button("Range 20##PL"))  { L.Range=20;  L.AttConstant=1.0f; L.AttLinear=0.22f;  L.AttQuadratic=0.20f;   }
 				ImGui::SameLine();
-				ImGui::Text("Light intensity");
-
-				// Radius
-				ImGui::SliderFloat("Radius##PointLight", &light.Radius, 0.0f, 100.0f);
+				if (ImGui::Button("Range 50##PL"))  { L.Range=50;  L.AttConstant=1.0f; L.AttLinear=0.09f;  L.AttQuadratic=0.032f;  }
 				ImGui::SameLine();
-				ImGui::Text("Light radius");
+				if (ImGui::Button("Range 100##PL")) { L.Range=100; L.AttConstant=1.0f; L.AttLinear=0.045f; L.AttQuadratic=0.0075f; }
+			});
 
-				// Additional properties for Phong reflection model
-				ImGui::Text("Phong Reflection Model");
+		// ── Directional Light ─────────────────────────────────────────────────
+		DrawComponent<DirectionalLightComponent>("Directional Light", entity, [](auto& L)
+			{
+				DrawVec3Control("Direction", L.Direction);
+				if (glm::length(L.Direction) > 0.001f)
+					L.Direction = glm::normalize(L.Direction);
 
-				// Ambient Color
-				ImGui::ColorEdit3("Ambient Color##PointLight", glm::value_ptr(light.AmbientColor));
-				ImGui::SameLine();
-				ImGui::Text("Ambient light color");
+				ImGui::Spacing();
 
-				// Diffuse Color
-				ImGui::ColorEdit3("Diffuse Color##PointLight", glm::value_ptr(light.DiffuseColor));
-				ImGui::SameLine();
-				ImGui::Text("Diffuse light color");
+				constexpr float kLabelW = 80.0f;
+				ImGui::Columns(2, "DLCols", false);
+				ImGui::SetColumnWidth(0, kLabelW);
 
-				// Specular Color
-				ImGui::ColorEdit3("Specular Color##PointLight", glm::value_ptr(light.SpecularColor));
-				ImGui::SameLine();
-				ImGui::Text("Specular light color");
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Ambient");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##DL_Ambient",  glm::value_ptr(L.Ambient));  ImGui::NextColumn();
 
-				
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Diffuse");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##DL_Diffuse",  glm::value_ptr(L.Diffuse));  ImGui::NextColumn();
 
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Specular");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##DL_Specular", glm::value_ptr(L.Specular)); ImGui::NextColumn();
 
-				// You can add more UI controls as needed for your PointLightComponent
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Intensity");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##DL_Intensity", &L.Intensity, 0.05f, 0.0f, 20.0f, "%.2f"); ImGui::NextColumn();
+
+				ImGui::Columns(1);
+			});
+
+		// ── Spot Light ────────────────────────────────────────────────────────
+		DrawComponent<SpotLightComponent>("Spot Light", entity, [](auto& L)
+			{
+				DrawVec3Control("Direction", L.Direction);
+				if (glm::length(L.Direction) > 0.001f)
+					L.Direction = glm::normalize(L.Direction);
+
+				ImGui::Spacing();
+
+				constexpr float kLabelW = 80.0f;
+				ImGui::Columns(2, "SLCols", false);
+				ImGui::SetColumnWidth(0, kLabelW);
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Ambient");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##SL_Ambient",  glm::value_ptr(L.Ambient));  ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Diffuse");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##SL_Diffuse",  glm::value_ptr(L.Diffuse));  ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Specular");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::ColorEdit3("##SL_Specular", glm::value_ptr(L.Specular)); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Intensity");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##SL_Intensity", &L.Intensity, 0.05f, 0.0f, 20.0f, "%.2f"); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Range");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##SL_Range",     &L.Range,     0.5f,  0.1f, 500.0f, "%.1f"); ImGui::NextColumn();
+
+				ImGui::Columns(1);
+
+				ImGui::Spacing();
+				ImGui::TextDisabled("Cone Angles");
+
+				ImGui::Columns(2, "SLConeCols", false);
+				ImGui::SetColumnWidth(0, kLabelW);
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Inner Cone");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##SL_Inner", &L.InnerConeAngle, 0.5f, 0.5f, 89.0f, "%.1f\xc2\xb0"); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Outer Cone");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##SL_Outer", &L.OuterConeAngle, 0.5f, 1.0f, 90.0f, "%.1f\xc2\xb0"); ImGui::NextColumn();
+
+				ImGui::Columns(1);
+				if (L.OuterConeAngle < L.InnerConeAngle + 0.5f)
+					L.OuterConeAngle = L.InnerConeAngle + 0.5f;
+
+				ImGui::Spacing();
+				ImGui::TextDisabled("Attenuation  (1 / (c + l*d + q*d\xc2\xb2))");
+
+				ImGui::Columns(2, "SLAttCols", false);
+				ImGui::SetColumnWidth(0, kLabelW);
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Constant");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##SL_Const",  &L.AttConstant,  0.001f,  0.0f, 5.0f, "%.4f"); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Linear");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##SL_Lin",    &L.AttLinear,    0.001f,  0.0f, 5.0f, "%.4f"); ImGui::NextColumn();
+
+				ImGui::AlignTextToFramePadding(); ImGui::Text("Quadratic");
+				ImGui::NextColumn(); ImGui::SetNextItemWidth(-1.0f);
+				ImGui::DragFloat("##SL_Quad",   &L.AttQuadratic, 0.0001f, 0.0f, 5.0f, "%.5f"); ImGui::NextColumn();
+
+				ImGui::Columns(1);
 			});
 
 

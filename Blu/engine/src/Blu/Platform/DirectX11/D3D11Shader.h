@@ -62,7 +62,7 @@ namespace Blu
         // Not used by 3D/2D renderers — no-op stubs
         void SetUniformPointLight      (const std::string&, const struct PointLightComponent&)   override {}
         void SetUniformDirectionalLight(const std::string&, const struct DirectionalLightComponent&) override {}
-        void SetUniformSpotlight       (const std::string&, const struct SpotlightComponent&)    override {}
+        void SetUniformSpotlight       (const std::string&, const struct SpotLightComponent&)    override {}
 
     private:
         void Compile(const std::string& vertexSrc, const std::string& pixelSrc);

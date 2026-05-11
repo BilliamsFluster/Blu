@@ -60,7 +60,12 @@ namespace Blu
 			
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+			// ViewportsEnable (floating platform windows) is intentionally disabled.
+			// With the DX11 + GLFW backend, popup menus become separate OS windows
+			// whose per-window swap chains are not created reliably, so they never
+			// appear on screen.  Keeping popups in-window via the standard ImGui
+			// draw-list z-order fixes File/Script/Window dropdowns.
+			// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 			
 			ImGuiStyle& style = ImGui::GetStyle();
 			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -204,12 +209,19 @@ namespace Blu
 			static bool opt_fullscreen = true;
 			static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
-			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+			// Do NOT include ImGuiWindowFlags_MenuBar here — the menu bar is rendered
+			// separately via BeginMainMenuBar() in UIDrawTitlebar. Keeping MenuBar in
+			// the dockspace flags creates a hidden blank strip that sits over docked
+			// panels' tab bars, offsetting hit-testing from the visual rendering.
+			ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
 			if (opt_fullscreen)
 			{
 				ImGuiViewport* viewport = ImGui::GetMainViewport();
-				ImGui::SetNextWindowPos(viewport->Pos);
-				ImGui::SetNextWindowSize(viewport->Size);
+				// Use WorkPos/WorkSize instead of Pos/Size so the dockspace correctly
+				// sits below the main menu bar (WorkPos.y > Pos.y after BeginMainMenuBar
+				// has been called on the previous frame).
+				ImGui::SetNextWindowPos(viewport->WorkPos);
+				ImGui::SetNextWindowSize(viewport->WorkSize);
 				ImGui::SetNextWindowViewport(viewport->ID);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -226,8 +238,8 @@ namespace Blu
 
 			GLFWwindow* window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
 
-			
-			
+
+
 			if (opt_fullscreen)
 				ImGui::PopStyleVar(2);
 

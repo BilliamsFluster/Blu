@@ -37,7 +37,8 @@ namespace Blu
 	
 	bool Application::IsMaximized() const
 	{
-		return (bool)glfwGetWindowAttrib((GLFWwindow*)&m_Window, GLFW_MAXIMIZED);
+		return (bool)glfwGetWindowAttrib(
+		    (GLFWwindow*)m_Window->GetNativeWindow(), GLFW_MAXIMIZED);
 	}
 
 

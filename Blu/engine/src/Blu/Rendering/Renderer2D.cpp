@@ -390,24 +390,11 @@ namespace Blu
 
 		}
 	}
-	void Renderer2D::PassLightPropertiesToShader(Shared<LightManager> lightManager)
+	void Renderer2D::PassLightPropertiesToShader(Shared<LightManager> /*lightManager*/)
 	{
-		auto lights = lightManager->GetPointLights();  // copy so elements are non-const
-		int numLights = (int)lights.size();
-		constexpr int MaxLights = 8;
-		s_RendererData->QuadShader->SetUniformInt("u_NumLights", std::min(numLights, MaxLights));
-
-		for (int i = 0; i < numLights && i < MaxLights; i++)
-		{
-			auto& tc  = lights[i].GetComponent<TransformComponent>();
-			auto& plc = lights[i].GetComponent<PointLightComponent>();
-
-			std::string p = "u_Lights[" + std::to_string(i) + "].";
-			s_RendererData->QuadShader->SetUniformFloat3(p + "position", tc.Translation);
-			s_RendererData->QuadShader->SetUniformFloat3(p + "ambient",  plc.AmbientColor);
-			s_RendererData->QuadShader->SetUniformFloat3(p + "diffuse",  plc.DiffuseColor);
-			s_RendererData->QuadShader->SetUniformFloat3(p + "specular", plc.SpecularColor);
-		}
+		// 2D lights are not driven by the LightManager any more.
+		// The 3D lighting system (Renderer3D + GatherLights) handles all mesh lighting.
+		// This stub is kept so call-sites in the 2D pass continue to compile.
 	}
 
 	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade, int entityID)

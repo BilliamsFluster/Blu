@@ -35,11 +35,14 @@ namespace Blu
         dev->CreateDepthStencilState(&dsd, dss.GetAddressOf());
         dc->OMSetDepthStencilState(dss.Get(), 1);
 
-        // Solid rasteriser, back-face culling
+        // Solid rasteriser, back-face culling.
+        // FrontCounterClockwise = TRUE  matches OpenGL / GLM convention (CCW = front).
+        // The cube mesh and all procedural meshes use CCW winding, so with FALSE the
+        // outer faces are treated as back-faces and culled, showing only the interior.
         D3D11_RASTERIZER_DESC rsd = {};
         rsd.FillMode              = D3D11_FILL_SOLID;
         rsd.CullMode              = D3D11_CULL_BACK;
-        rsd.FrontCounterClockwise = FALSE;
+        rsd.FrontCounterClockwise = TRUE;
         rsd.DepthClipEnable       = TRUE;
         Microsoft::WRL::ComPtr<ID3D11RasterizerState> rs;
         dev->CreateRasterizerState(&rsd, rs.GetAddressOf());
