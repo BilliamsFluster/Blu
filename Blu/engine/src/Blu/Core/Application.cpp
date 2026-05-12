@@ -3,7 +3,6 @@
 #include "Blu/Core/Log.h"
 #include "Window.h"
 #include "Input.h"
-#include <glad/glad.h>
 #include "imgui.h"
 #include "Blu/Rendering/Buffer.h"
 #include "Blu/Rendering/VertexArray.h"
@@ -12,24 +11,13 @@
 #include "Blu/Core/Timestep.h"
 #include <GLFW/glfw3.h>
 #include "Blu/Events/WindowEvent.h"
-#include "Blu//Scripting/ScriptEngine.h"
-
-
-
-
-
-
+#include "Blu/Scripting/ScriptEngine.h"
 
 namespace Blu
 {
-	static void CheckOpenGLError()
+	static void CheckGraphicsError()
 	{
-		if (RendererAPI::GetAPI() != RendererAPI::API::OpenGL) return;
-		GLenum err;
-		while ((err = glGetError()) != GL_NO_ERROR)
-		{
-			BLU_CORE_ERROR("Error {0}", err);
-		}
+		(void)0;
 	}
 
 	Application* Application::s_Instance = nullptr;
@@ -57,7 +45,7 @@ namespace Blu
 		Renderer::Init();
 		ScriptEngine::Init();
 		PushOverlay(m_ImGuiLayer);
-		CheckOpenGLError();
+		CheckGraphicsError();
 		
 		
 
@@ -66,7 +54,7 @@ namespace Blu
 	Application::~Application()
 	{
 		ScriptEngine::Shutdown();
-		//need Renderer::Shutdown();
+		Renderer::Shutdown();
 	}
 
 	// Push a new layer into the application
@@ -74,7 +62,7 @@ namespace Blu
 	{
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
-		CheckOpenGLError();
+		CheckGraphicsError();
 	}
 
 	// Push a new overlay into the application

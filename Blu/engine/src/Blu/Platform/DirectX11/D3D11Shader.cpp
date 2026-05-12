@@ -256,6 +256,8 @@ namespace Blu
                 if (slot >= m_CBuffers.size())
                     m_CBuffers.resize(slot + 1);
 
+                m_CBufferNameMap[cbDesc.Name] = slot;
+
                 auto& cbBuf = m_CBuffers[slot];
                 if (cbBuf.gpuBuffer) continue;  // Already set up by other stage
 
@@ -289,6 +291,21 @@ namespace Blu
 
         ReflectStage(vsBlob);
         ReflectStage(psBlob);
+    }
+
+    // -----------------------------------------------------------------------
+    // Bulk upload — write the entire shadow buffer of a named cbuffer
+    // -----------------------------------------------------------------------
+    void D3D11Shader::SetUniformBuffer(const std::string& cbufferName, const void* data, uint32_t size)
+    {
+        auto it = m_CBufferNameMap.find(cbufferName);
+        if (it == m_CBufferNameMap.end())
+            return;
+        auto& cb = m_CBuffers[it->second];
+        if (cb.shadow.size() < size)
+            return;
+        memcpy(cb.shadow.data(), data, size);
+        cb.dirty = true;
     }
 
     // -----------------------------------------------------------------------

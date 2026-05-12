@@ -1,6 +1,7 @@
 #include "Blupch.h"
 #include "D3D11RendererAPI.h"
 #include "D3D11Context.h"
+#include "Blu/Rendering/PipelineState.h"
 #include <d3d11.h>
 #include <wrl/client.h>
 
@@ -12,41 +13,10 @@ namespace Blu
         auto* dev = ctx->GetDevice();
         auto* dc  = ctx->GetDeviceContext();
 
-        // Alpha blending
-        D3D11_BLEND_DESC bd                           = {};
-        bd.RenderTarget[0].BlendEnable               = TRUE;
-        bd.RenderTarget[0].SrcBlend                  = D3D11_BLEND_SRC_ALPHA;
-        bd.RenderTarget[0].DestBlend                 = D3D11_BLEND_INV_SRC_ALPHA;
-        bd.RenderTarget[0].BlendOp                   = D3D11_BLEND_OP_ADD;
-        bd.RenderTarget[0].SrcBlendAlpha             = D3D11_BLEND_ONE;
-        bd.RenderTarget[0].DestBlendAlpha            = D3D11_BLEND_ZERO;
-        bd.RenderTarget[0].BlendOpAlpha              = D3D11_BLEND_OP_ADD;
-        bd.RenderTarget[0].RenderTargetWriteMask     = D3D11_COLOR_WRITE_ENABLE_ALL;
-        Microsoft::WRL::ComPtr<ID3D11BlendState> bs;
-        dev->CreateBlendState(&bd, bs.GetAddressOf());
-        dc->OMSetBlendState(bs.Get(), nullptr, 0xFFFFFFFF);
-
-        // Depth test, write enabled, less comparison
-        D3D11_DEPTH_STENCIL_DESC dsd = {};
-        dsd.DepthEnable              = TRUE;
-        dsd.DepthWriteMask           = D3D11_DEPTH_WRITE_MASK_ALL;
-        dsd.DepthFunc                = D3D11_COMPARISON_LESS;
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> dss;
-        dev->CreateDepthStencilState(&dsd, dss.GetAddressOf());
-        dc->OMSetDepthStencilState(dss.Get(), 1);
-
-        // Solid rasteriser, back-face culling.
-        // FrontCounterClockwise = TRUE  matches OpenGL / GLM convention (CCW = front).
-        // The cube mesh and all procedural meshes use CCW winding, so with FALSE the
-        // outer faces are treated as back-faces and culled, showing only the interior.
-        D3D11_RASTERIZER_DESC rsd = {};
-        rsd.FillMode              = D3D11_FILL_SOLID;
-        rsd.CullMode              = D3D11_CULL_BACK;
-        rsd.FrontCounterClockwise = TRUE;
-        rsd.DepthClipEnable       = TRUE;
-        Microsoft::WRL::ComPtr<ID3D11RasterizerState> rs;
-        dev->CreateRasterizerState(&rsd, rs.GetAddressOf());
-        dc->RSSetState(rs.Get());
+        // Rasterizer state is created by D3D11Context::Init() for wireframe toggle.
+        // Use the PipelineStateCache for blend + depth/stencil defaults.
+        auto defaultState = PipelineStateCache::GetOpaque();
+        defaultState->Bind();
     }
 
     void D3D11RendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
@@ -73,8 +43,6 @@ namespace Blu
         const glm::vec4& c = ctx->GetClearColorValue();
         float rgba[4] = { c.r, c.g, c.b, c.a };
 
-        // Query whatever RTVs/DSV are currently bound (works whether we're
-        // rendering to a framebuffer texture or the swap-chain backbuffer).
         ID3D11RenderTargetView* rtvs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT] = {};
         ID3D11DepthStencilView* dsv = nullptr;
         dc->OMGetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, rtvs, &dsv);
@@ -84,7 +52,7 @@ namespace Blu
             if (rtvs[i])
             {
                 dc->ClearRenderTargetView(rtvs[i], rgba);
-                rtvs[i]->Release();   // OMGetRenderTargets adds a ref
+                rtvs[i]->Release();
             }
         }
         if (dsv)
@@ -108,7 +76,6 @@ namespace Blu
         va->Bind();
         dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         dc->Draw(vertexCount, 0);
-        // Restore triangle topology for subsequent draws
         dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 }

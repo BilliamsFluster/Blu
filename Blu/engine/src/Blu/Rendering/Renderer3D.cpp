@@ -16,6 +16,7 @@ namespace Blu
     {
         Shared<Shader> MeshShader;
         glm::mat4      ViewProjectionMatrix = glm::mat4(1.0f);
+        glm::mat4      ViewMatrix           = glm::mat4(1.0f);
         glm::vec3      ViewPos              = glm::vec3(0.0f);
     };
 
@@ -40,12 +41,14 @@ namespace Blu
     void Renderer3D::BeginScene(const EditorCamera& camera)
     {
         s_Data3D->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+        s_Data3D->ViewMatrix           = camera.GetViewMatrix();
         s_Data3D->ViewPos              = camera.GetPosition();
     }
 
     void Renderer3D::BeginScene(const Camera& camera, const glm::mat4& transform)
     {
-        s_Data3D->ViewProjectionMatrix = camera.GetProjectionMatrix() * glm::inverse(transform);
+        s_Data3D->ViewMatrix           = glm::inverse(transform);
+        s_Data3D->ViewProjectionMatrix = camera.GetProjectionMatrix() * s_Data3D->ViewMatrix;
         s_Data3D->ViewPos              = glm::vec3(transform[3]);
     }
 
@@ -54,8 +57,55 @@ namespace Blu
     }
 
     // -------------------------------------------------------------------------
-    // PassLights — upload all three light types to the bound shader.
-    // Works for both DX11 (cbuffer shadow via reflection) and OpenGL (named uniforms).
+    // HLSL cbuffer-padded light structs — matches Renderer3D_Mesh.hlsl exactly.
+    // Each float3 occupies 16 bytes (padded to float4 stride) in a cbuffer.
+    // -------------------------------------------------------------------------
+    struct alignas(16) DirLightGPU
+    {
+        glm::vec3 Direction; float pad0;      // 16 bytes
+        glm::vec3 Ambient;   float Intensity; // 16
+        glm::vec3 Diffuse;   float pad1;      // 16
+        glm::vec3 Specular;  float pad2;      // 16
+        // total: 64
+    };
+
+    struct alignas(16) PointLightGPU
+    {
+        glm::vec3 Position;  float Range;     // 16
+        glm::vec3 Ambient;   float Intensity; // 16
+        glm::vec3 Diffuse;   float pad0;      // 16
+        glm::vec3 Specular;  float pad1;      // 16
+        glm::vec3 Att;       float pad2;      // 16
+        // total: 80
+    };
+
+    struct alignas(16) SpotLightGPU
+    {
+        glm::vec3 Position;     float Range;       // 16
+        glm::vec3 Direction;    float Intensity;   // 16
+        glm::vec3 Ambient;      float pad0;        // 16
+        glm::vec3 Diffuse;      float pad1;        // 16
+        glm::vec3 Specular;     float pad2;        // 16
+        glm::vec3 Att;          float InnerCutoff; // 16
+        float      OuterCutoff; float pad3[3];     // 16
+        // total: 112
+    };
+
+    struct alignas(16) LightDataGPU
+    {
+        DirLightGPU   DirLights[4];   // 256
+        PointLightGPU PointLights[8]; // 640
+        SpotLightGPU  SpotLights[4];  // 448
+        int           NumDirLights;   // 4
+        int           NumPointLights; // 4
+        int           NumSpotLights;  // 4
+        float         PadL;           // 4 → 16
+        // total: 1360
+    };
+    static_assert(sizeof(LightDataGPU) == 1360, "LightDataGPU size must match HLSL cbuffer");
+
+    // -------------------------------------------------------------------------
+    // PassLights — upload all lights as a single cbuffer blob (no string allocs).
     // -------------------------------------------------------------------------
     void Renderer3D::PassLights(
         const std::vector<DirLightData>&   dirLights,
@@ -72,53 +122,52 @@ namespace Blu
         const int np = std::min((int)pointLights.size(), kMaxPoint);
         const int ns = std::min((int)spotLights.size(),  kMaxSpot);
 
-        sh.SetUniformInt   ("u_NumDirLights",   nd);
-        sh.SetUniformInt   ("u_NumPointLights", np);
-        sh.SetUniformInt   ("u_NumSpotLights",  ns);
-        sh.SetUniformFloat3("u_ViewPos", s_Data3D->ViewPos);
+        LightDataGPU gpu = {};
+        gpu.NumDirLights   = nd;
+        gpu.NumPointLights = np;
+        gpu.NumSpotLights  = ns;
 
-        // ── Directional lights ────────────────────────────────────────────────
         for (int i = 0; i < nd; ++i)
         {
-            const std::string p = "u_DirLights[" + std::to_string(i) + "].";
             const auto& L = dirLights[i];
-            sh.SetUniformFloat3(p + "Direction", glm::normalize(L.Direction));
-            sh.SetUniformFloat3(p + "Ambient",   L.Ambient);
-            sh.SetUniformFloat3(p + "Diffuse",   L.Diffuse);
-            sh.SetUniformFloat3(p + "Specular",  L.Specular);
-            sh.SetUniformFloat (p + "Intensity", L.Intensity);
+            gpu.DirLights[i].Direction = glm::normalize(L.Direction);
+            gpu.DirLights[i].Ambient   = L.Ambient   * L.Intensity;
+            gpu.DirLights[i].Diffuse   = L.Diffuse   * L.Intensity;
+            gpu.DirLights[i].Specular  = L.Specular  * L.Intensity;
+            gpu.DirLights[i].Intensity = L.Intensity;
         }
-
-        // ── Point lights ──────────────────────────────────────────────────────
         for (int i = 0; i < np; ++i)
         {
-            const std::string p = "u_PointLights[" + std::to_string(i) + "].";
             const auto& L = pointLights[i];
-            sh.SetUniformFloat3(p + "Position",  L.Position);
-            sh.SetUniformFloat3(p + "Ambient",   L.Ambient);
-            sh.SetUniformFloat3(p + "Diffuse",   L.Diffuse);
-            sh.SetUniformFloat3(p + "Specular",  L.Specular);
-            sh.SetUniformFloat (p + "Intensity", L.Intensity);
-            sh.SetUniformFloat (p + "Range",     L.Range);
-            sh.SetUniformFloat3(p + "Att",       glm::vec3(L.AttConstant, L.AttLinear, L.AttQuadratic));
+            gpu.PointLights[i].Position  = L.Position;
+            gpu.PointLights[i].Ambient   = L.Ambient   * L.Intensity;
+            gpu.PointLights[i].Diffuse   = L.Diffuse   * L.Intensity;
+            gpu.PointLights[i].Specular  = L.Specular  * L.Intensity;
+            gpu.PointLights[i].Intensity = L.Intensity;
+            gpu.PointLights[i].Range     = L.Range;
+            gpu.PointLights[i].Att       = glm::vec3(L.AttConstant, L.AttLinear, L.AttQuadratic);
         }
-
-        // ── Spot lights ───────────────────────────────────────────────────────
         for (int i = 0; i < ns; ++i)
         {
-            const std::string p = "u_SpotLights[" + std::to_string(i) + "].";
             const auto& L = spotLights[i];
-            sh.SetUniformFloat3(p + "Position",      L.Position);
-            sh.SetUniformFloat3(p + "Direction",     glm::normalize(L.Direction));
-            sh.SetUniformFloat3(p + "Ambient",       L.Ambient);
-            sh.SetUniformFloat3(p + "Diffuse",       L.Diffuse);
-            sh.SetUniformFloat3(p + "Specular",      L.Specular);
-            sh.SetUniformFloat (p + "Intensity",     L.Intensity);
-            sh.SetUniformFloat (p + "Range",         L.Range);
-            sh.SetUniformFloat (p + "InnerCutoff",   L.InnerCutoffCos);
-            sh.SetUniformFloat (p + "OuterCutoff",   L.OuterCutoffCos);
-            sh.SetUniformFloat3(p + "Att",           glm::vec3(L.AttConstant, L.AttLinear, L.AttQuadratic));
+            gpu.SpotLights[i].Position     = L.Position;
+            gpu.SpotLights[i].Direction    = glm::normalize(L.Direction);
+            gpu.SpotLights[i].Ambient      = L.Ambient   * L.Intensity;
+            gpu.SpotLights[i].Diffuse      = L.Diffuse   * L.Intensity;
+            gpu.SpotLights[i].Specular     = L.Specular  * L.Intensity;
+            gpu.SpotLights[i].Intensity    = L.Intensity;
+            gpu.SpotLights[i].Range        = L.Range;
+            gpu.SpotLights[i].InnerCutoff  = L.InnerCutoffCos;
+            gpu.SpotLights[i].OuterCutoff  = L.OuterCutoffCos;
+            gpu.SpotLights[i].Att          = glm::vec3(L.AttConstant, L.AttLinear, L.AttQuadratic);
         }
+
+        // Single bulk upload — no string allocations, one memcpy into cbuffer shadow.
+        sh.SetUniformBuffer("LightData", &gpu, sizeof(gpu));
+
+        // View position is a separate PerFrame cbuffer member, still uploaded via
+        // the normal path (single float3, negligible cost).
+        sh.SetUniformFloat3("u_ViewPos", s_Data3D->ViewPos);
     }
 
     void Renderer3D::SetLights(
@@ -156,7 +205,7 @@ namespace Blu
         s_Data3D->MeshShader->SetUniformMat4("u_ViewProjectionMatrix", s_Data3D->ViewProjectionMatrix);
         s_Data3D->MeshShader->SetUniformMat4("u_Model", transform);
 
-        glm::mat3 normalMatrix = glm::mat3(glm::transpose(glm::inverse(transform)));
+        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(transform)));
         if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
         {
             s_Data3D->MeshShader->SetUniformFloat3("u_NormalCol0", normalMatrix[0]);

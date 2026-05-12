@@ -50,7 +50,9 @@ namespace Blu
 	}
 	Shared<Shader> ShaderLibrary::Load(std::string name, const std::string& filepath)
 	{
-		return Shared<Shader>();
+		auto shader = Shader::Create(filepath);
+		Add(name, shader);
+		return shader;
 	}
 	Shared<Shader> ShaderLibrary::Get(const std::string& name)
 	{

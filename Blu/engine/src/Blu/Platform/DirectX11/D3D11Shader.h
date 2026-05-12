@@ -64,6 +64,9 @@ namespace Blu
         void SetUniformDirectionalLight(const std::string&, const struct DirectionalLightComponent&) override {}
         void SetUniformSpotlight       (const std::string&, const struct SpotLightComponent&)    override {}
 
+        // Upload a whole cbuffer shadow blob by cbuffer name (not uniform name).
+        void SetUniformBuffer(const std::string& cbufferName, const void* data, uint32_t size) override;
+
     private:
         void Compile(const std::string& vertexSrc, const std::string& pixelSrc);
         void Reflect(ID3DBlob* vsBlob, ID3DBlob* psBlob);
@@ -88,5 +91,6 @@ namespace Blu
         // Constant buffers indexed by their natural order (slot order from reflection)
         std::vector<D3D11CBuffer>                    m_CBuffers;
         std::unordered_map<std::string, UniformInfo> m_UniformMap;
+        std::unordered_map<std::string, uint32_t>    m_CBufferNameMap;  // cbuffer name → slot index
     };
 }

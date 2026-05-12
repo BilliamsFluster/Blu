@@ -3,7 +3,6 @@
 #include "Window.h"
 #include "Blu/Core/LayerStack.h"
 #include "Blu/Events/EventDispatcher.h"
-#include "Blu/Platform/OpenGL/OpenGLShader.h"
 #include "Blu/Rendering/OrthographicCamera.h"
 #include "Blu/ImGui/ImGuiLayer.h"
 

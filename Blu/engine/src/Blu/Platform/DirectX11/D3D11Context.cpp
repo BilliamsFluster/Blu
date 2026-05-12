@@ -69,11 +69,13 @@ namespace Blu
 
         CreateBackbuffer();
 
-        // Solid-fill rasterizer (default)
+        // Solid-fill rasterizer, back-face culling.
+        // FrontCounterClockwise = TRUE matches OpenGL / GLM convention (CCW = front).
+        // All procedural meshes and cube meshes use CCW winding.
         D3D11_RASTERIZER_DESC rsDesc = {};
         rsDesc.FillMode              = D3D11_FILL_SOLID;
         rsDesc.CullMode              = D3D11_CULL_BACK;
-        rsDesc.FrontCounterClockwise = FALSE;
+        rsDesc.FrontCounterClockwise = TRUE;
         rsDesc.DepthClipEnable       = TRUE;
         m_Device->CreateRasterizerState(&rsDesc, m_RSSolid.GetAddressOf());
 

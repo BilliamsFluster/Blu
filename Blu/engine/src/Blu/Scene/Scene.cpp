@@ -137,7 +137,6 @@ namespace Blu
 			{
 				return Entity{ entity, this };
 			}
-			return {};
 		}
 		return {};
 	}
@@ -360,73 +359,77 @@ namespace Blu
 		m_EntityMap.erase(entity.GetUUID());
 		m_Registry.destroy(entity);
 	}
-	// ─── Helper: collect all lights from the ECS into typed render data ─────────
-	static void GatherLights(entt::registry& reg,
-	    std::vector<DirLightData>&   outDir,
-	    std::vector<PointLightData>& outPoint,
-	    std::vector<SpotLightData>&  outSpot)
-	{
-	    // Directional lights
-	    {
-	        auto view = reg.view<TransformComponent, DirectionalLightComponent>();
-	        for (auto e : view)
-	        {
-	            auto& dlc = view.get<DirectionalLightComponent>(e);
-	            DirLightData d;
-	            d.Direction = glm::normalize(dlc.Direction);
-	            d.Ambient   = dlc.Ambient   * dlc.Intensity;
-	            d.Diffuse   = dlc.Diffuse   * dlc.Intensity;
-	            d.Specular  = dlc.Specular  * dlc.Intensity;
-	            d.Intensity = dlc.Intensity;
-	            outDir.push_back(d);
-	        }
-	    }
-	    // Point lights
-	    {
-	        auto view = reg.view<TransformComponent, PointLightComponent>();
-	        for (auto e : view)
-	        {
-	            auto&& [tc, plc] = view.get<TransformComponent, PointLightComponent>(e);
-	            PointLightData p;
-	            p.Position     = tc.Translation;
-	            p.Ambient      = plc.Ambient   * plc.Intensity;
-	            p.Diffuse      = plc.Diffuse   * plc.Intensity;
-	            p.Specular     = plc.Specular  * plc.Intensity;
-	            p.Intensity    = plc.Intensity;
-	            p.Range        = plc.Range;
-	            p.AttConstant  = plc.AttConstant;
-	            p.AttLinear    = plc.AttLinear;
-	            p.AttQuadratic = plc.AttQuadratic;
-	            outPoint.push_back(p);
-	        }
-	    }
-	    // Spot lights
-	    {
-	        auto view = reg.view<TransformComponent, SpotLightComponent>();
-	        for (auto e : view)
-	        {
-	            auto&& [tc, slc] = view.get<TransformComponent, SpotLightComponent>(e);
-	            SpotLightData s;
-	            s.Position       = tc.Translation;
-	            s.Direction      = glm::normalize(slc.Direction);
-	            s.Ambient        = slc.Ambient  * slc.Intensity;
-	            s.Diffuse        = slc.Diffuse  * slc.Intensity;
-	            s.Specular       = slc.Specular * slc.Intensity;
-	            s.Intensity      = slc.Intensity;
-	            s.Range          = slc.Range;
-	            s.InnerCutoffCos = glm::cos(glm::radians(slc.InnerConeAngle));
-	            s.OuterCutoffCos = glm::cos(glm::radians(slc.OuterConeAngle));
-	            s.AttConstant    = slc.AttConstant;
-	            s.AttLinear      = slc.AttLinear;
-	            s.AttQuadratic   = slc.AttQuadratic;
-	            outSpot.push_back(s);
-	        }
-	    }
-	}
+    // ─── Helper: collect raw light data from the ECS ─────────────────────────--
+    // Intensity is NOT baked into ambient/diffuse/specular here — that happens in
+    // Renderer3D::PassLights during the single cbuffer upload.  Keeping this path
+    // raw avoids double-multiplication and keeps concerns separated.
+    static void GatherLights(entt::registry& reg,
+        std::vector<DirLightData>&   outDir,
+        std::vector<PointLightData>& outPoint,
+        std::vector<SpotLightData>&  outSpot)
+    {
+        // Directional lights
+        {
+            auto view = reg.view<TransformComponent, DirectionalLightComponent>();
+            for (auto e : view)
+            {
+                auto& dlc = view.get<DirectionalLightComponent>(e);
+                DirLightData d;
+                d.Direction = glm::normalize(dlc.Direction);
+                d.Ambient   = dlc.Ambient;
+                d.Diffuse   = dlc.Diffuse;
+                d.Specular  = dlc.Specular;
+                d.Intensity = dlc.Intensity;
+                outDir.push_back(d);
+            }
+        }
+        // Point lights
+        {
+            auto view = reg.view<TransformComponent, PointLightComponent>();
+            for (auto e : view)
+            {
+                auto&& [tc, plc] = view.get<TransformComponent, PointLightComponent>(e);
+                PointLightData p;
+                p.Position     = tc.Translation;
+                p.Ambient      = plc.Ambient;
+                p.Diffuse      = plc.Diffuse;
+                p.Specular     = plc.Specular;
+                p.Intensity    = plc.Intensity;
+                p.Range        = plc.Range;
+                p.AttConstant  = plc.AttConstant;
+                p.AttLinear    = plc.AttLinear;
+                p.AttQuadratic = plc.AttQuadratic;
+                outPoint.push_back(p);
+            }
+        }
+        // Spot lights
+        {
+            auto view = reg.view<TransformComponent, SpotLightComponent>();
+            for (auto e : view)
+            {
+                auto&& [tc, slc] = view.get<TransformComponent, SpotLightComponent>(e);
+                SpotLightData s;
+                s.Position       = tc.Translation;
+                s.Direction      = glm::normalize(slc.Direction);
+                s.Ambient        = slc.Ambient;
+                s.Diffuse        = slc.Diffuse;
+                s.Specular       = slc.Specular;
+                s.Intensity      = slc.Intensity;
+                s.Range          = slc.Range;
+                s.InnerCutoffCos = glm::cos(glm::radians(slc.InnerConeAngle));
+                s.OuterCutoffCos = glm::cos(glm::radians(slc.OuterConeAngle));
+                s.AttConstant    = slc.AttConstant;
+                s.AttLinear      = slc.AttLinear;
+                s.AttQuadratic   = slc.AttQuadratic;
+                outSpot.push_back(s);
+            }
+        }
+    }
 
-	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
+	// ─── Shared render helpers ──────────────────────────────────────────────────
+
+	void Scene::Render2DPass(EditorCamera& camera, Timestep deltaTime)
 	{
-		// 2D pass
 		Renderer2D::BeginScene(camera);
 		{
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
@@ -453,35 +456,91 @@ namespace Blu
 			}
 		}
 		Renderer2D::EndScene();
+	}
 
-		// 3D pass
+	void Scene::Render2DPass(Camera& camera, const glm::mat4& transform, Timestep deltaTime, bool updateParticles)
+	{
+		Renderer2D::BeginScene(camera.GetProjectionMatrix(), transform);
+		if (updateParticles)
 		{
-			std::vector<DirLightData>   dirLights;
-			std::vector<PointLightData> pointLights;
-			std::vector<SpotLightData>  spotLights;
-			GatherLights(m_Registry, dirLights, pointLights, spotLights);
-
-			Renderer3D::BeginScene(camera);
-			Renderer3D::SetLights(dirLights, pointLights, spotLights);
+			auto particleView = m_Registry.view<ParticleSystemComponent>();
+			for (auto& entity : particleView)
 			{
-				auto view = m_Registry.view<TransformComponent, MeshComponent>();
-				for (auto& entity : view)
-				{
-					auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
-					Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
-				}
+				auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+				particleSystem.Update(deltaTime);
 			}
-			Renderer3D::EndScene();
 		}
+		{
+			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			for (auto& entity : group)
+			{
+				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+			}
+		}
+		{
+			auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+			for (auto& entity : view)
+			{
+				auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+				Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+			}
+		}
+		Renderer2D::EndScene();
+	}
+
+	void Scene::Render3DPass(EditorCamera& camera)
+	{
+		std::vector<DirLightData>   dirLights;
+		std::vector<PointLightData> pointLights;
+		std::vector<SpotLightData>  spotLights;
+		GatherLights(m_Registry, dirLights, pointLights, spotLights);
+
+		Renderer3D::BeginScene(camera);
+		Renderer3D::SetLights(dirLights, pointLights, spotLights);
+		{
+			auto view = m_Registry.view<TransformComponent, MeshComponent>();
+			for (auto& entity : view)
+			{
+				auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+				Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+			}
+		}
+		Renderer3D::EndScene();
+	}
+
+	void Scene::Render3DPass(Camera& camera, const glm::mat4& transform)
+	{
+		std::vector<DirLightData>   dirLights;
+		std::vector<PointLightData> pointLights;
+		std::vector<SpotLightData>  spotLights;
+		GatherLights(m_Registry, dirLights, pointLights, spotLights);
+
+		Renderer3D::BeginScene(camera, transform);
+		Renderer3D::SetLights(dirLights, pointLights, spotLights);
+		{
+			auto view = m_Registry.view<TransformComponent, MeshComponent>();
+			for (auto& entity : view)
+			{
+				auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+				Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+			}
+		}
+		Renderer3D::EndScene();
+	}
+
+	// ─── Update entry points ───────────────────────────────────────────────────
+
+	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
+	{
+		Render2DPass(camera, deltaTime);
+		Render3DPass(camera);
 	}
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
-		
-		
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{
-					
 					if (!nsc.Instance)
 					{
 						nsc.Instance = nsc.InstantiateScript();
@@ -490,8 +549,7 @@ namespace Blu
 					}
 					if (nsc.Instance)
 					{
-						nsc.Instance->OnUpdate(deltaTime);	
-
+						nsc.Instance->OnUpdate(deltaTime);
 					}
 				});
 		}
@@ -502,7 +560,6 @@ namespace Blu
 
 			m_PhysicsWorld->Step(deltaTime, velocityIterations, positionIterations);
 			OnScriptSystemUpdate(deltaTime);
-			//retrieve transform form box 2d, the goal is to update the transform to the rigidbody component's transform
 			auto view = m_Registry.view<Rigidbody2DComponent>();
 			for (auto e : view)
 			{
@@ -514,12 +571,9 @@ namespace Blu
 				const auto& position = body->GetPosition();
 				transform.Translation.x = position.x;
 				transform.Translation.y = position.y;
-
 				transform.Rotation.z = body->GetAngle();
 			}
 		}
-		
-			
 
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
@@ -533,67 +587,12 @@ namespace Blu
 				cameraTransform = transform.GetTransform();
 				break;
 			}
-
 		}
 		if (mainCamera)
 		{
-			
-
-			Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), cameraTransform);
-			// Update particle systems
-			
-			
-			{
-				auto particleView = m_Registry.view<ParticleSystemComponent>();
-				for (auto& entity : particleView)
-				{
-					auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-					particleSystem.Update(deltaTime);
-
-
-				}
-			}
-			
-			{
-				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-				for (auto& entity : group)
-				{
-					auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-					Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-				}
-			}
-			{
-				auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
-				for (auto& entity : view)
-				{
-					auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
-					Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
-				}
-			}
-
-			Renderer2D::EndScene();
-
-			// 3D pass
-			{
-				std::vector<DirLightData>   dirLights;
-				std::vector<PointLightData> pointLights;
-				std::vector<SpotLightData>  spotLights;
-				GatherLights(m_Registry, dirLights, pointLights, spotLights);
-
-				Renderer3D::BeginScene(*mainCamera, cameraTransform);
-				Renderer3D::SetLights(dirLights, pointLights, spotLights);
-				{
-					auto meshView = m_Registry.view<TransformComponent, MeshComponent>();
-					for (auto& e : meshView)
-					{
-						auto [transform, mesh] = meshView.get<TransformComponent, MeshComponent>(e);
-						Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)e);
-					}
-				}
-				Renderer3D::EndScene();
-			}
+			Render2DPass(*mainCamera, cameraTransform, deltaTime, true);
+			Render3DPass(*mainCamera, cameraTransform);
 		}
-
 	}
 	void Scene::OnUpdatePaused(Timestep deltaTime)
 	{
@@ -609,55 +608,11 @@ namespace Blu
 				cameraTransform = transform.GetTransform();
 				break;
 			}
-
 		}
-
 		if (mainCamera)
 		{
-
-
-			Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), cameraTransform);
-			//Pause Everything
-			{
-				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-				for (auto& entity : group)
-				{
-					auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-					Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-				}
-			}
-			{
-				auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
-				for (auto& entity : view)
-				{
-					auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
-					Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
-				}
-			}
-
-
-
-			Renderer2D::EndScene();
-
-			// 3D pass
-			{
-				std::vector<DirLightData>   dirLights;
-				std::vector<PointLightData> pointLights;
-				std::vector<SpotLightData>  spotLights;
-				GatherLights(m_Registry, dirLights, pointLights, spotLights);
-
-				Renderer3D::BeginScene(*mainCamera, cameraTransform);
-				Renderer3D::SetLights(dirLights, pointLights, spotLights);
-				{
-					auto meshView = m_Registry.view<TransformComponent, MeshComponent>();
-					for (auto& e : meshView)
-					{
-						auto [transform, mesh] = meshView.get<TransformComponent, MeshComponent>(e);
-						Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)e);
-					}
-				}
-				Renderer3D::EndScene();
-			}
+			Render2DPass(*mainCamera, cameraTransform, deltaTime, false);
+			Render3DPass(*mainCamera, cameraTransform);
 		}
 	}
 	void Scene::OnSceneStep(int frames)

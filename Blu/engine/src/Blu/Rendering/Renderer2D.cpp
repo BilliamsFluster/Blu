@@ -2,9 +2,7 @@
 #include "Blu.h"
 #include "Renderer2D.h"
 #include "Blu/Core/Core.h"
-#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Blu/Platform/OpenGL/OpenGLBuffer.h"
 #include "Blu/Utils/Helpers.h"
 #include "Blu/LightSystem/LightManager.h"	
 
@@ -180,6 +178,17 @@ namespace Blu
 	}
 	void Renderer2D::Shutdown()
 	{
+		delete[] s_RendererData->QuadVertexBufferBase;
+		s_RendererData->QuadVertexBufferBase = nullptr;
+		s_RendererData->QuadVertexBufferPtr = nullptr;
+
+		delete[] s_RendererData->CircleVertexBufferBase;
+		s_RendererData->CircleVertexBufferBase = nullptr;
+		s_RendererData->CircleVertexBufferPtr = nullptr;
+
+		delete[] s_RendererData->LineVertexBufferBase;
+		s_RendererData->LineVertexBufferBase = nullptr;
+		s_RendererData->LineVertexBufferPtr = nullptr;
 	}
 
 	// Begin rendering the scene with a given camera
@@ -330,11 +339,19 @@ namespace Blu
 	{
 		BLU_PROFILE_FUNCTION();
 		uint32_t dataSize = (uint8_t*)s_RendererData->QuadVertexBufferPtr - (uint8_t*)s_RendererData->QuadVertexBufferBase;
-		s_RendererData->QuadVertexBuffer->SetData(s_RendererData->QuadVertexBufferBase, dataSize);
-		FlushQuad();
-		FlushCircle();
-		FlushLines();
-
+		if (dataSize > 0)
+		{
+			s_RendererData->QuadVertexBuffer->SetData(s_RendererData->QuadVertexBufferBase, dataSize);
+			FlushQuad();
+		}
+		if (s_RendererData->CircleIndexCount > 0)
+		{
+			FlushCircle();
+		}
+		if (s_RendererData->LineVertexCount > 0)
+		{
+			FlushLines();
+		}
 	}
 	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color, const float rotation)
 	{
@@ -362,15 +379,14 @@ namespace Blu
 	}
 	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
 	{
-		if (src.MaterialInstance)
+		if (src.MaterialInstance && src.MaterialInstance->AlbedoMap)
 		{
-			if(src.MaterialInstance->AlbedoMap)
-				DrawTexturedQuad(transform, src.MaterialInstance->AlbedoMap, src.Color, entityID);
-			PassMaterialPropertiesToShader(src.MaterialInstance);
+			DrawTexturedQuad(transform, src.MaterialInstance->AlbedoMap, src.Color, entityID);
 		}
-		
-		DrawQuad(transform, src.Color, entityID);
-
+		else
+		{
+			DrawQuad(transform, src.Color, entityID);
+		}
 	}
 	void Renderer2D::PassMaterialPropertiesToShader(Shared<Material> materialInstance)
 	{

@@ -27,6 +27,7 @@ namespace Blu
 		m_PerspectiveFOV = fov;
 		m_PerspectiveNear = nearClip;
 		m_PerspectiveFar = farClip;
+		RecalculateProjection();
 	}
 
 	void SceneCamera::SetViewportSize(uint32_t width, uint32_t height)

@@ -67,6 +67,11 @@ namespace Blu
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
 	private:
+		void Render2DPass(class EditorCamera& camera, Timestep deltaTime);
+		void Render2DPass(Camera& camera, const glm::mat4& transform, Timestep deltaTime, bool updateParticles);
+		void Render3DPass(class EditorCamera& camera);
+		void Render3DPass(Camera& camera, const glm::mat4& transform);
+
 		bool m_ScenePaused = false;
 		int m_StepFrames = 0;
 	};

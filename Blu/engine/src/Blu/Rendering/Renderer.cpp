@@ -24,12 +24,23 @@ namespace Blu
 		Renderer2D::Init();
 		Renderer3D::Init();
 	}
+
+	void Renderer::Shutdown()
+	{
+		BLU_PROFILE_FUNCTION();
+
+		Renderer3D::Shutdown();
+		Renderer2D::Shutdown();
+		delete m_SceneData;
+		m_SceneData = nullptr;
+		delete m_ShaderLibrary;
+		m_ShaderLibrary = nullptr;
+	}
 	void Renderer::Submit(const Shared<VertexArray>& vertexArray, const Shared<Shader>& shader, const glm::mat4& transform)
 	{
 		shader->Bind();
-		// wouldnt cast with multiple API's its ok for only one atm
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->SetUniformMat4("u_ViewProjectionMatrix", m_SceneData->ViewProjectionMatrix);
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->SetUniformMat4("u_Transform", transform); // aka model matrix
+		shader->SetUniformMat4("u_ViewProjectionMatrix", m_SceneData->ViewProjectionMatrix);
+		shader->SetUniformMat4("u_Transform", transform);
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);

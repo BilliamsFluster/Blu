@@ -100,7 +100,9 @@ project "Blu"
 		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_dx11.h",
 		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_dx11.cpp",
 		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_glfw.h",
-		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_glfw.cpp"
+		"%{prj.name}/engine/ExternalDependencies/imgui/backends/imgui_impl_glfw.cpp",
+		"%{prj.name}/engine/src/Blu/Platform/DirectX11/D3D11PipelineState.h",
+		"%{prj.name}/engine/src/Blu/Platform/DirectX11/D3D11PipelineState.cpp"
 	}   
 
 	includedirs

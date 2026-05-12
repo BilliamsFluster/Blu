@@ -29,7 +29,11 @@ namespace Blu
 		virtual void SetUniformPointLight(const std::string& name, const struct PointLightComponent& light) = 0;
 		virtual void SetUniformDirectionalLight(const std::string& name, const struct DirectionalLightComponent& light) = 0;
 		virtual void SetUniformSpotlight(const std::string& name, const struct SpotLightComponent& light) = 0;
-	
+
+		// Bulk-upload a constant buffer by name (D3D11: uploads entire cbuffer shadow;
+		// OpenGL: no-op since GL doesn't map cbuffers the same way).
+		virtual void SetUniformBuffer(const std::string& cbufferName, const void* data, uint32_t size) {}
+
 		virtual void Bind()   const = 0;
 		virtual void UnBind() const = 0;
 		// Flush any pending uniform data to the GPU (no-op for OpenGL)
