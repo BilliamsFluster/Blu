@@ -19,3 +19,6 @@
 [submodule "Blu/engine/ExternalDependencies/box2d"]
 	path = Blu/engine/ExternalDependencies/box2d
 	url = https://github.com/BilliamsFluster/box2d
+[submodule "Blu/engine/ExternalDependencies/assimp"]
+	path = Blu/engine/ExternalDependencies/assimp
+	url = https://github.com/BilliamsFluster/AssimpPremake.git

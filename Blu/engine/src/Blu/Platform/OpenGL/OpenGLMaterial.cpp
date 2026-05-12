@@ -16,8 +16,8 @@ namespace Blu
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 	OpenGLMaterial::OpenGLMaterial()
+		: m_Shader(nullptr), m_RendererID(0)
 	{
-		glDeleteBuffers(1, &m_RendererID);
 	}
 	
 	

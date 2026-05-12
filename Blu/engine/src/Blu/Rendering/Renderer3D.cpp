@@ -132,23 +132,33 @@ namespace Blu
         s_Data3D->MeshShader->UnBind();
     }
 
+    static void UploadSubMesh(SubMesh& submesh)
+    {
+        submesh.VAO = VertexArray::Create();
+        Shared<VertexBuffer> vb = VertexBuffer::Create((uint32_t)(submesh.Vertices.size() * sizeof(MeshVertex)));
+        vb->SetData(submesh.Vertices.data(), (uint32_t)(submesh.Vertices.size() * sizeof(MeshVertex)));
+        BufferLayout layout = {
+            { ShaderDataType::Float3, "a_Position" },
+            { ShaderDataType::Float3, "a_Normal" },
+            { ShaderDataType::Float2, "a_TexCoord" },
+        };
+        vb->SetLayout(layout);
+        submesh.VAO->AddVertexBuffer(vb);
+        Shared<IndexBuffer> ib = IndexBuffer::Create(submesh.Indices.data(), (uint32_t)submesh.Indices.size());
+        submesh.VAO->AddIndexBuffer(ib);
+    }
+
     void Renderer3D::DrawMesh(const glm::mat4& transform, MeshComponent& mc, int entityID)
     {
-        if (!mc.MeshData) return;
+        if (!mc.MeshData && !mc.ModelAsset) return;
 
         s_Data3D->MeshShader->Bind();
         s_Data3D->MeshShader->SetUniformMat4("u_ViewProjectionMatrix", s_Data3D->ViewProjectionMatrix);
         s_Data3D->MeshShader->SetUniformMat4("u_Model", transform);
 
-        // Normal matrix (handles non-uniform scaling correctly).
-        // DX11: float3x3 in a cbuffer packs each column as float4 (16 bytes), so a
-        //       raw GLM mat3 memcpy (36 bytes) corrupts columns 1 and 2.
-        //       Fix: upload each column as a separate float3 named uniform.
-        // OpenGL: glUniformMatrix3fv is fine; keep the existing SetUniformMat3 path.
         glm::mat3 normalMatrix = glm::mat3(glm::transpose(glm::inverse(transform)));
         if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
         {
-            // GLM is column-major: mat[col][row]
             s_Data3D->MeshShader->SetUniformFloat3("u_NormalCol0", normalMatrix[0]);
             s_Data3D->MeshShader->SetUniformFloat3("u_NormalCol1", normalMatrix[1]);
             s_Data3D->MeshShader->SetUniformFloat3("u_NormalCol2", normalMatrix[2]);
@@ -175,12 +185,51 @@ namespace Blu
 
         s_Data3D->MeshShader->SetUniformInt("u_EntityID", entityID);
 
-        // Upload all dirty cbuffers to the GPU (no-op on OpenGL)
+        // Upload all per-object uniforms once
         s_Data3D->MeshShader->Flush();
 
-        mc.MeshData->GetVertexArray()->Bind();
-        RenderCommand::DrawIndexed(mc.MeshData->GetVertexArray(), mc.MeshData->GetIndexCount());
-        mc.MeshData->GetVertexArray()->UnBind();
+        if (mc.ModelAsset)
+        {
+            for (auto& submesh : mc.ModelAsset->Meshes)
+            {
+                if (!submesh.VAO)
+                    UploadSubMesh(submesh);
+
+                bool hasAlbedo = false;
+                if (submesh.MaterialIndex >= 0 && submesh.MaterialIndex < (int)mc.ModelAsset->Materials.size())
+                {
+                    auto& mat = mc.ModelAsset->Materials[submesh.MaterialIndex];
+                    if (mat && mat->AlbedoMap)
+                    {
+                        mat->AlbedoMap->Bind(0);
+                        s_Data3D->MeshShader->SetUniformInt("u_AlbedoTexture", 0);
+                        hasAlbedo = true;
+                    }
+                }
+                // Update texture flag per-submesh and upload before draw
+                s_Data3D->MeshShader->SetUniformInt("u_HasAlbedoTexture", hasAlbedo ? 1 : 0);
+                s_Data3D->MeshShader->Flush();
+
+                submesh.VAO->Bind();
+                RenderCommand::DrawIndexed(submesh.VAO, (uint32_t)submesh.Indices.size());
+                submesh.VAO->UnBind();
+            }
+        }
+        else if (mc.MeshData)
+        {
+            bool hasAlbedo = mc.MaterialInstance && mc.MaterialInstance->AlbedoMap;
+            if (hasAlbedo)
+            {
+                mc.MaterialInstance->AlbedoMap->Bind(0);
+                s_Data3D->MeshShader->SetUniformInt("u_AlbedoTexture", 0);
+            }
+            s_Data3D->MeshShader->SetUniformInt("u_HasAlbedoTexture", hasAlbedo ? 1 : 0);
+            s_Data3D->MeshShader->Flush();
+
+            mc.MeshData->GetVertexArray()->Bind();
+            RenderCommand::DrawIndexed(mc.MeshData->GetVertexArray(), mc.MeshData->GetIndexCount());
+            mc.MeshData->GetVertexArray()->UnBind();
+        }
 
         s_Data3D->MeshShader->UnBind();
     }

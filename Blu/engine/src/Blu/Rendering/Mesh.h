@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
+#include <string>
 #include "Blu/Core/Core.h"
 #include "Buffer.h"
 #include "VertexArray.h"
@@ -12,6 +13,28 @@ namespace Blu
         glm::vec3 Position;
         glm::vec3 Normal;
         glm::vec2 TexCoord;
+    };
+
+    struct MeshVertex
+    {
+        glm::vec3 Position;
+        glm::vec3 Normal;
+        glm::vec2 TexCoord;
+    };
+
+    struct SubMesh
+    {
+        std::vector<MeshVertex>  Vertices;
+        std::vector<uint32_t>    Indices;
+        int                      MaterialIndex = -1;
+        Shared<VertexArray>      VAO;
+    };
+
+    struct Model
+    {
+        std::vector<SubMesh>     Meshes;
+        std::vector<Shared<class Material>> Materials;
+        std::string              FilePath;
     };
 
     class Mesh

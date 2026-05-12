@@ -115,6 +115,8 @@ namespace Blu
 	{
 		Shared<class Mesh> MeshData;
 		Shared<class Material> MaterialInstance;
+		Shared<Model> ModelAsset;
+		std::string FilePath;
 
 		MeshComponent() = default;
 		MeshComponent(const MeshComponent&) = default;

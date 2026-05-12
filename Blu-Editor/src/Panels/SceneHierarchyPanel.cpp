@@ -1040,14 +1040,22 @@ namespace Blu
 
 		DrawComponent<MeshComponent>("Mesh Renderer", entity, [](auto& component)
 			{
-				static const char* meshTypes[] = { "Cube", "Quad" };
-				static int currentMeshType = 0;
-				if (ImGui::Combo("Mesh Type", &currentMeshType, meshTypes, IM_ARRAYSIZE(meshTypes)))
+				if (component.ModelAsset)
 				{
-					if (currentMeshType == 0)
-						component.MeshData = Mesh::CreateCube();
-					else
-						component.MeshData = Mesh::CreateQuad();
+					ImGui::Text("Model: %s", component.FilePath.c_str());
+					ImGui::Text("SubMeshes: %zu", component.ModelAsset->Meshes.size());
+				}
+				else
+				{
+					static const char* meshTypes[] = { "Cube", "Quad" };
+					static int currentMeshType = 0;
+					if (ImGui::Combo("Mesh Type", &currentMeshType, meshTypes, IM_ARRAYSIZE(meshTypes)))
+					{
+						if (currentMeshType == 0)
+							component.MeshData = Mesh::CreateCube();
+						else
+							component.MeshData = Mesh::CreateQuad();
+					}
 				}
 
 				if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))

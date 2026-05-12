@@ -13,6 +13,7 @@ cbuffer PerFrame : register(b0)
 {
     float4x4 u_ViewProjectionMatrix;
     float3   u_ViewPos;
+    int      u_HasAlbedoTexture;
     float    _pad0;
 };
 
@@ -94,6 +95,9 @@ cbuffer LightData : register(b3)
     int  u_NumSpotLights;
     float _padL;
 };
+
+Texture2D    u_AlbedoTexture : register(t0);
+SamplerState u_AlbedoSampler : register(s0);
 
 // =============================================================================
 // Vertex shader
@@ -237,6 +241,12 @@ PS_OUT main(PS_IN IN)
     for (int i = 0; i < u_NumDirLights;   ++i) result += CalcDirLight  (u_DirLights[i],   N, V);
     for (int i = 0; i < u_NumPointLights; ++i) result += CalcPointLight(u_PointLights[i], N, IN.FragPos, V);
     for (int i = 0; i < u_NumSpotLights;  ++i) result += CalcSpotLight (u_SpotLights[i],  N, IN.FragPos, V);
+
+    if (u_HasAlbedoTexture)
+    {
+        float4 texColor = u_AlbedoTexture.Sample(u_AlbedoSampler, IN.TexCoord);
+        result *= texColor.rgb;
+    }
 
     OUT.Color    = float4(result, 1.0f);
     OUT.EntityID = u_EntityID;

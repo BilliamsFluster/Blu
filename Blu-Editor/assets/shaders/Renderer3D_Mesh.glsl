@@ -87,6 +87,8 @@ uniform int  u_NumPointLights;
 uniform int  u_NumSpotLights;
 uniform vec3 u_ViewPos;
 uniform int  u_EntityID;
+uniform sampler2D u_AlbedoTexture;
+uniform bool     u_HasAlbedoTexture;
 
 // ---- outputs ---------------------------------------------------------------
 layout(location = 0) out vec4 o_Color;
@@ -182,6 +184,13 @@ void main()
 
     for (int i = 0; i < u_NumSpotLights  && i < MAX_SPOT_LIGHTS;  ++i)
         result += CalcSpotLight(u_SpotLights[i], N, v_FragPos, V);
+
+    // Sample albedo texture if available and multiply with diffuse result
+    if (u_HasAlbedoTexture)
+    {
+        vec4 texColor = texture(u_AlbedoTexture, v_TexCoord);
+        result *= texColor.rgb;
+    }
 
     o_Color    = vec4(result, 1.0);
     o_EntityID = u_EntityID;

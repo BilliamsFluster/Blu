@@ -17,6 +17,7 @@
 #include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/Utils/Helpers.h"
 #include "Blu/Rendering/RendererAPI.h"
+#include "Blu/Rendering/ModelLoader.h"
 // D3D11Context.h already pulls in <d3d11.h> — include it last so Windows headers
 // don't stomp on the glad/GLFW type definitions established above.
 #include "Blu/Platform/DirectX11/D3D11Context.h"
@@ -1632,11 +1633,27 @@ namespace Blu
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
-				OpenScene(payloadPath);
-				m_ActiveScene->SetSceneFilePath(payloadPath);
-				SceneSerializer serializer(m_EditorScene);
-				serializer.SerializeLoadedScene(payloadPath.string());
+				std::string ext = payloadPath.extension().string();
+				std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
+				static const std::unordered_set<std::string> s_ModelExtensions = {
+					".fbx", ".obj", ".gltf", ".glb", ".dae", ".3ds", ".blend", ".ply"
+				};
+
+				if (s_ModelExtensions.count(ext))
+				{
+					Entity modelEntity = m_ActiveScene->CreateEntity(payloadPath.stem().string());
+					auto& mc = modelEntity.AddComponent<MeshComponent>();
+					mc.ModelAsset = ModelLoader::Load(payloadPath.string());
+					mc.FilePath = payloadPath.string();
+				}
+				else
+				{
+					OpenScene(payloadPath);
+					m_ActiveScene->SetSceneFilePath(payloadPath);
+					SceneSerializer serializer(m_EditorScene);
+					serializer.SerializeLoadedScene(payloadPath.string());
+				}
 			}
 			ImGui::EndDragDropTarget();
 		}

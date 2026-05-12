@@ -22,6 +22,7 @@ workspace "Blu"
 	IncludeDir["ImGuizmo"] =	"$(SolutionDir)/Blu/engine/ExternalDependencies/ImGuizmo"
 	IncludeDir["box2d"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/box2d/include"
 	IncludeDir["mono"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/mono/include"
+	IncludeDir["assimp"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/assimp/include"
 
 
 	LibraryDir = {}
@@ -56,6 +57,7 @@ group"Dependencies"
 	include "Blu/engine/ExternalDependencies/imgui"
 	include "Blu/engine/ExternalDependencies/yaml"
 	include "Blu/engine/ExternalDependencies/box2d"
+	include "Blu/engine/ExternalDependencies/assimp"
 -- Setup multiple premake files per directory so we can include them in here
 group "Core"
 	--include "Blu"
@@ -116,8 +118,7 @@ project "Blu"
 		"%{IncludeDir.yaml}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.box2d}",
-
-
+		"%{IncludeDir.assimp}",
 
 
 
@@ -132,6 +133,7 @@ project "Blu"
 		"yaml",
 		"dwmapi",
 		"box2d",
+		"assimp",
 		"%{Library.mono}",
 		-- DirectX 11
 		"d3d11",
@@ -168,6 +170,7 @@ project "Blu"
 			"GLFW_INCLUDE_NONE",
 			"NOMINMAX",
 			"IMGUI_DEFINE_MATH_OPERATORS",
+			"ASSIMP_BUILD_NO_EXPORT",
 			--"BLU_ENABLE_ASSERTS"
 		}
 
@@ -314,14 +317,14 @@ project "Blu-Editor"
 		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml}",
-		"%{IncludeDir.ImGuizmo}"
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.assimp}"
 
 
 
 
 
-		
-		
+
 	}
 	
 	links
@@ -330,7 +333,8 @@ project "Blu-Editor"
 		"ImGui",
 		"GLFW",
 		"yaml",
-		"Glad"
+		"Glad",
+		"assimp"
 
 
 	}
@@ -342,7 +346,8 @@ project "Blu-Editor"
 		defines
 		{
 			"BLU_PLATFORM_WINDOWS",
-			"_CRT_SECURE_NO_WARNINGS"
+			"_CRT_SECURE_NO_WARNINGS",
+			"ASSIMP_BUILD_NO_EXPORT"
 
 		}
 
