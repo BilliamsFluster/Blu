@@ -14,10 +14,18 @@
 #include "Blu/Math/Math.h"
 #include "Blu/Core/Application.h"
 #include "Blu/Platform/Windows/WindowsWindow.h"
-#include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/Utils/Helpers.h"
 #include "Blu/Rendering/RendererAPI.h"
 #include "Blu/Rendering/ModelLoader.h"
+#include "Blu/Rendering/Mesh.h"
+#include "Blu/Rendering/PostProcess.h"
+#include "Blu/Rendering/Terrain.h"
+#include "Blu/Rendering/Skybox.h"
+#include "Blu/Rendering/IBLSystem.h"
+#include "Blu/Rendering/Renderer3D.h"
+#include "Blu/Core/InputMap.h"
+#include "Blu/Audio/AudioEngine.h"
+#include "FreeFlyCamera.h"
 // D3D11Context.h already pulls in <d3d11.h> — include it last so Windows headers
 // don't stomp on the glad/GLFW type definitions established above.
 #include "Blu/Platform/DirectX11/D3D11Context.h"
@@ -247,11 +255,14 @@ namespace Blu
 		Renderer2D::ResetStats();
 		{
 			BLU_PROFILE_SCOPE("Renderer2D::ResetStats: ");
+			// Clear entity ID (UAV clear) BEFORE binding the framebuffer as RTV.
+			// ClearUnorderedAccessViewUint requires the resource NOT be simultaneously
+			// bound as an RTV — binding first then clearing silently unbinds the RTV
+			// at slot 1, causing SV_Target1 writes to go nowhere (entityID always -1).
+			m_FrameBuffer->ClearAttachment(1, -1);
 			m_FrameBuffer->Bind();
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
-
-			m_FrameBuffer->ClearAttachment(1, -1);
 		}
 
 		BLU_PROFILE_FUNCTION();
@@ -299,26 +310,46 @@ namespace Blu
 			}
 		}
 		
-		/* Clicking Functionality*/
-		// Get the mouse cursor position in screen coordinates
-		auto [mx, my] = ImGui::GetMousePos();
+		// ---- Deferred entity pick --------------------------------------------------
+		// OnMouseButtonPressed only sets m_PendingEntityPick. We do the actual
+		// ReadPixel here, after the scene has rendered to m_FrameBuffer this frame,
+		// so the pixel data is current and the OS cursor position is accurate.
+		if (m_PendingEntityPick && m_SceneState == SceneState::Edit)
+		{
+			m_PendingEntityPick = false;
 
-		// Adjust for the viewport position
+			auto [rawX, rawY] = Input::GetMousePosition();
+			float pickX = rawX - m_ViewportBounds[0].x;
+			float pickY = rawY - m_ViewportBounds[0].y;
+
+			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+				pickY = (m_ViewportBounds[1].y - m_ViewportBounds[0].y) - pickY;
+
+			if (pickX >= 0.f && pickY >= 0.f &&
+				pickX < m_ViewportSize.x && pickY < m_ViewportSize.y)
+			{
+				int entityID = m_FrameBuffer->ReadPixel(1, (int)pickX, (int)pickY);
+				if (entityID == -1)
+				{
+					m_SceneHierarchyPanel->SetSelectedEntity({});
+				}
+				else
+				{
+					Entity candidate{ (entt::entity)entityID, m_ActiveScene.get() };
+					if (candidate.HasComponent<IDComponent>())
+						m_SceneHierarchyPanel->SetSelectedEntity(candidate);
+				}
+			}
+		}
+
+		// Track mouse position for other systems (gizmos, overlay, etc.)
+		auto [mx, my] = Input::GetMousePosition();
 		mx -= m_ViewportBounds[0].x;
 		my -= m_ViewportBounds[0].y;
-
-		// DX11 render targets are stored top-down: screen Y == framebuffer row, no flip needed.
-		// OpenGL framebuffers are stored bottom-up: flip Y so row 0 maps to the bottom of the viewport.
-		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-			my = viewportSize.y - my - m_ViewportOffset.y;
-		float mouseX = (float)mx;
-		float mouseY = (float)my;
-		m_MousePosX = mouseX;
-		m_MousePosY = mouseY;
-
-		// m_DrawnEntityID is only needed on left-click (entity selection).
-		// ReadPixel is a synchronous GPU stall — do NOT call it every frame.
+			my = (m_ViewportBounds[1].y - m_ViewportBounds[0].y) - my;
+		m_MousePosX = (float)mx;
+		m_MousePosY = (float)my;
 
 
 
@@ -708,6 +739,145 @@ namespace Blu
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
+	void BluEditorLayer::CreatePhysicsDemoScene()
+	{
+		if (m_SceneState != SceneState::Edit)
+			OnSceneStop();
+
+		m_ActiveScene = std::make_shared<Scene>();
+		m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+
+		// ── Directional sun light ────────────────────────────────────────────
+		{
+			auto sun = m_ActiveScene->CreateEntity("Sun");
+			sun.GetComponent<TransformComponent>().Rotation =
+				glm::vec3(glm::radians(-45.0f), glm::radians(30.0f), 0.0f);
+			auto& dl = sun.AddComponent<DirectionalLightComponent>();
+			dl.Diffuse    = glm::vec3(1.0f, 0.95f, 0.85f);
+			dl.Ambient    = glm::vec3(0.08f, 0.08f, 0.10f);
+			dl.Specular   = glm::vec3(0.6f);
+			dl.Intensity  = 1.2f;
+			dl.Direction  = glm::normalize(glm::vec3(0.3f, -1.0f, 0.5f));
+		}
+
+		// ── Ground plane (static physics box + visible cube) ─────────────────
+		{
+			auto ground = m_ActiveScene->CreateEntity("Ground");
+			auto& tc = ground.GetComponent<TransformComponent>();
+			tc.Translation = { 0.0f, -0.5f, 0.0f };
+			tc.Scale       = { 50.0f, 1.0f, 50.0f };
+
+			auto& mc = ground.AddComponent<MeshComponent>();
+			mc.MeshData = Mesh::CreateCube();
+			mc.MaterialInstance = Material::Create();
+			mc.MaterialInstance->AlbedoColor = glm::vec4(0.45f, 0.42f, 0.40f, 1.0f);
+			mc.MaterialInstance->Roughness   = 0.85f;
+			mc.MaterialInstance->Metallic    = 0.0f;
+
+			auto& rb = ground.AddComponent<Rigidbody3DComponent>();
+			rb.Type = Rigidbody3DComponent::BodyType::Static;
+
+			auto& bc = ground.AddComponent<BoxCollider3DComponent>();
+			bc.HalfExtents = { 25.0f, 0.5f, 25.0f };
+			bc.Friction    = 0.7f;
+		}
+
+		// ── Camera with free-fly NativeScript ───────────────────────────────
+		{
+			auto cam = m_ActiveScene->CreateEntity("Camera");
+			auto& tc = cam.GetComponent<TransformComponent>();
+			tc.Translation = { 0.0f, 4.0f, 14.0f };
+			tc.Rotation    = { 0.0f, 0.0f, 0.0f };
+
+			auto& cc = cam.AddComponent<CameraComponent>();
+			cc.Primary = true;
+			cc.Camera.SetViewportSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+
+			auto& nsc = cam.AddComponent<NativeScriptComponent>();
+			nsc.Bind<FreeFlyCamera>();
+		}
+
+		// ── Dynamic boxes ────────────────────────────────────────────────────
+		struct BoxDef { glm::vec3 pos; glm::vec4 color; float metallic; float roughness; };
+		const BoxDef boxes[] = {
+			{{ -4.0f, 2.0f, -3.0f }, { 0.85f, 0.15f, 0.15f, 1.0f }, 0.0f, 0.5f },
+			{{  0.0f, 4.0f, -3.0f }, { 0.15f, 0.75f, 0.20f, 1.0f }, 0.0f, 0.6f },
+			{{  4.0f, 6.0f, -3.0f }, { 0.15f, 0.30f, 0.85f, 1.0f }, 0.0f, 0.4f },
+			{{ -2.0f, 8.0f,  0.0f }, { 0.90f, 0.70f, 0.10f, 1.0f }, 0.0f, 0.5f },
+			{{  2.0f,10.0f,  0.0f }, { 0.80f, 0.30f, 0.80f, 1.0f }, 0.1f, 0.3f },
+			{{ -5.0f, 3.0f,  2.0f }, { 0.95f, 0.95f, 0.95f, 1.0f }, 0.9f, 0.2f }, // chrome
+			{{  5.0f, 5.0f,  2.0f }, { 0.80f, 0.55f, 0.20f, 1.0f }, 0.8f, 0.3f }, // gold
+			{{  0.0f, 7.0f,  3.0f }, { 0.20f, 0.60f, 0.70f, 1.0f }, 0.0f, 0.7f },
+		};
+
+		for (int i = 0; i < (int)(sizeof(boxes)/sizeof(boxes[0])); ++i)
+		{
+			auto box = m_ActiveScene->CreateEntity("Box_" + std::to_string(i));
+			auto& tc = box.GetComponent<TransformComponent>();
+			tc.Translation = boxes[i].pos;
+
+			auto& mc = box.AddComponent<MeshComponent>();
+			mc.MeshData = Mesh::CreateCube();
+			mc.MaterialInstance = Material::Create();
+			mc.MaterialInstance->AlbedoColor = boxes[i].color;
+			mc.MaterialInstance->Metallic    = boxes[i].metallic;
+			mc.MaterialInstance->Roughness   = boxes[i].roughness;
+
+			auto& rb = box.AddComponent<Rigidbody3DComponent>();
+			rb.Type         = Rigidbody3DComponent::BodyType::Dynamic;
+			rb.GravityScale = 1.0f;
+			rb.LinearDamping  = 0.02f;
+			rb.AngularDamping = 0.05f;
+
+			auto& bc = box.AddComponent<BoxCollider3DComponent>();
+			bc.HalfExtents = { 0.5f, 0.5f, 0.5f };
+			bc.Friction    = 0.5f;
+			bc.Restitution = 0.3f;
+		}
+
+		// ── Dynamic spheres ──────────────────────────────────────────────────
+		struct SphereDef { glm::vec3 pos; glm::vec4 color; float restitution; };
+		const SphereDef spheres[] = {
+			{{ -3.0f, 12.0f, -2.0f }, { 1.0f, 0.4f, 0.1f, 1.0f }, 0.7f },
+			{{  3.0f, 14.0f,  1.0f }, { 0.1f, 0.9f, 0.8f, 1.0f }, 0.5f },
+			{{  0.0f, 16.0f, -5.0f }, { 0.9f, 0.9f, 0.1f, 1.0f }, 0.6f },
+			{{ -6.0f, 10.0f,  4.0f }, { 0.5f, 0.1f, 0.9f, 1.0f }, 0.4f },
+		};
+
+		for (int i = 0; i < (int)(sizeof(spheres)/sizeof(spheres[0])); ++i)
+		{
+			auto sphere = m_ActiveScene->CreateEntity("Sphere_" + std::to_string(i));
+			auto& tc = sphere.GetComponent<TransformComponent>();
+			tc.Translation = spheres[i].pos;
+
+			auto& mc = sphere.AddComponent<MeshComponent>();
+			mc.MeshData = Mesh::CreateCube(); // cube visual, sphere physics
+			mc.MaterialInstance = Material::Create();
+			mc.MaterialInstance->AlbedoColor = spheres[i].color;
+			mc.MaterialInstance->Roughness   = 0.3f;
+			mc.MaterialInstance->Metallic    = 0.05f;
+
+			auto& rb = sphere.AddComponent<Rigidbody3DComponent>();
+			rb.Type           = Rigidbody3DComponent::BodyType::Dynamic;
+			rb.GravityScale   = 1.0f;
+			rb.LinearDamping  = 0.01f;
+			rb.AngularDamping = 0.01f;
+
+			auto& sc = sphere.AddComponent<SphereCollider3DComponent>();
+			sc.Radius      = 0.5f;
+			sc.Friction    = 0.3f;
+			sc.Restitution = spheres[i].restitution;
+		}
+
+		// Enable the full pipeline by default
+		m_ActiveScene->SetUseShadows(true);
+		m_ActiveScene->SetUsePostProcess(true);
+
+		// Track as the editor scene so Play/Stop works correctly
+		m_EditorScene = m_ActiveScene;
+	}
+
 	void BluEditorLayer::Toolbar()
 	{
 		ImGui::Begin("##Toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
@@ -803,6 +973,24 @@ namespace Blu
 			ImGui::EndPopup();
 		}
 
+		// ── Import button (right side of toolbar) ─────────────────────────────
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 110.0f, 0));
+		ImGui::SameLine();
+		if (ImGui::Button("Import Model", ImVec2(100.0f, 0)))
+		{
+			std::string filepath = FileDialogs::OpenFile("FBX (*.fbx)\0*.fbx\0OBJ (*.obj)\0*.obj\0GLTF (*.gltf)\0*.gltf\0GLB (*.glb)\0*.glb\0All Models\0*.fbx;*.obj;*.gltf;*.glb;*.dae;*.blend;*.ply\0");
+			if (!filepath.empty())
+			{
+				Entity modelEntity = m_ActiveScene->CreateEntity(std::filesystem::path(filepath).stem().string());
+				auto& mc = modelEntity.AddComponent<MeshComponent>();
+				mc.ModelAsset = ModelLoader::Load(filepath);
+				mc.FilePath = filepath;
+			}
+		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Import a 3D model (FBX, OBJ, GLTF, etc.)");
+
 		ImGui::End();
 	}
 
@@ -831,10 +1019,8 @@ namespace Blu
 
 			m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
-			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
 			std::filesystem::path scenePath = path;
 			m_ActiveScene->SetSceneFilePath(scenePath);
-			serializer.DeserializeEntityScriptInstances(path.string());
 			
 
 			
@@ -865,7 +1051,8 @@ namespace Blu
 			if (m_SceneState == SceneState::Edit)
 			{
 				std::string filepath = m_EditorScene->GetSceneFilePath().string();
-				serializer.Serialize(filepath);
+				if (!filepath.empty())
+					serializer.Serialize(filepath);
 			}
 
 		}
@@ -882,12 +1069,9 @@ namespace Blu
 			m_PlayButtonHit = true;
 			m_ActiveScene = Scene::Copy(m_EditorScene);
 
-			ScriptEngine::OnRuntimeStart(&(*m_ActiveScene)); // do this to update the context
 			m_ActiveScene->OnRuntimeStart();
-			m_ActiveScene->OnScriptSystemStart(true);
 			m_SceneMissing = false;
 			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
-			
 
 		}
 		else
@@ -914,11 +1098,9 @@ namespace Blu
 		if (m_SceneState != SceneState::Edit)
 		{
 			m_ActiveScene->OnRuntimeStop();
-			SceneSerializer serializer(m_ActiveScene);
 			m_ActiveScene = m_EditorScene;
 			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
-			std::string filepath = m_EditorScene->GetSceneFilePath().string();
-			serializer.DeserializeEntityScriptInstances(filepath);
+			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			m_PlayButtonHit = false;
 			m_SceneState = SceneState::Edit;
 
@@ -934,6 +1116,16 @@ namespace Blu
 
 	void BluEditorLayer::OnSceneSimulate()
 	{
+		if (!m_EditorScene) { m_SceneMissing = true; return; }
+
+		m_SceneState     = SceneState::Play;
+		m_ViewPortFocused = true;
+		ImGui::SetWindowFocus("viewport");
+		m_PlayButtonHit  = true;
+		m_ActiveScene    = Scene::Copy(m_EditorScene);
+		m_ActiveScene->OnRuntimeStart();
+		m_SceneMissing   = false;
+		Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 	}
 	void BluEditorLayer::DisplayMissingSceneWarning()
 	{
@@ -1000,8 +1192,13 @@ namespace Blu
 		// ── App logo ────────────────────────────────────────────────────────────
 		const float logoSz = barH - 10.f;
 		ImGui::SetCursorPosY((barH - logoSz) * 0.5f);
-		ImGui::Image((ImTextureID)m_AppHeaderIcon->GetImTextureID(),
-		             ImVec2(logoSz, logoSz), ImVec2(0, 1), ImVec2(1, 0));
+		{
+			const bool isDX11 = RendererAPI::GetAPI() == RendererAPI::API::Direct3D;
+			ImGui::Image((ImTextureID)m_AppHeaderIcon->GetImTextureID(),
+			             ImVec2(logoSz, logoSz),
+			             isDX11 ? ImVec2(0, 0) : ImVec2(0, 1),
+			             isDX11 ? ImVec2(1, 1) : ImVec2(1, 0));
+		}
 		ImGui::SameLine(0, 8.f);
 
 		// ── Menus ───────────────────────────────────────────────────────────────
@@ -1012,20 +1209,21 @@ namespace Blu
 			if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))   SaveSceneAs();
 			if (ImGui::MenuItem("Save",       "Ctrl+S"))         SaveCurrentScene();
 			ImGui::Separator();
-			if (ImGui::MenuItem("Exit")) Application::Get().Close();
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Script"))
-		{
-			if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
+			if (ImGui::MenuItem("New Physics Demo"))              CreatePhysicsDemoScene();
+			ImGui::Separator();
+			if (ImGui::MenuItem("Import Model...", 0))
 			{
-				SceneSerializer serializer(m_ActiveScene);
-				ScriptEngine::ReloadAssembly();
-				ScriptEngine::OnRuntimeStart(&(*m_ActiveScene));
-				m_ActiveScene->OnScriptSystemStart(false);
-				serializer.DeserializeEntityScriptInstances(
-				    m_ActiveScene->GetSceneFilePath().string());
+				std::string filepath = FileDialogs::OpenFile("FBX (*.fbx)\0*.fbx\0OBJ (*.obj)\0*.obj\0GLTF (*.gltf)\0*.gltf\0GLB (*.glb)\0*.glb\0All Models\0*.fbx;*.obj;*.gltf;*.glb;*.dae;*.blend;*.ply\0");
+				if (!filepath.empty())
+				{
+					Entity modelEntity = m_ActiveScene->CreateEntity(std::filesystem::path(filepath).stem().string());
+					auto& mc = modelEntity.AddComponent<MeshComponent>();
+					mc.ModelAsset = ModelLoader::Load(filepath);
+					mc.FilePath = filepath;
+				}
 			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Exit")) Application::Get().Close();
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Window"))
@@ -1035,6 +1233,7 @@ namespace Blu
 			ImGui::MenuItem("Content Browser", nullptr, &m_ShowContentBrowser);
 			ImGui::MenuItem("Output Log",      nullptr, &m_ShowOutputLog);
 			ImGui::MenuItem("Rendering",       nullptr, &m_ShowRendering);
+			ImGui::MenuItem("Input Map",       nullptr, &m_ShowInputMap);
 			ImGui::EndMenu();
 		}
 
@@ -1298,8 +1497,325 @@ namespace Blu
 			ImGui::Text("Vertices    %d", Renderer2D::GetStats().GetTotalVertexCount());
 		}
 
+		ImGui::Spacing();
+
+		// ---- Time of Day ----
+		if (ImGui::CollapsingHeader("Time of Day"))
+		{
+			bool useTod = m_ActiveScene->GetUseTimeOfDay();
+			if (ImGui::Checkbox("Enable ToD", &useTod))
+				m_ActiveScene->SetUseTimeOfDay(useTod);
+
+			if (useTod)
+			{
+				auto& tod = m_ActiveScene->GetTimeOfDay();
+				ImGui::Indent();
+				ImGui::SliderFloat("Time", &tod.NormalizedTime, 0.0f, 1.0f, "%.3f");
+				ImGui::Checkbox("Auto Advance", &tod.AutoAdvance);
+				if (tod.AutoAdvance)
+					ImGui::DragFloat("Day Duration (s)", &tod.DayDurationSecs, 10.0f, 60.0f, 7200.0f, "%.0f s");
+				ImGui::DragFloat("Sun Azimuth",      &tod.SunAzimuthDeg,    1.0f, 0.0f, 360.0f, "%.1f°");
+				ImGui::DragFloat("Max Sun Strength", &tod.SunMaxStrength,   0.5f, 0.0f, 100.0f);
+				ImGui::DragFloat("Turbidity (noon)", &tod.SunNoonTurbidity, 0.05f, 1.0f, 10.0f, "%.2f");
+				ImGui::DragFloat("Turbidity (haze)", &tod.SunHazeTurbidity, 0.05f, 1.0f, 10.0f, "%.2f");
+
+				// Show computed output as a read-only preview
+				auto out = tod.Evaluate(tod.NormalizedTime);
+				ImGui::Spacing();
+				ImGui::TextDisabled("Elevation: %.1f°   Exposure: %.3f", out.SunElevationDeg, out.SkyExposure);
+				ImGui::Unindent();
+			}
+		}
+
+		// ---- Scene Rendering ----
+		if (ImGui::CollapsingHeader("Scene Rendering", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			bool useShadows = m_ActiveScene->GetUseShadows();
+			if (ImGui::Checkbox("Shadows (CSM)", &useShadows))
+				m_ActiveScene->SetUseShadows(useShadows);
+
+			bool usePostProcess = m_ActiveScene->GetUsePostProcess();
+			if (ImGui::Checkbox("Post Process", &usePostProcess))
+				m_ActiveScene->SetUsePostProcess(usePostProcess);
+
+			if (usePostProcess)
+			{
+				auto pp = m_ActiveScene->GetPostProcess();
+				if (pp)
+				{
+					ImGui::Indent();
+					ImGui::Checkbox("Bloom", &pp->EnableBloom);
+					if (pp->EnableBloom)
+					{
+						ImGui::DragFloat("Threshold",  &pp->BloomThreshold, 0.05f, 0.0f, 10.0f);
+						ImGui::DragFloat("Strength",   &pp->BloomStrength,  0.005f, 0.0f, 2.0f);
+					}
+					ImGui::Checkbox("FXAA", &pp->EnableFXAA);
+
+					ImGui::Separator();
+					ImGui::Checkbox("SSAO", &pp->EnableSSAO);
+					if (pp->EnableSSAO)
+					{
+						ImGui::DragFloat("Radius",   &pp->SSAORadius,   0.01f, 0.05f, 5.0f);
+						ImGui::DragFloat("Bias",     &pp->SSAOBias,     0.001f, 0.0f, 0.1f);
+						ImGui::DragFloat("Power",    &pp->SSAOPower,    0.1f, 0.5f, 8.0f);
+						ImGui::DragFloat("Strength", &pp->SSAOStrength, 0.01f, 0.0f, 1.0f);
+						int samples = pp->SSAOSamples;
+						if (ImGui::SliderInt("Samples", &samples, 4, 32))
+							pp->SSAOSamples = samples;
+					}
+					ImGui::Unindent();
+				}
+			}
+
+			ImGui::Separator();
+
+			auto& fog = m_ActiveScene->GetFog();
+			if (ImGui::Checkbox("Fog", &fog.Enabled))
+				m_ActiveScene->SetFogEnabled(fog.Enabled);
+
+			if (fog.Enabled)
+			{
+				ImGui::Indent();
+				ImGui::ColorEdit3("Fog Color",      &fog.Color.x);
+				ImGui::DragFloat("Density",         &fog.Density,       0.0001f, 0.0f,    0.1f,  "%.4f");
+				ImGui::DragFloat("Height Start",    &fog.HeightStart,   0.1f,   -100.0f,  100.0f);
+				ImGui::DragFloat("Height Falloff",  &fog.HeightDensity, 0.01f,   0.0f,    2.0f,  "%.3f");
+				ImGui::SeparatorText("Aerial Perspective");
+				ImGui::ColorEdit3("Aerial Color",   &fog.AerialColor.x);
+				ImGui::DragFloat("Aerial Strength", &fog.AerialStrength, 0.01f, 0.0f, 1.0f, "%.2f");
+				ImGui::Unindent();
+			}
+
+			ImGui::Separator();
+
+			bool useSkybox = m_ActiveScene->GetUseSkybox();
+			if (ImGui::Checkbox("Skybox", &useSkybox))
+				m_ActiveScene->SetUseSkybox(useSkybox);
+
+			if (useSkybox)
+			{
+				auto sky = m_ActiveScene->GetSkybox();
+				if (sky)
+				{
+					ImGui::Indent();
+					ImGui::SeparatorText("Atmosphere (Preetham)");
+					ImGui::DragFloat("Turbidity",     &sky->Turbidity,    0.05f,  1.8f, 10.0f,  "%.2f");
+					ImGui::DragFloat("Sky Exposure",  &sky->SkyExposure,  0.001f, 0.0f, 0.5f, "%.4f");
+					ImGui::ColorEdit3("Ground Color", &sky->GroundColor.x);
+					ImGui::SeparatorText("Sun");
+					ImGui::ColorEdit3("Sun Color",    &sky->SunColor.x);
+					ImGui::DragFloat("Sun Size",      &sky->SunSize,      0.00001f, 0.990f, 0.99999f, "%.5f");
+					ImGui::DragFloat("Sun Strength",  &sky->SunStrength,  0.5f,     0.0f,   100.0f);
+					ImGui::SeparatorText("Clouds");
+					ImGui::ColorEdit3("Cloud Color",     &sky->CloudColor.x);
+					ImGui::DragFloat("Coverage",         &sky->CloudCoverage,    0.01f,  0.0f,    1.0f,    "%.2f");
+					ImGui::DragFloat("Density",          &sky->CloudDensity,     0.01f,  0.0f,    1.0f,    "%.2f");
+					ImGui::DragFloat("Height",           &sky->CloudHeight,      10.0f,  0.0f,    5000.0f, "%.0f");
+					ImGui::DragFloat("Scale",            &sky->CloudScale,       10.0f,  50.0f,   5000.0f, "%.0f");
+					ImGui::DragFloat("Scroll Speed",     &sky->CloudScrollSpeed, 0.001f, 0.0f,    0.2f,    "%.3f");
+					ImGui::Unindent();
+				}
+			}
+		}
+
+		// ── Audio ────────────────────────────────────────────────────────────────
+		if (ImGui::CollapsingHeader("Audio"))
+		{
+			float master = AudioEngine::Get().GetMasterVolume();
+			if (ImGui::SliderFloat("Master Volume", &master, 0.0f, 1.0f))
+				AudioEngine::Get().SetMasterVolume(master);
+		}
+
+		// ── IBL (Image-Based Lighting) ────────────────────────────────────────
+		if (ImGui::CollapsingHeader("IBL (Image-Based Lighting)"))
+		{
+			static bool  s_IBLEnabled  = false;
+			static float s_IBLStrength = 1.0f;
+			static char  s_HDRPath[512] = "";
+
+			if (ImGui::Checkbox("Enable IBL", &s_IBLEnabled))
+				Renderer3D::SetIBL(s_IBLEnabled, s_IBLStrength);
+
+			if (s_IBLEnabled)
+			{
+				if (ImGui::SliderFloat("IBL Strength", &s_IBLStrength, 0.0f, 3.0f))
+					Renderer3D::SetIBL(s_IBLEnabled, s_IBLStrength);
+			}
+
+			ImGui::InputText("HDR Path", s_HDRPath, sizeof(s_HDRPath));
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+				{
+					const char* droppedPath = static_cast<const char*>(payload->Data);
+					strncpy_s(s_HDRPath, droppedPath, sizeof(s_HDRPath) - 1);
+					s_HDRPath[sizeof(s_HDRPath) - 1] = '\0';
+					if (IBLSystem::LoadEnvironment(s_HDRPath))
+					{
+						s_IBLEnabled = true;
+						Renderer3D::SetIBL(true, s_IBLStrength);
+					}
+				}
+				ImGui::EndDragDropTarget();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Load##IBL"))
+			{
+				if (IBLSystem::LoadEnvironment(s_HDRPath))
+				{
+					s_IBLEnabled = true;
+					Renderer3D::SetIBL(true, s_IBLStrength);
+				}
+			}
+
+			if (IBLSystem::IsReady())
+			{
+				ImGui::TextDisabled("Loaded: %s", IBLSystem::GetHDRPath().c_str());
+			}
+			else
+			{
+				ImGui::TextDisabled("No environment loaded — drop an .hdr file path above.");
+			}
+		}
+
 		ImGui::End(); // Rendering
 		} // if (m_ShowRendering)
+
+		// ── Input Map panel ─────────────────────────────────────────────────────
+		if (m_ShowInputMap)
+		{
+			ImGui::SetNextWindowSize(ImVec2(460, 420), ImGuiCond_FirstUseEver);
+			if (ImGui::Begin("Input Map", &m_ShowInputMap))
+			{
+				auto& imap = InputMap::Get();
+				ImGui::TextDisabled("Named actions and axes mapped to key/mouse codes (GLFW).");
+				ImGui::Separator();
+
+				// ── File I/O ──────────────────────────────────────────────────
+				if (ImGui::Button("Load from file"))
+				{
+					auto path = FileDialogs::OpenFile("YAML Input Map (*.inputmap)\0*.inputmap\0All Files\0*.*\0");
+					if (!path.empty()) imap.LoadFromFile(path);
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Save to file"))
+				{
+					auto path = FileDialogs::SaveFile("YAML Input Map (*.inputmap)\0*.inputmap\0All Files\0*.*\0");
+					if (!path.empty()) imap.SaveToFile(path);
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Clear All"))
+					imap.Clear();
+				ImGui::Separator();
+
+				// ── Quick-add action ─────────────────────────────────────────
+				if (ImGui::CollapsingHeader("Add Action"))
+				{
+					static char actionName[64] = "Jump";
+					static int  actionKey = 32; // GLFW_KEY_SPACE
+					ImGui::InputText("Name##act",  actionName, sizeof(actionName));
+					ImGui::InputInt("Key Code##act", &actionKey);
+					if (ImGui::Button("Add Action"))
+						imap.AddAction(actionName, actionKey);
+				}
+
+				// ── Quick-add axis ───────────────────────────────────────────
+				if (ImGui::CollapsingHeader("Add Axis"))
+				{
+					static char axisName[64] = "Horizontal";
+					static int  posKey = 68; // D
+					static int  negKey = 65; // A
+					ImGui::InputText("Name##ax",   axisName, sizeof(axisName));
+					ImGui::InputInt("Positive Key", &posKey);
+					ImGui::InputInt("Negative Key", &negKey);
+					if (ImGui::Button("Add Axis"))
+						imap.AddAxis(axisName, posKey, negKey);
+				}
+
+				ImGui::Separator();
+				ImGui::TextDisabled("Live state (IsActionPressed / GetAxis):");
+				// Display a few well-known actions for quick debugging
+				const char* testActions[] = {"Jump","Fire","Sprint","Crouch","Interact"};
+				for (const char* a : testActions)
+				{
+					bool pressed = imap.IsActionPressed(a);
+					ImGui::TextColored(pressed ? ImVec4(0,1,0,1) : ImVec4(0.5f,0.5f,0.5f,1), "%s", a);
+					ImGui::SameLine(120.f);
+					ImGui::Text(pressed ? "PRESSED" : "---");
+				}
+				const char* testAxes[] = {"Horizontal","Vertical"};
+				for (const char* ax : testAxes)
+				{
+					float v = imap.GetAxis(ax);
+					ImGui::Text("%-12s  %.2f", ax, v);
+				}
+			}
+			ImGui::End();
+		}
+
+		// ── Terrain Editor panel ────────────────────────────────────────────────
+		if (m_ShowTerrainPanel)
+		{
+			ImGui::SetNextWindowSize(ImVec2(320, 380), ImGuiCond_FirstUseEver);
+			if (ImGui::Begin("Terrain Editor", &m_ShowTerrainPanel))
+			{
+				ImGui::SeparatorText("Grid");
+				ImGui::DragInt("Width  (quads)",  &m_TerrainSpec.GridWidth,  1.0f, 2, 1024);
+				ImGui::DragInt("Height (quads)",  &m_TerrainSpec.GridHeight, 1.0f, 2, 1024);
+				ImGui::DragFloat("Cell Size",     &m_TerrainSpec.CellSize,   0.1f, 0.1f, 100.0f, "%.1f m");
+
+				ImGui::SeparatorText("Height");
+				ImGui::DragFloat("Max Height",    &m_TerrainSpec.HeightScale, 0.5f, 0.0f, 2000.0f, "%.1f m");
+
+				ImGui::SeparatorText("Heightmap");
+				if (!m_TerrainSpec.HeightmapPath.empty())
+				{
+					// Show just the filename for readability
+					auto filename = std::filesystem::path(m_TerrainSpec.HeightmapPath).filename().string();
+					ImGui::TextColored(ImVec4(0.4f, 0.9f, 0.4f, 1.0f), "%s", filename.c_str());
+				}
+				else
+				{
+					ImGui::TextDisabled("No heightmap — flat terrain");
+				}
+
+				if (ImGui::Button("Load Heightmap...", ImVec2(-1, 0)))
+				{
+					std::string path = FileDialogs::OpenFile(
+					    "Image (*.png;*.jpg;*.bmp;*.tga)\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All\0*.*\0");
+					if (!path.empty())
+						m_TerrainSpec.HeightmapPath = path;
+				}
+				if (!m_TerrainSpec.HeightmapPath.empty() && ImGui::Button("Clear Heightmap", ImVec2(-1, 0)))
+					m_TerrainSpec.HeightmapPath.clear();
+
+				ImGui::Spacing();
+				ImGui::TextDisabled("~%dk vertices | ~%dk triangles",
+				    (m_TerrainSpec.GridWidth + 1) * (m_TerrainSpec.GridHeight + 1) / 1000,
+				    m_TerrainSpec.GridWidth * m_TerrainSpec.GridHeight * 2 / 1000);
+
+				ImGui::Spacing();
+				ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.20f, 0.60f, 0.20f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.75f, 0.30f, 1.0f));
+				bool generate = ImGui::Button("Generate Terrain", ImVec2(-1, 36));
+				ImGui::PopStyleColor(2);
+
+				if (generate)
+				{
+					auto mesh = Blu::GenerateTerrain(m_TerrainSpec);
+					if (mesh)
+					{
+						Entity terrainEntity = m_ActiveScene->CreateEntity("Terrain");
+						auto& mc = terrainEntity.AddComponent<MeshComponent>();
+						mc.MeshData = mesh;
+						m_SceneHierarchyPanel->SetSelectedEntity(terrainEntity);
+						BLU_CORE_INFO("Terrain generated: {}×{} grid", m_TerrainSpec.GridWidth, m_TerrainSpec.GridHeight);
+					}
+				}
+			}
+			ImGui::End();
+		}
 		
 		
 		
@@ -1493,6 +2009,23 @@ namespace Blu
 
 			ImGui::PopStyleVar(); // FramePadding 2,2
 
+			// ── Terrain mode toggle (left side, before right-aligned dropdowns) ──
+			ImGui::SameLine(0, 6);
+			ImGui::TextDisabled("|");
+			ImGui::SameLine(0, 6);
+			{
+				bool active = m_ShowTerrainPanel;
+				if (active) {
+					ImGui::PushStyleColor(ImGuiCol_Button,        kColActive);
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, kColActHov);
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive,  kColActive);
+				}
+				if (ImGui::Button("Terrain"))
+					m_ShowTerrainPanel = !m_ShowTerrainPanel;
+				if (active) ImGui::PopStyleColor(3);
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("Toggle Terrain Editor");
+			}
+
 			// ---- RIGHT: Perspective + Lit dropdowns ----
 			{
 				const char* perspStr = m_EditorCamera.IsOrthographic() ? "Orthographic" : "Perspective";
@@ -1560,7 +2093,7 @@ namespace Blu
 		ImGui::PopStyleVar(); // WindowPadding from outer Begin("Viewport")
 		
 		m_ViewPortFocused = ImGui::IsWindowFocused();
-		m_ViewPortHovered = ImGui::IsWindowHovered();
+		m_ViewPortHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 		/* Clicking */
 		m_ViewportOffset = glm::vec2(ImGui::GetCursorPos().x, ImGui::GetCursorPos().y);
 		auto windowSize = ImGui::GetWindowSize();
@@ -1718,32 +2251,15 @@ namespace Blu
 
 	bool BluEditorLayer::OnMouseButtonPressed(Events::MouseButtonPressedEvent& event)
 	{
-		if (m_MousePosX >= 0 && m_MousePosY >= 0 && m_MousePosX < (int)m_ViewportSize.x && m_MousePosY < (int)m_ViewportSize.y)
-		{
-			if (m_ViewPortHovered)
-			{
-				// Don't select when clicking a gizmo handle — let ImGuizmo consume the input.
-				if (ImGuizmo::IsOver() && m_ImGuizmoType != -1)
-					return false;
-
-				// Read the entity-ID pixel exactly once at click time.
-				// This is a synchronous GPU stall so we do it here (once per click)
-				// rather than every frame.
-				m_DrawnEntityID = m_FrameBuffer->ReadPixel(1, (int)m_MousePosX, (int)m_MousePosY);
-
-				Entity e = Entity{ (entt::entity)m_DrawnEntityID, m_ActiveScene.get() };
-				if (e.HasComponent<TransformComponent>())
-				{
-					m_SceneHierarchyPanel->SetSelectedEntity(e);
-					return true;
-				}
-			}
-		}
-		event.Handled = true;
+		// Queue a deferred pick. We avoid ReadPixel here because:
+		//   1. Events fire in Window::OnUpdate() before layer->OnUpdate() renders the scene.
+		//   2. m_ViewPortHovered is stale (set in the previous frame's OnGuiDraw).
+		// The deferred pick runs in OnUpdate after rendering; it uses the live OS
+		// mouse position and validates viewport containment via bounds, so we do
+		// NOT need m_ViewPortHovered here.
+		if (event.GetButton() == BLU_MOUSE_BUTTON_LEFT)
+			m_PendingEntityPick = true;
 		return false;
-
-
-
 	}
 
 	bool BluEditorLayer::OnMouseButtonReleased(Events::MouseButtonReleasedEvent& event)
@@ -1822,28 +2338,41 @@ namespace Blu
 			break;
 		}
 		case BLU_KEY_Q:
-			m_ImGuizmoType = -1;
+			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = -1;
 			break;
 		case BLU_KEY_W:
-			m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
 			break;
 		case BLU_KEY_E:
-			m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
+			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
 			break;
 		case BLU_KEY_R:
-			m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
+			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
 			break;
 		case BLU_KEY_F:
 		{
 			// Focus the editor camera's orbit pivot on the selected entity.
 			// This makes the camera orbit around the entity rather than a stale focal point.
-			if (m_ViewPortFocused || m_ViewPortHovered)
+			if (!ImGui::GetIO().WantCaptureKeyboard && (m_ViewPortFocused || m_ViewPortHovered))
 			{
 				Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 				if (selectedEntity && selectedEntity.HasComponent<TransformComponent>())
 				{
 					const auto& tc = selectedEntity.GetComponent<TransformComponent>();
 					m_EditorCamera.SetFocalPoint(tc.Translation);
+				}
+			}
+			break;
+		}
+		case BLU_KEY_DELETE:
+		{
+			if (!ImGui::GetIO().WantCaptureKeyboard)
+			{
+				Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
+				if (selectedEntity)
+				{
+					m_ActiveScene->DestroyEntity(selectedEntity);
+					m_SceneHierarchyPanel->SetSelectedEntity({});
 				}
 			}
 			break;
@@ -1862,14 +2391,9 @@ namespace Blu
 
 	bool BluEditorLayer::OnKeyTypedEvent(Events::KeyTypedEvent& event)
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		int KeyCode = event.GetKeyCode();
-		if (KeyCode > 0 && KeyCode < 0x10000)
-		{
-			io.AddInputCharacter((unsigned short)KeyCode);
-		}
-		event.Handled = true;
-
+		// ImGui_ImplGlfw_InitForOther(window, true) already installs the GLFW
+		// char callback and chains to ours — characters are added once by ImGui.
+		// Do NOT call io.AddInputCharacter() here; that would double every keystroke.
 		return false;
 	}
 

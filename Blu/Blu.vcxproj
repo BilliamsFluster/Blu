@@ -76,8 +76,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\mono\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_ENABLE_ASSERTS;JPH_DEBUG_RENDERER;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -90,7 +90,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;dwmapi.lib;$(SolutionDir)Blu\engine\ExternalDependencies\mono\lib\Debug\libmono-static-sgen.lib;Ws2_32.lib;Winmm.lib;Version.lib;Bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;dwmapi.lib;d3d11.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;Ws2_32.lib;Winmm.lib;Version.lib;Bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -98,8 +98,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\mono\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_PROFILE_ENABLED;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -116,7 +116,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;dwmapi.lib;$(SolutionDir)Blu\engine\ExternalDependencies\mono\lib\Release\libmono-static-sgen.lib;Ws2_32.lib;Winmm.lib;Version.lib;Bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;dwmapi.lib;d3d11.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;Ws2_32.lib;Winmm.lib;Version.lib;Bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -124,8 +124,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\mono\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -142,7 +142,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;dwmapi.lib;$(SolutionDir)Blu\engine\ExternalDependencies\mono\lib\Dist\libmono-static-sgen.lib;Ws2_32.lib;Winmm.lib;Version.lib;Bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;dwmapi.lib;d3d11.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;Ws2_32.lib;Winmm.lib;Version.lib;Bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -573,12 +573,16 @@
     <ClInclude Include="engine\ExternalDependencies\glm\glm\vec3.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\vec4.hpp" />
     <ClInclude Include="engine\ExternalDependencies\glm\glm\vector_relational.hpp" />
+    <ClInclude Include="engine\ExternalDependencies\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="engine\ExternalDependencies\stb_image\stb_image.h" />
     <ClInclude Include="engine\src\Blu.h" />
     <ClInclude Include="engine\src\Blu\Core\Application.h" />
     <ClInclude Include="engine\src\Blu\Core\Core.h" />
     <ClInclude Include="engine\src\Blu\Core\EntryPoint.h" />
     <ClInclude Include="engine\src\Blu\Core\Input.h" />
+    <ClInclude Include="engine\src\Blu\Core\InputMap.h" />
+    <ClInclude Include="engine\src\Blu\Audio\AudioEngine.h" />
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\Layer.h" />
     <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
@@ -601,6 +605,19 @@
     <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h" />
     <ClInclude Include="engine\src\Blu\Math\Math.h" />
     <ClInclude Include="engine\src\Blu\Physics\Physics2D.h" />
+    <ClInclude Include="engine\src\Blu\Physics\Physics3D.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Buffer.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11CascadedShadowMap.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Context.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11FrameBuffer.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Material.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11PipelineState.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11PostProcess.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11RendererAPI.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Shader.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11ShadowMap.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Texture.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11VertexArray.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.h" />
@@ -611,20 +628,40 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Asset.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\AssetManager.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\CascadedShadowMap.h" />
     <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Frustum.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Material.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\MaterialAsset.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Mesh.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\ModelLoader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\PipelineState.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\PostProcess.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Skybox.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\TimeOfDay.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Terrain.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Animation.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Animator.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\TextureCube.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.h" />
     <ClInclude Include="engine\src\Blu\Rendering\RenderCommand.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Renderer3D.h" />
     <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\ShadowMap.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\TextureAsset.h" />
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
     <ClInclude Include="engine\src\Blu\Scene\CameraController.h" />
     <ClInclude Include="engine\src\Blu\Scene\Component.h" />
@@ -632,9 +669,13 @@
     <ClInclude Include="engine\src\Blu\Scene\Scene.h" />
     <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h" />
     <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h" />
-    <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h" />
-    <ClInclude Include="engine\src\Blu\Scripting\ScriptEngine.h" />
-    <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\AActor.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\ACharacter.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\AGameMode.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\APawn.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\ActorRegistry.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\GameFramework.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\UObject.h" />
     <ClInclude Include="engine\src\Blu\Utils\Helpers.h" />
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h" />
     <ClInclude Include="engine\src\Blupch.h" />
@@ -643,12 +684,20 @@
     <ClCompile Include="engine\ExternalDependencies\ImGuizmo\ImGuizmo.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="engine\ExternalDependencies\imgui\backends\imgui_impl_dx11.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
     <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\InputMap.cpp" />
+    <ClCompile Include="engine\src\Blu\Audio\AudioEngine.cpp" />
     <ClCompile Include="engine\src\Blu\Core\UUID.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
@@ -660,6 +709,18 @@
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp" />
     <ClCompile Include="engine\src\Blu\Math\Math.cpp" />
+    <ClCompile Include="engine\src\Blu\Physics\Physics3D.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Buffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11CascadedShadowMap.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Context.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11FrameBuffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11PipelineState.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11PostProcess.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11RendererAPI.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Shader.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11ShadowMap.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Texture.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11VertexArray.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLContext.cpp" />
@@ -672,29 +733,44 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsPlatformUtils.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Asset.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\AssetManager.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\MaterialAsset.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Mesh.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\ModelLoader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\PipelineState.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Renderer3D.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\TimeOfDay.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Animation.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\TextureAsset.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\CameraController.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Entity.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Scene.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp" />
+    <ClCompile Include="engine\src\Blu\GameFramework\AActor.cpp" />
+    <ClCompile Include="engine\src\Blu\GameFramework\ActorRegistry.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\SceneSerializer.cpp" />
-    <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp" />
-    <ClCompile Include="engine\src\Blu\Scripting\ScriptEngine.cpp" />
-    <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp" />
+    <ClCompile Include="engine\src\Blu\GameFramework\ACharacter.cpp" />
     <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -715,6 +791,12 @@
     </ProjectReference>
     <ProjectReference Include="engine\ExternalDependencies\box2d\Box2D.vcxproj">
       <Project>{A434E80C-1049-10BE-D9CA-B31D459E0CEF}</Project>
+    </ProjectReference>
+    <ProjectReference Include="engine\ExternalDependencies\assimp\assimp.vcxproj">
+      <Project>{724885F2-5EEA-AFC8-47A5-C31C33E63619}</Project>
+    </ProjectReference>
+    <ProjectReference Include="engine\ExternalDependencies\jolt\JoltPhysics.vcxproj">
+      <Project>{812AB974-EDDF-316A-76D4-2B41E288286E}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

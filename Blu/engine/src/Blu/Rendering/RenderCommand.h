@@ -19,6 +19,11 @@ namespace Blu
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
 		}
+		inline static void DrawIndexedInstanced(const std::shared_ptr<VertexArray>& vertexArray,
+		                                         uint32_t indexCount, uint32_t instanceCount)
+		{
+			s_RendererAPI->DrawIndexedInstanced(vertexArray, indexCount, instanceCount);
+		}
 		inline static void DrawLines(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertexCount)
 		{
 			s_RendererAPI->DrawLines(vertexArray, vertexCount);

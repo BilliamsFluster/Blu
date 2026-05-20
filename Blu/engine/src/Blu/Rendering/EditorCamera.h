@@ -43,6 +43,8 @@ namespace Blu
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
 		float GetFOV() const { return m_FOV; }
+		float GetNearClip() const { return m_NearClip; }
+		float GetFarClip()  const { return m_FarClip; }
 
 		// Orthographic / perspective toggle
 		bool IsOrthographic() const { return m_IsOrthographic; }
@@ -75,6 +77,7 @@ namespace Blu
 		glm::mat4 m_ViewMatrix;
 		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 m_FocalPoint = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 m_Velocity  = { 0.0f, 0.0f, 0.0f }; // for smooth start/stop easing
 
 		glm::vec2 m_InitialMousePosition;
 

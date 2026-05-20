@@ -139,8 +139,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\GameLayer.h" />
+    <ClInclude Include="src\Actors\PlayerCharacter.h" />
+    <ClInclude Include="src\Actors\ZombieCharacter.h" />
+    <ClInclude Include="src\GameModes\ZombieGameMode.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="src\Azure.cpp" />
     <ClCompile Include="src\Azure2D.cpp" />
+    <ClCompile Include="src\GameLayer.cpp" />
+    <ClCompile Include="src\Actors\PlayerCharacter.cpp" />
+    <ClCompile Include="src\Actors\ZombieCharacter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Blu\Blu.vcxproj">

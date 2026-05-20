@@ -74,10 +74,22 @@ namespace Blu
     {
         m_Name = NameFromPath(filepath);
         auto src = SplitShaderSource(ReadFile(filepath));
+
+        bool hasCS = src.count("compute") > 0;
+        if (hasCS)
+        {
+            CompileCompute(src["compute"]);
+            return;
+        }
+
         BLU_CORE_ASSERT(src.count("vertex") && (src.count("pixel") || src.count("fragment")),
-            "HLSL shader must have #type vertex and #type pixel sections");
+            "HLSL shader must have #type vertex and #type pixel (#type compute for compute-only)");
         std::string& psSrc = src.count("pixel") ? src["pixel"] : src["fragment"];
-        Compile(src["vertex"], psSrc);
+        std::string gsSrc, hsSrc, dsSrc;
+        if (src.count("geometry")) gsSrc = src["geometry"];
+        if (src.count("hull"))     hsSrc = src["hull"];
+        if (src.count("domain"))   dsSrc = src["domain"];
+        Compile(src["vertex"], psSrc, gsSrc, hsSrc, dsSrc);
     }
 
     D3D11Shader::D3D11Shader(const std::string& name,
@@ -91,10 +103,10 @@ namespace Blu
     // -----------------------------------------------------------------------
     // Compile HLSL source using D3DCompile
     // -----------------------------------------------------------------------
-    void D3D11Shader::Compile(const std::string& vertexSrc, const std::string& pixelSrc)
+    // ── Internal compile helper (lambda extracted from Compile) ──────────────
+    bool D3D11Shader::CompileStage(const std::string& src, const char* target,
+                                   ID3DBlob** outBlob)
     {
-        auto* dev = D3D11Context::Get()->GetDevice();
-
         UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;
 #ifdef BLU_DEBUG
         flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -102,40 +114,84 @@ namespace Blu
         flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
 
-        auto Compile = [&](const std::string& src, const char* target,
-                           ID3DBlob** outBlob) -> bool
+        Microsoft::WRL::ComPtr<ID3DBlob> errBlob;
+        HRESULT hr = D3DCompile(
+            src.c_str(), src.size(),
+            m_Filepath.empty() ? m_Name.c_str() : m_Filepath.c_str(),
+            nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+            "main", target, flags, 0,
+            outBlob, errBlob.GetAddressOf());
+
+        if (FAILED(hr))
         {
-            Microsoft::WRL::ComPtr<ID3DBlob> errBlob;
-            HRESULT hr = D3DCompile(
-                src.c_str(), src.size(),
-                m_Filepath.empty() ? m_Name.c_str() : m_Filepath.c_str(),
-                nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-                "main", target, flags, 0,
-                outBlob, errBlob.GetAddressOf());
+            if (errBlob)
+                BLU_CORE_ERROR("HLSL compile error ({0} {1}): {2}",
+                    m_Name, target,
+                    reinterpret_cast<const char*>(errBlob->GetBufferPointer()));
+            BLU_CORE_ASSERT(false, "Shader compilation failed");
+            return false;
+        }
+        return true;
+    }
 
-            if (FAILED(hr))
-            {
-                if (errBlob)
-                    BLU_CORE_ERROR("HLSL compile error ({0} {1}): {2}",
-                        m_Name, target,
-                        reinterpret_cast<const char*>(errBlob->GetBufferPointer()));
-                BLU_CORE_ASSERT(false, "Shader compilation failed");
-                return false;
-            }
-            return true;
-        };
+    void D3D11Shader::Compile(
+        const std::string& vertexSrc,
+        const std::string& pixelSrc,
+        const std::string& geometrySrc,
+        const std::string& hullSrc,
+        const std::string& domainSrc)
+    {
+        auto* dev = D3D11Context::Get()->GetDevice();
 
-        if (!Compile(vertexSrc, "vs_5_0", m_VSBlob.GetAddressOf())) return;
-
-        Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
-        if (!Compile(pixelSrc,  "ps_5_0", psBlob.GetAddressOf()))  return;
-
+        // Vertex
+        if (!CompileStage(vertexSrc, "vs_5_0", m_VSBlob.GetAddressOf())) return;
         dev->CreateVertexShader(m_VSBlob->GetBufferPointer(),
             m_VSBlob->GetBufferSize(), nullptr, m_VS.GetAddressOf());
-        dev->CreatePixelShader(psBlob->GetBufferPointer(),
-            psBlob->GetBufferSize(),  nullptr, m_PS.GetAddressOf());
+        ReflectConstantBuffers(m_VSBlob.Get());
 
-        Reflect(m_VSBlob.Get(), psBlob.Get());
+        // Pixel
+        Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
+        if (!CompileStage(pixelSrc, "ps_5_0", psBlob.GetAddressOf())) return;
+        dev->CreatePixelShader(psBlob->GetBufferPointer(),
+            psBlob->GetBufferSize(), nullptr, m_PS.GetAddressOf());
+        ReflectConstantBuffers(psBlob.Get());
+
+        // Geometry (optional)
+        if (!geometrySrc.empty())
+        {
+            if (!CompileStage(geometrySrc, "gs_5_0", m_GSBlob.GetAddressOf())) return;
+            dev->CreateGeometryShader(m_GSBlob->GetBufferPointer(),
+                m_GSBlob->GetBufferSize(), nullptr, m_GS.GetAddressOf());
+            ReflectConstantBuffers(m_GSBlob.Get());
+        }
+
+        // Hull (optional)
+        if (!hullSrc.empty())
+        {
+            if (!CompileStage(hullSrc, "hs_5_0", m_HSBlob.GetAddressOf())) return;
+            dev->CreateHullShader(m_HSBlob->GetBufferPointer(),
+                m_HSBlob->GetBufferSize(), nullptr, m_HS.GetAddressOf());
+            ReflectConstantBuffers(m_HSBlob.Get());
+        }
+
+        // Domain (optional)
+        if (!domainSrc.empty())
+        {
+            if (!CompileStage(domainSrc, "ds_5_0", m_DSBlob.GetAddressOf())) return;
+            dev->CreateDomainShader(m_DSBlob->GetBufferPointer(),
+                m_DSBlob->GetBufferSize(), nullptr, m_DS.GetAddressOf());
+            ReflectConstantBuffers(m_DSBlob.Get());
+        }
+    }
+
+    void D3D11Shader::CompileCompute(const std::string& src)
+    {
+        auto* dev = D3D11Context::Get()->GetDevice();
+
+        if (!CompileStage(src, "cs_5_0", m_CSBlob.GetAddressOf())) return;
+        dev->CreateComputeShader(m_CSBlob->GetBufferPointer(),
+            m_CSBlob->GetBufferSize(), nullptr, m_CS.GetAddressOf());
+        ReflectConstantBuffers(m_CSBlob.Get());
     }
 
     // -----------------------------------------------------------------------
@@ -219,78 +275,70 @@ namespace Blu
         }
     }
 
-    void D3D11Shader::Reflect(ID3DBlob* vsBlob, ID3DBlob* psBlob)
+    void D3D11Shader::ReflectConstantBuffers(ID3DBlob* blob)
     {
         auto* dev = D3D11Context::Get()->GetDevice();
 
-        // We reflect both stages and merge cbuffer info (same slot -> same buffer)
-        auto ReflectStage = [&](ID3DBlob* blob)
+        Microsoft::WRL::ComPtr<ID3D11ShaderReflection> refl;
+        D3DReflect(blob->GetBufferPointer(), blob->GetBufferSize(),
+            IID_ID3D11ShaderReflection, reinterpret_cast<void**>(refl.GetAddressOf()));
+
+        D3D11_SHADER_DESC shDesc;
+        refl->GetDesc(&shDesc);
+
+        for (UINT cb = 0; cb < shDesc.ConstantBuffers; cb++)
         {
-            Microsoft::WRL::ComPtr<ID3D11ShaderReflection> refl;
-            D3DReflect(blob->GetBufferPointer(), blob->GetBufferSize(),
-                IID_ID3D11ShaderReflection, reinterpret_cast<void**>(refl.GetAddressOf()));
+            auto* cbRefl = refl->GetConstantBufferByIndex(cb);
+            D3D11_SHADER_BUFFER_DESC cbDesc;
+            cbRefl->GetDesc(&cbDesc);
 
-            D3D11_SHADER_DESC shDesc;
-            refl->GetDesc(&shDesc);
-
-            for (UINT cb = 0; cb < shDesc.ConstantBuffers; cb++)
+            // Find binding slot
+            UINT slot = cb;
+            for (UINT r = 0; r < shDesc.BoundResources; r++)
             {
-                auto* cbRefl = refl->GetConstantBufferByIndex(cb);
-                D3D11_SHADER_BUFFER_DESC cbDesc;
-                cbRefl->GetDesc(&cbDesc);
-
-                // Find binding slot
-                UINT slot = cb;
-                for (UINT r = 0; r < shDesc.BoundResources; r++)
+                D3D11_SHADER_INPUT_BIND_DESC bd;
+                refl->GetResourceBindingDesc(r, &bd);
+                if (bd.Type == D3D_SIT_CBUFFER && strcmp(bd.Name, cbDesc.Name) == 0)
                 {
-                    D3D11_SHADER_INPUT_BIND_DESC bd;
-                    refl->GetResourceBindingDesc(r, &bd);
-                    if (bd.Type == D3D_SIT_CBUFFER && strcmp(bd.Name, cbDesc.Name) == 0)
-                    {
-                        slot = bd.BindPoint;
-                        break;
-                    }
-                }
-
-                // Ensure m_CBuffers is large enough
-                if (slot >= m_CBuffers.size())
-                    m_CBuffers.resize(slot + 1);
-
-                m_CBufferNameMap[cbDesc.Name] = slot;
-
-                auto& cbBuf = m_CBuffers[slot];
-                if (cbBuf.gpuBuffer) continue;  // Already set up by other stage
-
-                cbBuf.slot = slot;
-                cbBuf.shadow.assign(cbDesc.Size, 0);
-
-                D3D11_BUFFER_DESC gpuDesc = {};
-                gpuDesc.ByteWidth      = (cbDesc.Size + 15) & ~15u;  // 16-byte aligned
-                gpuDesc.Usage          = D3D11_USAGE_DEFAULT;
-                gpuDesc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
-
-                HRESULT hr = dev->CreateBuffer(&gpuDesc, nullptr, cbBuf.gpuBuffer.GetAddressOf());
-                BLU_CORE_ASSERT(SUCCEEDED(hr), "Failed to create constant buffer");
-
-                // Map variable names -> (cbufferIndex, offset, size)
-                // m_CBuffers[slot] corresponds to cbufferIndex = slot
-                for (UINT v = 0; v < cbDesc.Variables; v++)
-                {
-                    auto* varRefl = cbRefl->GetVariableByIndex(v);
-                    D3D11_SHADER_VARIABLE_DESC varDesc;
-                    varRefl->GetDesc(&varDesc);
-
-                    TraverseType(varRefl->GetType(),
-                                 varDesc.Name,
-                                 varDesc.StartOffset,
-                                 slot,
-                                 varDesc.Size);
+                    slot = bd.BindPoint;
+                    break;
                 }
             }
-        };
 
-        ReflectStage(vsBlob);
-        ReflectStage(psBlob);
+            // Ensure m_CBuffers is large enough
+            if (slot >= m_CBuffers.size())
+                m_CBuffers.resize(slot + 1);
+
+            m_CBufferNameMap[cbDesc.Name] = slot;
+
+            auto& cbBuf = m_CBuffers[slot];
+            if (cbBuf.gpuBuffer) continue;  // Already set up by other stage
+
+            cbBuf.slot = slot;
+            cbBuf.shadow.assign(cbDesc.Size, 0);
+
+            D3D11_BUFFER_DESC gpuDesc = {};
+            gpuDesc.ByteWidth      = (cbDesc.Size + 15) & ~15u;  // 16-byte aligned
+            gpuDesc.Usage          = D3D11_USAGE_DEFAULT;
+            gpuDesc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
+
+            HRESULT hr = dev->CreateBuffer(&gpuDesc, nullptr, cbBuf.gpuBuffer.GetAddressOf());
+            BLU_CORE_ASSERT(SUCCEEDED(hr), "Failed to create constant buffer");
+
+            // Map variable names -> (cbufferIndex, offset, size)
+            for (UINT v = 0; v < cbDesc.Variables; v++)
+            {
+                auto* varRefl = cbRefl->GetVariableByIndex(v);
+                D3D11_SHADER_VARIABLE_DESC varDesc;
+                varRefl->GetDesc(&varDesc);
+
+                TraverseType(varRefl->GetType(),
+                             varDesc.Name,
+                             varDesc.StartOffset,
+                             slot,
+                             varDesc.Size);
+            }
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -371,48 +419,95 @@ namespace Blu
     }
 
     // -----------------------------------------------------------------------
-    // Upload dirty cbuffers and bind shaders
+    // Cbuffer management
+    // BindConstantBuffers — called once from Bind().  Maps every slot to the
+    // engine's GPU buffer so subsequent UpdateSubresource calls in Flush()
+    // are immediately visible to the pipeline without re-binding.
     // -----------------------------------------------------------------------
-    void D3D11Shader::UploadDirtyCBuffers() const
+    void D3D11Shader::BindConstantBuffers() const
     {
         auto* dc = D3D11Context::Get()->GetDeviceContext();
         for (const auto& cb : m_CBuffers)
         {
             if (!cb.gpuBuffer) continue;
-            if (cb.dirty)
-            {
-                dc->UpdateSubresource(cb.gpuBuffer.Get(), 0, nullptr,
-                    cb.shadow.data(), 0, 0);
-                // Mark clean
-                const_cast<D3D11CBuffer&>(cb).dirty = false;
-            }
-            dc->VSSetConstantBuffers(cb.slot, 1, cb.gpuBuffer.GetAddressOf());
-            dc->PSSetConstantBuffers(cb.slot, 1, cb.gpuBuffer.GetAddressOf());
+            ID3D11Buffer* buf = cb.gpuBuffer.Get();
+            dc->VSSetConstantBuffers(cb.slot, 1, &buf);
+            dc->PSSetConstantBuffers(cb.slot, 1, &buf);
+            if (m_GS) dc->GSSetConstantBuffers(cb.slot, 1, &buf);
+            if (m_HS) dc->HSSetConstantBuffers(cb.slot, 1, &buf);
+            if (m_DS) dc->DSSetConstantBuffers(cb.slot, 1, &buf);
+            if (m_CS) dc->CSSetConstantBuffers(cb.slot, 1, &buf);
+        }
+    }
+
+    // UploadDirtyCBuffers — called from Flush().  Only uploads data for dirty
+    // cbuffers; no SetConstantBuffers needed since Bind() already mapped the
+    // slots and D3D11 reads from the buffer object at draw time.
+    void D3D11Shader::UploadDirtyCBuffers() const
+    {
+        auto* dc = D3D11Context::Get()->GetDeviceContext();
+        for (const auto& cb : m_CBuffers)
+        {
+            if (!cb.gpuBuffer || !cb.dirty) continue;
+            dc->UpdateSubresource(cb.gpuBuffer.Get(), 0, nullptr,
+                cb.shadow.data(), 0, 0);
+            const_cast<D3D11CBuffer&>(cb).dirty = false;
         }
     }
 
     void D3D11Shader::Bind() const
     {
-        BLU_CORE_ASSERT(m_VSBlob, "D3D11Shader::Bind — vertex shader was not compiled successfully");
-        auto* dc  = D3D11Context::Get()->GetDeviceContext();
-        auto* ctx = D3D11Context::Get();
+        auto* dc = D3D11Context::Get()->GetDeviceContext();
 
-        // Expose VS bytecode so D3D11VertexArray can create InputLayouts
-        ctx->SetCurrentVSBytecode(
+        // Compute-only path
+        if (!m_VS && m_CS)
+        {
+            dc->CSSetShader(m_CS.Get(), nullptr, 0);
+            BindConstantBuffers();
+            UploadDirtyCBuffers();
+            return;
+        }
+
+        if (!m_VSBlob)
+        {
+            BLU_CORE_WARN("D3D11Shader::Bind — vertex shader not compiled for '{0}', skipping", m_Name);
+            return;
+        }
+        D3D11Context::Get()->SetCurrentVSBytecode(
             m_VSBlob->GetBufferPointer(),
             m_VSBlob->GetBufferSize());
 
         dc->VSSetShader(m_VS.Get(), nullptr, 0);
         dc->PSSetShader(m_PS.Get(), nullptr, 0);
+        if (m_GS) dc->GSSetShader(m_GS.Get(), nullptr, 0);
+        if (m_HS) dc->HSSetShader(m_HS.Get(), nullptr, 0);
+        if (m_DS) dc->DSSetShader(m_DS.Get(), nullptr, 0);
 
+        // Bind all cbuffer slots first, then push any data that was marked
+        // dirty before this Bind() call (e.g. from SetLights / BindShadowMap).
+        BindConstantBuffers();
         UploadDirtyCBuffers();
     }
 
     void D3D11Shader::UnBind() const
     {
         auto* dc = D3D11Context::Get()->GetDeviceContext();
+        if (!m_VS && m_CS)
+        {
+            dc->CSSetShader(nullptr, nullptr, 0);
+            return;
+        }
         dc->VSSetShader(nullptr, nullptr, 0);
         dc->PSSetShader(nullptr, nullptr, 0);
+        if (m_GS) dc->GSSetShader(nullptr, nullptr, 0);
+        if (m_HS) dc->HSSetShader(nullptr, nullptr, 0);
+        if (m_DS) dc->DSSetShader(nullptr, nullptr, 0);
         D3D11Context::Get()->SetCurrentVSBytecode(nullptr, 0);
+    }
+
+    void D3D11Shader::DispatchCompute(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ)
+    {
+        auto* dc = D3D11Context::Get()->GetDeviceContext();
+        dc->Dispatch(groupsX, groupsY, groupsZ);
     }
 }

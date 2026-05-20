@@ -67,26 +67,41 @@ namespace Blu
         // Upload a whole cbuffer shadow blob by cbuffer name (not uniform name).
         void SetUniformBuffer(const std::string& cbufferName, const void* data, uint32_t size) override;
 
+        void DispatchCompute(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) override;
+
     private:
-        void Compile(const std::string& vertexSrc, const std::string& pixelSrc);
-        void Reflect(ID3DBlob* vsBlob, ID3DBlob* psBlob);
+        void Compile(const std::string& vertexSrc, const std::string& pixelSrc,
+                     const std::string& geometrySrc = {},
+                     const std::string& hullSrc = {},
+                     const std::string& domainSrc = {});
+        void CompileCompute(const std::string& src);
+        bool CompileStage(const std::string& src, const char* target, ID3DBlob** outBlob);
         void TraverseType(ID3D11ShaderReflectionType* type,
                           const std::string& baseName,
                           uint32_t baseOffset,
                           uint32_t cbufferIndex,
                           uint32_t totalSize);
+        void ReflectConstantBuffers(ID3DBlob* blob);
 
         void WriteToShadow(const std::string& name, const void* data, uint32_t size);
-        void UploadDirtyCBuffers() const;
+        void BindConstantBuffers()  const; // called from Bind(): maps all buffer slots once
+        void UploadDirtyCBuffers()  const; // called from Flush(): only UpdateSubresource dirty ones
 
         std::string m_Name;
         std::string m_Filepath;
 
-        Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
-        Microsoft::WRL::ComPtr<ID3D11PixelShader>  m_PS;
+        Microsoft::WRL::ComPtr<ID3D11VertexShader>   m_VS;
+        Microsoft::WRL::ComPtr<ID3D11PixelShader>    m_PS;
+        Microsoft::WRL::ComPtr<ID3D11GeometryShader> m_GS;
+        Microsoft::WRL::ComPtr<ID3D11HullShader>     m_HS;
+        Microsoft::WRL::ComPtr<ID3D11DomainShader>   m_DS;
+        Microsoft::WRL::ComPtr<ID3D11ComputeShader>  m_CS;
 
-        // VS bytecode stored so D3D11VertexArray can create InputLayouts
         Microsoft::WRL::ComPtr<ID3DBlob> m_VSBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> m_GSBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> m_HSBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> m_DSBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> m_CSBlob;
 
         // Constant buffers indexed by their natural order (slot order from reflection)
         std::vector<D3D11CBuffer>                    m_CBuffers;

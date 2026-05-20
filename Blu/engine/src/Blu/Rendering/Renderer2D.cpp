@@ -388,23 +388,9 @@ namespace Blu
 			DrawQuad(transform, src.Color, entityID);
 		}
 	}
-	void Renderer2D::PassMaterialPropertiesToShader(Shared<Material> materialInstance)
+	void Renderer2D::PassMaterialPropertiesToShader(Shared<Material> /*materialInstance*/)
 	{
-		if (materialInstance)
-		{
-			s_RendererData->QuadShader->Bind();
-			s_RendererData->QuadShader->SetUniformFloat3("o_Material.ambient", materialInstance->GetAmbientColor());
-			s_RendererData->QuadShader->SetUniformFloat3("o_Material.diffuse", materialInstance->GetDiffuseColor());
-			s_RendererData->QuadShader->SetUniformFloat3("o_Material.specular", materialInstance->GetSpecularColor());
-			s_RendererData->QuadShader->SetUniformFloat("o_Material.shininess", materialInstance->GetShininess());
-			auto lightManager = Helpers::SceneHelpers::GetHelperActiveScene()->GetLightManager();
-			PassLightPropertiesToShader(lightManager);
-			s_RendererData->QuadShader->UnBind();
-
-
-
-
-		}
+		// Phong material properties retired; 2D rendering uses per-vertex colour only.
 	}
 	void Renderer2D::PassLightPropertiesToShader(Shared<LightManager> /*lightManager*/)
 	{

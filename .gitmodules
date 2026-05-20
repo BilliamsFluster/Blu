@@ -22,3 +22,6 @@
 [submodule "Blu/engine/ExternalDependencies/assimp"]
 	path = Blu/engine/ExternalDependencies/assimp
 	url = https://github.com/BilliamsFluster/AssimpPremake.git
+[submodule "Blu/engine/ExternalDependencies/jolt"]
+	path = Blu/engine/ExternalDependencies/jolt
+	url = https://github.com/jrouwe/JoltPhysics.git

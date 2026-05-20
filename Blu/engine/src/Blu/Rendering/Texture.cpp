@@ -1,8 +1,10 @@
 #include "Blupch.h"
 #include "Texture.h"
+#include "TextureCube.h"
 #include "Blu/Rendering/Renderer.h"
 #include "Blu/Platform/OpenGL/OpenGLTexture.h"
 #include "Blu/Platform/DirectX11/D3D11Texture.h"
+#include "Blu/Platform/DirectX11/D3D11TextureCube.h"
 #include <memory>
 
 namespace Blu
@@ -25,6 +27,17 @@ namespace Blu
 		case RendererAPI::API::None:     return nullptr;
 		case RendererAPI::API::OpenGL:   return std::make_shared<OpenGLTexture2D>(width, height);
 		case RendererAPI::API::Direct3D: return std::make_shared<D3D11Texture2D>(width, height);
+		}
+		return nullptr;
+	}
+
+	Shared<TextureCube> TextureCube::Create(uint32_t size, uint32_t mipLevels)
+	{
+		switch (Renderer::GetAPI())
+		{
+		case RendererAPI::API::None:     return nullptr;
+		case RendererAPI::API::Direct3D: return std::make_shared<D3D11TextureCube>(size, mipLevels);
+		case RendererAPI::API::OpenGL:   return nullptr; // OpenGL cubemap not implemented yet
 		}
 		return nullptr;
 	}

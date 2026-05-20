@@ -2,70 +2,51 @@
 #include "Shader.h"
 #include "Blu/Core/Core.h"
 #include "Texture.h"
+#include <string>
 
 namespace Blu
 {
-    struct MaterialProperties
+    enum class BlendMode : uint8_t
     {
-        glm::vec3 AmbientColor; // Remember to align fields according to std140 rules
-        float Padding1; // Padding for alignment
-        glm::vec3 DiffuseColor;
-        float Padding2; // Padding for alignment
-        glm::vec3 SpecularColor;
-        float Padding3; // Padding for alignment
-        float Shininess;
-        float Padding4[3]; // Additional padding to ensure alignment
-        MaterialProperties() : AmbientColor(1.0f, 0.5f, 0.31f), DiffuseColor(1.0f, 0.5f, 0.31f), SpecularColor(0.5f, 0.5f, 0.5f), Shininess(32.0f) {
-            // Initialize padding to ensure it has predictable content
-            Padding1 = Padding2 = Padding3 = 0.0f;
-            std::fill(std::begin(Padding4), std::end(Padding4), 0.0f);
-        }
+        Opaque      = 0,  // No blending, depth write on
+        Masked      = 1,  // Alpha test (clip), depth write on, no sorting needed
+        Transparent = 2,  // Alpha blend, depth write off, sort back-to-front
+        Additive    = 3   // Additive blend, depth write off
     };
+
+    enum class ShadingModel : uint8_t
+    {
+        PBR   = 0,
+        Unlit = 1,
+    };
+
     class Material
     {
     public:
-        
-        
-        Blu::MaterialProperties MaterialProperties;
+        std::string  Name;
+        BlendMode    Blend          = BlendMode::Opaque;
+        ShadingModel Shading        = ShadingModel::PBR;
+        bool         TwoSided       = false;
+        float        AlphaCutoff    = 0.5f;   // only used when Blend == Masked
 
-        // Textures
-        Shared<Texture2D> DiffuseMap;
-        Shared<Texture2D> SpecularMap;
-        Shared<Texture2D> NormalMap;
+        glm::vec4    AlbedoColor    = glm::vec4(1.0f);  // alpha used for Transparent/Masked
+        float        Metallic       = 0.0f;
+        float        Roughness      = 0.5f;
+        float        AO             = 1.0f;
+        glm::vec3    EmissiveColor  = glm::vec3(0.0f);
+        float        EmissiveStrength = 0.0f;
+
         Shared<Texture2D> AlbedoMap;
+        Shared<Texture2D> NormalMap;
+        Shared<Texture2D> MetallicRoughnessMap;
+        Shared<Texture2D> AOMap;
+        Shared<Texture2D> EmissiveMap;
 
-        // Flags or other properties
-        bool IsTransparent;
-        // ... other flags or properties
+        // Uploads PBR uniforms and binds all texture slots into `shader`.
+        void Bind(Shader& shader) const;
 
-        // Common methods
-        virtual void SetShaderData(Blu::MaterialProperties& properties) = 0;
-        virtual Shader* GetShader() const = 0;
-        
-        Blu::MaterialProperties& GetMaterialProperties() { return MaterialProperties; }
+        bool IsTransparent() const { return Blend == BlendMode::Transparent || Blend == BlendMode::Additive; }
 
-        // Methods to set/get properties
-        void SetAmbientColor( glm::vec3& color) { MaterialProperties.AmbientColor = color; }
-        glm::vec3& GetAmbientColor()  { return MaterialProperties.AmbientColor; }
-
-        void SetDiffuseColor(glm::vec3& color) { MaterialProperties.DiffuseColor = color; }
-        glm::vec3& GetDiffuseColor()  { return MaterialProperties.DiffuseColor; }
-
-        void SetSpecularColor( glm::vec3& color) { MaterialProperties.SpecularColor = color; }
-        glm::vec3& GetSpecularColor()  { return MaterialProperties.SpecularColor; }
-
-        void SetShininess(float shininess) { MaterialProperties.Shininess = shininess; }
-        float& GetShininess()  { return MaterialProperties.Shininess; }
-
-        virtual bool operator ==(const Material& other) const = 0;
-
-
-        static Shared<Material> Create(Shader* shader);
         static Shared<Material> Create();
-        virtual void BindMaterialToShader(Material* material, Shader* shader) = 0;
-        virtual uint32_t GetProgramID() = 0;
-            
-
-        
     };
 }

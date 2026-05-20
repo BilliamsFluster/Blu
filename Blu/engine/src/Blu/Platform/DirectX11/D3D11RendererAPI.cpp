@@ -70,6 +70,14 @@ namespace Blu
         D3D11Context::Get()->GetDeviceContext()->DrawIndexed(count, 0, 0);
     }
 
+    void D3D11RendererAPI::DrawIndexedInstanced(const Shared<VertexArray>& va,
+                                                uint32_t indexCount, uint32_t instanceCount)
+    {
+        va->Bind();
+        uint32_t count = indexCount ? indexCount : va->GetIndexBuffer()->GetCount();
+        D3D11Context::Get()->GetDeviceContext()->DrawIndexedInstanced(count, instanceCount, 0, 0, 0);
+    }
+
     void D3D11RendererAPI::DrawLines(const Shared<VertexArray>& va, uint32_t vertexCount)
     {
         auto* dc = D3D11Context::Get()->GetDeviceContext();

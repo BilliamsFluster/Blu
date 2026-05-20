@@ -4,32 +4,44 @@
 #include "EditorCamera.h"
 #include "Camera.h"
 #include "Shader.h"
+#include "CascadedShadowMap.h"
+#include "IBLSystem.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Entity.h"
 
 #include "RenderCommand.h"
+#include "PipelineState.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 
 namespace Blu
 {
-    struct Renderer3DData
-    {
-        Shared<Shader> MeshShader;
-        glm::mat4      ViewProjectionMatrix = glm::mat4(1.0f);
-        glm::mat4      ViewMatrix           = glm::mat4(1.0f);
-        glm::vec3      ViewPos              = glm::vec3(0.0f);
-    };
-
-    static Renderer3DData* s_Data3D = nullptr;
+    Renderer3D::Renderer3DData* Renderer3D::s_Data3D = nullptr;
 
     void Renderer3D::Init()
     {
         s_Data3D = new Renderer3DData();
         if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
-            Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Renderer3D_Mesh.hlsl");
+        {
+            Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/PBR_Mesh.hlsl");
+            Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/DepthOnly.hlsl");
+            Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Foliage_Instanced.hlsl");
+            Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Skinned_Mesh.hlsl");
+        }
         else
+        {
             Renderer::GetShaderLibrary()->Load("assets/shaders/Renderer3D_Mesh.glsl");
-        s_Data3D->MeshShader = Renderer::GetShaderLibrary()->Get("Renderer3D_Mesh");
+        }
+        s_Data3D->MeshShader          = Renderer::GetShaderLibrary()->Get("PBR_Mesh");
+        s_Data3D->DepthOnlyShader     = Renderer::GetShaderLibrary()->Get("DepthOnly");
+        s_Data3D->InstancedMeshShader = Renderer::GetShaderLibrary()->Get("Foliage_Instanced");
+        s_Data3D->SkinnedMeshShader   = Renderer::GetShaderLibrary()->Get("Skinned_Mesh");
+        s_Data3D->CSMInstance         = CascadedShadowMap::Create(2048);
+
+        s_Data3D->MeshShader->Bind();
+        s_Data3D->MeshShader->SetUniformInt("u_HasShadowMap", 0);
+        s_Data3D->MeshShader->Flush();
+        s_Data3D->MeshShader->UnBind();
     }
 
     void Renderer3D::Shutdown()
@@ -43,6 +55,7 @@ namespace Blu
         s_Data3D->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
         s_Data3D->ViewMatrix           = camera.GetViewMatrix();
         s_Data3D->ViewPos              = camera.GetPosition();
+        s_Data3D->ViewFrustum.ExtractFromVP(s_Data3D->ViewProjectionMatrix);
     }
 
     void Renderer3D::BeginScene(const Camera& camera, const glm::mat4& transform)
@@ -50,10 +63,41 @@ namespace Blu
         s_Data3D->ViewMatrix           = glm::inverse(transform);
         s_Data3D->ViewProjectionMatrix = camera.GetProjectionMatrix() * s_Data3D->ViewMatrix;
         s_Data3D->ViewPos              = glm::vec3(transform[3]);
+        s_Data3D->ViewFrustum.ExtractFromVP(s_Data3D->ViewProjectionMatrix);
     }
 
     void Renderer3D::EndScene()
     {
+    }
+
+    struct alignas(16) IBLDataGPU
+    {
+        int   IBLEnabled;
+        float IBLStrength;
+        int   IBLMipLevels;
+        float _pad;
+    };
+    static_assert(sizeof(IBLDataGPU) == 16, "IBLDataGPU must be 16 bytes");
+
+    void Renderer3D::SetIBL(bool enabled, float strength)
+    {
+        s_Data3D->IBLEnabled  = enabled;
+        s_Data3D->IBLStrength = strength;
+    }
+
+    void Renderer3D::SetFog(const FogSettings& fog)
+    {
+        auto& sh = *s_Data3D->MeshShader;
+        sh.Bind();
+        sh.SetUniformInt   ("u_FogEnabled",      fog.Enabled ? 1 : 0);
+        sh.SetUniformFloat3("u_FogColor",        fog.Color);
+        sh.SetUniformFloat ("u_FogDensity",      fog.Density);
+        sh.SetUniformFloat ("u_FogHeightStart",  fog.HeightStart);
+        sh.SetUniformFloat ("u_FogHeightDensity",fog.HeightDensity);
+        sh.SetUniformFloat3("u_AerialColor",     fog.AerialColor);
+        sh.SetUniformFloat ("u_AerialStrength",  fog.AerialStrength);
+        sh.Flush();
+        sh.UnBind();
     }
 
     // -------------------------------------------------------------------------
@@ -131,18 +175,18 @@ namespace Blu
         {
             const auto& L = dirLights[i];
             gpu.DirLights[i].Direction = glm::normalize(L.Direction);
-            gpu.DirLights[i].Ambient   = L.Ambient   * L.Intensity;
-            gpu.DirLights[i].Diffuse   = L.Diffuse   * L.Intensity;
-            gpu.DirLights[i].Specular  = L.Specular  * L.Intensity;
+            gpu.DirLights[i].Ambient   = L.Ambient;
+            gpu.DirLights[i].Diffuse   = L.Diffuse;
+            gpu.DirLights[i].Specular  = L.Specular;
             gpu.DirLights[i].Intensity = L.Intensity;
         }
         for (int i = 0; i < np; ++i)
         {
             const auto& L = pointLights[i];
             gpu.PointLights[i].Position  = L.Position;
-            gpu.PointLights[i].Ambient   = L.Ambient   * L.Intensity;
-            gpu.PointLights[i].Diffuse   = L.Diffuse   * L.Intensity;
-            gpu.PointLights[i].Specular  = L.Specular  * L.Intensity;
+            gpu.PointLights[i].Ambient   = L.Ambient;
+            gpu.PointLights[i].Diffuse   = L.Diffuse;
+            gpu.PointLights[i].Specular  = L.Specular;
             gpu.PointLights[i].Intensity = L.Intensity;
             gpu.PointLights[i].Range     = L.Range;
             gpu.PointLights[i].Att       = glm::vec3(L.AttConstant, L.AttLinear, L.AttQuadratic);
@@ -152,9 +196,9 @@ namespace Blu
             const auto& L = spotLights[i];
             gpu.SpotLights[i].Position     = L.Position;
             gpu.SpotLights[i].Direction    = glm::normalize(L.Direction);
-            gpu.SpotLights[i].Ambient      = L.Ambient   * L.Intensity;
-            gpu.SpotLights[i].Diffuse      = L.Diffuse   * L.Intensity;
-            gpu.SpotLights[i].Specular     = L.Specular  * L.Intensity;
+            gpu.SpotLights[i].Ambient      = L.Ambient;
+            gpu.SpotLights[i].Diffuse      = L.Diffuse;
+            gpu.SpotLights[i].Specular     = L.Specular;
             gpu.SpotLights[i].Intensity    = L.Intensity;
             gpu.SpotLights[i].Range        = L.Range;
             gpu.SpotLights[i].InnerCutoff  = L.InnerCutoffCos;
@@ -181,105 +225,377 @@ namespace Blu
         s_Data3D->MeshShader->UnBind();
     }
 
-    static void UploadSubMesh(SubMesh& submesh)
+    // ─────────────────────────────────────────────────────────────────────────
+    // MeshDrawCall — internal per-submesh record used for blend-mode sorting.
+    // Collected during DrawMesh, flushed to GPU in Renderer3D::FlushDrawCalls.
+    // ─────────────────────────────────────────────────────────────────────────
+    struct MeshDrawCall
     {
-        submesh.VAO = VertexArray::Create();
-        Shared<VertexBuffer> vb = VertexBuffer::Create((uint32_t)(submesh.Vertices.size() * sizeof(MeshVertex)));
-        vb->SetData(submesh.Vertices.data(), (uint32_t)(submesh.Vertices.size() * sizeof(MeshVertex)));
-        BufferLayout layout = {
-            { ShaderDataType::Float3, "a_Position" },
-            { ShaderDataType::Float3, "a_Normal" },
-            { ShaderDataType::Float2, "a_TexCoord" },
-        };
-        vb->SetLayout(layout);
-        submesh.VAO->AddVertexBuffer(vb);
-        Shared<IndexBuffer> ib = IndexBuffer::Create(submesh.Indices.data(), (uint32_t)submesh.Indices.size());
-        submesh.VAO->AddIndexBuffer(ib);
+        glm::mat4            Transform;
+        glm::mat4            NormalMatrix;
+        const Material*      Mat;
+        Shared<VertexArray>  VAO;
+        uint32_t             IndexCount;
+        int                  EntityID;
+        float                DistToCamera; // world-space distance, for back-to-front sort
+    };
+
+    static std::vector<MeshDrawCall> s_OpaqueDrawCalls;
+    static std::vector<MeshDrawCall> s_TransparentDrawCalls;
+
+    // Resolve the effective material for a given submesh index
+    static const Material& ResolveMaterial(const MeshComponent& mc, int materialIndex)
+    {
+        static const Material s_DefaultMaterial;
+        if (mc.ModelAsset && materialIndex >= 0 && materialIndex < (int)mc.ModelAsset->Materials.size())
+        {
+            const auto& m = mc.ModelAsset->Materials[materialIndex];
+            if (m) return *m;
+        }
+        return mc.MaterialInstance ? *mc.MaterialInstance : s_DefaultMaterial;
+    }
+
+    // Issue a single draw call with the correct pipeline state already bound
+    static void IssueDrawCall(Shader& sh, const MeshDrawCall& dc)
+    {
+        sh.SetUniformMat4("u_Model", dc.Transform);
+        sh.SetUniformMat3("u_NormalMatrix", dc.NormalMatrix);
+        sh.SetUniformInt("u_EntityID", dc.EntityID);
+        dc.Mat->Bind(sh);
+        sh.Flush();
+        dc.VAO->Bind();
+        RenderCommand::DrawIndexed(dc.VAO, dc.IndexCount);
+    }
+
+
+    // Choose and bind the correct pipeline state for a material
+    static void BindPipelineForMaterial(const Material& mat)
+    {
+        switch (mat.Blend)
+        {
+        case BlendMode::Transparent:
+            PipelineStateCache::GetTransparent()->Bind();
+            break;
+        case BlendMode::Additive:
+            PipelineStateCache::GetAdditiveBlend()->Bind();
+            break;
+        default:
+            // Opaque or Masked — use CullNone for TwoSided, Back-cull otherwise
+            if (mat.TwoSided)
+                PipelineStateCache::GetCullNone()->Bind();
+            else
+                PipelineStateCache::GetOpaque()->Bind();
+            break;
+        }
     }
 
     void Renderer3D::DrawMesh(const glm::mat4& transform, MeshComponent& mc, int entityID)
     {
         if (!mc.MeshData && !mc.ModelAsset) return;
 
-        s_Data3D->MeshShader->Bind();
-        s_Data3D->MeshShader->SetUniformMat4("u_ViewProjectionMatrix", s_Data3D->ViewProjectionMatrix);
-        s_Data3D->MeshShader->SetUniformMat4("u_Model", transform);
-
-        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(transform)));
-        if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+        if (mc.ModelAsset)
         {
-            s_Data3D->MeshShader->SetUniformFloat3("u_NormalCol0", normalMatrix[0]);
-            s_Data3D->MeshShader->SetUniformFloat3("u_NormalCol1", normalMatrix[1]);
-            s_Data3D->MeshShader->SetUniformFloat3("u_NormalCol2", normalMatrix[2]);
+            for (auto& submesh : mc.ModelAsset->Meshes)
+            {
+                glm::mat4 submeshWorld = transform * submesh.LocalTransform;
+
+                glm::vec3 worldCenter = glm::vec3(submeshWorld * glm::vec4(submesh.BoundingCenter, 1.0f));
+                float worldRadius = submesh.BoundingRadius * std::max({
+                    glm::length(glm::vec3(submeshWorld[0])),
+                    glm::length(glm::vec3(submeshWorld[1])),
+                    glm::length(glm::vec3(submeshWorld[2]))});
+                if (!s_Data3D->ViewFrustum.TestSphere(worldCenter, worldRadius))
+                    continue;
+
+                const Material& mat = ResolveMaterial(mc, submesh.MaterialIndex);
+
+                MeshDrawCall dc;
+                dc.Transform    = submeshWorld;
+                dc.NormalMatrix = glm::transpose(glm::inverse(glm::mat3(submeshWorld)));
+                dc.Mat          = &mat;
+                dc.VAO          = submesh.VAO;
+                dc.IndexCount   = submesh.IndexCount;
+                dc.EntityID     = entityID;
+                dc.DistToCamera = glm::length(worldCenter - s_Data3D->ViewPos);
+
+                if (mat.IsTransparent())
+                    s_TransparentDrawCalls.push_back(dc);
+                else
+                    s_OpaqueDrawCalls.push_back(dc);
+            }
         }
-        else
+        else if (mc.MeshData)
         {
-            s_Data3D->MeshShader->SetUniformMat3("u_NormalMatrix", normalMatrix);
+            const Material& mat = mc.MaterialInstance ? *mc.MaterialInstance
+                                                       : ResolveMaterial(mc, -1);
+
+            glm::vec3 worldPos = glm::vec3(transform[3]);
+            MeshDrawCall dc;
+            dc.Transform    = transform;
+            dc.NormalMatrix = glm::transpose(glm::inverse(glm::mat3(transform)));
+            dc.Mat          = &mat;
+            dc.VAO          = mc.MeshData->GetVertexArray();
+            dc.IndexCount   = mc.MeshData->GetIndexCount();
+            dc.EntityID     = entityID;
+            dc.DistToCamera = glm::length(worldPos - s_Data3D->ViewPos);
+
+            if (mat.IsTransparent())
+                s_TransparentDrawCalls.push_back(dc);
+            else
+                s_OpaqueDrawCalls.push_back(dc);
+        }
+    }
+
+    void Renderer3D::FlushDrawCalls()
+    {
+        auto& sh = *s_Data3D->MeshShader;
+        sh.Bind();
+        sh.SetUniformMat4("u_ViewProjectionMatrix", s_Data3D->ViewProjectionMatrix);
+
+        // Upload IBL cbuffer + bind IBL textures
+        IBLDataGPU iblGPU;
+        iblGPU.IBLEnabled  = (s_Data3D->IBLEnabled && IBLSystem::IsReady()) ? 1 : 0;
+        iblGPU.IBLStrength = s_Data3D->IBLStrength;
+        iblGPU.IBLMipLevels = IBLSystem::GetPrefilterMips();
+        iblGPU._pad        = 0.0f;
+        sh.SetUniformBuffer("IBLData", &iblGPU, sizeof(iblGPU));
+        sh.Flush();
+
+        if (iblGPU.IBLEnabled)
+            IBLSystem::BindIBL(6, 7, 8);
+
+        // --- Opaque / Masked pass (front-to-back order, arbitrary per-material) ---
+        // Sort front-to-back to reduce overdraw
+        std::sort(s_OpaqueDrawCalls.begin(), s_OpaqueDrawCalls.end(),
+            [](const MeshDrawCall& a, const MeshDrawCall& b) {
+                return a.DistToCamera < b.DistToCamera;
+            });
+
+        const Material* lastMat = nullptr;
+        for (const auto& dc : s_OpaqueDrawCalls)
+        {
+            if (dc.Mat != lastMat)
+            {
+                BindPipelineForMaterial(*dc.Mat);
+                lastMat = dc.Mat;
+            }
+            IssueDrawCall(sh, dc);
         }
 
-        if (mc.MaterialInstance)
+        // --- Transparent / Additive pass (back-to-front order) ---
+        std::sort(s_TransparentDrawCalls.begin(), s_TransparentDrawCalls.end(),
+            [](const MeshDrawCall& a, const MeshDrawCall& b) {
+                return a.DistToCamera > b.DistToCamera;
+            });
+
+        lastMat = nullptr;
+        for (const auto& dc : s_TransparentDrawCalls)
         {
-            s_Data3D->MeshShader->SetUniformFloat3("u_Material.ambient",  mc.MaterialInstance->GetAmbientColor());
-            s_Data3D->MeshShader->SetUniformFloat3("u_Material.diffuse",  mc.MaterialInstance->GetDiffuseColor());
-            s_Data3D->MeshShader->SetUniformFloat3("u_Material.specular", mc.MaterialInstance->GetSpecularColor());
-            s_Data3D->MeshShader->SetUniformFloat ("u_Material.shininess", mc.MaterialInstance->GetShininess());
-        }
-        else
-        {
-            s_Data3D->MeshShader->SetUniformFloat3("u_Material.ambient",  glm::vec3(0.2f));
-            s_Data3D->MeshShader->SetUniformFloat3("u_Material.diffuse",  glm::vec3(0.8f));
-            s_Data3D->MeshShader->SetUniformFloat3("u_Material.specular", glm::vec3(0.5f));
-            s_Data3D->MeshShader->SetUniformFloat ("u_Material.shininess", 32.0f);
+            if (dc.Mat != lastMat)
+            {
+                BindPipelineForMaterial(*dc.Mat);
+                lastMat = dc.Mat;
+            }
+            IssueDrawCall(sh, dc);
         }
 
-        s_Data3D->MeshShader->SetUniformInt("u_EntityID", entityID);
+        s_OpaqueDrawCalls.clear();
+        s_TransparentDrawCalls.clear();
 
-        // Upload all per-object uniforms once
-        s_Data3D->MeshShader->Flush();
+        // Restore opaque state for subsequent 2D/UI passes
+        PipelineStateCache::GetOpaque()->Bind();
+        sh.UnBind();
+    }
+
+    // ─── CSM shadow pass ────────────────────────────────────────────────────
+
+    void Renderer3D::BeginCSMPass(int cascadeIndex, const glm::mat4& lightVP)
+    {
+        s_Data3D->CSMInstance->BindCascadeForWriting(cascadeIndex);
+        PipelineStateCache::GetShadowMap()->Bind();
+        s_Data3D->DepthOnlyShader->Bind();
+        s_Data3D->DepthOnlyShader->SetUniformMat4("u_LightVP", lightVP);
+        s_Data3D->DepthOnlyShader->Flush();
+    }
+
+    void Renderer3D::EndCSMPass()
+    {
+        s_Data3D->DepthOnlyShader->UnBind();
+        PipelineStateCache::GetOpaque()->Bind();
+        // Do not restore render target yet — caller loops over cascades.
+    }
+
+    void Renderer3D::DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc)
+    {
+        if (!mc.MeshData && !mc.ModelAsset) return;
 
         if (mc.ModelAsset)
         {
             for (auto& submesh : mc.ModelAsset->Meshes)
             {
-                if (!submesh.VAO)
-                    UploadSubMesh(submesh);
-
-                bool hasAlbedo = false;
-                if (submesh.MaterialIndex >= 0 && submesh.MaterialIndex < (int)mc.ModelAsset->Materials.size())
-                {
-                    auto& mat = mc.ModelAsset->Materials[submesh.MaterialIndex];
-                    if (mat && mat->AlbedoMap)
-                    {
-                        mat->AlbedoMap->Bind(0);
-                        s_Data3D->MeshShader->SetUniformInt("u_AlbedoTexture", 0);
-                        hasAlbedo = true;
-                    }
-                }
-                // Update texture flag per-submesh and upload before draw
-                s_Data3D->MeshShader->SetUniformInt("u_HasAlbedoTexture", hasAlbedo ? 1 : 0);
-                s_Data3D->MeshShader->Flush();
-
+                s_Data3D->DepthOnlyShader->SetUniformMat4("u_Model", transform * submesh.LocalTransform);
+                s_Data3D->DepthOnlyShader->Flush();
                 submesh.VAO->Bind();
-                RenderCommand::DrawIndexed(submesh.VAO, (uint32_t)submesh.Indices.size());
-                submesh.VAO->UnBind();
+                RenderCommand::DrawIndexed(submesh.VAO, submesh.IndexCount);
             }
         }
         else if (mc.MeshData)
         {
-            bool hasAlbedo = mc.MaterialInstance && mc.MaterialInstance->AlbedoMap;
-            if (hasAlbedo)
-            {
-                mc.MaterialInstance->AlbedoMap->Bind(0);
-                s_Data3D->MeshShader->SetUniformInt("u_AlbedoTexture", 0);
-            }
-            s_Data3D->MeshShader->SetUniformInt("u_HasAlbedoTexture", hasAlbedo ? 1 : 0);
-            s_Data3D->MeshShader->Flush();
-
+            s_Data3D->DepthOnlyShader->SetUniformMat4("u_Model", transform);
+            s_Data3D->DepthOnlyShader->Flush();
             mc.MeshData->GetVertexArray()->Bind();
             RenderCommand::DrawIndexed(mc.MeshData->GetVertexArray(), mc.MeshData->GetIndexCount());
-            mc.MeshData->GetVertexArray()->UnBind();
+        }
+    }
+
+    // ─── Skinned mesh draw ────────────────────────────────────────────────────
+
+    // BoneData cbuffer: 128 mat4s (8192 bytes).  Matches Skinned_Mesh.hlsl b6.
+    struct alignas(16) BoneDataGPU
+    {
+        glm::mat4 Bones[128]; // 128 * 64 = 8 192 bytes
+    };
+    static_assert(sizeof(BoneDataGPU) == 8192, "BoneDataGPU size mismatch");
+
+    void Renderer3D::DrawSkinnedMesh(const glm::mat4& transform, MeshComponent& mc,
+                                     const std::vector<glm::mat4>& boneMatrices,
+                                     int entityID)
+    {
+        if (!mc.ModelAsset || !mc.ModelAsset->HasSkeleton()) return;
+        if (!s_Data3D->SkinnedMeshShader) return;
+
+        auto& sh = *s_Data3D->SkinnedMeshShader;
+        sh.Bind();
+        sh.SetUniformMat4("u_ViewProjectionMatrix", s_Data3D->ViewProjectionMatrix);
+        sh.SetUniformFloat3("u_ViewPos", s_Data3D->ViewPos);
+        sh.SetUniformMat4("u_Model", transform);
+
+        glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(transform)));
+        sh.SetUniformMat3("u_NormalMatrix", normalMat);
+        sh.SetUniformInt("u_EntityID", entityID);
+
+        // Upload bone matrices
+        BoneDataGPU boneGPU = {};
+        int count = std::min((int)boneMatrices.size(), 128);
+        for (int i = 0; i < count; ++i)
+            boneGPU.Bones[i] = boneMatrices[i];
+        sh.SetUniformBuffer("BoneData", &boneGPU, sizeof(boneGPU));
+
+        // IBL (b7 in Skinned_Mesh.hlsl, same GPU struct)
+        IBLDataGPU iblGPU;
+        iblGPU.IBLEnabled   = (s_Data3D->IBLEnabled && IBLSystem::IsReady()) ? 1 : 0;
+        iblGPU.IBLStrength  = s_Data3D->IBLStrength;
+        iblGPU.IBLMipLevels = IBLSystem::GetPrefilterMips();
+        iblGPU._pad         = 0.0f;
+        sh.SetUniformBuffer("IBLData", &iblGPU, sizeof(iblGPU));
+        sh.Flush();
+
+        if (iblGPU.IBLEnabled)
+            IBLSystem::BindIBL(6, 7, 8);
+
+        PipelineStateCache::GetOpaque()->Bind();
+
+        for (auto& submesh : mc.ModelAsset->SkinnedMeshes)
+        {
+            const Material& mat = (submesh.MaterialIndex >= 0 &&
+                submesh.MaterialIndex < (int)mc.ModelAsset->Materials.size() &&
+                mc.ModelAsset->Materials[submesh.MaterialIndex])
+                ? *mc.ModelAsset->Materials[submesh.MaterialIndex]
+                : (mc.MaterialInstance ? *mc.MaterialInstance : Material{});
+
+            mat.Bind(sh);
+            sh.Flush();
+            submesh.VAO->Bind();
+            RenderCommand::DrawIndexed(submesh.VAO, submesh.IndexCount);
         }
 
+        sh.UnBind();
+    }
+
+    // ─── Instanced draw support ───────────────────────────────────────────────
+
+    // Matches Foliage_Instanced.hlsl InstanceData cbuffer (b1) exactly.
+    struct alignas(16) InstanceDataGPU
+    {
+        glm::mat4 Transforms[256]; // 256 * 64 = 16 384 bytes
+    };
+    static_assert(sizeof(InstanceDataGPU) == 16384, "InstanceDataGPU size mismatch");
+
+    // Matches Foliage_Instanced.hlsl WindData cbuffer (b5).
+    struct alignas(16) WindDataGPU
+    {
+        glm::vec3 Direction; float Strength;   // 16
+        float     Frequency; float Time;
+        glm::vec2 _pad;                        // 8 → 32 total
+    };
+    static_assert(sizeof(WindDataGPU) == 32, "WindDataGPU size mismatch");
+
+    void Renderer3D::DrawMeshInstanced(const Shared<Model>& model,
+                                       const std::vector<glm::mat4>& transforms,
+                                       const Material* overrideMat)
+    {
+        if (!model || model->Meshes.empty() || transforms.empty()) return;
+        auto& sh = *s_Data3D->InstancedMeshShader;
+        if (!s_Data3D->InstancedMeshShader) return;
+
+        sh.Bind();
+        sh.SetUniformMat4("u_ViewProjectionMatrix", s_Data3D->ViewProjectionMatrix);
+        sh.SetUniformFloat3("u_ViewPos", s_Data3D->ViewPos);
+        sh.Flush();
+
+        PipelineStateCache::GetCullNone()->Bind(); // two-sided for foliage leaves
+
+        const int total = (int)transforms.size();
+        for (int batchStart = 0; batchStart < total; batchStart += kMaxInstances)
+        {
+            int batchCount = std::min(kMaxInstances, total - batchStart);
+
+            InstanceDataGPU instGPU = {};
+            for (int i = 0; i < batchCount; ++i)
+                instGPU.Transforms[i] = transforms[batchStart + i];
+
+            sh.SetUniformBuffer("InstanceData", &instGPU, sizeof(instGPU));
+
+            for (const auto& submesh : model->Meshes)
+            {
+                const Material& mat = overrideMat ? *overrideMat
+                    : (submesh.MaterialIndex >= 0 && submesh.MaterialIndex < (int)model->Materials.size()
+                        && model->Materials[submesh.MaterialIndex]
+                        ? *model->Materials[submesh.MaterialIndex]
+                        : Material{});
+
+                mat.Bind(sh);
+                sh.Flush();
+                RenderCommand::DrawIndexedInstanced(submesh.VAO, submesh.IndexCount, (uint32_t)batchCount);
+            }
+        }
+
+        PipelineStateCache::GetOpaque()->Bind();
+        sh.UnBind();
+    }
+
+    struct alignas(16) ShadowDataGPU
+    {
+        glm::mat4 LightVPs[CascadedShadowMap::NUM_CASCADES]; // 192 bytes
+        glm::vec3 CascadeSplits;                              // 12
+        float     ShadowMapSize;                              // 4  → total 208
+    };
+    static_assert(sizeof(ShadowDataGPU) == 208, "ShadowDataGPU must match HLSL cbuffer ShadowData");
+
+    void Renderer3D::BindCSM(const glm::mat4 lightVPs[CascadedShadowMap::NUM_CASCADES],
+                              const glm::vec3& cascadeSplits)
+    {
+        ShadowDataGPU gpuData = {};
+        for (int i = 0; i < CascadedShadowMap::NUM_CASCADES; ++i)
+            gpuData.LightVPs[i] = lightVPs[i];
+        gpuData.CascadeSplits = cascadeSplits;
+        gpuData.ShadowMapSize = static_cast<float>(s_Data3D->CSMInstance->GetSize());
+
+        s_Data3D->MeshShader->Bind();
+        s_Data3D->MeshShader->SetUniformInt("u_HasShadowMap", 1);
+        s_Data3D->MeshShader->SetUniformBuffer("ShadowData", &gpuData, sizeof(gpuData));
+        s_Data3D->CSMInstance->BindTexture(5);
+        s_Data3D->MeshShader->Flush();
         s_Data3D->MeshShader->UnBind();
     }
 }

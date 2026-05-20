@@ -44,6 +44,8 @@ namespace Blu
 
         // Convenience for DX11-aware code that wants the raw SRV
         ID3D11ShaderResourceView* GetColorAttachmentSRV(uint32_t index = 0) const;
+        // SRV over the depth texture (R24_UNORM_X8_TYPELESS view) — null if no depth attachment
+        ID3D11ShaderResourceView* GetDepthSRV() const { return m_DepthSRV.Get(); }
 
     private:
         void Invalidate();
@@ -52,7 +54,9 @@ namespace Blu
         FrameBufferSpecifications m_Spec;
 
         std::vector<D3D11ColorAttachment>                m_ColorAttachments;
-        Microsoft::WRL::ComPtr<ID3D11Texture2D>          m_DepthTexture;
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilView>   m_DSV;
+        Microsoft::WRL::ComPtr<ID3D11Texture2D>             m_DepthTexture;
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilView>    m_DSV;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  m_DepthSRV;         // R24_UNORM_X8_TYPELESS view for SSAO
+        Microsoft::WRL::ComPtr<ID3D11Texture2D>           m_DepthStaging;     // cached 1×1 staging for ReadDepth
     };
 }

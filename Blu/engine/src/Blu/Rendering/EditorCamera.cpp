@@ -33,6 +33,7 @@ namespace Blu
 
 	void EditorCamera::OnUpdate(Timestep deltaTime)
 	{
+		const float dt = deltaTime.GetSeconds();
 		const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
 		glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mouse;
@@ -41,29 +42,37 @@ namespace Blu
 		if (Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_MIDDLE))
 			MousePan(delta);
 
-		// Right mouse — look around (rotate in place, no orbit drift).
+		// Right mouse — look around and fly with velocity-based easing.
 		if (Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_RIGHT))
 		{
 			MouseRotate(delta);
 
-			// WASD / QE — fly: move the camera position directly in local space.
-			const float speed = m_CameraSpeed * deltaTime.GetSeconds();
+			// Build desired move direction from WASD/QE.
+			glm::vec3 moveDir(0.0f);
+			if (Input::IsKeyPressed(BLU_KEY_W)) moveDir += GetForwardDirection();
+			if (Input::IsKeyPressed(BLU_KEY_S)) moveDir -= GetForwardDirection();
+			if (Input::IsKeyPressed(BLU_KEY_A)) moveDir -= GetRightDirection();
+			if (Input::IsKeyPressed(BLU_KEY_D)) moveDir += GetRightDirection();
+			if (Input::IsKeyPressed(BLU_KEY_Q)) moveDir -= GetUpDirection();
+			if (Input::IsKeyPressed(BLU_KEY_E)) moveDir += GetUpDirection();
 
-			if (Blu::Input::IsKeyPressed(BLU_KEY_W))
-				m_Position += GetForwardDirection() * speed;
-			if (Blu::Input::IsKeyPressed(BLU_KEY_S))
-				m_Position -= GetForwardDirection() * speed;
-			if (Blu::Input::IsKeyPressed(BLU_KEY_A))
-				m_Position -= GetRightDirection() * speed;
-			if (Blu::Input::IsKeyPressed(BLU_KEY_D))
-				m_Position += GetRightDirection() * speed;
-			// Q = up, E = down (user-confirmed preference)
-			if (Blu::Input::IsKeyPressed(BLU_KEY_Q))
-				m_Position -= GetUpDirection() * speed;
-			if (Blu::Input::IsKeyPressed(BLU_KEY_E))
-				m_Position += GetUpDirection() * speed;
+			float len = glm::length(moveDir);
+			glm::vec3 targetVel = (len > 0.001f)
+			    ? (moveDir / len) * m_CameraSpeed
+			    : glm::vec3(0.0f);
+
+			// Exponential smoothing: ramp up quickly, coast to zero smoothly.
+			float alpha = 1.0f - glm::exp(-12.0f * dt);
+			m_Velocity = glm::mix(m_Velocity, targetVel, alpha);
+		}
+		else
+		{
+			// Brake: exponential decay so the camera glides to a stop.
+			float brake = 1.0f - glm::exp(-9.0f * dt);
+			m_Velocity = glm::mix(m_Velocity, glm::vec3(0.0f), brake);
 		}
 
+		m_Position += m_Velocity * dt;
 		UpdateView();
 	}
 

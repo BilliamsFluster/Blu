@@ -2,12 +2,18 @@
 #include "entt.hpp"
 #include "Component.h"
 #include "Blu/Core/Timestep.h"
+#include "Blu/Rendering/Renderer3D.h"
+#include "Blu/Rendering/TimeOfDay.h"
 #include <filesystem>
 
 class b2World;
 namespace Blu
 {
 	class Entity;
+	class PostProcess;
+	class Skybox;
+	class Physics3DWorld;
+
 	class Scene
 	{
 	public:
@@ -38,11 +44,10 @@ namespace Blu
 
 		void OnRuntimeStart();
 		void OnPhysics2DStart();
+		void OnPhysics3DStart();
+		void OnPhysics3DStop();
 		void OnRuntimeStop();
 
-		void OnScriptSystemStart(bool invokeOnCreate = true);
-		void OnScriptSystemStop();
-		void OnScriptSystemUpdate(Timestep deltaTime);
 		void UpdateActiveCameraComponent(Timestep deltaTime);
 
 		void DestroyEntity(Entity entity);
@@ -55,6 +60,20 @@ namespace Blu
 		bool IsScenePaused() { return m_ScenePaused; }
 		void SetScenePaused(bool paused) {m_ScenePaused = paused; }
 		Shared<class LightManager> GetLightManager() { return m_LightManager; }
+		void SetUseShadows(bool use) { m_UseShadows = use; }
+		bool GetUseShadows() const { return m_UseShadows; }
+		void SetUsePostProcess(bool use) { m_UsePostProcess = use; }
+		bool GetUsePostProcess() const { return m_UsePostProcess; }
+		Shared<PostProcess> GetPostProcess() const { return m_PostProcess; }
+		void SetUseSkybox(bool use) { m_UseSkybox = use; }
+		bool GetUseSkybox() const { return m_UseSkybox; }
+		Shared<Skybox> GetSkybox() const { return m_Skybox; }
+		FogSettings& GetFog() { return m_Fog; }
+		void SetFogEnabled(bool e) { m_Fog.Enabled = e; }
+		TimeOfDayController& GetTimeOfDay() { return m_TimeOfDay; }
+		void SetUseTimeOfDay(bool use) { m_UseTimeOfDay = use; }
+		bool GetUseTimeOfDay() const { return m_UseTimeOfDay; }
+
 	private:
 		entt::registry m_Registry; // container for all of our entt components
 		float m_ViewportWidth = 0.0f, m_ViewportHeight = 0.0f;
@@ -63,6 +82,9 @@ namespace Blu
 		Shared<LightManager> m_LightManager;
 
 		b2World* m_PhysicsWorld = nullptr;
+		Physics3DWorld* m_Physics3DWorld = nullptr;
+		Shared<PostProcess> m_PostProcess;
+		Shared<Skybox>      m_Skybox;
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
@@ -71,8 +93,17 @@ namespace Blu
 		void Render2DPass(Camera& camera, const glm::mat4& transform, Timestep deltaTime, bool updateParticles);
 		void Render3DPass(class EditorCamera& camera);
 		void Render3DPass(Camera& camera, const glm::mat4& transform);
+		void ShadowPass(const std::vector<DirLightData>& dirLights,
+		                const glm::mat4& cameraVP, float cameraNear, float cameraFar);
 
-		bool m_ScenePaused = false;
-		int m_StepFrames = 0;
+		bool        m_ScenePaused    = false;
+		int         m_StepFrames    = 0;
+		bool        m_UseShadows    = false;
+		bool        m_UsePostProcess= false;
+		bool        m_UseSkybox     = false;
+		bool        m_UseTimeOfDay  = false;
+		FogSettings             m_Fog;
+		TimeOfDayController     m_TimeOfDay;
+		float       m_ElapsedTime   = 0.0f;
 	};
 }

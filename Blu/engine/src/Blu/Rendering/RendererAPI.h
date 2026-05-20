@@ -21,6 +21,7 @@ namespace Blu
 
 		virtual void DrawLines(const Shared<VertexArray>& vertexArray, uint32_t vertexCount) = 0;
 		virtual void DrawIndexed(const Shared<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+		virtual void DrawIndexedInstanced(const Shared<VertexArray>& vertexArray, uint32_t indexCount, uint32_t instanceCount) = 0;
 		virtual void Clear() = 0;
 
 		inline static API GetAPI() { return s_API; }

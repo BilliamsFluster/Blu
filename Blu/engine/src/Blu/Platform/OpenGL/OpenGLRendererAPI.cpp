@@ -24,6 +24,14 @@ namespace Blu
 		
 	}
 
+	void OpenGLRendererAPI::DrawIndexedInstanced(const Shared<VertexArray>& vertexArray,
+	                                              uint32_t indexCount, uint32_t instanceCount)
+	{
+		vertexArray->Bind();
+		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+		glDrawElementsInstanced(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr, instanceCount);
+	}
+
 	void OpenGLRendererAPI::DrawLines(const Shared<VertexArray>& vertexArray, uint32_t vertexCount)
 	{
 		vertexArray->Bind();

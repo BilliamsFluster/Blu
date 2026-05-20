@@ -10,6 +10,7 @@ namespace Blu
         void SetViewport(uint32_t x, uint32_t y, uint32_t w, uint32_t h)       override;
         void SetClearColor(const glm::vec4& color)                              override;
         void DrawIndexed(const Shared<VertexArray>& va, uint32_t indexCount = 0) override;
+        void DrawIndexedInstanced(const Shared<VertexArray>& va, uint32_t indexCount, uint32_t instanceCount) override;
         void DrawLines(const Shared<VertexArray>& va, uint32_t vertexCount)     override;
         void Clear()                                                             override;
     };

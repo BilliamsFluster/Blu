@@ -115,10 +115,12 @@ namespace Blu
     {
         static PipelineStateDesc Opaque();
         static PipelineStateDesc AlphaBlend();
+        static PipelineStateDesc Transparent();   // AlphaBlend + depth write off
         static PipelineStateDesc Wireframe();
         static PipelineStateDesc NoDepth();
         static PipelineStateDesc ShadowMap();
         static PipelineStateDesc AdditiveBlend();
+        static PipelineStateDesc CullNone();      // Opaque, two-sided
     };
 
     class PipelineState
@@ -139,10 +141,12 @@ namespace Blu
 
         static Shared<PipelineState> GetOpaque();
         static Shared<PipelineState> GetAlphaBlend();
+        static Shared<PipelineState> GetTransparent();   // AlphaBlend + depth write off
         static Shared<PipelineState> GetWireframe();
         static Shared<PipelineState> GetNoDepth();
         static Shared<PipelineState> GetShadowMap();
         static Shared<PipelineState> GetAdditiveBlend();
+        static Shared<PipelineState> GetCullNone();      // Opaque, two-sided
 
         static void Clear();
 

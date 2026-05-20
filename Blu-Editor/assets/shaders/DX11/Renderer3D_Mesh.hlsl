@@ -14,19 +14,14 @@ cbuffer PerFrame : register(b0)
     float4x4 u_ViewProjectionMatrix;
     float3   u_ViewPos;
     int      u_HasAlbedoTexture;
-    float    _pad0;
+    int      u_HasShadowMap;
 };
 
 cbuffer PerObject : register(b1)
 {
-    float4x4 u_Model;
-    // float3x3 in a cbuffer packs each column as float4 (16 bytes each = 48 bytes total),
-    // but GLM mat3 is 36 bytes (no padding).  Uploading a GLM mat3 via memcpy corrupts
-    // columns 1 and 2.  Fix: store as three explicit float3+float4 rows (each 16 bytes).
-    float3 u_NormalCol0;  float _n0;   // column 0 of the normal matrix
-    float3 u_NormalCol1;  float _n1;   // column 1
-    float3 u_NormalCol2;  float _n2;   // column 2
-    int    u_EntityID;    float3 _pad2; // 16 bytes
+    float4x4 u_Model;          // 64 bytes
+    float3x3 u_NormalMatrix;   // 48 bytes (3 float4 columns, column-major)
+    int    u_EntityID;         float3 _pad2; // 16 bytes
 };
 
 // ─── Material ─────────────────────────────────────────────────────────────────
@@ -96,6 +91,44 @@ cbuffer LightData : register(b3)
     float _padL;
 };
 
+// ─── Shadow map ───────────────────────────────────────────────────────────────
+cbuffer ShadowData : register(b4)
+{
+    float4x4 u_LightVP;
+};
+
+// ─── Fog + aerial perspective ─────────────────────────────────────────────────
+cbuffer FogData : register(b5)
+{
+    float3 u_FogColor;           float  u_FogDensity;       // 16
+    float  u_FogHeightStart;     float  u_FogHeightDensity; float2 _fogPad0; // 16
+    float3 u_AerialColor;        float  u_AerialStrength;   // 16 — sky colour bleed at horizon
+    int    u_FogEnabled;         float3 _fogPad1;           // 16
+};
+
+Texture2D                u_ShadowMap      : register(t1);
+SamplerComparisonState   u_ShadowSampler  : register(s1);
+
+// ─── PCF shadow factor ────────────────────────────────────────────────────────
+float CalcShadowFactor(float4 fragPosLightSpace)
+{
+    float3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+
+    float currentDepth = projCoords.z;
+    if (currentDepth > 1.0) return 1.0;
+
+    float2 texelSize = 1.0 / 2048.0;
+    float shadow = 0.0;
+    [unroll]
+    for (int x = -1; x <= 1; ++x)
+        [unroll]
+        for (int y = -1; y <= 1; ++y)
+            shadow += u_ShadowMap.SampleCmpLevelZero(u_ShadowSampler, projCoords.xy + float2(x, y) * texelSize, currentDepth);
+    shadow /= 9.0;
+    return shadow;
+}
+
 Texture2D    u_AlbedoTexture : register(t0);
 SamplerState u_AlbedoSampler : register(s0);
 
@@ -118,6 +151,7 @@ struct VS_OUT
     float3 FragPos   : FRAGPOS;
     float3 Normal    : NORMAL;
     float2 TexCoord  : TEXCOORD;
+    float4 FragPosLightSpace : LIGHTSPACE;
 };
 
 VS_OUT main(VS_IN IN)
@@ -126,13 +160,9 @@ VS_OUT main(VS_IN IN)
     float4 worldPos  = mul(u_Model, float4(IN.a_Position, 1.0));
     OUT.FragPos  = worldPos.xyz;
     OUT.Position = mul(u_ViewProjectionMatrix, worldPos);
-    // Reconstruct the normal matrix from its three explicit columns and apply it.
-    // mul(M, v) = v.x*col0 + v.y*col1 + v.z*col2  (column-major multiply)
-    float3 transformedNormal = IN.a_Normal.x * u_NormalCol0
-                             + IN.a_Normal.y * u_NormalCol1
-                             + IN.a_Normal.z * u_NormalCol2;
-    OUT.Normal   = normalize(transformedNormal);
+    OUT.Normal   = normalize(mul(u_NormalMatrix, IN.a_Normal));
     OUT.TexCoord = IN.a_TexCoord;
+    OUT.FragPosLightSpace = mul(u_LightVP, worldPos);
     return OUT;
 }
 
@@ -148,6 +178,7 @@ struct PS_IN
     float3 FragPos  : FRAGPOS;
     float3 Normal   : NORMAL;
     float2 TexCoord : TEXCOORD;
+    float4 FragPosLightSpace : LIGHTSPACE;
 };
 
 struct PS_OUT
@@ -157,7 +188,7 @@ struct PS_OUT
 };
 
 // ─── Directional light contribution ──────────────────────────────────────────
-float3 CalcDirLight(DirectionalLight L, float3 N, float3 V)
+float3 CalcDirLight(DirectionalLight L, float3 N, float3 V, float shadowFactor)
 {
     float3 lightDir = normalize(-L.Direction);
     float3 R        = reflect(-lightDir, N);
@@ -166,8 +197,8 @@ float3 CalcDirLight(DirectionalLight L, float3 N, float3 V)
     float  spec = pow(max(dot(V, R), 0.0f), max(u_Material.shininess, 1.0f));
 
     float3 ambient  = L.Ambient  * u_Material.ambient;
-    float3 diffuse  = L.Diffuse  * diff * u_Material.diffuse;
-    float3 specular = L.Specular * spec * u_Material.specular;
+    float3 diffuse  = L.Diffuse  * diff * u_Material.diffuse * shadowFactor;
+    float3 specular = L.Specular * spec * u_Material.specular * shadowFactor;
 
     return ambient + diffuse + specular;
 }
@@ -237,8 +268,9 @@ PS_OUT main(PS_IN IN)
 
     float3 result = float3(0.0f, 0.0f, 0.0f);
 
-    // No fallback for zero lights — objects are black when unlit (correct behaviour).
-    for (int i = 0; i < u_NumDirLights;   ++i) result += CalcDirLight  (u_DirLights[i],   N, V);
+    float shadowFactor = u_HasShadowMap ? CalcShadowFactor(IN.FragPosLightSpace) : 1.0;
+
+    for (int i = 0; i < u_NumDirLights;   ++i) result += CalcDirLight  (u_DirLights[i],   N, V, shadowFactor);
     for (int i = 0; i < u_NumPointLights; ++i) result += CalcPointLight(u_PointLights[i], N, IN.FragPos, V);
     for (int i = 0; i < u_NumSpotLights;  ++i) result += CalcSpotLight (u_SpotLights[i],  N, IN.FragPos, V);
 
@@ -246,6 +278,30 @@ PS_OUT main(PS_IN IN)
     {
         float4 texColor = u_AlbedoTexture.Sample(u_AlbedoSampler, IN.TexCoord);
         result *= texColor.rgb;
+    }
+
+    // ─── Fog + aerial perspective ─────────────────────────────────────────────
+    if (u_FogEnabled)
+    {
+        float  dist       = length(u_ViewPos - IN.FragPos);
+        float  fogFactor  = exp(-u_FogDensity * dist);
+
+        // Height-based density: fog thins above HeightStart
+        if (u_FogHeightDensity > 0.0f)
+        {
+            float heightAbove = max(0.0f, IN.FragPos.y - u_FogHeightStart);
+            fogFactor *= exp(-heightAbove * u_FogHeightDensity);
+        }
+        fogFactor = saturate(fogFactor);
+
+        // Aerial perspective: blend fog colour toward the sky horizon colour
+        // as the view direction flattens — eliminates the white horizon band.
+        float3 viewDir      = normalize(IN.FragPos - u_ViewPos);
+        float  horizonBlend = saturate(1.0f - abs(viewDir.y)); // 1 at horizon, 0 overhead
+        float3 finalFog     = lerp(u_FogColor, u_AerialColor,
+                                   u_AerialStrength * horizonBlend);
+
+        result = lerp(finalFog, result, fogFactor);
     }
 
     OUT.Color    = float4(result, 1.0f);

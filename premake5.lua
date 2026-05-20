@@ -21,17 +21,13 @@ workspace "Blu"
 	IncludeDir["yaml"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/yaml/include"
 	IncludeDir["ImGuizmo"] =	"$(SolutionDir)/Blu/engine/ExternalDependencies/ImGuizmo"
 	IncludeDir["box2d"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/box2d/include"
-	IncludeDir["mono"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/mono/include"
 	IncludeDir["assimp"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/assimp/include"
+	IncludeDir["jolt"] =		"$(SolutionDir)/Blu/engine/ExternalDependencies/jolt"
 
 
 	LibraryDir = {}
 
-	LibraryDir["mono"] = "$(SolutionDir)Blu/engine/ExternalDependencies/mono/lib/%{cfg.buildcfg}"
-
 	Library = {}
-
-	Library["mono"] = "%{LibraryDir.mono}/libmono-static-sgen.lib"
 
 	--Windows
 	Library["WinSock"] = "Ws2_32.lib"
@@ -58,10 +54,10 @@ group"Dependencies"
 	include "Blu/engine/ExternalDependencies/yaml"
 	include "Blu/engine/ExternalDependencies/box2d"
 	include "Blu/engine/ExternalDependencies/assimp"
+	include "Blu/engine/ExternalDependencies/jolt"
 -- Setup multiple premake files per directory so we can include them in here
 group "Core"
 	--include "Blu"
-	include "Blu-ScriptCore"
 
 group "Tools"
 	--include "Blu-Editor"
@@ -116,11 +112,11 @@ project "Blu"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.mono}",
 		"%{IncludeDir.yaml}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.box2d}",
 		"%{IncludeDir.assimp}",
+		"%{IncludeDir.jolt}",
 
 
 
@@ -136,7 +132,7 @@ project "Blu"
 		"dwmapi",
 		"box2d",
 		"assimp",
-		"%{Library.mono}",
+		"JoltPhysics",
 		-- DirectX 11
 		"d3d11",
 		"dxgi",
@@ -173,6 +169,7 @@ project "Blu"
 			"NOMINMAX",
 			"IMGUI_DEFINE_MATH_OPERATORS",
 			"ASSIMP_BUILD_NO_EXPORT",
+			"JPH_DISABLE_CUSTOM_ALLOCATOR",
 			--"BLU_ENABLE_ASSERTS"
 		}
 
@@ -212,11 +209,8 @@ project "Azure"
 
 	files
 	{
-		"%{prj.name}/engine/src/**.h",
-		"%{prj.name}/engine/src/**.cpp", 
+		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
-		
-
 	}
 
 	includedirs 

@@ -30,8 +30,9 @@ namespace Blu
         std::vector<Shared<VertexBuffer>> m_VertexBuffers;
         Shared<IndexBuffer>               m_IndexBuffer;
 
-        // One InputLayout per distinct VS bytecode pointer (different shaders)
-        mutable std::unordered_map<const void*,
+        // One InputLayout per distinct VS bytecode hash (not raw pointer — avoids
+        // stale cache hits when old blobs are freed and reallocated at the same address).
+        mutable std::unordered_map<size_t,
             Microsoft::WRL::ComPtr<ID3D11InputLayout>> m_InputLayouts;
     };
 }

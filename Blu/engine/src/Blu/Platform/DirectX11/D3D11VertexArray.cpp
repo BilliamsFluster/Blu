@@ -4,6 +4,7 @@
 #include "D3D11Context.h"
 #include "Blu/Core/Log.h"
 #include "Blu/Rendering/Buffer.h"
+#include <string_view>
 
 namespace Blu
 {
@@ -50,7 +51,10 @@ namespace Blu
             return nullptr;
         }
 
-        auto it = m_InputLayouts.find(vs);
+        // Hash the bytecode to avoid stale cache hits from pointer reuse.
+        size_t vsHash = std::hash<std::string_view>{}(
+            {static_cast<const char*>(vs), static_cast<size_t>(vsSize)});
+        auto it = m_InputLayouts.find(vsHash);
         if (it != m_InputLayouts.end())
             return it->second.Get();
 
@@ -86,7 +90,7 @@ namespace Blu
             return nullptr;
         }
 
-        m_InputLayouts[vs] = layout;
+        m_InputLayouts[vsHash] = layout;
         return layout.Get();
     }
 

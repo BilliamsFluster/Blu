@@ -34,10 +34,14 @@ namespace Blu
 		// OpenGL: no-op since GL doesn't map cbuffers the same way).
 		virtual void SetUniformBuffer(const std::string& cbufferName, const void* data, uint32_t size) {}
 
-		virtual void Bind()   const = 0;
-		virtual void UnBind() const = 0;
-		// Flush any pending uniform data to the GPU (no-op for OpenGL)
-		virtual void Flush()  const {}
+        virtual void Bind()   const = 0;
+        virtual void UnBind() const = 0;
+        // Flush any pending uniform data to the GPU (no-op for OpenGL)
+        virtual void Flush()  const {}
+
+        // Compute dispatch (no-op base — only implemented by D3D11).
+        // Call Bind() first to set up the compute shader and cbuffers.
+        virtual void DispatchCompute(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) {}
 		virtual const std::string& GetName() const = 0;
 		virtual uint32_t GetProgramID() = 0;
 

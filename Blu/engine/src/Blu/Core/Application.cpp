@@ -11,7 +11,6 @@
 #include "Blu/Core/Timestep.h"
 #include <GLFW/glfw3.h>
 #include "Blu/Events/WindowEvent.h"
-#include "Blu/Scripting/ScriptEngine.h"
 
 namespace Blu
 {
@@ -43,7 +42,6 @@ namespace Blu
 
 		// Initialize the renderer and push the ImGui layer
 		Renderer::Init();
-		ScriptEngine::Init();
 		PushOverlay(m_ImGuiLayer);
 		CheckGraphicsError();
 		
@@ -53,7 +51,6 @@ namespace Blu
 	
 	Application::~Application()
 	{
-		ScriptEngine::Shutdown();
 		Renderer::Shutdown();
 	}
 

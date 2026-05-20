@@ -15,6 +15,7 @@ namespace Blu
         switch (f)
         {
         case FrameBufferTextureFormat::RGBA8:        return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case FrameBufferTextureFormat::RGBA16F:      return DXGI_FORMAT_R16G16B16A16_FLOAT;
         case FrameBufferTextureFormat::RED_INTEGER:  return DXGI_FORMAT_R32_SINT;
         default: BLU_CORE_ASSERT(false, "Unknown colour format"); return DXGI_FORMAT_UNKNOWN;
         }
@@ -37,6 +38,8 @@ namespace Blu
         m_ColorAttachments.clear();
         m_DepthTexture.Reset();
         m_DSV.Reset();
+        m_DepthSRV.Reset();
+        m_DepthStaging.Reset();
     }
 
     void D3D11FrameBuffer::Invalidate()
@@ -51,18 +54,44 @@ namespace Blu
         {
             if (IsDepthFormat(attSpec.TextureFormat))
             {
-                // Depth-stencil
+                // Depth-stencil — typeless so we can also bind as SRV for SSAO sampling
                 D3D11_TEXTURE2D_DESC td = {};
                 td.Width              = w;
                 td.Height             = h;
                 td.MipLevels          = 1;
                 td.ArraySize          = 1;
-                td.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
+                td.Format             = DXGI_FORMAT_R24G8_TYPELESS;
                 td.SampleDesc.Count   = 1;
                 td.Usage              = D3D11_USAGE_DEFAULT;
-                td.BindFlags          = D3D11_BIND_DEPTH_STENCIL;
+                td.BindFlags          = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
                 dev->CreateTexture2D(&td, nullptr, m_DepthTexture.GetAddressOf());
-                dev->CreateDepthStencilView(m_DepthTexture.Get(), nullptr, m_DSV.GetAddressOf());
+
+                D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+                dsvDesc.Format        = DXGI_FORMAT_D24_UNORM_S8_UINT;
+                dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+                dev->CreateDepthStencilView(m_DepthTexture.Get(), &dsvDesc, m_DSV.GetAddressOf());
+
+                D3D11_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = {};
+                depthSRVDesc.Format                    = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+                depthSRVDesc.ViewDimension             = D3D11_SRV_DIMENSION_TEXTURE2D;
+                depthSRVDesc.Texture2D.MipLevels       = 1;
+                depthSRVDesc.Texture2D.MostDetailedMip = 0;
+                dev->CreateShaderResourceView(m_DepthTexture.Get(), &depthSRVDesc, m_DepthSRV.GetAddressOf());
+
+                // Cached 1×1 staging for ReadDepth (R24_UNORM to read back the depth channel)
+                {
+                    D3D11_TEXTURE2D_DESC sd = {};
+                    sd.Width          = 1;
+                    sd.Height         = 1;
+                    sd.MipLevels      = 1;
+                    sd.ArraySize      = 1;
+                    sd.Format         = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+                    sd.SampleDesc     = { 1, 0 };
+                    sd.Usage          = D3D11_USAGE_STAGING;
+                    sd.BindFlags      = 0;
+                    sd.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+                    dev->CreateTexture2D(&sd, nullptr, m_DepthStaging.GetAddressOf());
+                }
             }
             else
             {
@@ -200,28 +229,15 @@ namespace Blu
     float D3D11FrameBuffer::ReadDepth(uint32_t /*attachmentIndex*/, int x, int y)
     {
         if (!m_DepthTexture) return 1.0f;
-        auto* dev = D3D11Context::Get()->GetDevice();
-        auto* dc  = D3D11Context::Get()->GetDeviceContext();
-
-        D3D11_TEXTURE2D_DESC td = {};
-        m_DepthTexture->GetDesc(&td);
-        td.Format         = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;  // Read depth channel
-        td.Usage          = D3D11_USAGE_STAGING;
-        td.BindFlags      = 0;
-        td.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-        td.Width          = 1;
-        td.Height         = 1;
-
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> staging;
-        dev->CreateTexture2D(&td, nullptr, staging.GetAddressOf());
+        auto* dc = D3D11Context::Get()->GetDeviceContext();
 
         D3D11_BOX box = { (UINT)x, (UINT)y, 0, (UINT)(x + 1), (UINT)(y + 1), 1 };
-        dc->CopySubresourceRegion(staging.Get(), 0, 0, 0, 0, m_DepthTexture.Get(), 0, &box);
+        dc->CopySubresourceRegion(m_DepthStaging.Get(), 0, 0, 0, 0, m_DepthTexture.Get(), 0, &box);
 
         D3D11_MAPPED_SUBRESOURCE mapped;
-        dc->Map(staging.Get(), 0, D3D11_MAP_READ, 0, &mapped);
+        dc->Map(m_DepthStaging.Get(), 0, D3D11_MAP_READ, 0, &mapped);
         float depth = *static_cast<float*>(mapped.pData);
-        dc->Unmap(staging.Get(), 0);
+        dc->Unmap(m_DepthStaging.Get(), 0);
         return depth;
     }
 
@@ -246,7 +262,12 @@ namespace Blu
 
         if (att.format == FrameBufferTextureFormat::RED_INTEGER && att.uav)
         {
-            // Single GPU-side clear — no CPU allocation, no 3.6 MB upload every frame.
+            // D3D11 forbids a resource being simultaneously bound as RTV and UAV.
+            // Temporarily clear all render target bindings so the UAV clear succeeds,
+            // then restore them. The caller is expected to call Bind() afterwards.
+            ID3D11RenderTargetView* nullRTVs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT] = {};
+            dc->OMSetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, nullRTVs, nullptr);
+
             UINT v[4] = { static_cast<UINT>(value), 0u, 0u, 0u };
             dc->ClearUnorderedAccessViewUint(att.uav.Get(), v);
         }

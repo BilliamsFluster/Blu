@@ -2,6 +2,7 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Blu/Rendering/EditorCamera.h"
+#include "Blu/Rendering/Terrain.h"
 #include "EditorLog.h"
 #include <chrono>
 
@@ -31,6 +32,7 @@ namespace Blu
 		bool OnWindowResizedEvent(Events::WindowResizeEvent& event);
 		void GizmosTransform(glm::mat4& view, const glm::mat4& projection, glm::mat4& transform);
 		void NewScene();
+		void CreatePhysicsDemoScene();
 		void Toolbar();
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
@@ -80,6 +82,7 @@ namespace Blu
 		bool m_TitleBarHovered = false;
 		bool m_SceneMissing = false;
 		bool m_PlayButtonHit = false;
+		bool m_PendingEntityPick = false;
 		
 
 		float translationSnapValue = 0.5f;
@@ -137,6 +140,11 @@ namespace Blu
 		bool m_ShowContentBrowser = true;
 		bool m_ShowOutputLog      = true;
 		bool m_ShowRendering      = true;
+		bool m_ShowInputMap       = false;
+
+		// ---- Terrain editor ------------------------------------------------
+		bool        m_ShowTerrainPanel = false;
+		TerrainSpec m_TerrainSpec;
 
 		// ---- Output Log panel state ----------------------------------------
 		bool m_LogShowTrace = true;

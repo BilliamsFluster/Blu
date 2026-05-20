@@ -86,6 +86,19 @@ namespace Blu
 
         m_DeviceContext->RSSetState(m_RSSolid.Get());
 
+        // Shadow comparison sampler (hardware PCF)
+        D3D11_SAMPLER_DESC shadowSam = {};
+        shadowSam.Filter         = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+        shadowSam.AddressU       = D3D11_TEXTURE_ADDRESS_BORDER;
+        shadowSam.AddressV       = D3D11_TEXTURE_ADDRESS_BORDER;
+        shadowSam.AddressW       = D3D11_TEXTURE_ADDRESS_BORDER;
+        shadowSam.BorderColor[0] = 1.0f;
+        shadowSam.BorderColor[1] = 1.0f;
+        shadowSam.BorderColor[2] = 1.0f;
+        shadowSam.BorderColor[3] = 1.0f;
+        shadowSam.ComparisonFunc = D3D11_COMPARISON_LESS;
+        m_Device->CreateSamplerState(&shadowSam, m_ShadowSampler.GetAddressOf());
+
         BLU_CORE_INFO("D3D11 context initialised (feature level 0x{0:X})", (uint32_t)chosenLevel);
     }
 

@@ -3,6 +3,8 @@
 
 namespace Blu
 {
+	class TextureCube; // forward-declared here; full definition in TextureCube.h
+
 	class Texture
 	{
 	public:

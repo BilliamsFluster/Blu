@@ -1,15 +1,20 @@
 #include "SceneHierarchyPanel.h"
 #include "imgui.h"
 #include "Blu/Scene/Component.h"
+#include "Blu/GameFramework/GameFramework.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/constants.hpp>
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Rendering/Material.h"
+#include "Blu/Rendering/ModelLoader.h"
+#include "Blu/Audio/AudioEngine.h"
+#include "Blu/Utils/PlatformUtils.h"
 #include <imgui_internal.h>
 #include <filesystem>
 #include <algorithm>
 #include <cctype>
 #include <cstring>
-#include "Blu/Scripting/ScriptEngine.h"
+#include <random>
 #include "Blu/LightSystem/LightManager.h"
 
 namespace Blu
@@ -347,16 +352,6 @@ namespace Blu
 				}
 
 			}
-			if (!m_SelectedEntity.HasComponent<ScriptComponent>())
-			{
-				ScriptEngine::RemoveEntityInstance(&m_SelectedEntity);
-				if (ImGui::MenuItem("Script"))
-				{
-					m_SelectedEntity.AddComponent<ScriptComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			
 			if (!m_SelectedEntity.HasComponent<SpriteRendererComponent>())
 			{
 				if (ImGui::MenuItem("Sprite Renderer"))
@@ -434,6 +429,38 @@ namespace Blu
 					ImGui::CloseCurrentPopup();
 				}
 			}
+			if (!m_SelectedEntity.HasComponent<Rigidbody3DComponent>())
+			{
+				if (ImGui::MenuItem("Rigidbody 3D"))
+				{
+					m_SelectedEntity.AddComponent<Rigidbody3DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<BoxCollider3DComponent>())
+			{
+				if (ImGui::MenuItem("Box Collider 3D"))
+				{
+					m_SelectedEntity.AddComponent<BoxCollider3DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<SphereCollider3DComponent>())
+			{
+				if (ImGui::MenuItem("Sphere Collider 3D"))
+				{
+					m_SelectedEntity.AddComponent<SphereCollider3DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<CapsuleCollider3DComponent>())
+			{
+				if (ImGui::MenuItem("Capsule Collider 3D"))
+				{
+					m_SelectedEntity.AddComponent<CapsuleCollider3DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
 			if (!m_SelectedEntity.HasComponent<MeshComponent>())
 			{
 				if (ImGui::MenuItem("Mesh Renderer"))
@@ -441,6 +468,54 @@ namespace Blu
 					auto& mc = m_SelectedEntity.AddComponent<MeshComponent>();
 					mc.MeshData = Mesh::CreateCube();
 					mc.MaterialInstance = Material::Create();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<MeshLODComponent>())
+			{
+				if (ImGui::MenuItem("Mesh LOD"))
+				{
+					m_SelectedEntity.AddComponent<MeshLODComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<SpringArmComponent>())
+			{
+				if (ImGui::MenuItem("Spring Arm"))
+				{
+					m_SelectedEntity.AddComponent<SpringArmComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<AudioSourceComponent>())
+			{
+				if (ImGui::MenuItem("Audio Source"))
+				{
+					m_SelectedEntity.AddComponent<AudioSourceComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<FoliageComponent>())
+			{
+				if (ImGui::MenuItem("Foliage (GPU Instanced)"))
+				{
+					m_SelectedEntity.AddComponent<FoliageComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<AnimatorComponent>())
+			{
+				if (ImGui::MenuItem("Animator"))
+				{
+					m_SelectedEntity.AddComponent<AnimatorComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectedEntity.HasComponent<NativeScriptComponent>())
+			{
+				if (ImGui::MenuItem("Native Script"))
+				{
+					m_SelectedEntity.AddComponent<NativeScriptComponent>();
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -628,158 +703,6 @@ namespace Blu
 
 
 
-		DrawComponent<ScriptComponent>("Script", entity, [entity](auto& component) mutable
-			{
-				bool scriptExists = ScriptEngine::EntityClassExists(component.Name);
-				const auto& entities = ScriptEngine::GetEntities();
-				static std::unordered_map<std::string, Shared<ScriptClass>> searchResults;
-				Shared<ScriptClass> scriptClass = ScriptEngine::GetEntityScriptClass(component.Name);
-
-
-				Shared<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
-				
-				if (scriptClass)
-				{
-					if (scriptInstance) 
-					{
-						auto& fields = scriptClass->GetScriptFields();
-						for (const auto& [name, field] : fields)
-						{
-							if (field.Type == ScriptFieldType::Float)
-							{
-								float data = scriptInstance->GetFieldValue<float>(name);
-
-								ImGui::Text("%s", name.c_str());
-								ImGui::SameLine();
-								ImGui::PushID(name.c_str()); // Add an ID to prevent conflicts with other ImGui widgets
-								ImGui::PushItemWidth(100); // Set the width of the next widget to 100
-								
-								
-
-								if (ImGui::DragFloat("##data", &data))
-								{
-									scriptInstance->SetFieldValue<float>(name, data);
-									
-								}
-								ImGui::PopItemWidth(); // Reset the width for subsequent widgets
-								ImGui::PopID();
-								
-							}
-							// Handle other field types...
-						}
-					}
-					
-				}
-				
-
-
-				std::string buttonLabel = component.Name.empty() ? "Add Script" : component.Name;
-				if (ImGui::Button(buttonLabel.c_str()))
-				{
-					ImGui::OpenPopup("AddScriptPopup");
-				}
-
-				ImGui::SameLine(); // Set next control on the same line
-
-				// Add the clear button
-				if (!component.Name.empty() && ImGui::Button("Clear Script"))
-				{
-					component.Name.clear();
-				}
-
-				ImGui::SetNextWindowSize(ImVec2(200, 100));
-				// The pop-up dialog
-				if (ImGui::BeginPopup("AddScriptPopup"))
-				{
-					// This is your search field
-					static char searchBuffer[64] = "";
-					static char lastSearchBuffer[64] = "";
-					ImGui::SetNextItemWidth(-1); // Set width to occupy all available space
-					if (ImGui::InputText("##Search", searchBuffer, sizeof(searchBuffer), ImGuiInputTextFlags_CharsNoBlank))
-					{
-						if (strcmp(searchBuffer, lastSearchBuffer) != 0) // Check if the search text has changed
-						{
-							// Clear the previous search results
-							searchResults.clear();
-
-							// Go through each entity and check if its name contains the search buffer
-							for (const auto& e : entities)
-							{
-								if (e.first.find(searchBuffer) != std::string::npos)
-								{
-									// If the entity's name contains the search buffer, add it to the search results
-									searchResults.insert(e);
-								}
-							}
-
-							strcpy(lastSearchBuffer, searchBuffer); // Remember the last search text
-						}
-					}
-
-					ImGui::Separator(); // Add a separator for visual clarity
-
-					ImGui::BeginChild("EntityList", ImVec2(-1, -ImGui::GetFrameHeightWithSpacing())); // Auto-resizing child window
-
-					if (strlen(searchBuffer) == 0)
-					{
-						// If searchBuffer is empty, loop over the entities map
-						for (const auto& e : entities)
-						{
-							std::string entityName = e.first;
-
-							// Check if this entity is currently selected
-							bool isSelected = entityName == component.Name;
-
-							if (ImGui::Selectable(entityName.c_str(), isSelected))
-							{
-								component.Name = entityName;
-								ImGui::CloseCurrentPopup(); // Close the popup when an entity is selected
-								UUID uuid = entity.GetUUID();
-								ScriptEngine::OnCreateEntity(&entity); // creates the scriptInstance
-
-
-							}
-
-							// If this entity is selected, make it default focused
-							if (isSelected)
-							{
-								ImGui::SetItemDefaultFocus();
-							}
-						}
-					}
-					else
-					{
-						// If searchBuffer is not empty, loop over the searchResults map
-						for (const auto& e : searchResults)
-						{
-							std::string entityName = e.first;
-
-							// Check if this entity is currently selected
-							bool isSelected = entityName == component.Name;
-
-							if (ImGui::Selectable(entityName.c_str(), isSelected))
-							{
-								component.Name = entityName;
-								ImGui::CloseCurrentPopup(); // Close the popup when an entity is selected
-								ScriptEngine::OnCreateEntity(&entity); // creates the scriptInstance
-
-
-							}
-
-							// If this entity is selected, make it default focused
-							if (isSelected)
-							{
-								ImGui::SetItemDefaultFocus();
-							}
-						}
-					}
-
-					ImGui::EndChild();
-					ImGui::EndPopup();
-				}
-
-
-			});
 
 		DrawComponent<ParticleSystemComponent>("Particle System", entity, [&](auto& component)
 			{
@@ -903,63 +826,46 @@ namespace Blu
 				{
 					if (!component.MaterialInstance) return;
 
-					// Helper lambda to handle texture UI
-					auto HandleTextureUI = [&](const char* label, Shared<Texture2D>& texture)
-						{
-							if (texture)
-							{
-								ImGui::Text(label);
-								if (ImGui::IsItemHovered())
-								{
-									std::string tooltip = "Texture Path: " + std::string(texture->GetTexturePath());
-									ImGui::SetTooltip(tooltip.c_str());
-								}
-								ImGui::SameLine();
-								std::string buttonLabel = "X##" + std::string(label);
-								if (ImGui::Button(buttonLabel.c_str()))
-								{
-									texture = nullptr;
-								}
-								if (ImGui::IsItemHovered())
-								{
-									std::string tooltip = "Clear " + std::string(label);
-									ImGui::SetTooltip(tooltip.c_str());
-								}
-							}
-							else
-							{
-								ImGui::Button(label, ImVec2(50.0f, 50.0f));
-								if (ImGui::BeginDragDropTarget())
-								{
-									if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-									{
-										std::filesystem::path payloadPath = std::string(reinterpret_cast<const char*>(payload->Data));
-										texture = Texture2D::Create(payloadPath.string());
-										texture->GetTexturePath();
-									}
-									ImGui::EndDragDropTarget();
-								}
-							}
-						};
+					auto& mi = *component.MaterialInstance;
 
-					// Handle each texture type
-					HandleTextureUI("Albedo Map", component.MaterialInstance->AlbedoMap);
-					// Albedo Color
 					ImGui::ColorEdit4("Albedo Color: ", glm::value_ptr(component.Color));
+					ImGui::DragFloat("Metallic",         &mi.Metallic,         0.01f, 0.0f, 1.0f);
+					ImGui::DragFloat("Roughness",        &mi.Roughness,        0.01f, 0.0f, 1.0f);
+					ImGui::DragFloat("AO",               &mi.AO,               0.01f, 0.0f, 1.0f);
+					ImGui::ColorEdit3("Emissive Color",  glm::value_ptr(mi.EmissiveColor));
+					ImGui::DragFloat("Emissive Strength",&mi.EmissiveStrength,  0.1f,  0.0f, 100.0f);
 
-					
-					
-					
+					auto TexUI = [&](const char* label, Shared<Texture2D>& tex)
+					{
+						if (tex)
+						{
+							ImGui::Text(label);
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("Path: %s", tex->GetTexturePath().c_str());
+							ImGui::SameLine();
+							if (ImGui::Button(("X##" + std::string(label)).c_str()))
+								tex = nullptr;
+						}
+						else
+						{
+							ImGui::Button(label, ImVec2(50.0f, 50.0f));
+							if (ImGui::BeginDragDropTarget())
+							{
+								if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+								{
+									std::filesystem::path p = std::string((const char*)payload->Data);
+									tex = Texture2D::Create(p.string());
+								}
+								ImGui::EndDragDropTarget();
+							}
+						}
+					};
 
-					HandleTextureUI("Diffuse Map", component.MaterialInstance->DiffuseMap);
-					ImGui::ColorEdit4("Diffuse Color: ", glm::value_ptr(component.MaterialInstance->GetDiffuseColor()));
-
-					HandleTextureUI("Specular Map", component.MaterialInstance->SpecularMap);
-					ImGui::ColorEdit4("Specular Color: ", glm::value_ptr(component.MaterialInstance->GetSpecularColor()));
-					ImGui::ColorEdit4("Ambient Color: ", glm::value_ptr(component.MaterialInstance->GetAmbientColor()));
-
-					HandleTextureUI("Normal Map", component.MaterialInstance->NormalMap);
-
+					TexUI("Albedo",  component.MaterialInstance->AlbedoMap);
+					TexUI("Normal",  component.MaterialInstance->NormalMap);
+					TexUI("MetallicRoughness", component.MaterialInstance->MetallicRoughnessMap);
+					TexUI("AO",      component.MaterialInstance->AOMap);
+					TexUI("Emissive", component.MaterialInstance->EmissiveMap);
 				}
 			});
 
@@ -1038,13 +944,185 @@ namespace Blu
 				ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
 			});
 
+		DrawComponent<Rigidbody3DComponent>("Rigidbody 3D", entity, [](auto& component)
+			{
+				const char* bodyTypes[] = { "Static", "Dynamic", "Kinematic" };
+				const char* current = bodyTypes[(int)component.Type];
+				if (ImGui::BeginCombo("Body Type##3D", current))
+				{
+					for (int i = 0; i < IM_ARRAYSIZE(bodyTypes); i++)
+					{
+						bool sel = (current == bodyTypes[i]);
+						if (ImGui::Selectable(bodyTypes[i], sel)) component.Type = (Rigidbody3DComponent::BodyType)i;
+						if (sel) ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+				ImGui::DragFloat("Gravity Scale",   &component.GravityScale,   0.01f, 0.0f, 10.0f);
+				ImGui::DragFloat("Linear Damping",  &component.LinearDamping,  0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Angular Damping", &component.AngularDamping, 0.01f, 0.0f, 1.0f);
+				ImGui::Checkbox("Lock X", &component.FixedRotationX); ImGui::SameLine();
+				ImGui::Checkbox("Lock Y", &component.FixedRotationY); ImGui::SameLine();
+				ImGui::Checkbox("Lock Z", &component.FixedRotationZ);
+			});
+
+		DrawComponent<BoxCollider3DComponent>("Box Collider 3D", entity, [](auto& component)
+			{
+				ImGui::DragFloat3("Half Extents", glm::value_ptr(component.HalfExtents), 0.01f, 0.01f, 100.0f);
+				ImGui::DragFloat3("Offset",       glm::value_ptr(component.Offset),      0.01f);
+				ImGui::DragFloat("Friction",      &component.Friction,    0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution",   &component.Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Density",       &component.Density,     1.0f,  0.01f, 10000.0f);
+			});
+
+		DrawComponent<SphereCollider3DComponent>("Sphere Collider 3D", entity, [](auto& component)
+			{
+				ImGui::DragFloat("Radius",       &component.Radius,      0.01f, 0.01f, 100.0f);
+				ImGui::DragFloat3("Offset",       glm::value_ptr(component.Offset), 0.01f);
+				ImGui::DragFloat("Friction",      &component.Friction,    0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution",   &component.Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Density",       &component.Density,     1.0f,  0.01f, 10000.0f);
+			});
+
+		DrawComponent<CapsuleCollider3DComponent>("Capsule Collider 3D", entity, [](auto& component)
+			{
+				ImGui::DragFloat("Radius",       &component.Radius,      0.01f, 0.01f, 100.0f);
+				ImGui::DragFloat("Half Height",  &component.HalfHeight,  0.01f, 0.01f, 100.0f);
+				ImGui::DragFloat3("Offset",       glm::value_ptr(component.Offset), 0.01f);
+				ImGui::DragFloat("Friction",      &component.Friction,    0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution",   &component.Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Density",       &component.Density,     1.0f,  0.01f, 10000.0f);
+			});
+
 		DrawComponent<MeshComponent>("Mesh Renderer", entity, [](auto& component)
 			{
+				// ── Texture slot — thumbnail + drop target + browse button ─────
+				// Shows a 48×48 thumbnail when a texture is assigned, or a drop
+				// target + file-browse button when it's empty.  Works for both
+				// drag-from-content-browser and native file-dialog browsing.
+				auto TexSlot = [](const char* uid, const char* label, Shared<Texture2D>& tex)
+				{
+					constexpr float kThumb  = 48.0f;
+					constexpr float kLabelW = 72.0f;
+
+					ImGui::PushID(uid);
+
+					// Label column
+					ImGui::BeginGroup();
+					ImGui::AlignTextToFramePadding();
+					ImGui::TextUnformatted(label);
+					ImGui::EndGroup();
+
+					ImGui::SameLine(kLabelW);
+
+					if (tex)
+					{
+						// Show thumbnail; hovering reveals full path
+						ImGui::Image(
+							reinterpret_cast<ImTextureID>(tex->GetImTextureID()),
+							ImVec2(kThumb, kThumb));
+						if (ImGui::IsItemHovered())
+						{
+							ImGui::BeginTooltip();
+							ImGui::Image(
+								reinterpret_cast<ImTextureID>(tex->GetImTextureID()),
+								ImVec2(128.0f, 128.0f));
+							ImGui::Text("%s", tex->GetTexturePath().c_str());
+							ImGui::EndTooltip();
+						}
+						// Drop new texture on top of thumbnail
+						if (ImGui::BeginDragDropTarget())
+						{
+							if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+								tex = Texture2D::Create(std::string((const char*)p->Data));
+							ImGui::EndDragDropTarget();
+						}
+						ImGui::SameLine();
+						if (ImGui::SmallButton("x"))
+							tex = nullptr;
+					}
+					else
+					{
+						// Empty drop-target box
+						ImGui::Button(("Drop " + std::string(label)).c_str(), ImVec2(kThumb * 2.0f, kThumb));
+						if (ImGui::BeginDragDropTarget())
+						{
+							if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+								tex = Texture2D::Create(std::string((const char*)p->Data));
+							ImGui::EndDragDropTarget();
+						}
+						// Browse button — opens a native file dialog
+						ImGui::SameLine();
+						if (ImGui::SmallButton("..."))
+						{
+							std::string path = FileDialogs::OpenFile(
+								"Images\0*.png;*.jpg;*.jpeg;*.bmp;*.tga;*.hdr\0All Files\0*.*\0");
+							if (!path.empty())
+								tex = Texture2D::Create(path);
+						}
+						if (ImGui::IsItemHovered())
+							ImGui::SetTooltip("Browse for %s texture", label);
+					}
+
+					ImGui::PopID();
+				};
+
+				// ── Imported model ────────────────────────────────────────
 				if (component.ModelAsset)
 				{
-					ImGui::Text("Model: %s", component.FilePath.c_str());
+					ImGui::TextDisabled("%s", component.FilePath.c_str());
 					ImGui::Text("SubMeshes: %zu", component.ModelAsset->Meshes.size());
+
+					auto& mats = component.ModelAsset->Materials;
+					if (!mats.empty() && ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						for (int i = 0; i < (int)mats.size(); ++i)
+						{
+							auto& mat = mats[i];
+							if (!mat) continue;
+
+							// Use the FBX material name if available, otherwise "Material N"
+							const std::string& nodeName = mat->Name.empty()
+								? ("Material " + std::to_string(i))
+								: mat->Name;
+
+							ImGui::PushID(i);
+							bool open = ImGui::TreeNodeEx(nodeName.c_str(), 0);
+							if (open)
+							{
+								ImGui::ColorEdit4("Albedo",   glm::value_ptr(mat->AlbedoColor));
+								ImGui::DragFloat("Metallic",  &mat->Metallic,         0.01f, 0.0f, 1.0f);
+								ImGui::DragFloat("Roughness", &mat->Roughness,        0.01f, 0.0f, 1.0f);
+								ImGui::DragFloat("AO",        &mat->AO,               0.01f, 0.0f, 1.0f);
+								ImGui::ColorEdit3("Emissive", glm::value_ptr(mat->EmissiveColor));
+								ImGui::DragFloat("Emit Str",  &mat->EmissiveStrength, 0.1f,  0.0f, 100.0f);
+								ImGui::Separator();
+								// Blend mode selector
+								static const char* blendModeNames[] = { "Opaque", "Masked", "Transparent", "Additive" };
+								int blendIdx = static_cast<int>(mat->Blend);
+								if (ImGui::Combo("Blend Mode", &blendIdx, blendModeNames, IM_ARRAYSIZE(blendModeNames)))
+									mat->Blend = static_cast<BlendMode>(blendIdx);
+								if (mat->Blend == BlendMode::Masked)
+									ImGui::DragFloat("Alpha Cutoff", &mat->AlphaCutoff, 0.01f, 0.0f, 1.0f);
+								ImGui::Checkbox("Two Sided", &mat->TwoSided);
+								// Shading model selector
+								static const char* shadingNames[] = { "PBR", "Unlit" };
+								int shadingIdx = static_cast<int>(mat->Shading);
+								if (ImGui::Combo("Shading", &shadingIdx, shadingNames, IM_ARRAYSIZE(shadingNames)))
+									mat->Shading = static_cast<ShadingModel>(shadingIdx);
+								ImGui::Separator();
+								TexSlot("alb",  "Albedo",   mat->AlbedoMap);
+								TexSlot("nrm",  "Normal",   mat->NormalMap);
+								TexSlot("mr",   "Metallic", mat->MetallicRoughnessMap);
+								TexSlot("ao",   "AO",       mat->AOMap);
+								TexSlot("emis", "Emissive", mat->EmissiveMap);
+								ImGui::TreePop();
+							}
+							ImGui::PopID();
+						}
+					}
 				}
+				// ── Primitive mesh ────────────────────────────────────────
 				else
 				{
 					static const char* meshTypes[] = { "Cube", "Quad" };
@@ -1056,19 +1134,283 @@ namespace Blu
 						else
 							component.MeshData = Mesh::CreateQuad();
 					}
-				}
 
-				if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					if (!component.MaterialInstance)
-						component.MaterialInstance = Material::Create();
+					if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						if (!component.MaterialInstance)
+							component.MaterialInstance = Material::Create();
 
-					ImGui::ColorEdit3("Ambient##Mesh",  glm::value_ptr(component.MaterialInstance->GetAmbientColor()));
-					ImGui::ColorEdit3("Diffuse##Mesh",  glm::value_ptr(component.MaterialInstance->GetDiffuseColor()));
-					ImGui::ColorEdit3("Specular##Mesh", glm::value_ptr(component.MaterialInstance->GetSpecularColor()));
-					ImGui::DragFloat("Shininess##Mesh", &component.MaterialInstance->GetShininess(), 0.5f, 1.0f, 256.0f);
+						auto& mi = *component.MaterialInstance;
+						ImGui::ColorEdit4("Albedo##Mesh",         glm::value_ptr(mi.AlbedoColor));
+						ImGui::DragFloat("Metallic##Mesh",        &mi.Metallic,         0.01f, 0.0f, 1.0f);
+						ImGui::DragFloat("Roughness##Mesh",       &mi.Roughness,        0.01f, 0.0f, 1.0f);
+						ImGui::DragFloat("AO##Mesh",              &mi.AO,               0.01f, 0.0f, 1.0f);
+						ImGui::ColorEdit3("Emissive##Mesh",       glm::value_ptr(mi.EmissiveColor));
+						ImGui::DragFloat("Emissive Str##Mesh",    &mi.EmissiveStrength, 0.1f,  0.0f, 100.0f);
+						ImGui::Separator();
+						// Blend mode selector
+						static const char* blendModeNames[] = { "Opaque", "Masked", "Transparent", "Additive" };
+						int blendIdx = static_cast<int>(mi.Blend);
+						if (ImGui::Combo("Blend Mode##Mesh", &blendIdx, blendModeNames, IM_ARRAYSIZE(blendModeNames)))
+							mi.Blend = static_cast<BlendMode>(blendIdx);
+						if (mi.Blend == BlendMode::Masked)
+							ImGui::DragFloat("Alpha Cutoff##Mesh", &mi.AlphaCutoff, 0.01f, 0.0f, 1.0f);
+						ImGui::Checkbox("Two Sided##Mesh", &mi.TwoSided);
+						// Shading model selector
+						static const char* shadingNames[] = { "PBR", "Unlit" };
+						int shadingIdx = static_cast<int>(mi.Shading);
+						if (ImGui::Combo("Shading##Mesh", &shadingIdx, shadingNames, IM_ARRAYSIZE(shadingNames)))
+							mi.Shading = static_cast<ShadingModel>(shadingIdx);
+						ImGui::Separator();
+						TexSlot("alb_m",  "Albedo",   component.MaterialInstance->AlbedoMap);
+						TexSlot("nrm_m",  "Normal",   component.MaterialInstance->NormalMap);
+						TexSlot("mr_m",   "Metallic", component.MaterialInstance->MetallicRoughnessMap);
+						TexSlot("ao_m",   "AO",       component.MaterialInstance->AOMap);
+						TexSlot("emis_m", "Emissive", component.MaterialInstance->EmissiveMap);
+					}
 				}
 			});
+
+		// ── Mesh LOD ──────────────────────────────────────────────────────────────
+		DrawComponent<MeshLODComponent>("Mesh LOD", entity, [](auto& lod)
+		{
+			ImGui::Checkbox("Active", &lod.Active);
+			ImGui::Text("LOD Levels (%d)", (int)lod.Levels.size());
+			ImGui::Separator();
+			for (int i = 0; i < (int)lod.Levels.size(); ++i)
+			{
+				auto& lv = lod.Levels[i];
+				ImGui::PushID(i);
+				ImGui::Text("LOD %d", i);
+				ImGui::SameLine();
+				ImGui::DragFloat("Max Distance", &lv.MaxDistance, 1.0f, 0.1f, 5000.0f);
+				ImGui::Text("  Model: %s", lv.FilePath.empty() ? "(none)" : lv.FilePath.c_str());
+				if (ImGui::Button("Remove")) { lod.Levels.erase(lod.Levels.begin() + i); ImGui::PopID(); break; }
+				ImGui::Separator();
+				ImGui::PopID();
+			}
+			if (ImGui::Button("Add LOD Level"))
+				lod.Levels.push_back({});
+		});
+
+		// ── Spring-Arm ────────────────────────────────────────────────────────────
+		DrawComponent<SpringArmComponent>("Spring Arm", entity, [](auto& arm)
+		{
+			ImGui::DragFloat("Arm Length",      &arm.ArmLength,        0.1f, 0.1f, 50.0f);
+			ImGui::DragFloat3("Socket Offset",  glm::value_ptr(arm.SocketOffset), 0.05f);
+			ImGui::DragFloat3("Pivot Offset",   glm::value_ptr(arm.PivotOffset),  0.05f);
+			ImGui::DragFloat("Pitch (deg)",     &arm.Pitch,            0.5f, -89.0f, 89.0f);
+			ImGui::DragFloat("Yaw Offset",      &arm.Yaw,              0.5f, -180.0f, 180.0f);
+			ImGui::Separator();
+			ImGui::Checkbox("Enable Lag",       &arm.EnableLag);
+			if (arm.EnableLag)
+				ImGui::DragFloat("Lag Speed",   &arm.PositionLagSpeed, 0.5f, 0.5f, 30.0f);
+			ImGui::Separator();
+			ImGui::Text("Camera UUID: %llu", (unsigned long long)arm.TargetCameraUUID);
+		});
+
+		// ── Animator Component ────────────────────────────────────────────────────
+		DrawComponent<AnimatorComponent>("Animator", entity, [&](auto& anim)
+		{
+			// Populate SkelData from MeshComponent if not already set
+			if (!anim.SkelData && entity.HasComponent<MeshComponent>())
+			{
+				auto& mc = entity.GetComponent<MeshComponent>();
+				if (mc.ModelAsset && mc.ModelAsset->SkelData)
+					anim.SkelData = mc.ModelAsset->SkelData;
+			}
+
+			if (!anim.SkelData)
+			{
+				ImGui::TextColored(ImVec4(1,1,0,1), "No skeleton found on Model.");
+				ImGui::TextWrapped("Load an FBX/glTF with bones in the Mesh Component first.");
+				return;
+			}
+
+			// Clip selector
+			auto& clips = anim.SkelData->Clips;
+			if (!clips.empty())
+			{
+				const char* preview = clips[anim.CurrentClipIndex].Name.c_str();
+				if (ImGui::BeginCombo("Clip", preview))
+				{
+					for (int i = 0; i < (int)clips.size(); ++i)
+					{
+						bool selected = (i == anim.CurrentClipIndex);
+						if (ImGui::Selectable(clips[i].Name.c_str(), selected))
+						{
+							anim.CurrentClipIndex = i;
+							anim.CurrentTime      = 0.0f;
+						}
+						if (selected) ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+				const auto& clip = clips[anim.CurrentClipIndex];
+				float durationSec = clip.DurationSeconds();
+				float currentSec  = clip.TicksPerSec > 0.0f ? anim.CurrentTime / clip.TicksPerSec : 0.0f;
+				ImGui::ProgressBar(durationSec > 0.0f ? currentSec / durationSec : 0.0f,
+				                   ImVec2(-1, 0),
+				                   (std::to_string((int)currentSec) + "s / " +
+				                    std::to_string((int)durationSec) + "s").c_str());
+			}
+			else
+			{
+				ImGui::TextColored(ImVec4(1,0.5f,0,1), "No animation clips found in file.");
+			}
+
+			ImGui::Separator();
+			ImGui::Checkbox("Playing", &anim.Playing);
+			ImGui::SameLine();
+			ImGui::Checkbox("Loop",    &anim.Loop);
+			ImGui::DragFloat("Speed",  &anim.SpeedScale, 0.01f, 0.0f, 10.0f);
+			if (ImGui::Button("Rewind##anim"))
+				anim.CurrentTime = 0.0f;
+
+			ImGui::Separator();
+			ImGui::Text("Skeleton: %d bones", anim.SkelData->Skel ? anim.SkelData->Skel->NumBones : 0);
+		});
+
+		// ── Foliage Component ─────────────────────────────────────────────────────
+		DrawComponent<FoliageComponent>("Foliage (GPU Instanced)", entity, [](auto& fc)
+		{
+			// Model file
+			char fbuf[512] = {};
+			std::strncpy(fbuf, fc.FilePath.c_str(), sizeof(fbuf) - 1);
+			if (ImGui::InputText("Model File##fc", fbuf, sizeof(fbuf)))
+				fc.FilePath = fbuf;
+			ImGui::SameLine();
+			if (ImGui::Button("...##fc"))
+			{
+				std::string r = Blu::FileDialogs::OpenFile("Model Files\0*.fbx;*.obj;*.gltf;*.glb\0All\0*.*\0");
+				if (!r.empty())
+				{
+					fc.FilePath  = r;
+					fc.ModelAsset = ModelLoader::Load(r);
+				}
+			}
+			if (ImGui::Button("Reload Model##fc") && !fc.FilePath.empty())
+				fc.ModelAsset = ModelLoader::Load(fc.FilePath);
+
+			ImGui::Text("Instances: %d", (int)fc.Transforms.size());
+
+			// Scatter tool
+			ImGui::Separator();
+			ImGui::Text("Scatter");
+			static int   scatterCount    = 50;
+			static float scatterRadius   = 20.0f;
+			static float scatterMinScale = 0.8f;
+			static float scatterMaxScale = 1.2f;
+			ImGui::DragInt  ("Count##scatter",    &scatterCount,    1,    1,    10000);
+			ImGui::DragFloat("Radius##scatter",   &scatterRadius,   0.5f, 1.0f, 500.0f);
+			ImGui::DragFloat("Min Scale##scatter", &scatterMinScale, 0.01f, 0.01f, 10.0f);
+			ImGui::DragFloat("Max Scale##scatter", &scatterMaxScale, 0.01f, 0.01f, 10.0f);
+			if (ImGui::Button("Scatter##do"))
+			{
+				fc.Transforms.clear();
+				fc.Transforms.reserve(scatterCount);
+				std::mt19937 rng(42);
+				std::uniform_real_distribution<float> uniR(-scatterRadius, scatterRadius);
+				std::uniform_real_distribution<float> uniRot(0.0f, glm::two_pi<float>());
+				std::uniform_real_distribution<float> uniSc(scatterMinScale, scatterMaxScale);
+				for (int i = 0; i < scatterCount; ++i)
+				{
+					float x = uniR(rng), z = uniR(rng);
+					float scale = uniSc(rng);
+					float rot   = uniRot(rng);
+					glm::mat4 t = glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, z))
+					            * glm::rotate(glm::mat4(1.0f), rot, glm::vec3(0, 1, 0))
+					            * glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+					fc.Transforms.push_back(t);
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Clear##fc"))
+				fc.Transforms.clear();
+
+			// Wind
+			ImGui::Separator();
+			ImGui::Checkbox("Wind Enabled", &fc.WindEnabled);
+			if (fc.WindEnabled)
+			{
+				ImGui::DragFloat("Wind Strength",   &fc.WindStrength,   0.001f, 0.0f, 1.0f);
+				ImGui::DragFloat("Wind Frequency",  &fc.WindFrequency,  0.05f,  0.1f, 20.0f);
+				ImGui::DragFloat3("Wind Direction", glm::value_ptr(fc.WindDirection), 0.01f);
+			}
+		});
+
+		// ── Audio Source ──────────────────────────────────────────────────────────
+		DrawComponent<AudioSourceComponent>("Audio Source", entity, [](auto& asc)
+		{
+			// File path
+			char buf[512] = {};
+			std::strncpy(buf, asc.FilePath.c_str(), sizeof(buf) - 1);
+			if (ImGui::InputText("File", buf, sizeof(buf)))
+				asc.FilePath = buf;
+			ImGui::SameLine();
+			if (ImGui::Button("...##audio"))
+			{
+				// Simple open-file via platform dialog if available
+				std::string result = Blu::FileDialogs::OpenFile("Audio Files\0*.wav;*.mp3;*.ogg;*.flac\0All Files\0*.*\0");
+				if (!result.empty())
+					asc.FilePath = result;
+			}
+
+			ImGui::SliderFloat("Volume",      &asc.Volume,      0.0f, 1.0f);
+			ImGui::SliderFloat("Pitch",       &asc.Pitch,       0.1f, 4.0f);
+			ImGui::Checkbox   ("Loop",        &asc.Loop);
+			ImGui::Checkbox   ("Play On Start", &asc.PlayOnStart);
+			ImGui::Separator();
+			ImGui::Checkbox   ("Spatial 3D",  &asc.Spatial);
+			if (asc.Spatial)
+			{
+				ImGui::DragFloat("Min Distance", &asc.MinDistance, 0.1f, 0.01f, 1000.0f);
+				ImGui::DragFloat("Max Distance", &asc.MaxDistance, 1.0f, asc.MinDistance, 2000.0f);
+			}
+			// Runtime controls (only meaningful during Play)
+			if (asc._RuntimeHandle != kInvalidSound)
+			{
+				ImGui::Separator();
+				ImGui::Text("Runtime handle: %u", asc._RuntimeHandle);
+				bool playing = AudioEngine::Get().IsPlaying(asc._RuntimeHandle);
+				ImGui::Text("State: %s", playing ? "Playing" : "Stopped/Paused");
+				if (ImGui::Button("Play##asc"))  AudioEngine::Get().Play (asc._RuntimeHandle);
+				ImGui::SameLine();
+				if (ImGui::Button("Pause##asc")) AudioEngine::Get().Pause(asc._RuntimeHandle);
+				ImGui::SameLine();
+				if (ImGui::Button("Stop##asc"))  AudioEngine::Get().Stop (asc._RuntimeHandle);
+			}
+		});
+
+		// ── Native Script ─────────────────────────────────────────────────────────
+		DrawComponent<NativeScriptComponent>("Native Script", entity, [](auto& nsc)
+		{
+			const auto& registry = ActorRegistry::Get().GetAll();
+
+			const char* preview = nsc.ClassName.empty() ? "(None)" : nsc.ClassName.c_str();
+			if (ImGui::BeginCombo("Class##nsc", preview))
+			{
+				if (ImGui::Selectable("(None)", nsc.ClassName.empty()))
+					nsc.ClassName.clear();
+				for (auto& [name, _] : registry)
+				{
+					bool selected = (nsc.ClassName == name);
+					if (ImGui::Selectable(name.c_str(), selected))
+						nsc.ClassName = name;
+					if (selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+
+			ImGui::Spacing();
+			if (nsc.Instance)
+				ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Running");
+			else if (!nsc.ClassName.empty())
+				ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Will bind \"%s\" on Play", nsc.ClassName.c_str());
+			else
+				ImGui::TextDisabled("No class selected.");
+		});
 
 		float extraSpace = 200.0f;  // Extra space at the end in pixels
 		ImGui::Dummy(ImVec2(0.0f, extraSpace));

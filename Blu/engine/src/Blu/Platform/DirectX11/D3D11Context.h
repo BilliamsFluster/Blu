@@ -27,6 +27,7 @@ namespace Blu
         IDXGISwapChain*         GetSwapChain()         const { return m_SwapChain.Get(); }
         ID3D11RenderTargetView* GetBackbufferRTV()     const { return m_BackbufferRTV.Get(); }
         ID3D11DepthStencilView* GetDepthStencilView()  const { return m_DepthStencilView.Get(); }
+        ID3D11SamplerState*     GetShadowSampler()     const { return m_ShadowSampler.Get(); }
 
         // Shared by D3D11VertexArray so it can create InputLayouts lazily
         void        SetCurrentVSBytecode(const void* bytecode, SIZE_T size) { m_CurrentVSBytecode = bytecode; m_CurrentVSBytecodeSize = size; }
@@ -59,6 +60,7 @@ namespace Blu
 
         Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RSSolid;
         Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RSWireframe;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>    m_ShadowSampler;
 
         static D3D11Context* s_Instance;
     };

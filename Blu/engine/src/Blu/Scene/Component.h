@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <glm/glm.hpp>
 #include "Blu/Scene/SceneCamera.h"
 #include "Blu/Core/Timestep.h"
@@ -8,13 +9,16 @@
 #include "Blu/Core/UUID.h"
 #include "Blu/Rendering/Material.h"
 #include "Blu/Rendering/Mesh.h"
+#include "Blu/Audio/AudioEngine.h"
+#include "Blu/Rendering/Animation.h"
+#include "Blu/Rendering/Animator.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
 namespace Blu
 {
-	class ScriptableEntity;
+	class AActor;
 	class Entity;
 	
 	struct IDComponent
@@ -122,6 +126,33 @@ namespace Blu
 		MeshComponent(const MeshComponent&) = default;
 	};
 
+	// ── Level of Detail ───────────────────────────────────────────────────────
+	// Each LOD entry pairs a loaded model with a maximum camera distance at which
+	// it should be rendered. Levels are checked nearest-first; the last entry's
+	// model is used for any distance beyond it (the "lowest quality" fallback).
+	struct LODEntry
+	{
+		Shared<Model> ModelAsset;
+		float         MaxDistance = 100.0f;
+		std::string   FilePath;
+	};
+
+	struct MeshLODComponent
+	{
+		std::vector<LODEntry> Levels;   // sorted by MaxDistance ascending
+		bool Active = true;
+
+		// Returns the model to render at the given camera distance.
+		// Falls back to the MeshComponent's own model when Levels is empty.
+		Shared<Model> SelectLOD(float dist) const
+		{
+			if (!Active || Levels.empty()) return nullptr;
+			for (const auto& lv : Levels)
+				if (dist <= lv.MaxDistance) return lv.ModelAsset;
+			return Levels.back().ModelAsset;
+		}
+	};
+
 	struct TagComponent 
 	{
 		std::string Tag;
@@ -142,28 +173,20 @@ namespace Blu
 		CameraComponent(const CameraComponent&) = default;
 		
 	};
-	struct ScriptComponent
+	struct NativeScriptComponent
 	{
-		std::string Name;
+		AActor*     Instance          = nullptr;
+		std::string ClassName;                     // set from editor or Bind<T>()
 
-		ScriptComponent() = default;
-		ScriptComponent(const ScriptComponent&) = default;
-		
-	};
-	struct NativeScriptComponent 
-	{
+		AActor*(*InstantiateScript)()              = nullptr;
+		void (*DestroyScript)(NativeScriptComponent*) = nullptr;
 
-		ScriptableEntity* Instance = nullptr;
-		
-		ScriptableEntity*(*InstantiateScript)();
-		void (*DestroyScript)(NativeScriptComponent*);
-
-		
+		// Programmatic bind — T must derive from AActor.
 		template<typename T>
 		void Bind()
 		{
-			InstantiateScript = []() {return static_cast<ScriptableEntity*>(new T()); };
-			DestroyScript = [](NativeScriptComponent* nsc) {delete nsc->Instance; nsc->Instance = nullptr; };
+			InstantiateScript = []() { return static_cast<AActor*>(new T()); };
+			DestroyScript     = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};
 
@@ -212,6 +235,61 @@ namespace Blu
 
 		CircleCollider2DComponent() = default;
 		CircleCollider2DComponent(const CircleCollider2DComponent& other) = default;
+	};
+
+	// ─── 3D Physics Components ────────────────────────────────────────────────
+
+	struct Rigidbody3DComponent
+	{
+		enum class BodyType { Static = 0, Dynamic, Kinematic };
+		BodyType Type           = BodyType::Static;
+		bool FixedRotationX     = false;
+		bool FixedRotationY     = false;
+		bool FixedRotationZ     = false;
+		float GravityScale      = 1.0f;
+		float LinearDamping     = 0.05f;
+		float AngularDamping    = 0.05f;
+		uint32_t RuntimeBodyID  = UINT32_MAX; // Jolt BodyID packed as uint32
+
+		Rigidbody3DComponent() = default;
+		Rigidbody3DComponent(const Rigidbody3DComponent&) = default;
+	};
+
+	struct BoxCollider3DComponent
+	{
+		glm::vec3 HalfExtents = { 0.5f, 0.5f, 0.5f };
+		glm::vec3 Offset      = { 0.0f, 0.0f, 0.0f };
+		float Friction        = 0.5f;
+		float Restitution     = 0.0f;
+		float Density         = 1000.0f;
+
+		BoxCollider3DComponent() = default;
+		BoxCollider3DComponent(const BoxCollider3DComponent&) = default;
+	};
+
+	struct SphereCollider3DComponent
+	{
+		float Radius          = 0.5f;
+		glm::vec3 Offset      = { 0.0f, 0.0f, 0.0f };
+		float Friction        = 0.5f;
+		float Restitution     = 0.0f;
+		float Density         = 1000.0f;
+
+		SphereCollider3DComponent() = default;
+		SphereCollider3DComponent(const SphereCollider3DComponent&) = default;
+	};
+
+	struct CapsuleCollider3DComponent
+	{
+		float Radius          = 0.5f;
+		float HalfHeight      = 1.0f;
+		glm::vec3 Offset      = { 0.0f, 0.0f, 0.0f };
+		float Friction        = 0.5f;
+		float Restitution     = 0.0f;
+		float Density         = 1000.0f;
+
+		CapsuleCollider3DComponent() = default;
+		CapsuleCollider3DComponent(const CapsuleCollider3DComponent&) = default;
 	};
 
 	// ─── Point Light ──────────────────────────────────────────────────────────
@@ -273,6 +351,112 @@ namespace Blu
 		SpotLightComponent(const SpotLightComponent&) = default;
 	};
 
+	// ── Spring-Arm (Camera Boom) ─────────────────────────────────────────────
+	// Attach to an entity to position a child camera at ArmLength behind/above it.
+	// The arm extends in the direction opposite to TargetOffset (pivot → arm end).
+	// During OnUpdateEditor/Runtime the Scene drives the attached CameraComponent
+	// entity's TransformComponent each frame using the lag-smoothed world position.
+	struct SpringArmComponent
+	{
+		// Arm length: world-space distance from the pivot to the camera socket.
+		float     ArmLength         = 5.0f;
+		// Socket offset relative to the end of the arm (e.g. raise camera above)
+		glm::vec3 SocketOffset      = { 0.0f, 0.5f, 0.0f };
+		// Pivot offset: where on the target entity the arm originates (e.g. head)
+		glm::vec3 PivotOffset       = { 0.0f, 1.7f, 0.0f };
+		// Pitch / yaw of the arm (degrees).  Yaw is added to the entity's own yaw.
+		float     Pitch             = -15.0f;
+		float     Yaw               = 0.0f;
+		// Lag: how quickly the camera follows (0=instant, 1=very slow)
+		float     PositionLagSpeed  = 10.0f;
+		bool      EnableLag         = true;
+		// Camera entity driven by this arm (set in editor via SceneHierarchyPanel)
+		UUID      TargetCameraUUID  = 0;
+
+		SpringArmComponent() = default;
+		SpringArmComponent(const SpringArmComponent&) = default;
+	};
+
+	// ── Skeletal Animation ───────────────────────────────────────────────────
+	// Attach to an entity that also has a MeshComponent whose Model has bone data.
+	// The Scene updates FinalBoneMatrices each frame and uploads them to the GPU.
+	struct AnimatorComponent
+	{
+		// Clips are shared from the Model's SkeletonData; this component owns the
+		// current playback state so multiple entities can animate independently.
+		Shared<SkeletonData>       SkelData;        // set from Model::SkelData on start
+		int                        CurrentClipIndex = 0;
+		float                      CurrentTime      = 0.0f; // ticks
+		bool                       Playing          = true;
+		bool                       Loop             = true;
+		float                      SpeedScale       = 1.0f;
+
+		// Output: filled each frame by Animator::Update — uploaded to BoneData cbuffer
+		std::vector<glm::mat4>     FinalBoneMatrices;
+
+		AnimatorComponent()
+		{
+			FinalBoneMatrices.assign(Animator::kMaxBones, glm::mat4(1.0f));
+		}
+		AnimatorComponent(const AnimatorComponent&) = default;
+
+		const std::string& CurrentClipName() const
+		{
+			if (SkelData && CurrentClipIndex < (int)SkelData->Clips.size())
+				return SkelData->Clips[CurrentClipIndex].Name;
+			static const std::string none = "<none>";
+			return none;
+		}
+	};
+
+	// ── Foliage (GPU-instanced vegetation) ───────────────────────────────────
+	// Attach to an entity to scatter N copies of a mesh in world space.
+	// Each instance is positioned individually; the GPU draws them in one call.
+	// Use the Scatter button in the editor to procedurally fill transforms,
+	// or add them manually.
+	struct FoliageComponent
+	{
+		Shared<Model>              ModelAsset;
+		std::string                FilePath;
+		std::vector<glm::mat4>     Transforms;     // world-space per-instance transforms
+
+		// Wind animation parameters (applied in the vertex shader)
+		bool      WindEnabled     = true;
+		float     WindStrength    = 0.05f;
+		float     WindFrequency   = 1.5f;
+		glm::vec3 WindDirection   = { 1.0f, 0.0f, 0.0f };
+
+		FoliageComponent() = default;
+		FoliageComponent(const FoliageComponent&) = default;
+	};
+
+	// ── Audio Source ─────────────────────────────────────────────────────────
+	// Attach to any entity to give it a sound.  The Scene initialises the
+	// runtime handle on OnRuntimeStart and stops/frees it on OnRuntimeStop.
+	struct AudioSourceComponent
+	{
+		std::string FilePath;           // Path to .wav / .mp3 / .ogg / .flac
+		float       Volume      = 1.0f; // [0, 1]
+		float       Pitch       = 1.0f; // 1.0 = normal speed
+		bool        Loop        = false;
+		bool        PlayOnStart = true;
+		// 3-D spatial audio
+		bool        Spatial     = false;
+		float       MinDistance = 1.0f;
+		float       MaxDistance = 50.0f;
+
+		// --- Runtime state (not serialized) ---
+		SoundHandle _RuntimeHandle = kInvalidSound;
+
+		AudioSourceComponent() = default;
+		AudioSourceComponent(const AudioSourceComponent& o)
+			: FilePath(o.FilePath), Volume(o.Volume), Pitch(o.Pitch),
+			  Loop(o.Loop), PlayOnStart(o.PlayOnStart),
+			  Spatial(o.Spatial), MinDistance(o.MinDistance), MaxDistance(o.MaxDistance),
+			  _RuntimeHandle(kInvalidSound) // never copy runtime handle
+		{}
+	};
+
 	template<typename... Component>
 	struct Components
 	{
@@ -281,8 +465,10 @@ namespace Blu
 	using AllComponents =
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
-		ScriptComponent, NativeScriptComponent, Rigidbody2DComponent,
-		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent>;
+		NativeScriptComponent, Rigidbody2DComponent,
+		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent, MeshLODComponent,
+		SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
+		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent>;
 
 
 

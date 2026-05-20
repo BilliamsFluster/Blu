@@ -6,6 +6,9 @@
 #include "Buffer.h"
 #include "VertexArray.h"
 
+// Forward-declared to avoid circular include; defined in Animation.h
+namespace Blu { struct SkeletonData; }
+
 namespace Blu
 {
     struct Vertex3D
@@ -13,6 +16,7 @@ namespace Blu
         glm::vec3 Position;
         glm::vec3 Normal;
         glm::vec2 TexCoord;
+        glm::vec3 Tangent;
     };
 
     struct MeshVertex
@@ -20,21 +24,58 @@ namespace Blu
         glm::vec3 Position;
         glm::vec3 Normal;
         glm::vec2 TexCoord;
+        glm::vec3 Tangent;
+    };
+
+    static constexpr int kMaxBonesPerVertex = 4;
+
+    // Extended vertex for skinned meshes.  Bone indices/weights are set by
+    // ModelLoader when the mesh has skinning data; otherwise all zero/1.0.
+    struct SkinnedMeshVertex
+    {
+        glm::vec3  Position;
+        glm::vec3  Normal;
+        glm::vec2  TexCoord;
+        glm::vec3  Tangent;
+        glm::ivec4 BoneIDs    = glm::ivec4(0);
+        glm::vec4  BoneWeights = glm::vec4(0.0f);
     };
 
     struct SubMesh
     {
         std::vector<MeshVertex>  Vertices;
         std::vector<uint32_t>    Indices;
+        uint32_t                 IndexCount = 0;   // cached before Indices is freed post-upload
         int                      MaterialIndex = -1;
         Shared<VertexArray>      VAO;
+        glm::mat4                LocalTransform = glm::mat4(1.0f); // node-space → model root space
+        glm::vec3                BoundingCenter = glm::vec3(0.0f); // in local mesh space
+        float                    BoundingRadius = 0.0f;
+    };
+
+    // A submesh variant with skinning data; shares the same Material/index system.
+    struct SkinnedSubMesh
+    {
+        std::vector<SkinnedMeshVertex> Vertices;
+        std::vector<uint32_t>          Indices;
+        uint32_t                       IndexCount    = 0;
+        int                            MaterialIndex = -1;
+        Shared<VertexArray>            VAO;
+        glm::mat4                      LocalTransform = glm::mat4(1.0f);
     };
 
     struct Model
     {
-        std::vector<SubMesh>     Meshes;
-        std::vector<Shared<class Material>> Materials;
-        std::string              FilePath;
+        std::vector<SubMesh>                     Meshes;        // static (no skin) draw path
+        std::vector<SkinnedSubMesh>              SkinnedMeshes; // skinned draw path
+        std::vector<Shared<class Material>>      Materials;
+        std::string                              FilePath;
+
+        // Non-null when the model has skeletal animation data.
+        // ModelLoader fills this when bones are present in the file.
+        Shared<struct SkeletonData>              SkelData;
+
+        bool HasSkeleton() const { return SkelData != nullptr && !SkinnedMeshes.empty(); }
     };
 
     class Mesh

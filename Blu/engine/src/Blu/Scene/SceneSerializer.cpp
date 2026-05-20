@@ -5,7 +5,6 @@
 #include <fstream>
 #include <filesystem>
 #include "yaml-cpp/yaml.h"
-#include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Utils/Helpers.h"
 #include "Blu/LightSystem/LightManager.h"
@@ -137,16 +136,14 @@ namespace Blu
 			out << YAML::EndMap;
 
 		}
-		/*if (entity.HasComponent<NativeScriptComponent>())
+		if (entity.HasComponent<NativeScriptComponent>())
 		{
+			auto& nsc = entity.GetComponent<NativeScriptComponent>();
 			out << YAML::Key << "NativeScriptComponent";
 			out << YAML::BeginMap;
-
-			auto& instance = entity.GetComponent<NativeScriptComponent>().Instance;
-			out << YAML::Key << "Tag" << YAML::Value << instance;
+			out << YAML::Key << "ClassName" << YAML::Value << nsc.ClassName;
 			out << YAML::EndMap;
-
-		}*/
+		}
 		if (entity.HasComponent<PointLightComponent>())
 		{
 			out << YAML::Key << "PointLightComponent";
@@ -197,42 +194,6 @@ namespace Blu
 
 
 
-		if (entity.HasComponent<ScriptComponent>())
-		{
-			out << YAML::Key << "ScriptComponent";
-			out << YAML::BeginMap;
-			auto& sc = entity.GetComponent<ScriptComponent>();
-			out << YAML::Key << "Name" << YAML::Value << sc.Name;
-			
-
-			// we need to serialize the fields 
-			Shared<ScriptClass> scriptClass = ScriptEngine::GetEntityScriptClass(sc.Name);
-
-
-			Shared<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
-
-			if (scriptClass)
-			{
-				if (scriptInstance)
-				{
-					out << YAML::Key << "ScriptFields" << YAML::Value;
-					out << YAML::BeginMap; // script fields
-					auto& fields = scriptClass->GetScriptFields();
-					for (const auto& [name, field] : fields)
-					{
-						if (field.Type == ScriptFieldType::Float)
-						{
-							float data = scriptInstance->GetFieldValue<float>(name);
-							out << YAML::Key << name << YAML::Value << data;
-
-						}
-					}
-					out << YAML::EndMap;
-				}
-			}
-			out << YAML::EndMap; // script component
-
-		}
 		if (entity.HasComponent<CameraComponent>())
 		{
 			out << YAML::Key << "CameraComponent";
@@ -285,13 +246,49 @@ namespace Blu
 					}
 				};
 			// Check to see if texture paths are valid before we serialize them 
-			serializeTexture("AlbedoPath", src.MaterialInstance->AlbedoMap);
-			serializeTexture("NormalPath", src.MaterialInstance->NormalMap);
-			serializeTexture("DiffusePath", src.MaterialInstance->DiffuseMap);
-			serializeTexture("SpecularPath", src.MaterialInstance->SpecularMap);
+			serializeTexture("AlbedoPath",           src.MaterialInstance->AlbedoMap);
+			serializeTexture("NormalPath",            src.MaterialInstance->NormalMap);
+			serializeTexture("MetallicRoughnessPath", src.MaterialInstance->MetallicRoughnessMap);
+			serializeTexture("AOPath",                src.MaterialInstance->AOMap);
+			serializeTexture("EmissivePath",          src.MaterialInstance->EmissiveMap);
 
 			out << YAML::EndMap;
 
+		}
+		if (entity.HasComponent<MeshComponent>())
+		{
+			out << YAML::Key << "MeshComponent";
+			out << YAML::BeginMap;
+
+			auto& mc = entity.GetComponent<MeshComponent>();
+			out << YAML::Key << "FilePath" << YAML::Value << mc.FilePath;
+
+			if (mc.MaterialInstance)
+			{
+				out << YAML::Key << "PBR_AlbedoColor" << YAML::Value << glm::vec3(mc.MaterialInstance->AlbedoColor);
+				out << YAML::Key << "PBR_AlbedoAlpha" << YAML::Value << mc.MaterialInstance->AlbedoColor.a;
+				out << YAML::Key << "PBR_Metallic"    << YAML::Value << mc.MaterialInstance->Metallic;
+				out << YAML::Key << "PBR_Roughness"   << YAML::Value << mc.MaterialInstance->Roughness;
+				out << YAML::Key << "PBR_AO"          << YAML::Value << mc.MaterialInstance->AO;
+				out << YAML::Key << "PBR_EmissiveColor" << YAML::Value << mc.MaterialInstance->EmissiveColor;
+				out << YAML::Key << "PBR_EmissiveStrength" << YAML::Value << mc.MaterialInstance->EmissiveStrength;
+				out << YAML::Key << "Mat_BlendMode"   << YAML::Value << static_cast<int>(mc.MaterialInstance->Blend);
+				out << YAML::Key << "Mat_ShadingModel" << YAML::Value << static_cast<int>(mc.MaterialInstance->Shading);
+				out << YAML::Key << "Mat_TwoSided"    << YAML::Value << mc.MaterialInstance->TwoSided;
+				out << YAML::Key << "Mat_AlphaCutoff" << YAML::Value << mc.MaterialInstance->AlphaCutoff;
+
+				auto serializeTex = [&](const std::string& key, Shared<Texture2D>& tex)
+				{
+					if (tex) out << YAML::Key << key << YAML::Value << tex->GetTexturePath();
+				};
+				serializeTex("Tex_Albedo",  mc.MaterialInstance->AlbedoMap);
+				serializeTex("Tex_Normal",  mc.MaterialInstance->NormalMap);
+				serializeTex("Tex_MetallicRoughness", mc.MaterialInstance->MetallicRoughnessMap);
+				serializeTex("Tex_AO",      mc.MaterialInstance->AOMap);
+				serializeTex("Tex_Emissive", mc.MaterialInstance->EmissiveMap);
+			}
+
+			out << YAML::EndMap;
 		}
 		if (entity.HasComponent<CircleRendererComponent>())
 		{
@@ -348,6 +345,53 @@ namespace Blu
 			out << YAML::Key << "Restitution" << YAML::Value << cc.Restitution;
 			out << YAML::Key << "RestitutionThreshold" << YAML::Value << cc.RestitutionThreshold;
 
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<Rigidbody3DComponent>())
+		{
+			auto& rb = entity.GetComponent<Rigidbody3DComponent>();
+			out << YAML::Key << "Rigidbody3DComponent" << YAML::BeginMap;
+			out << YAML::Key << "BodyType"        << YAML::Value << static_cast<int>(rb.Type);
+			out << YAML::Key << "GravityScale"    << YAML::Value << rb.GravityScale;
+			out << YAML::Key << "LinearDamping"   << YAML::Value << rb.LinearDamping;
+			out << YAML::Key << "AngularDamping"  << YAML::Value << rb.AngularDamping;
+			out << YAML::Key << "FixedRotationX"  << YAML::Value << rb.FixedRotationX;
+			out << YAML::Key << "FixedRotationY"  << YAML::Value << rb.FixedRotationY;
+			out << YAML::Key << "FixedRotationZ"  << YAML::Value << rb.FixedRotationZ;
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<BoxCollider3DComponent>())
+		{
+			auto& bc = entity.GetComponent<BoxCollider3DComponent>();
+			out << YAML::Key << "BoxCollider3DComponent" << YAML::BeginMap;
+			out << YAML::Key << "HalfExtents" << YAML::Value << bc.HalfExtents;
+			out << YAML::Key << "Offset"      << YAML::Value << bc.Offset;
+			out << YAML::Key << "Friction"    << YAML::Value << bc.Friction;
+			out << YAML::Key << "Restitution" << YAML::Value << bc.Restitution;
+			out << YAML::Key << "Density"     << YAML::Value << bc.Density;
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<SphereCollider3DComponent>())
+		{
+			auto& sc = entity.GetComponent<SphereCollider3DComponent>();
+			out << YAML::Key << "SphereCollider3DComponent" << YAML::BeginMap;
+			out << YAML::Key << "Radius"     << YAML::Value << sc.Radius;
+			out << YAML::Key << "Offset"     << YAML::Value << sc.Offset;
+			out << YAML::Key << "Friction"   << YAML::Value << sc.Friction;
+			out << YAML::Key << "Restitution"<< YAML::Value << sc.Restitution;
+			out << YAML::Key << "Density"    << YAML::Value << sc.Density;
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<CapsuleCollider3DComponent>())
+		{
+			auto& cc = entity.GetComponent<CapsuleCollider3DComponent>();
+			out << YAML::Key << "CapsuleCollider3DComponent" << YAML::BeginMap;
+			out << YAML::Key << "Radius"     << YAML::Value << cc.Radius;
+			out << YAML::Key << "HalfHeight" << YAML::Value << cc.HalfHeight;
+			out << YAML::Key << "Offset"     << YAML::Value << cc.Offset;
+			out << YAML::Key << "Friction"   << YAML::Value << cc.Friction;
+			out << YAML::Key << "Restitution"<< YAML::Value << cc.Restitution;
+			out << YAML::Key << "Density"    << YAML::Value << cc.Density;
 			out << YAML::EndMap;
 		}
 		//if (entity.HasComponent<ParticleSystemComponent>())
@@ -472,14 +516,6 @@ namespace Blu
 				
 
 
-				auto scriptComponent = entity["ScriptComponent"];
-				if (scriptComponent)
-				{
-					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
-					sc.Name = scriptComponent["Name"].as<std::string>();
-
-				}
-
 				auto cameraComponent = entity["CameraComponent"];
 				if (cameraComponent)
 				{
@@ -525,11 +561,11 @@ namespace Blu
 						};
 
 					// Use the lambda for each texture type
-					assignTextureFromYAML("AlbedoPath", src.MaterialInstance->AlbedoMap);
-					assignTextureFromYAML("DiffusePath", src.MaterialInstance->DiffuseMap);
-					assignTextureFromYAML("SpecularPath", src.MaterialInstance->SpecularMap);
-					assignTextureFromYAML("NormalPath", src.MaterialInstance->NormalMap);
-					
+					assignTextureFromYAML("AlbedoPath",           src.MaterialInstance->AlbedoMap);
+					assignTextureFromYAML("NormalPath",            src.MaterialInstance->NormalMap);
+					assignTextureFromYAML("MetallicRoughnessPath", src.MaterialInstance->MetallicRoughnessMap);
+					assignTextureFromYAML("AOPath",                src.MaterialInstance->AOMap);
+					assignTextureFromYAML("EmissivePath",          src.MaterialInstance->EmissiveMap);
 
 				}
 				
@@ -579,6 +615,54 @@ namespace Blu
 					cc.Restitution = circleColliderComponent["Restitution"].as<float>();
 					cc.RestitutionThreshold = circleColliderComponent["RestitutionThreshold"].as<float>();
 				}
+
+				auto rigidbody3DComponent = entity["Rigidbody3DComponent"];
+				if (rigidbody3DComponent)
+				{
+					auto& rb = deserializedEntity.AddComponent<Rigidbody3DComponent>();
+					rb.Type           = static_cast<Rigidbody3DComponent::BodyType>(rigidbody3DComponent["BodyType"].as<int>());
+					if (rigidbody3DComponent["GravityScale"])   rb.GravityScale   = rigidbody3DComponent["GravityScale"].as<float>();
+					if (rigidbody3DComponent["LinearDamping"])  rb.LinearDamping  = rigidbody3DComponent["LinearDamping"].as<float>();
+					if (rigidbody3DComponent["AngularDamping"]) rb.AngularDamping = rigidbody3DComponent["AngularDamping"].as<float>();
+					if (rigidbody3DComponent["FixedRotationX"]) rb.FixedRotationX = rigidbody3DComponent["FixedRotationX"].as<bool>();
+					if (rigidbody3DComponent["FixedRotationY"]) rb.FixedRotationY = rigidbody3DComponent["FixedRotationY"].as<bool>();
+					if (rigidbody3DComponent["FixedRotationZ"]) rb.FixedRotationZ = rigidbody3DComponent["FixedRotationZ"].as<bool>();
+				}
+
+				auto boxCollider3DComponent = entity["BoxCollider3DComponent"];
+				if (boxCollider3DComponent)
+				{
+					auto& bc = deserializedEntity.AddComponent<BoxCollider3DComponent>();
+					if (boxCollider3DComponent["HalfExtents"])  bc.HalfExtents  = boxCollider3DComponent["HalfExtents"].as<glm::vec3>();
+					if (boxCollider3DComponent["Offset"])       bc.Offset       = boxCollider3DComponent["Offset"].as<glm::vec3>();
+					if (boxCollider3DComponent["Friction"])     bc.Friction     = boxCollider3DComponent["Friction"].as<float>();
+					if (boxCollider3DComponent["Restitution"])  bc.Restitution  = boxCollider3DComponent["Restitution"].as<float>();
+					if (boxCollider3DComponent["Density"])      bc.Density      = boxCollider3DComponent["Density"].as<float>();
+				}
+
+				auto sphereCollider3DComponent = entity["SphereCollider3DComponent"];
+				if (sphereCollider3DComponent)
+				{
+					auto& sc = deserializedEntity.AddComponent<SphereCollider3DComponent>();
+					if (sphereCollider3DComponent["Radius"])      sc.Radius      = sphereCollider3DComponent["Radius"].as<float>();
+					if (sphereCollider3DComponent["Offset"])      sc.Offset      = sphereCollider3DComponent["Offset"].as<glm::vec3>();
+					if (sphereCollider3DComponent["Friction"])    sc.Friction    = sphereCollider3DComponent["Friction"].as<float>();
+					if (sphereCollider3DComponent["Restitution"]) sc.Restitution = sphereCollider3DComponent["Restitution"].as<float>();
+					if (sphereCollider3DComponent["Density"])     sc.Density     = sphereCollider3DComponent["Density"].as<float>();
+				}
+
+				auto capsuleCollider3DComponent = entity["CapsuleCollider3DComponent"];
+				if (capsuleCollider3DComponent)
+				{
+					auto& cc = deserializedEntity.AddComponent<CapsuleCollider3DComponent>();
+					if (capsuleCollider3DComponent["Radius"])      cc.Radius      = capsuleCollider3DComponent["Radius"].as<float>();
+					if (capsuleCollider3DComponent["HalfHeight"])  cc.HalfHeight  = capsuleCollider3DComponent["HalfHeight"].as<float>();
+					if (capsuleCollider3DComponent["Offset"])      cc.Offset      = capsuleCollider3DComponent["Offset"].as<glm::vec3>();
+					if (capsuleCollider3DComponent["Friction"])    cc.Friction    = capsuleCollider3DComponent["Friction"].as<float>();
+					if (capsuleCollider3DComponent["Restitution"]) cc.Restitution = capsuleCollider3DComponent["Restitution"].as<float>();
+					if (capsuleCollider3DComponent["Density"])     cc.Density     = capsuleCollider3DComponent["Density"].as<float>();
+				}
+
 				auto pointLightComponent = entity["PointLightComponent"];
 				if (pointLightComponent)
 				{
@@ -603,6 +687,46 @@ namespace Blu
 					if (dirLightComponent["Specular"])  dl.Specular  = dirLightComponent["Specular"].as<glm::vec3>();
 					if (dirLightComponent["Intensity"]) dl.Intensity = dirLightComponent["Intensity"].as<float>();
 				}
+				auto meshComponent = entity["MeshComponent"];
+				if (meshComponent)
+				{
+					auto& mc = deserializedEntity.AddComponent<MeshComponent>();
+					if (meshComponent["FilePath"])
+						mc.FilePath = meshComponent["FilePath"].as<std::string>();
+
+					if (!mc.MaterialInstance)
+						mc.MaterialInstance = Material::Create();
+
+					// PBR properties
+					if (meshComponent["PBR_AlbedoColor"])
+					{
+						glm::vec3 rgb = meshComponent["PBR_AlbedoColor"].as<glm::vec3>();
+						float alpha = meshComponent["PBR_AlbedoAlpha"] ? meshComponent["PBR_AlbedoAlpha"].as<float>() : 1.0f;
+						mc.MaterialInstance->AlbedoColor = glm::vec4(rgb, alpha);
+					}
+					if (meshComponent["PBR_Metallic"])         mc.MaterialInstance->Metallic         = meshComponent["PBR_Metallic"].as<float>();
+					if (meshComponent["PBR_Roughness"])        mc.MaterialInstance->Roughness        = meshComponent["PBR_Roughness"].as<float>();
+					if (meshComponent["PBR_AO"])               mc.MaterialInstance->AO               = meshComponent["PBR_AO"].as<float>();
+					if (meshComponent["PBR_EmissiveColor"])    mc.MaterialInstance->EmissiveColor    = meshComponent["PBR_EmissiveColor"].as<glm::vec3>();
+					if (meshComponent["PBR_EmissiveStrength"]) mc.MaterialInstance->EmissiveStrength = meshComponent["PBR_EmissiveStrength"].as<float>();
+					if (meshComponent["Mat_BlendMode"])        mc.MaterialInstance->Blend            = static_cast<BlendMode>(meshComponent["Mat_BlendMode"].as<int>());
+					if (meshComponent["Mat_ShadingModel"])     mc.MaterialInstance->Shading          = static_cast<ShadingModel>(meshComponent["Mat_ShadingModel"].as<int>());
+					if (meshComponent["Mat_TwoSided"])         mc.MaterialInstance->TwoSided         = meshComponent["Mat_TwoSided"].as<bool>();
+					if (meshComponent["Mat_AlphaCutoff"])      mc.MaterialInstance->AlphaCutoff      = meshComponent["Mat_AlphaCutoff"].as<float>();
+
+					// Textures
+					auto loadTex = [&](const char* key, Shared<Texture2D>& tex)
+					{
+						if (meshComponent[key])
+							tex = Texture2D::Create(meshComponent[key].as<std::string>());
+					};
+					loadTex("Tex_Albedo",  mc.MaterialInstance->AlbedoMap);
+					loadTex("Tex_Normal",  mc.MaterialInstance->NormalMap);
+					loadTex("Tex_MetallicRoughness", mc.MaterialInstance->MetallicRoughnessMap);
+					loadTex("Tex_AO",      mc.MaterialInstance->AOMap);
+					loadTex("Tex_Emissive", mc.MaterialInstance->EmissiveMap);
+				}
+
 				auto spotLightComponent = entity["SpotLightComponent"];
 				if (spotLightComponent)
 				{
@@ -620,69 +744,19 @@ namespace Blu
 					if (spotLightComponent["AttQuadratic"])   sl.AttQuadratic   = spotLightComponent["AttQuadratic"].as<float>();
 				}
 
+			auto nativeScriptComponent = entity["NativeScriptComponent"];
+				if (nativeScriptComponent)
+				{
+					auto& nsc = deserializedEntity.AddComponent<NativeScriptComponent>();
+					nsc.ClassName = nativeScriptComponent["ClassName"].as<std::string>("");
+				}
+
 			}
 		}
 
 		return true;
 	}
 	
-	bool SceneSerializer::DeserializeEntityScriptInstances(const std::string& filepath)
-	{
-		std::ifstream stream(filepath);
-		std::stringstream strStream;
-		strStream << stream.rdbuf();
-
-		YAML::Node data = YAML::Load(strStream.str());
-		if (!data["Scene"])
-			return false;
-
-		std::string sceneName = data["Scene"].as<std::string>();
-		auto entities = data["Entities"];
-		if (entities)
-		{
-			for (auto entity : entities)
-			{
-				uint64_t uuid = entity["Entity"].as<uint64_t>();
-				std::string name;
-
-
-
-				auto scriptComponent = entity["ScriptComponent"];
-				if (scriptComponent)
-				{
-
-
-					Entity entity = m_Scene->GetEntityByUUID(uuid);
-					if (!entity) continue;
-					auto& sc = entity.GetComponent<ScriptComponent>();
-					Shared<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(uuid);
-					sc.Name = scriptComponent["Name"].as<std::string>();
-					Shared<ScriptClass> scriptClass = ScriptEngine::GetEntityScriptClass(sc.Name);
-
-					auto scriptFields = scriptComponent["ScriptFields"];
-					for (auto it = scriptFields.begin(); it != scriptFields.end(); ++it)
-					{
-						const std::string& fieldName = it->first.as<std::string>();
-						auto fieldValue = it->second; // YAML will convert to appropriate C++ type
-						if (scriptInstance)
-						{
-							auto& fields = scriptClass->GetScriptFields();
-							auto fieldIt = fields.find(fieldName);
-							if (fieldIt != fields.end() && fieldIt->second.Type == ScriptFieldType::Float)
-							{
-								float data = fieldValue.as<float>();
-								scriptInstance->SetFieldValue<float>(fieldName, data);
-							}
-						}
-
-						// Handle other field types...
-					}
-
-
-				}
-			}
-		}
-	}
 	bool SceneSerializer::DeserializeBinary(const std::string& filepath)
 	{
 		return false;

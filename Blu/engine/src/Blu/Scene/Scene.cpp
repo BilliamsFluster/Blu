@@ -1,8 +1,13 @@
 #include "Blupch.h"
 #include "Scene.h"
+#include "Blu/Physics/Physics3D.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Rendering/Renderer3D.h"
-#include "Blu/Scene/ScriptableEntity.h"
+#include "Blu/Rendering/CascadedShadowMap.h"
+#include "Blu/Rendering/PostProcess.h"
+#include "Blu/Rendering/Skybox.h"
+#include "Blu/Rendering/TimeOfDay.h"
+#include "Blu/GameFramework/GameFramework.h"
 #include "Entity.h"
 #include "Blu/Rendering/EditorCamera.h"
 #include "Blu/Rendering/Shader.h"
@@ -11,9 +16,13 @@
 #include "box2d/b2_fixture.h"
 #include "box2d/b2_polygon_shape.h"
 #include "box2d/b2_circle_shape.h"
-#include "Blu/Scripting/ScriptEngine.h"
 #include "Blu/LightSystem/LightManager.h"
-#include <glm/gtc/matrix_transform.hpp>  // glm::radians, glm::cos, etc.
+#include "Blu/Audio/AudioEngine.h"
+#include "Blu/Rendering/Animator.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <cfloat>
+#include <algorithm>
 
 namespace Blu
 {
@@ -43,6 +52,30 @@ namespace Blu
 	{
 		m_LightManager = std::make_shared<LightManager>();
 		OnRuntimeStop(); // make sure there are not any instances that may create compounding for gravity and etc
+	}
+
+	void Scene::OnViewportResize(float width, float height)
+	{
+		m_ViewportWidth = width;
+		m_ViewportHeight = height;
+
+		auto view = m_Registry.view<CameraComponent>();
+		for (auto entity : view)
+		{
+			auto& cameraComponent = view.get<CameraComponent>(entity);
+			if (!cameraComponent.FixedAspectRatio)
+			{
+				cameraComponent.Camera.SetViewportSize(width, height);
+			}
+		}
+
+		if (!m_PostProcess && width > 0 && height > 0)
+			m_PostProcess = PostProcess::Create((uint32_t)width, (uint32_t)height);
+		else if (m_PostProcess)
+			m_PostProcess->Resize((uint32_t)width, (uint32_t)height);
+
+		if (!m_Skybox)
+			m_Skybox = std::make_shared<Skybox>();
 	}
 	Scene::~Scene()
 	{
@@ -100,13 +133,56 @@ namespace Blu
 		CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		
-		CopyComponent<ScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<DirectionalLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<SpotLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<MeshComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+
+		CopyComponent<Rigidbody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<SphereCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CapsuleCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+
+		newScene->m_UseShadows     = scene->m_UseShadows;
+		newScene->m_UsePostProcess = scene->m_UsePostProcess;
+		newScene->m_UseSkybox      = scene->m_UseSkybox;
+		newScene->m_Fog            = scene->m_Fog;
+		if (scene->m_UseSkybox && scene->m_Skybox)
+		{
+			newScene->m_Skybox = std::make_shared<Skybox>();
+			auto& src = *scene->m_Skybox;
+			auto& dst = *newScene->m_Skybox;
+			dst.GroundColor      = src.GroundColor;
+			dst.Turbidity        = src.Turbidity;
+			dst.SkyExposure      = src.SkyExposure;
+			dst.SunColor         = src.SunColor;
+			dst.SunSize          = src.SunSize;
+			dst.SunStrength      = src.SunStrength;
+			dst.CloudColor       = src.CloudColor;
+			dst.CloudCoverage    = src.CloudCoverage;
+			dst.CloudDensity     = src.CloudDensity;
+			dst.CloudHeight      = src.CloudHeight;
+			dst.CloudScale       = src.CloudScale;
+			dst.CloudScrollSpeed = src.CloudScrollSpeed;
+		}
+		if (scene->m_UsePostProcess && scene->m_PostProcess &&
+		    newScene->m_ViewportWidth > 0 && newScene->m_ViewportHeight > 0)
+		{
+			newScene->m_PostProcess = PostProcess::Create(
+			    (uint32_t)newScene->m_ViewportWidth, (uint32_t)newScene->m_ViewportHeight);
+			newScene->m_PostProcess->EnableBloom    = scene->m_PostProcess->EnableBloom;
+			newScene->m_PostProcess->BloomThreshold = scene->m_PostProcess->BloomThreshold;
+			newScene->m_PostProcess->BloomStrength  = scene->m_PostProcess->BloomStrength;
+			newScene->m_PostProcess->EnableFXAA     = scene->m_PostProcess->EnableFXAA;
+			newScene->m_PostProcess->EnableSSAO     = scene->m_PostProcess->EnableSSAO;
+			newScene->m_PostProcess->SSAORadius     = scene->m_PostProcess->SSAORadius;
+			newScene->m_PostProcess->SSAOBias       = scene->m_PostProcess->SSAOBias;
+			newScene->m_PostProcess->SSAOPower      = scene->m_PostProcess->SSAOPower;
+			newScene->m_PostProcess->SSAOSamples    = scene->m_PostProcess->SSAOSamples;
+			newScene->m_PostProcess->SSAOStrength   = scene->m_PostProcess->SSAOStrength;
+		}
 
 		return newScene;
 	}
@@ -200,7 +276,29 @@ namespace Blu
 	void Scene::OnRuntimeStart()
 	{
 		OnPhysics2DStart();
-		
+		OnPhysics3DStart();
+
+		// --- Audio ---
+		AudioEngine::Get().Initialize();
+		m_Registry.view<AudioSourceComponent, TransformComponent>().each(
+			[&](auto entity, AudioSourceComponent& asc, const TransformComponent& tc)
+			{
+				if (asc.FilePath.empty()) return;
+				asc._RuntimeHandle = AudioEngine::Get().LoadSound(asc.FilePath);
+				if (asc._RuntimeHandle == kInvalidSound) return;
+
+				AudioEngine::Get().SetVolume (asc._RuntimeHandle, asc.Volume);
+				AudioEngine::Get().SetPitch  (asc._RuntimeHandle, asc.Pitch);
+				AudioEngine::Get().SetLooping(asc._RuntimeHandle, asc.Loop);
+				AudioEngine::Get().SetSpatial(asc._RuntimeHandle, asc.Spatial);
+				if (asc.Spatial)
+				{
+					AudioEngine::Get().SetSoundPosition(asc._RuntimeHandle, tc.Translation);
+					AudioEngine::Get().SetAttenuation  (asc._RuntimeHandle, asc.MinDistance, asc.MaxDistance);
+				}
+				if (asc.PlayOnStart)
+					AudioEngine::Get().Play(asc._RuntimeHandle);
+			});
 	}
 	void Scene::OnPhysics2DStart()
 	{
@@ -263,42 +361,123 @@ namespace Blu
 
 		}
 	}
+	void Scene::OnPhysics3DStart()
+	{
+		m_Physics3DWorld = new Physics3DWorld();
+		m_Physics3DWorld->Init({ 0.0f, -9.81f, 0.0f });
+
+		auto view = m_Registry.view<Rigidbody3DComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, this };
+			auto& tc = entity.GetComponent<TransformComponent>();
+			auto& rb = entity.GetComponent<Rigidbody3DComponent>();
+
+			// Build body spec from whichever collider component is present
+			Physics3DBodySpec spec;
+
+			if (entity.HasComponent<BoxCollider3DComponent>())
+			{
+				auto& bc       = entity.GetComponent<BoxCollider3DComponent>();
+				spec.ShapeType = Physics3DShapeType::Box;
+				spec.HalfExtents = bc.HalfExtents * tc.Scale; // scale into world space
+				spec.Offset    = bc.Offset;
+				spec.Friction  = bc.Friction;
+				spec.Restitution = bc.Restitution;
+				spec.Density   = bc.Density;
+			}
+			else if (entity.HasComponent<SphereCollider3DComponent>())
+			{
+				auto& sc       = entity.GetComponent<SphereCollider3DComponent>();
+				spec.ShapeType = Physics3DShapeType::Sphere;
+				// Use the maximum scale component to uniformly scale the sphere
+				float maxScale = glm::max(glm::max(tc.Scale.x, tc.Scale.y), tc.Scale.z);
+				spec.Radius    = sc.Radius * maxScale;
+				spec.Offset    = sc.Offset;
+				spec.Friction  = sc.Friction;
+				spec.Restitution = sc.Restitution;
+				spec.Density   = sc.Density;
+			}
+			else if (entity.HasComponent<CapsuleCollider3DComponent>())
+			{
+				auto& cc       = entity.GetComponent<CapsuleCollider3DComponent>();
+				spec.ShapeType = Physics3DShapeType::Capsule;
+				spec.Radius    = cc.Radius * glm::max(tc.Scale.x, tc.Scale.z);
+				spec.HalfHeight = cc.HalfHeight * tc.Scale.y;
+				spec.Offset    = cc.Offset;
+				spec.Friction  = cc.Friction;
+				spec.Restitution = cc.Restitution;
+				spec.Density   = cc.Density;
+			}
+			else
+			{
+				// No collider component — default to a unit box so the body still works
+				spec.ShapeType   = Physics3DShapeType::Box;
+				spec.HalfExtents = { 0.5f, 0.5f, 0.5f };
+			}
+
+			// Derive world-space rotation from euler angles stored in TransformComponent
+			glm::quat worldRotation = glm::quat(tc.Rotation);
+
+			Physics3DBodyType bodyType;
+			switch (rb.Type)
+			{
+				case Rigidbody3DComponent::BodyType::Static:    bodyType = Physics3DBodyType::Static;    break;
+				case Rigidbody3DComponent::BodyType::Dynamic:   bodyType = Physics3DBodyType::Dynamic;   break;
+				case Rigidbody3DComponent::BodyType::Kinematic: bodyType = Physics3DBodyType::Kinematic; break;
+				default:                                        bodyType = Physics3DBodyType::Static;    break;
+			}
+
+			rb.RuntimeBodyID = m_Physics3DWorld->AddBody(
+				tc.Translation, worldRotation, bodyType, spec);
+		}
+	}
+
+	void Scene::OnPhysics3DStop()
+	{
+		if (m_Physics3DWorld)
+		{
+			// Clear stored body IDs so we don't reference stale data after restart
+			auto view = m_Registry.view<Rigidbody3DComponent>();
+			for (auto e : view)
+			{
+				auto& rb = view.get<Rigidbody3DComponent>(e);
+				rb.RuntimeBodyID = UINT32_MAX;
+			}
+
+			delete m_Physics3DWorld;
+			m_Physics3DWorld = nullptr;
+		}
+	}
+
 	void Scene::OnRuntimeStop()
 	{
+		m_Registry.view<NativeScriptComponent>().each([](auto /*entity*/, auto& nsc) {
+			if (nsc.Instance) {
+				nsc.Instance->EndPlay();
+				nsc.DestroyScript(&nsc);
+			}
+		});
+
 		if (m_PhysicsWorld)
 		{
 			delete m_PhysicsWorld;
 			m_PhysicsWorld = nullptr;
 		}
 
+		OnPhysics3DStop();
 
-	}
-	void Scene::OnScriptSystemStart(bool invokeOnCreate)
-	{
-		auto view = m_Registry.view<ScriptComponent>();
-		for (auto e : view)
+		// --- Audio: stop and release all runtime sounds ---
+		m_Registry.view<AudioSourceComponent>().each([](auto /*entity*/, AudioSourceComponent& asc)
 		{
-			Entity entity = { e, this };
-			ScriptEngine::OnCreateEntity(&entity, invokeOnCreate);
-		}
-	}
-	void Scene::OnScriptSystemStop()
-	{
-		ScriptEngine::OnRuntimeStop();
-	}
-	void Scene::OnScriptSystemUpdate(Timestep deltaTime)
-	{
-		if (m_ScenePaused)
-			return;
-		auto view = m_Registry.view<ScriptComponent>();
-		for (auto e : view)
-		{
-			Entity entity = { e, this };
-			
-			if(entity)
-				ScriptEngine::OnUpdateEntity(&entity, deltaTime);
-
-		}
+			if (asc._RuntimeHandle != kInvalidSound)
+			{
+				AudioEngine::Get().Stop(asc._RuntimeHandle);
+				AudioEngine::Get().UnloadSound(asc._RuntimeHandle);
+				asc._RuntimeHandle = kInvalidSound;
+			}
+		});
+		AudioEngine::Get().Shutdown();
 	}
 	void Scene::UpdateActiveCameraComponent(Timestep deltaTime)
 	{
@@ -373,9 +552,10 @@ namespace Blu
             auto view = reg.view<TransformComponent, DirectionalLightComponent>();
             for (auto e : view)
             {
-                auto& dlc = view.get<DirectionalLightComponent>(e);
+                auto&& [tc, dlc] = view.get<TransformComponent, DirectionalLightComponent>(e);
                 DirLightData d;
-                d.Direction = glm::normalize(dlc.Direction);
+                glm::mat4 rotMat = glm::toMat4(glm::quat(tc.Rotation));
+                d.Direction = glm::normalize(glm::vec3(rotMat * glm::vec4(dlc.Direction, 0.0f)));
                 d.Ambient   = dlc.Ambient;
                 d.Diffuse   = dlc.Diffuse;
                 d.Specular  = dlc.Specular;
@@ -496,60 +676,390 @@ namespace Blu
 		std::vector<SpotLightData>  spotLights;
 		GatherLights(m_Registry, dirLights, pointLights, spotLights);
 
+		ShadowPass(dirLights, camera.GetViewProjectionMatrix(), camera.GetNearClip(), camera.GetFarClip());
+
 		Renderer3D::BeginScene(camera);
 		Renderer3D::SetLights(dirLights, pointLights, spotLights);
+		Renderer3D::SetFog(m_Fog);
 		{
+			glm::vec3 camPos = camera.GetPosition();
 			auto view = m_Registry.view<TransformComponent, MeshComponent>();
 			for (auto& entity : view)
 			{
 				auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+
+				// Skinned draw path
+				if (mesh.ModelAsset && mesh.ModelAsset->HasSkeleton() &&
+				    m_Registry.any_of<AnimatorComponent>(entity))
+				{
+					auto& anim = m_Registry.get<AnimatorComponent>(entity);
+					Renderer3D::DrawSkinnedMesh(transform.GetTransform(), mesh,
+					                            anim.FinalBoneMatrices, (int)entity);
+					continue;
+				}
+
+				// LOD: if entity has a MeshLODComponent, pick the right model for this distance
+				Shared<Model> savedModel = mesh.ModelAsset;
+				if (m_Registry.any_of<MeshLODComponent>(entity))
+				{
+					auto& lod = m_Registry.get<MeshLODComponent>(entity);
+					float dist = glm::length(glm::vec3(transform.GetTransform()[3]) - camPos);
+					if (auto lodModel = lod.SelectLOD(dist)) mesh.ModelAsset = lodModel;
+				}
 				Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+				mesh.ModelAsset = savedModel;
 			}
 		}
+		Renderer3D::FlushDrawCalls();
+
+		// --- Foliage (GPU-instanced) ---
+		{
+			auto fview = m_Registry.view<FoliageComponent>();
+			for (auto& entity : fview)
+			{
+				auto& fc = fview.get<FoliageComponent>(entity);
+				if (fc.ModelAsset && !fc.Transforms.empty())
+					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms);
+			}
+		}
+
+		if (m_UseSkybox && m_Skybox)
+		{
+			// DirLight stores "toward-scene" convention; Skybox wants "toward-sun", so negate.
+			glm::vec3 sunDir = dirLights.empty() ? glm::vec3(0.3f, 1.0f, 0.5f) : -dirLights[0].Direction;
+			m_Skybox->Render(camera.GetViewMatrix(), camera.GetProjectionMatrix(), sunDir, m_ElapsedTime);
+		}
+
 		Renderer3D::EndScene();
 	}
 
-	void Scene::Render3DPass(Camera& camera, const glm::mat4& transform)
+	void Scene::Render3DPass(Camera& camera, const glm::mat4& cameraTransform)
 	{
 		std::vector<DirLightData>   dirLights;
 		std::vector<PointLightData> pointLights;
 		std::vector<SpotLightData>  spotLights;
 		GatherLights(m_Registry, dirLights, pointLights, spotLights);
 
-		Renderer3D::BeginScene(camera, transform);
-		Renderer3D::SetLights(dirLights, pointLights, spotLights);
 		{
+			glm::mat4 camView = glm::inverse(cameraTransform);
+			glm::mat4 camVP   = camera.GetProjectionMatrix() * camView;
+			ShadowPass(dirLights, camVP, 0.1f, 1000.0f);
+		}
+
+		Renderer3D::BeginScene(camera, cameraTransform);
+		Renderer3D::SetLights(dirLights, pointLights, spotLights);
+		Renderer3D::SetFog(m_Fog);
+		{
+			glm::vec3 camPos = glm::vec3(cameraTransform[3]);
 			auto view = m_Registry.view<TransformComponent, MeshComponent>();
 			for (auto& entity : view)
 			{
 				auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+
+				// Skinned draw path
+				if (mesh.ModelAsset && mesh.ModelAsset->HasSkeleton() &&
+				    m_Registry.any_of<AnimatorComponent>(entity))
+				{
+					auto& anim = m_Registry.get<AnimatorComponent>(entity);
+					Renderer3D::DrawSkinnedMesh(transform.GetTransform(), mesh,
+					                            anim.FinalBoneMatrices, (int)entity);
+					continue;
+				}
+
+				Shared<Model> savedModel = mesh.ModelAsset;
+				if (m_Registry.any_of<MeshLODComponent>(entity))
+				{
+					auto& lod = m_Registry.get<MeshLODComponent>(entity);
+					float dist = glm::length(glm::vec3(transform.GetTransform()[3]) - camPos);
+					if (auto lodModel = lod.SelectLOD(dist)) mesh.ModelAsset = lodModel;
+				}
 				Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+				mesh.ModelAsset = savedModel;
 			}
 		}
+		Renderer3D::FlushDrawCalls();
+
+		// --- Foliage (GPU-instanced) ---
+		{
+			auto fview = m_Registry.view<FoliageComponent>();
+			for (auto& entity : fview)
+			{
+				auto& fc = fview.get<FoliageComponent>(entity);
+				if (fc.ModelAsset && !fc.Transforms.empty())
+					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms);
+			}
+		}
+
+		if (m_UseSkybox && m_Skybox)
+		{
+			glm::mat4 camView = glm::inverse(cameraTransform);
+			glm::vec3 sunDir  = dirLights.empty() ? glm::vec3(0.3f, 1.0f, 0.5f) : -dirLights[0].Direction;
+			m_Skybox->Render(camView, camera.GetProjectionMatrix(), sunDir, m_ElapsedTime);
+		}
+
 		Renderer3D::EndScene();
+	}
+
+	// ─── CSM helper ──────────────────────────────────────────────────────────────
+
+	static constexpr int   kNumCascades  = CascadedShadowMap::NUM_CASCADES;
+	static constexpr float kShadowFar    = 200.0f; // world units of shadow coverage
+	// World-distance far edge for each cascade (cumulative)
+	static constexpr float kCascadeFar[kNumCascades] = { 15.0f, 60.0f, kShadowFar };
+	static constexpr uint32_t kCSMSize   = 2048;
+
+	// Compute the lightVP for one cascade slice [tNear, tFar] (fractions of [0,1]).
+	static glm::mat4 FitCascade(
+	    const glm::vec3 nearCorners[4],   // world-space corners of the camera near frustum face
+	    const glm::vec3 farCorners[4],    // world-space corners of the camera far frustum face
+	    float tNear, float tFar,          // fractions along the frustum edges
+	    const glm::vec3& lightDir)        // normalized direction (toward the light)
+	{
+	    // 8 world-space corners of this cascade slice
+	    glm::vec3 corners[8];
+	    glm::vec3 center(0.0f);
+	    for (int i = 0; i < 4; ++i)
+	    {
+	        corners[i]     = glm::mix(nearCorners[i], farCorners[i], tNear);
+	        corners[i + 4] = glm::mix(nearCorners[i], farCorners[i], tFar);
+	        center += corners[i] + corners[i + 4];
+	    }
+	    center /= 8.0f;
+
+	    // Light-view matrix: look from behind the scene along lightDir
+	    glm::vec3 up = glm::abs(lightDir.y) < 0.99f
+	                       ? glm::vec3(0.0f, 1.0f, 0.0f)
+	                       : glm::vec3(1.0f, 0.0f, 0.0f);
+	    glm::mat4 lightView = glm::lookAt(center - lightDir * 100.0f, center, up);
+
+	    // AABB of cascade corners in light space
+	    glm::vec3 lsMin( FLT_MAX), lsMax(-FLT_MAX);
+	    for (int i = 0; i < 8; ++i)
+	    {
+	        glm::vec3 lc = glm::vec3(lightView * glm::vec4(corners[i], 1.0f));
+	        lsMin = glm::min(lsMin, lc);
+	        lsMax = glm::max(lsMax, lc);
+	    }
+
+	    // Extra Z padding to capture shadow casters behind the visible slice
+	    lsMin.z -= 50.0f;
+
+	    // Snap XY to texel-sized increments to suppress shimmering as the camera moves
+	    float worldUnitsPerTexel = (lsMax.x - lsMin.x) / static_cast<float>(kCSMSize);
+	    if (worldUnitsPerTexel > 0.0f)
+	    {
+	        lsMin.x = std::floor(lsMin.x / worldUnitsPerTexel) * worldUnitsPerTexel;
+	        lsMin.y = std::floor(lsMin.y / worldUnitsPerTexel) * worldUnitsPerTexel;
+	        lsMax.x = std::ceil (lsMax.x / worldUnitsPerTexel) * worldUnitsPerTexel;
+	        lsMax.y = std::ceil (lsMax.y / worldUnitsPerTexel) * worldUnitsPerTexel;
+	    }
+
+	    // Use RH_ZO so DX11 sees depth in [0,1] natively
+	    glm::mat4 lightProj = glm::orthoRH_ZO(lsMin.x, lsMax.x, lsMin.y, lsMax.y, lsMin.z, lsMax.z);
+	    return lightProj * lightView;
+	}
+
+	void Scene::ShadowPass(const std::vector<DirLightData>& dirLights,
+	                        const glm::mat4& cameraVP, float cameraNear, float cameraFar)
+	{
+	    if (!m_UseShadows || dirLights.empty()) return;
+
+	    const glm::vec3 lightDir = glm::normalize(dirLights[0].Direction);
+
+	    // Unproject camera frustum corners from NDC (RH_ZO: Z ∈ [0,1])
+	    glm::mat4 invVP = glm::inverse(cameraVP);
+	    glm::vec3 nearCorners[4], farCorners[4];
+	    int ni = 0, fi = 0;
+	    for (float x : {-1.0f, 1.0f})
+	        for (float y : {-1.0f, 1.0f})
+	        {
+	            auto unproj = [&](float z) {
+	                glm::vec4 p = invVP * glm::vec4(x, y, z, 1.0f);
+	                return glm::vec3(p) / p.w;
+	            };
+	            nearCorners[ni++] = unproj(0.0f);
+	            farCorners [fi++] = unproj(1.0f);
+	        }
+
+	    // For each cascade, compute what fraction of the frustum it covers
+	    const float fullRange = cameraFar - cameraNear;
+	    float prevFar = cameraNear;
+
+	    glm::mat4  lightVPs[kNumCascades];
+	    glm::vec3  splits;
+
+	    for (int c = 0; c < kNumCascades; ++c)
+	    {
+	        float cascadeFarWorld  = std::min(kCascadeFar[c], cameraFar);
+	        float tNear = (prevFar         - cameraNear) / fullRange;
+	        float tFar  = (cascadeFarWorld - cameraNear) / fullRange;
+	        tFar  = std::min(tFar,  1.0f);
+
+	        lightVPs[c] = FitCascade(nearCorners, farCorners, tNear, tFar, lightDir);
+	        splits[c]   = cascadeFarWorld; // world-space distance threshold
+
+	        Renderer3D::BeginCSMPass(c, lightVPs[c]);
+	        {
+	            auto view = m_Registry.view<TransformComponent, MeshComponent>();
+	            for (auto entity : view)
+	            {
+	                auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+	                Renderer3D::DrawMeshShadow(transform.GetTransform(), mesh);
+	            }
+	        }
+	        Renderer3D::EndCSMPass();
+
+	        prevFar = cascadeFarWorld;
+	    }
+
+	    // After all cascades, restore the main render target
+	    Renderer3D::GetCSM()->UnbindForWriting();
+
+	    Renderer3D::BindCSM(lightVPs, splits);
 	}
 
 	// ─── Update entry points ───────────────────────────────────────────────────
 
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
 	{
+		m_ElapsedTime += (float)deltaTime;
+		float dt = (float)deltaTime;
+
+		// Spring-Arm: drive target camera entity positions each frame
+		{
+			auto view = m_Registry.view<TransformComponent, SpringArmComponent>();
+			for (auto e : view)
+			{
+				auto [pivotXform, arm] = view.get<TransformComponent, SpringArmComponent>(e);
+				if (arm.TargetCameraUUID == 0) continue;
+				Entity camEntity = GetEntityByUUID(arm.TargetCameraUUID);
+				if (!camEntity || !camEntity.HasComponent<TransformComponent>()) continue;
+
+				// Pivot world position + arm yaw (pivot entity's Y rotation + arm yaw)
+				glm::vec3 pivotWorld = glm::vec3(pivotXform.GetTransform() * glm::vec4(arm.PivotOffset, 1.0f));
+				float     totalYaw   = pivotXform.Rotation.y + glm::radians(arm.Yaw);
+				float     pitchRad   = glm::radians(arm.Pitch);
+
+				// Arm direction (pitch down, yaw around Y)
+				glm::vec3 armDir = {
+					std::cos(pitchRad) * std::sin(totalYaw),
+					std::sin(pitchRad),
+					std::cos(pitchRad) * std::cos(totalYaw)
+				};
+				glm::vec3 targetPos = pivotWorld - armDir * arm.ArmLength + arm.SocketOffset;
+
+				auto& camXform = camEntity.GetComponent<TransformComponent>();
+				if (arm.EnableLag && dt > 0.0f)
+				{
+					float alpha = 1.0f - std::exp(-arm.PositionLagSpeed * dt);
+					camXform.Translation = glm::mix(camXform.Translation, targetPos, alpha);
+				}
+				else
+				{
+					camXform.Translation = targetPos;
+				}
+				// Point camera at pivot
+				glm::vec3 toTarget = glm::normalize(pivotWorld - camXform.Translation);
+				camXform.Rotation.x = std::asin(-toTarget.y);
+				camXform.Rotation.y = std::atan2(toTarget.x, toTarget.z);
+			}
+		}
+
+		// Animator: advance animation time and compute bone matrices
+		{
+			auto animView = m_Registry.view<AnimatorComponent, MeshComponent>();
+			for (auto e : animView)
+			{
+				auto [anim, mesh] = animView.get<AnimatorComponent, MeshComponent>(e);
+				if (!anim.SkelData && mesh.ModelAsset)
+					anim.SkelData = mesh.ModelAsset->SkelData;
+				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
+
+				const AnimationClip& clip = anim.SkelData->Clips[
+					std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1)];
+				Animator::Update(dt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+			}
+		}
+
+		// Time of Day: advance time and push sky + fog params before rendering
+		if (m_UseTimeOfDay && m_UseSkybox && m_Skybox)
+		{
+			glm::vec3 todSunDir;
+			float     todAmbient;
+			m_TimeOfDay.Update((float)deltaTime, *m_Skybox, m_Fog, todSunDir, todAmbient);
+			// Override the first directional light's direction and ambient from ECS
+			auto view = m_Registry.view<DirectionalLightComponent>();
+			for (auto e : view)
+			{
+				auto& dlc = view.get<DirectionalLightComponent>(e);
+				dlc.Direction = -todSunDir; // TimeOfDay gives toward-sun; component stores toward-scene
+				dlc.Ambient   = glm::vec3(todAmbient);
+				break; // only drive the first dir light
+			}
+		}
+
+		if (m_UsePostProcess && m_PostProcess)
+			m_PostProcess->Begin();
+
 		Render2DPass(camera, deltaTime);
 		Render3DPass(camera);
+
+		if (m_UsePostProcess && m_PostProcess)
+		{
+			m_PostProcess->SSAOProjection    = camera.GetProjectionMatrix();
+			m_PostProcess->SSAOInvProjection = glm::inverse(camera.GetProjectionMatrix());
+			m_PostProcess->Submit();
+		}
 	}
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
+		m_ElapsedTime += (float)deltaTime;
+		float dt = (float)deltaTime;
+
+		// Animate skeletal meshes
+		{
+			auto animView = m_Registry.view<AnimatorComponent, MeshComponent>();
+			for (auto e : animView)
+			{
+				auto [anim, mesh] = animView.get<AnimatorComponent, MeshComponent>(e);
+				if (!anim.SkelData && mesh.ModelAsset)
+					anim.SkelData = mesh.ModelAsset->SkelData;
+				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
+
+				const AnimationClip& clip = anim.SkelData->Clips[
+					std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1)];
+				Animator::Update(dt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+			}
+		}
+
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{
 					if (!nsc.Instance)
 					{
-						nsc.Instance = nsc.InstantiateScript();
-						nsc.Instance->m_Entity = Entity{ entity, this };
-						nsc.Instance->OnCreate();
+						if (nsc.InstantiateScript)
+						{
+							nsc.Instance = nsc.InstantiateScript();
+						}
+						else if (!nsc.ClassName.empty())
+						{
+							nsc.Instance = ActorRegistry::Get().Instantiate(nsc.ClassName);
+							if (nsc.Instance)
+								nsc.DestroyScript = [](NativeScriptComponent* n) { delete n->Instance; n->Instance = nullptr; };
+						}
+
+						if (nsc.Instance)
+						{
+							nsc.Instance->m_Entity = Entity{ entity, this };
+							nsc.Instance->m_Scene  = this;
+							nsc.Instance->BeginPlay();
+						}
 					}
 					if (nsc.Instance)
 					{
-						nsc.Instance->OnUpdate(deltaTime);
+						nsc.Instance->Tick(deltaTime);
 					}
 				});
 		}
@@ -559,7 +1069,6 @@ namespace Blu
 			const int32_t positionIterations = 2;
 
 			m_PhysicsWorld->Step(deltaTime, velocityIterations, positionIterations);
-			OnScriptSystemUpdate(deltaTime);
 			auto view = m_Registry.view<Rigidbody2DComponent>();
 			for (auto e : view)
 			{
@@ -572,6 +1081,37 @@ namespace Blu
 				transform.Translation.x = position.x;
 				transform.Translation.y = position.y;
 				transform.Rotation.z = body->GetAngle();
+			}
+		}
+
+		// ── 3D Physics step + transform sync ─────────────────────────────────
+		if (m_Physics3DWorld && m_Physics3DWorld->IsValid())
+		{
+			// Kinematic bodies: NativeScript already updated TransformComponent, now tell Jolt
+			{
+				auto kinView = m_Registry.view<TransformComponent, Rigidbody3DComponent>();
+				for (auto e : kinView)
+				{
+					auto&& [tc, rb] = kinView.get<TransformComponent, Rigidbody3DComponent>(e);
+					if (rb.RuntimeBodyID != UINT32_MAX && rb.Type == Rigidbody3DComponent::BodyType::Kinematic)
+						m_Physics3DWorld->MoveKinematic(rb.RuntimeBodyID, tc.Translation, glm::quat(tc.Rotation), (float)deltaTime);
+				}
+			}
+
+			m_Physics3DWorld->Step(deltaTime);
+
+			auto view3D = m_Registry.view<TransformComponent, Rigidbody3DComponent>();
+			for (auto e : view3D)
+			{
+				auto&& [tc, rb] = view3D.get<TransformComponent, Rigidbody3DComponent>(e);
+				if (rb.RuntimeBodyID != UINT32_MAX && rb.Type == Rigidbody3DComponent::BodyType::Dynamic)
+				{
+					glm::vec3 pos;
+					glm::quat rot;
+					m_Physics3DWorld->GetTransform(rb.RuntimeBodyID, pos, rot);
+					tc.Translation = pos;
+					tc.Rotation    = glm::eulerAngles(rot);
+				}
 			}
 		}
 
@@ -590,9 +1130,30 @@ namespace Blu
 		}
 		if (mainCamera)
 		{
+			if (m_UsePostProcess && m_PostProcess)
+				m_PostProcess->Begin();
+
 			Render2DPass(*mainCamera, cameraTransform, deltaTime, true);
 			Render3DPass(*mainCamera, cameraTransform);
+
+			if (m_UsePostProcess && m_PostProcess)
+				m_PostProcess->Submit();
+
+			// Update 3D audio listener to match the primary camera.
+			glm::vec3 camPos = glm::vec3(cameraTransform[3]);
+			glm::vec3 camFwd = -glm::vec3(cameraTransform[2]); // RH: -Z is forward
+			glm::vec3 camUp  =  glm::vec3(cameraTransform[1]);
+			AudioEngine::Get().SetListenerTransform(camPos, camFwd, camUp);
 		}
+
+		// Update spatial audio source positions.
+		m_Registry.view<AudioSourceComponent, TransformComponent>().each(
+			[](auto /*entity*/, AudioSourceComponent& asc, const TransformComponent& tc)
+			{
+				if (asc._RuntimeHandle != kInvalidSound && asc.Spatial)
+					AudioEngine::Get().SetSoundPosition(asc._RuntimeHandle, tc.Translation);
+			});
+		AudioEngine::Get().OnUpdate();
 	}
 	void Scene::OnUpdatePaused(Timestep deltaTime)
 	{
@@ -611,8 +1172,14 @@ namespace Blu
 		}
 		if (mainCamera)
 		{
+			if (m_UsePostProcess && m_PostProcess)
+				m_PostProcess->Begin();
+
 			Render2DPass(*mainCamera, cameraTransform, deltaTime, false);
 			Render3DPass(*mainCamera, cameraTransform);
+
+			if (m_UsePostProcess && m_PostProcess)
+				m_PostProcess->Submit();
 		}
 	}
 	void Scene::OnSceneStep(int frames)
@@ -638,20 +1205,4 @@ namespace Blu
 		}
 	}
 
-	void Scene::OnViewportResize(float width, float height)
-	{
-		m_ViewportWidth = width;
-		m_ViewportHeight = height;
-
-		auto view = m_Registry.view<CameraComponent>();
-		for (auto entity : view)
-		{
-			auto& cameraComponent = view.get<CameraComponent>(entity);
-			if (!cameraComponent.FixedAspectRatio)
-			{
-				cameraComponent.Camera.SetViewportSize(width, height);
-			}
-		}
-
-	}
 }

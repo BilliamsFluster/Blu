@@ -19,7 +19,7 @@
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Entity.h"
-#include "Blu/Scene/ScriptableEntity.h"
+#include "Blu/GameFramework/GameFramework.h"
 #include "Blu/Scene/CameraController.h"
 
 
@@ -36,4 +36,11 @@
 #include "Blu/Rendering/ParticleSystem.h"
 #include "Blu/Rendering/Mesh.h"
 
+// --------- Audio ----------
+#include "Blu/Audio/AudioEngine.h"
+#include "Blu/Core/InputMap.h"
+
+// --------- Rendering extras ----------
+#include "Blu/Rendering/IBLSystem.h"
+#include "Blu/Rendering/TextureCube.h"
 

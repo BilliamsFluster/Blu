@@ -3,6 +3,7 @@
 #include "Blu/Rendering/Shader.h"
 #include "Renderer2D.h"
 #include "Renderer3D.h"
+#include "IBLSystem.h"
 
 namespace Blu
 {
@@ -23,12 +24,14 @@ namespace Blu
 		RenderCommand::Init();
 		Renderer2D::Init();
 		Renderer3D::Init();
+		IBLSystem::Init(); // precompute BRDF LUT once
 	}
 
 	void Renderer::Shutdown()
 	{
 		BLU_PROFILE_FUNCTION();
 
+		IBLSystem::Shutdown();
 		Renderer3D::Shutdown();
 		Renderer2D::Shutdown();
 		delete m_SceneData;

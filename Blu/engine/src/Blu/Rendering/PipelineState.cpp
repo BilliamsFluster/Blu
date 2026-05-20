@@ -101,22 +101,43 @@ namespace Blu
         desc.BlendState.RenderTarget[0].SrcBlendAlpha = BlendFactor::One;
         desc.BlendState.RenderTarget[0].DstBlendAlpha = BlendFactor::One;
         desc.BlendState.RenderTarget[0].BlendOperationAlpha = BlendOp::Add;
+        desc.DepthStencilState.DepthWriteMask = false;
+        return desc;
+    }
+
+    // AlphaBlend with depth write disabled — correct for translucent geometry
+    static PipelineStateDesc MakeTransparent()
+    {
+        PipelineStateDesc desc = MakeAlphaBlend();
+        desc.DepthStencilState.DepthWriteMask = false;
+        return desc;
+    }
+
+    // Opaque solid with no back-face culling — for TwoSided materials
+    static PipelineStateDesc MakeCullNone()
+    {
+        PipelineStateDesc desc = MakeOpaque();
+        desc.RasterizerState.CullMode = CullMode::None;
         return desc;
     }
 
     PipelineStateDesc DefaultPipelineStates::Opaque()       { return MakeOpaque(); }
     PipelineStateDesc DefaultPipelineStates::AlphaBlend()   { return MakeAlphaBlend(); }
+    PipelineStateDesc DefaultPipelineStates::Transparent()  { return MakeTransparent(); }
     PipelineStateDesc DefaultPipelineStates::Wireframe()    { return MakeWireframe(); }
     PipelineStateDesc DefaultPipelineStates::NoDepth()      { return MakeNoDepth(); }
     PipelineStateDesc DefaultPipelineStates::ShadowMap()    { return MakeShadowMap(); }
     PipelineStateDesc DefaultPipelineStates::AdditiveBlend(){ return MakeAdditiveBlend(); }
+    PipelineStateDesc DefaultPipelineStates::CullNone()     { return MakeCullNone(); }
 
     Shared<PipelineState> PipelineStateCache::GetOpaque()       { return GetOrCreate(MakeOpaque()); }
     Shared<PipelineState> PipelineStateCache::GetAlphaBlend()   { return GetOrCreate(MakeAlphaBlend()); }
+    Shared<PipelineState> PipelineStateCache::GetTransparent()  { return GetOrCreate(MakeTransparent()); }
     Shared<PipelineState> PipelineStateCache::GetWireframe()    { return GetOrCreate(MakeWireframe()); }
     Shared<PipelineState> PipelineStateCache::GetNoDepth()      { return GetOrCreate(MakeNoDepth()); }
     Shared<PipelineState> PipelineStateCache::GetShadowMap()    { return GetOrCreate(MakeShadowMap()); }
     Shared<PipelineState> PipelineStateCache::GetAdditiveBlend(){ return GetOrCreate(MakeAdditiveBlend()); }
+    Shared<PipelineState> PipelineStateCache::GetCullNone()     { return GetOrCreate(MakeCullNone()); }
 
     void PipelineStateCache::Clear() { s_Cache.clear(); }
 }
