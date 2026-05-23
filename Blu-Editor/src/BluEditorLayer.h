@@ -44,6 +44,8 @@ namespace Blu
 		void OnScenePause();
 		void OnSceneResume();
 		void OnSceneStop();
+		void OnSceneEject();
+		void OnSceneRepossess();
 
 		void OnScenePlayNewWindow();
 		void OnSceneSimulate();
@@ -83,6 +85,7 @@ namespace Blu
 		bool m_SceneMissing = false;
 		bool m_PlayButtonHit = false;
 		bool m_PendingEntityPick = false;
+		bool m_F8Prev = false;
 		
 
 		float translationSnapValue = 0.5f;
@@ -101,7 +104,8 @@ namespace Blu
 			Edit = 0,
 			Play = 1,
 			Pause = 2,
-			Simulate = 3
+			Simulate = 3,
+			Eject = 4    // game keeps running, editor camera is active
 		};
 
 		enum class ViewMode { Lit = 0, Unlit, Wireframe };
@@ -140,6 +144,7 @@ namespace Blu
 		bool m_ShowContentBrowser = true;
 		bool m_ShowOutputLog      = true;
 		bool m_ShowRendering      = true;
+		bool m_ShowDiagnostics    = true;
 		bool m_ShowInputMap       = false;
 
 		// ---- Terrain editor ------------------------------------------------

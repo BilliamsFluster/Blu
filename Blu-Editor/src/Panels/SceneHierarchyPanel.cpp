@@ -84,6 +84,7 @@ namespace Blu
 							auto Entity = m_Context->CreateEntity("Mesh");
 							auto& mc = Entity.AddComponent<MeshComponent>();
 							mc.MeshData = Mesh::CreateCube();
+							mc.Primitive = MeshComponent::PrimitiveType::Cube;
 							mc.MaterialInstance = Material::Create();
 						}
 						if (ImGui::MenuItem("Sprite Entity"))
@@ -467,6 +468,7 @@ namespace Blu
 				{
 					auto& mc = m_SelectedEntity.AddComponent<MeshComponent>();
 					mc.MeshData = Mesh::CreateCube();
+					mc.Primitive = MeshComponent::PrimitiveType::Cube;
 					mc.MaterialInstance = Material::Create();
 					ImGui::CloseCurrentPopup();
 				}
@@ -1126,13 +1128,19 @@ namespace Blu
 				else
 				{
 					static const char* meshTypes[] = { "Cube", "Quad" };
-					static int currentMeshType = 0;
+					int currentMeshType = component.Primitive == MeshComponent::PrimitiveType::Quad ? 1 : 0;
 					if (ImGui::Combo("Mesh Type", &currentMeshType, meshTypes, IM_ARRAYSIZE(meshTypes)))
 					{
 						if (currentMeshType == 0)
+						{
 							component.MeshData = Mesh::CreateCube();
+							component.Primitive = MeshComponent::PrimitiveType::Cube;
+						}
 						else
+						{
 							component.MeshData = Mesh::CreateQuad();
+							component.Primitive = MeshComponent::PrimitiveType::Quad;
+						}
 					}
 
 					if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
@@ -1196,15 +1204,30 @@ namespace Blu
 		// ── Spring-Arm ────────────────────────────────────────────────────────────
 		DrawComponent<SpringArmComponent>("Spring Arm", entity, [](auto& arm)
 		{
-			ImGui::DragFloat("Arm Length",      &arm.ArmLength,        0.1f, 0.1f, 50.0f);
-			ImGui::DragFloat3("Socket Offset",  glm::value_ptr(arm.SocketOffset), 0.05f);
-			ImGui::DragFloat3("Pivot Offset",   glm::value_ptr(arm.PivotOffset),  0.05f);
-			ImGui::DragFloat("Pitch (deg)",     &arm.Pitch,            0.5f, -89.0f, 89.0f);
-			ImGui::DragFloat("Yaw Offset",      &arm.Yaw,              0.5f, -180.0f, 180.0f);
+			ImGui::Text("Arm Length");
+			ImGui::DragFloat("##SA_ArmLen", &arm.ArmLength, 0.1f, 0.1f, 50.0f, "%.2f");
+
+			ImGui::Text("Socket Offset");
+			ImGui::DragFloat3("##SA_Socket", glm::value_ptr(arm.SocketOffset), 0.05f, 0.0f, 0.0f, "%.2f");
+
+			ImGui::Text("Pivot Offset");
+			ImGui::DragFloat3("##SA_Pivot", glm::value_ptr(arm.PivotOffset), 0.05f, 0.0f, 0.0f, "%.2f");
+
+			ImGui::Text("Pitch (deg)");
+			ImGui::DragFloat("##SA_Pitch", &arm.Pitch, 0.5f, -89.0f, 89.0f, "%.1f");
+
+			ImGui::Text("Yaw Offset");
+			ImGui::DragFloat("##SA_Yaw", &arm.Yaw, 0.5f, -180.0f, 180.0f, "%.1f");
+
+			ImGui::Checkbox("Inherit Target Yaw", &arm.InheritYaw);
+
 			ImGui::Separator();
-			ImGui::Checkbox("Enable Lag",       &arm.EnableLag);
+			ImGui::Checkbox("Enable Lag", &arm.EnableLag);
 			if (arm.EnableLag)
-				ImGui::DragFloat("Lag Speed",   &arm.PositionLagSpeed, 0.5f, 0.5f, 30.0f);
+			{
+				ImGui::Text("Lag Speed");
+				ImGui::DragFloat("##SA_LagSpd", &arm.PositionLagSpeed, 0.5f, 0.5f, 30.0f, "%.1f");
+			}
 			ImGui::Separator();
 			ImGui::Text("Camera UUID: %llu", (unsigned long long)arm.TargetCameraUUID);
 		});
@@ -1402,6 +1425,14 @@ namespace Blu
 				}
 				ImGui::EndCombo();
 			}
+
+			// Manual text entry — type the class name when the dropdown is empty
+			char buf[128] = {};
+			if (!nsc.ClassName.empty())
+				strncpy_s(buf, nsc.ClassName.c_str(), sizeof(buf) - 1);
+			ImGui::SetNextItemWidth(-1.0f);
+			if (ImGui::InputText("##nsc_manual", buf, sizeof(buf)))
+				nsc.ClassName = buf;
 
 			ImGui::Spacing();
 			if (nsc.Instance)

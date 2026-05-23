@@ -16,8 +16,11 @@
 #include "Jolt/Physics/Collision/Shape/BoxShape.h"
 #include "Jolt/Physics/Collision/Shape/SphereShape.h"
 #include "Jolt/Physics/Collision/Shape/CapsuleShape.h"
+#include "Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h"
+#include "Jolt/Physics/Collision/ShapeFilter.h"
 #include "Jolt/Physics/Body/BodyCreationSettings.h"
 #include "Jolt/Physics/Body/BodyActivationListener.h"
+#include "Jolt/Physics/Character/CharacterVirtual.h"
 
 namespace Blu
 {
@@ -166,6 +169,9 @@ namespace Blu
         void MoveKinematic(uint32_t bodyID, const glm::vec3& position, const glm::quat& rotation, float deltaTime);
 
         bool IsValid() const { return m_PhysicsSystem != nullptr; }
+
+        JPH::PhysicsSystem*       GetPhysicsSystem()  const { return m_PhysicsSystem; }
+        JPH::TempAllocatorImpl*   GetTempAllocator()  const { return m_TempAllocator; }
 
     private:
         // Jolt global init/shutdown reference counting

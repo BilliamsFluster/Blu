@@ -65,7 +65,7 @@ namespace Blu
 			auto& cameraComponent = view.get<CameraComponent>(entity);
 			if (!cameraComponent.FixedAspectRatio)
 			{
-				cameraComponent.Camera.SetViewportSize(width, height);
+				cameraComponent.Camera.SetViewportSize((uint32_t)width, (uint32_t)height);
 			}
 		}
 
@@ -144,6 +144,11 @@ namespace Blu
 		CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<SphereCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<CapsuleCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<SpringArmComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<AnimatorComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<MeshLODComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<AudioSourceComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<FoliageComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		newScene->m_UseShadows     = scene->m_UseShadows;
 		newScene->m_UsePostProcess = scene->m_UsePostProcess;
@@ -216,6 +221,108 @@ namespace Blu
 		}
 		return {};
 	}
+	Entity Scene::EnsurePrimaryCamera()
+	{
+		{
+			auto springView = m_Registry.view<SpringArmComponent>();
+			const bool hasSpringArm = springView.begin() != springView.end();
+
+			if (!hasSpringArm)
+			{
+				Entity selected;
+				auto camView = m_Registry.view<CameraComponent>();
+				for (auto ce : camView)
+				{
+					if (!selected)
+						selected = Entity{ ce, this };
+					if (camView.get<CameraComponent>(ce).Primary)
+					{
+						selected = Entity{ ce, this };
+						break;
+					}
+				}
+
+				if (!selected)
+				{
+					selected = CreateEntity("Camera");
+					selected.AddComponent<CameraComponent>();
+				}
+
+				for (auto ce : camView)
+					camView.get<CameraComponent>(ce).Primary = (Entity{ ce, this } == selected);
+
+				auto& camera = selected.GetComponent<CameraComponent>();
+				camera.Primary = true;
+				if (m_ViewportWidth > 0.0f && m_ViewportHeight > 0.0f && !camera.FixedAspectRatio)
+					camera.Camera.SetViewportSize((uint32_t)m_ViewportWidth, (uint32_t)m_ViewportHeight);
+				return selected;
+			}
+
+			Entity playerCamera;
+			for (auto e : springView)
+			{
+				auto& arm = springView.get<SpringArmComponent>(e);
+				if (arm.TargetCameraUUID == 0)
+					continue;
+
+				Entity linkedCamera = GetEntityByUUID(arm.TargetCameraUUID);
+				if (linkedCamera && linkedCamera.HasComponent<CameraComponent>())
+				{
+					playerCamera = linkedCamera;
+					break;
+				}
+			}
+
+			if (!playerCamera)
+			{
+				Entity namedCamera = FindEntityByName("PlayerCamera");
+				if (namedCamera && namedCamera.HasComponent<CameraComponent>())
+					playerCamera = namedCamera;
+			}
+
+			if (!playerCamera)
+			{
+				playerCamera = CreateEntity("PlayerCamera");
+				playerCamera.AddComponent<CameraComponent>();
+			}
+
+			auto& playerCameraComponent = playerCamera.GetComponent<CameraComponent>();
+			playerCameraComponent.Primary = true;
+			if (m_ViewportWidth > 0.0f && m_ViewportHeight > 0.0f && !playerCameraComponent.FixedAspectRatio)
+				playerCameraComponent.Camera.SetViewportSize((uint32_t)m_ViewportWidth, (uint32_t)m_ViewportHeight);
+
+			auto camView = m_Registry.view<CameraComponent>();
+			for (auto ce : camView)
+			{
+				Entity cameraEntity{ ce, this };
+				auto& camera = camView.get<CameraComponent>(ce);
+				camera.Primary = (cameraEntity == playerCamera);
+
+				if (cameraEntity == playerCamera || !m_Registry.any_of<NativeScriptComponent>(ce))
+					continue;
+
+				auto& nsc = m_Registry.get<NativeScriptComponent>(ce);
+				if (nsc.Instance && nsc.DestroyScript)
+					nsc.DestroyScript(&nsc);
+				nsc.Instance          = nullptr;
+				nsc.ClassName         = {};
+				nsc.InstantiateScript = nullptr;
+				nsc.DestroyScript     = nullptr;
+			}
+
+			UUID playerCameraUUID = playerCamera.GetUUID();
+			for (auto e : springView)
+			{
+				auto& arm = springView.get<SpringArmComponent>(e);
+				Entity linkedCamera = arm.TargetCameraUUID != 0 ? GetEntityByUUID(arm.TargetCameraUUID) : Entity{};
+				if (!linkedCamera || !linkedCamera.HasComponent<CameraComponent>())
+					arm.TargetCameraUUID = playerCameraUUID;
+			}
+
+			return playerCamera;
+		}
+	}
+
 	Entity Scene::FindEntityByName(std::string_view name)
 	{
 		auto view = m_Registry.view<TagComponent>();
@@ -235,6 +342,88 @@ namespace Blu
 		}
 		return {};
 	}
+	void Scene::SetPlayerInputEnabled(bool enabled)
+	{
+		m_PlayerInputEnabled = enabled;
+
+		auto view = m_Registry.view<NativeScriptComponent>();
+		for (auto e : view)
+		{
+			auto& nsc = view.get<NativeScriptComponent>(e);
+			if (!nsc.Instance)
+				continue;
+
+			bool playerCandidate = nsc.ClassName == "PlayerCharacter";
+			if (!playerCandidate && m_Registry.any_of<TagComponent>(e))
+			{
+				const auto& tag = m_Registry.get<TagComponent>(e).Tag;
+				playerCandidate = tag == "Player" || tag == "PlayerCharacter";
+			}
+
+			if (!playerCandidate)
+				continue;
+
+			if (auto* pawn = dynamic_cast<APawn*>(nsc.Instance))
+				pawn->SetPlayerControlled(enabled);
+		}
+	}
+
+	SceneDiagnostics Scene::GetDiagnostics()
+	{
+		SceneDiagnostics diagnostics;
+		diagnostics.PlayerInputEnabled = m_PlayerInputEnabled;
+		diagnostics.EjectCameraActive = m_EjectCamera != nullptr;
+
+		auto entityView = m_Registry.view<IDComponent>();
+		for (auto e : entityView)
+			diagnostics.EntityCount++;
+
+		auto cameraView = m_Registry.view<CameraComponent>();
+		for (auto e : cameraView)
+		{
+			diagnostics.CameraCount++;
+			auto& camera = cameraView.get<CameraComponent>(e);
+			if (!camera.Primary)
+				continue;
+
+			diagnostics.PrimaryCameraCount++;
+			if (m_Registry.any_of<TagComponent>(e))
+				diagnostics.PrimaryCameraName = m_Registry.get<TagComponent>(e).Tag;
+		}
+
+		auto meshView = m_Registry.view<MeshComponent>();
+		for (auto e : meshView)
+		{
+			diagnostics.MeshEntityCount++;
+			auto& mesh = meshView.get<MeshComponent>(e);
+			if (mesh.MeshData || mesh.ModelAsset)
+				diagnostics.DrawableMeshCount++;
+		}
+
+		auto springArmView = m_Registry.view<SpringArmComponent>();
+		for (auto e : springArmView)
+			diagnostics.SpringArmCount++;
+
+		auto scriptView = m_Registry.view<NativeScriptComponent>();
+		for (auto e : scriptView)
+		{
+			auto& nsc = scriptView.get<NativeScriptComponent>(e);
+			if (!nsc.ClassName.empty() || nsc.Instance)
+				diagnostics.NativeScriptCount++;
+
+			if (nsc.Instance)
+			{
+				if (auto* pawn = dynamic_cast<APawn*>(nsc.Instance); pawn && pawn->IsPlayerControlled())
+				{
+					if (m_Registry.any_of<TagComponent>(e))
+						diagnostics.PossessedPawnName = m_Registry.get<TagComponent>(e).Tag;
+				}
+			}
+		}
+
+		return diagnostics;
+	}
+
 	Entity Scene::DuplicateEntity(Entity& targetEntity)
 	{
 		if (true)
@@ -431,6 +620,63 @@ namespace Blu
 			rb.RuntimeBodyID = m_Physics3DWorld->AddBody(
 				tc.Translation, worldRotation, bodyType, spec);
 		}
+
+		// Create JPH::CharacterVirtual for each entity with CharacterControllerComponent
+		{
+			auto charView = m_Registry.view<CharacterControllerComponent, TransformComponent>();
+			for (auto e : charView)
+			{
+				Entity entity = { e, this };
+				auto& tc  = entity.GetComponent<TransformComponent>();
+				auto& ccc = entity.GetComponent<CharacterControllerComponent>();
+
+				float radius     = 0.3f;
+				float halfHeight = 0.55f; // total standing height ≈ 1.7 m
+
+				if (entity.HasComponent<CapsuleCollider3DComponent>())
+				{
+					auto& cap = entity.GetComponent<CapsuleCollider3DComponent>();
+					radius     = cap.Radius;
+					halfHeight = cap.HalfHeight;
+				}
+
+				// Capsule with bottom at y=0 (feet at origin)
+				JPH::CapsuleShapeSettings capsuleSettings(halfHeight, radius);
+				auto capsuleResult = capsuleSettings.Create();
+				if (capsuleResult.HasError())
+				{
+					BLU_CORE_ERROR("CharacterVirtual: capsule shape failed: {0}", capsuleResult.GetError().c_str());
+					continue;
+				}
+
+				// Offset so the capsule bottom sits at y=0
+				JPH::RotatedTranslatedShapeSettings offsetSettings(
+					JPH::Vec3(0.0f, halfHeight + radius, 0.0f),
+					JPH::Quat::sIdentity(),
+					capsuleResult.Get());
+				auto shapeResult = offsetSettings.Create();
+				if (shapeResult.HasError())
+				{
+					BLU_CORE_ERROR("CharacterVirtual: offset shape failed: {0}", shapeResult.GetError().c_str());
+					continue;
+				}
+
+				JPH::CharacterVirtualSettings settings;
+				settings.mUp             = JPH::Vec3::sAxisY();
+				settings.mMaxSlopeAngle  = JPH::DegreesToRadians(ccc.SlopeLimit);
+				settings.mShape          = shapeResult.Get();
+
+				auto* character = new JPH::CharacterVirtual(
+					&settings,
+					JPH::RVec3(tc.Translation.x, tc.Translation.y, tc.Translation.z),
+					JPH::Quat::sIdentity(),
+					m_Physics3DWorld->GetPhysicsSystem());
+
+				ccc._RuntimeCharacter = character;
+				BLU_CORE_INFO("CharacterVirtual created for entity at ({0:.1f},{1:.1f},{2:.1f})",
+					tc.Translation.x, tc.Translation.y, tc.Translation.z);
+			}
+		}
 	}
 
 	void Scene::OnPhysics3DStop()
@@ -443,6 +689,22 @@ namespace Blu
 			{
 				auto& rb = view.get<Rigidbody3DComponent>(e);
 				rb.RuntimeBodyID = UINT32_MAX;
+			}
+
+			// Destroy CharacterVirtual instances
+			auto charView = m_Registry.view<CharacterControllerComponent>();
+			for (auto e : charView)
+			{
+				auto& ccc = charView.get<CharacterControllerComponent>(e);
+				if (ccc._RuntimeCharacter)
+				{
+					delete static_cast<JPH::CharacterVirtual*>(ccc._RuntimeCharacter);
+					ccc._RuntimeCharacter = nullptr;
+				}
+				ccc.IsGrounded       = false;
+				ccc.Velocity         = { 0.0f, 0.0f, 0.0f };
+				ccc._PendingMoveInput = { 0.0f, 0.0f, 0.0f };
+				ccc._PendingJump     = false;
 			}
 
 			delete m_Physics3DWorld;
@@ -918,6 +1180,55 @@ namespace Blu
 	    Renderer3D::BindCSM(lightVPs, splits);
 	}
 
+	void Scene::UpdateSpringArmCameras(float deltaTime)
+	{
+		auto view = m_Registry.view<TransformComponent, SpringArmComponent>();
+		for (auto e : view)
+		{
+			auto [pivotXform, arm] = view.get<TransformComponent, SpringArmComponent>(e);
+			Entity camEntity;
+			if (arm.TargetCameraUUID != 0)
+				camEntity = GetEntityByUUID(arm.TargetCameraUUID);
+			if (!camEntity)
+				camEntity = EnsurePrimaryCamera();
+			if (!camEntity || !camEntity.HasComponent<TransformComponent>())
+				continue;
+
+			glm::vec3 pivotWorld = glm::vec3(pivotXform.GetTransform() * glm::vec4(arm.PivotOffset, 1.0f));
+			float targetYaw = arm.InheritYaw ? pivotXform.Rotation.y : 0.0f;
+			float totalYaw = targetYaw + glm::radians(arm.Yaw);
+			float pitchRad = glm::radians(arm.Pitch);
+
+			glm::vec3 cameraForward = glm::normalize(glm::vec3(
+				std::cos(pitchRad) * std::sin(totalYaw),
+				std::sin(pitchRad),
+				-std::cos(pitchRad) * std::cos(totalYaw)
+			));
+			glm::vec3 targetPos = pivotWorld - cameraForward * glm::max(0.0f, arm.ArmLength) + arm.SocketOffset;
+
+			auto& camXform = camEntity.GetComponent<TransformComponent>();
+			if (arm.EnableLag && deltaTime > 0.0f)
+			{
+				float alpha = 1.0f - std::exp(-arm.PositionLagSpeed * deltaTime);
+				camXform.Translation = glm::mix(camXform.Translation, targetPos, alpha);
+			}
+			else
+			{
+				camXform.Translation = targetPos;
+			}
+
+			glm::vec3 toTarget = pivotWorld - camXform.Translation;
+			if (glm::dot(toTarget, toTarget) > 0.000001f)
+			{
+				toTarget = glm::normalize(toTarget);
+				glm::vec3 up = std::abs(glm::dot(toTarget, glm::vec3(0.0f, 1.0f, 0.0f))) > 0.98f
+					? glm::vec3(0.0f, 0.0f, -1.0f)
+					: glm::vec3(0.0f, 1.0f, 0.0f);
+				camXform.Rotation = glm::eulerAngles(glm::quatLookAtRH(toTarget, up));
+			}
+		}
+	}
+
 	// ─── Update entry points ───────────────────────────────────────────────────
 
 	void Scene::OnUpdateEditor(Timestep deltaTime, EditorCamera& camera)
@@ -925,45 +1236,7 @@ namespace Blu
 		m_ElapsedTime += (float)deltaTime;
 		float dt = (float)deltaTime;
 
-		// Spring-Arm: drive target camera entity positions each frame
-		{
-			auto view = m_Registry.view<TransformComponent, SpringArmComponent>();
-			for (auto e : view)
-			{
-				auto [pivotXform, arm] = view.get<TransformComponent, SpringArmComponent>(e);
-				if (arm.TargetCameraUUID == 0) continue;
-				Entity camEntity = GetEntityByUUID(arm.TargetCameraUUID);
-				if (!camEntity || !camEntity.HasComponent<TransformComponent>()) continue;
-
-				// Pivot world position + arm yaw (pivot entity's Y rotation + arm yaw)
-				glm::vec3 pivotWorld = glm::vec3(pivotXform.GetTransform() * glm::vec4(arm.PivotOffset, 1.0f));
-				float     totalYaw   = pivotXform.Rotation.y + glm::radians(arm.Yaw);
-				float     pitchRad   = glm::radians(arm.Pitch);
-
-				// Arm direction (pitch down, yaw around Y)
-				glm::vec3 armDir = {
-					std::cos(pitchRad) * std::sin(totalYaw),
-					std::sin(pitchRad),
-					std::cos(pitchRad) * std::cos(totalYaw)
-				};
-				glm::vec3 targetPos = pivotWorld - armDir * arm.ArmLength + arm.SocketOffset;
-
-				auto& camXform = camEntity.GetComponent<TransformComponent>();
-				if (arm.EnableLag && dt > 0.0f)
-				{
-					float alpha = 1.0f - std::exp(-arm.PositionLagSpeed * dt);
-					camXform.Translation = glm::mix(camXform.Translation, targetPos, alpha);
-				}
-				else
-				{
-					camXform.Translation = targetPos;
-				}
-				// Point camera at pivot
-				glm::vec3 toTarget = glm::normalize(pivotWorld - camXform.Translation);
-				camXform.Rotation.x = std::asin(-toTarget.y);
-				camXform.Rotation.y = std::atan2(toTarget.x, toTarget.z);
-			}
-		}
+		UpdateSpringArmCameras(dt);
 
 		// Animator: advance animation time and compute bone matrices
 		{
@@ -1048,6 +1321,8 @@ namespace Blu
 							nsc.Instance = ActorRegistry::Get().Instantiate(nsc.ClassName);
 							if (nsc.Instance)
 								nsc.DestroyScript = [](NativeScriptComponent* n) { delete n->Instance; n->Instance = nullptr; };
+							else
+								BLU_CORE_WARN("Scene: ActorRegistry could not instantiate '{0}' — class not registered. Check BLU_REGISTER_ACTOR in the actor's .cpp.", nsc.ClassName);
 						}
 
 						if (nsc.Instance)
@@ -1084,6 +1359,101 @@ namespace Blu
 			}
 		}
 
+		// ── CharacterVirtual update (before rigid-body step) ─────────────────
+		if (m_Physics3DWorld && m_Physics3DWorld->IsValid())
+		{
+			const JPH::Vec3 gravity(0.0f, -9.81f, 0.0f);
+			auto bpFilter  = m_Physics3DWorld->GetPhysicsSystem()->GetDefaultBroadPhaseLayerFilter(Physics3DLayers::MOVING);
+			auto layFilter = m_Physics3DWorld->GetPhysicsSystem()->GetDefaultLayerFilter(Physics3DLayers::MOVING);
+			JPH::BodyFilter  bodyFilter;
+			JPH::ShapeFilter shapeFilter;
+
+			auto charView = m_Registry.view<TransformComponent, CharacterControllerComponent>();
+			for (auto e : charView)
+			{
+				auto&& [tc, ccc] = charView.get<TransformComponent, CharacterControllerComponent>(e);
+				// Lazy-create CharacterVirtual if BeginPlay added the component after OnPhysics3DStart
+				if (!ccc._RuntimeCharacter)
+				{
+					float radius     = 0.3f;
+					float halfHeight = 0.55f;
+					JPH::CapsuleShapeSettings capsuleSettings(halfHeight, radius);
+					auto capsuleResult = capsuleSettings.Create();
+					if (!capsuleResult.HasError())
+					{
+						JPH::RotatedTranslatedShapeSettings offsetSettings(
+							JPH::Vec3(0.0f, halfHeight + radius, 0.0f),
+							JPH::Quat::sIdentity(),
+							capsuleResult.Get());
+						auto shapeResult = offsetSettings.Create();
+						if (!shapeResult.HasError())
+						{
+							JPH::CharacterVirtualSettings settings;
+							settings.mUp            = JPH::Vec3::sAxisY();
+							settings.mMaxSlopeAngle = JPH::DegreesToRadians(ccc.SlopeLimit);
+							settings.mShape         = shapeResult.Get();
+							auto* character = new JPH::CharacterVirtual(
+								&settings,
+								JPH::RVec3(tc.Translation.x, tc.Translation.y, tc.Translation.z),
+								JPH::Quat::sIdentity(),
+								m_Physics3DWorld->GetPhysicsSystem());
+							ccc._RuntimeCharacter = character;
+						}
+					}
+				}
+				if (!ccc._RuntimeCharacter) continue;
+
+				auto* character = static_cast<JPH::CharacterVirtual*>(ccc._RuntimeCharacter);
+
+				bool grounded = (character->GetGroundState() == JPH::CharacterBase::EGroundState::OnGround);
+				ccc.IsGrounded = grounded;
+
+				// Horizontal velocity: from pending move input (already speed-scaled)
+				JPH::Vec3 currentVel = character->GetLinearVelocity();
+				float     vertVel    = currentVel.GetY() + gravity.GetY() * dt;
+
+				if (grounded)
+				{
+					vertVel = std::max(0.0f, vertVel);
+					if (ccc._PendingJump)
+					{
+						vertVel          = ccc.JumpImpulse;
+						ccc._PendingJump = false;
+					}
+				}
+				else
+				{
+					ccc._PendingJump = false;
+				}
+
+				character->SetLinearVelocity(JPH::Vec3(
+					ccc._PendingMoveInput.x,
+					vertVel,
+					ccc._PendingMoveInput.z));
+
+				ccc._PendingMoveInput = { 0.0f, 0.0f, 0.0f };
+
+				JPH::CharacterVirtual::ExtendedUpdateSettings updateSettings;
+				updateSettings.mStickToFloorStepDown = JPH::Vec3(0.0f, -0.5f, 0.0f);
+				updateSettings.mWalkStairsStepUp      = JPH::Vec3(0.0f, ccc.StepHeight, 0.0f);
+
+				character->ExtendedUpdate(dt, gravity, updateSettings,
+					bpFilter, layFilter, bodyFilter, shapeFilter,
+					*m_Physics3DWorld->GetTempAllocator());
+
+				// Sync position back to transform
+				JPH::RVec3 pos = character->GetPosition();
+				tc.Translation = glm::vec3(
+					static_cast<float>(pos.GetX()),
+					static_cast<float>(pos.GetY()),
+					static_cast<float>(pos.GetZ()));
+
+				// Cache velocity for ACharacter::GetVelocity()
+				JPH::Vec3 vel = character->GetLinearVelocity();
+				ccc.Velocity = glm::vec3(vel.GetX(), vel.GetY(), vel.GetZ());
+			}
+		}
+
 		// ── 3D Physics step + transform sync ─────────────────────────────────
 		if (m_Physics3DWorld && m_Physics3DWorld->IsValid())
 		{
@@ -1113,6 +1483,21 @@ namespace Blu
 					tc.Rotation    = glm::eulerAngles(rot);
 				}
 			}
+		}
+
+		// ── Eject override: render from editor camera, skip game camera ─────────
+		UpdateSpringArmCameras(dt);
+
+		if (m_EjectCamera)
+		{
+			if (m_UsePostProcess && m_PostProcess)
+				m_PostProcess->Begin();
+			Render2DPass(*m_EjectCamera, deltaTime);
+			Render3DPass(*m_EjectCamera);
+			if (m_UsePostProcess && m_PostProcess)
+				m_PostProcess->Submit();
+			AudioEngine::Get().OnUpdate();
+			return;
 		}
 
 		Camera* mainCamera = nullptr;

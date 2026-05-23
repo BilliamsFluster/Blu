@@ -1,44 +1,52 @@
 #include "Blupch.h"
 #include "ACharacter.h"
-
-// CharacterControllerComponent integration lives here once that component is added.
-// These are intentional stubs — each method will be wired when the component exists.
+#include "Blu/Scene/Component.h"
 
 namespace Blu
 {
 	void ACharacter::BeginPlay()
 	{
 		APawn::BeginPlay();
-		// Future: auto-add CharacterControllerComponent if absent.
+		if (!HasComponent<CharacterControllerComponent>())
+			AddComponent<CharacterControllerComponent>();
 	}
 
-	void ACharacter::Move(glm::vec3 /*worldDirection*/)
+	void ACharacter::Move(glm::vec3 worldDirection)
 	{
-		// Future: set velocity on CharacterControllerComponent.
+		if (!HasComponent<CharacterControllerComponent>()) return;
+		auto& ccc = GetComponent<CharacterControllerComponent>();
+		ccc._PendingMoveInput += worldDirection * ccc.MoveSpeed;
 	}
 
 	void ACharacter::Jump()
 	{
-		// Future: trigger jump on CharacterControllerComponent.
+		if (!HasComponent<CharacterControllerComponent>()) return;
+		auto& ccc = GetComponent<CharacterControllerComponent>();
+		if (ccc.IsGrounded)
+			ccc._PendingJump = true;
 	}
 
-	bool ACharacter::IsGrounded() const
+	bool ACharacter::IsGrounded()
 	{
-		return false; // Future: query CharacterControllerComponent.
+		if (!HasComponent<CharacterControllerComponent>()) return false;
+		return GetComponent<CharacterControllerComponent>().IsGrounded;
 	}
 
-	float ACharacter::GetMoveSpeed() const
+	float ACharacter::GetMoveSpeed()
 	{
-		return 5.0f; // Future: read from CharacterControllerComponent.
+		if (!HasComponent<CharacterControllerComponent>()) return 5.0f;
+		return GetComponent<CharacterControllerComponent>().MoveSpeed;
 	}
 
-	void ACharacter::SetMoveSpeed(float /*speed*/)
+	void ACharacter::SetMoveSpeed(float speed)
 	{
-		// Future: write to CharacterControllerComponent.
+		if (!HasComponent<CharacterControllerComponent>()) return;
+		GetComponent<CharacterControllerComponent>().MoveSpeed = speed;
 	}
 
-	glm::vec3 ACharacter::GetVelocity() const
+	glm::vec3 ACharacter::GetVelocity()
 	{
-		return glm::vec3(0.0f); // Future: read from CharacterControllerComponent.
+		if (!HasComponent<CharacterControllerComponent>()) return glm::vec3(0.0f);
+		return GetComponent<CharacterControllerComponent>().Velocity;
 	}
 }

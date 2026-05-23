@@ -3,6 +3,7 @@
 #include "Blu/Core/Log.h"
 #include "Window.h"
 #include "Input.h"
+#include "InputMap.h"
 #include "imgui.h"
 #include "Blu/Rendering/Buffer.h"
 #include "Blu/Rendering/VertexArray.h"
@@ -123,8 +124,11 @@ namespace Blu
 
 				// End ImGui layer
 				m_ImGuiLayer->End();
+
+				// Advance JustPressed state for next frame
+				InputMap::Get().OnFrameEnd();
 			}
-			
+
 		}
 		
 		

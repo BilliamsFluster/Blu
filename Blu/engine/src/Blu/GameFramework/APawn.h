@@ -11,9 +11,21 @@ namespace Blu
 	{
 	public:
 		virtual void SetupPlayerInput(InputMap& input) {}
+		virtual void OnPossessed() {}
+		virtual void OnUnPossessed() {}
 
 		bool IsPlayerControlled() const        { return m_IsPlayerControlled; }
-		void SetPlayerControlled(bool value)   { m_IsPlayerControlled = value; }
+		void SetPlayerControlled(bool value)
+		{
+			if (m_IsPlayerControlled == value)
+				return;
+
+			m_IsPlayerControlled = value;
+			if (m_IsPlayerControlled)
+				OnPossessed();
+			else
+				OnUnPossessed();
+		}
 
 	private:
 		bool m_IsPlayerControlled = false;

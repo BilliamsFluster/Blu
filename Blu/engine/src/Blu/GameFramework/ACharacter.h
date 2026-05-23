@@ -15,9 +15,9 @@ namespace Blu
 		// Drive character locomotion — call from Tick().
 		void      Move(glm::vec3 worldDirection);
 		void      Jump();
-		bool      IsGrounded()   const;
-		float     GetMoveSpeed() const;
+		bool      IsGrounded();
+		float     GetMoveSpeed();
 		void      SetMoveSpeed(float speed);
-		glm::vec3 GetVelocity()  const;
+		glm::vec3 GetVelocity();
 	};
 }

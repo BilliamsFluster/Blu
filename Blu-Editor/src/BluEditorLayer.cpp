@@ -298,7 +298,39 @@ namespace Blu
 			}
 			case SceneState::Play:
 			{
-
+				GLFWwindow* _win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+				if (glfwGetKey(_win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+				{
+					OnSceneStop();
+					break;
+				}
+				// F8 — eject from pawn (cursor freed, editor camera takes over)
+				{
+					bool f8Now = glfwGetKey(_win, GLFW_KEY_F8) == GLFW_PRESS;
+					if (f8Now && !m_F8Prev) { m_F8Prev = f8Now; OnSceneEject(); break; }
+					m_F8Prev = f8Now;
+				}
+				m_ActiveScene->OnUpdateRuntime(deltaTime);
+				break;
+			}
+			case SceneState::Eject:
+			{
+				GLFWwindow* _win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+				if (glfwGetKey(_win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+				{
+					OnSceneStop();
+					break;
+				}
+				// F8 — repossess pawn (cursor re-locked, game input restored)
+				{
+					bool f8Now = glfwGetKey(_win, GLFW_KEY_F8) == GLFW_PRESS;
+					if (f8Now && !m_F8Prev) { m_F8Prev = f8Now; OnSceneRepossess(); break; }
+					m_F8Prev = f8Now;
+				}
+				// Editor camera moves freely with WASD + RMB
+				if (m_ViewPortFocused && m_ViewPortHovered)
+					m_EditorCamera.OnUpdate(deltaTime);
+				// Game logic continues; rendering goes through editor camera (set via BeginEject)
 				m_ActiveScene->OnUpdateRuntime(deltaTime);
 				break;
 			}
@@ -412,12 +444,16 @@ namespace Blu
 
 	void BluEditorLayer::OnEvent(Events::Event& event)
 	{
-		m_CameraController.OnEvent(event);
-		// Only forward events to the editor camera when the viewport is hovered.
-		// Without this guard, scroll-wheel events zoom the camera even when the
-		// mouse is over a detail panel, properties window, etc.
-		if (m_ViewPortHovered)
-			m_EditorCamera.OnEvent(event);
+		const bool editorCameraActive = m_SceneState == SceneState::Edit || m_SceneState == SceneState::Eject;
+		if (editorCameraActive)
+		{
+			m_CameraController.OnEvent(event);
+			// Only forward events to the editor camera when the viewport is hovered.
+			// Without this guard, scroll-wheel events zoom the camera even when the
+			// mouse is over a detail panel, properties window, etc.
+			if (m_ViewPortHovered)
+				m_EditorCamera.OnEvent(event);
+		}
 		switch (event.GetType())
 		{
 			case Events::Event::Type::MouseMoved:
@@ -770,6 +806,7 @@ namespace Blu
 
 			auto& mc = ground.AddComponent<MeshComponent>();
 			mc.MeshData = Mesh::CreateCube();
+			mc.Primitive = MeshComponent::PrimitiveType::Cube;
 			mc.MaterialInstance = Material::Create();
 			mc.MaterialInstance->AlbedoColor = glm::vec4(0.45f, 0.42f, 0.40f, 1.0f);
 			mc.MaterialInstance->Roughness   = 0.85f;
@@ -819,6 +856,7 @@ namespace Blu
 
 			auto& mc = box.AddComponent<MeshComponent>();
 			mc.MeshData = Mesh::CreateCube();
+			mc.Primitive = MeshComponent::PrimitiveType::Cube;
 			mc.MaterialInstance = Material::Create();
 			mc.MaterialInstance->AlbedoColor = boxes[i].color;
 			mc.MaterialInstance->Metallic    = boxes[i].metallic;
@@ -853,6 +891,7 @@ namespace Blu
 
 			auto& mc = sphere.AddComponent<MeshComponent>();
 			mc.MeshData = Mesh::CreateCube(); // cube visual, sphere physics
+			mc.Primitive = MeshComponent::PrimitiveType::Cube;
 			mc.MaterialInstance = Material::Create();
 			mc.MaterialInstance->AlbedoColor = spheres[i].color;
 			mc.MaterialInstance->Roughness   = 0.3f;
@@ -868,6 +907,37 @@ namespace Blu
 			sc.Radius      = 0.5f;
 			sc.Friction    = 0.3f;
 			sc.Restitution = spheres[i].restitution;
+		}
+
+		// ── Player Character ────────────────────────────────────────────────────
+		{
+			auto player = m_ActiveScene->CreateEntity("PlayerCharacter");
+			auto& tc = player.GetComponent<TransformComponent>();
+			tc.Translation = { 0.0f, 2.0f, 5.0f };
+			tc.Scale       = { 0.5f, 1.0f, 0.5f }; // rough capsule stand-in
+
+			// Visible mesh so we can see where the player is
+			auto& mc = player.AddComponent<MeshComponent>();
+			mc.MeshData = Mesh::CreateCube();
+			mc.Primitive = MeshComponent::PrimitiveType::Cube;
+			mc.MaterialInstance = Material::Create();
+			mc.MaterialInstance->AlbedoColor = glm::vec4(0.2f, 0.5f, 1.0f, 1.0f);
+			mc.MaterialInstance->Roughness   = 0.5f;
+			mc.MaterialInstance->Metallic    = 0.0f;
+
+			// Spring arm — TargetCameraUUID stays 0; EnsurePrimaryCamera() links it on Play
+			auto& arm = player.AddComponent<SpringArmComponent>();
+			arm.ArmLength        = 6.0f;
+			arm.Pitch            = -15.0f;
+			arm.Yaw              = 0.0f;
+			arm.InheritYaw       = false;
+			arm.SocketOffset     = glm::vec3(0.0f, 1.0f, 0.0f);
+			arm.EnableLag        = true;
+			arm.PositionLagSpeed = 10.0f;
+
+			// NativeScript — resolved via ActorRegistry on Play
+			auto& nsc = player.AddComponent<NativeScriptComponent>();
+			nsc.ClassName = "PlayerCharacter";
 		}
 
 		// Enable the full pipeline by default
@@ -893,7 +963,7 @@ namespace Blu
 		ImGui::SameLine();
 
 		ImTextureID playPauseButton = nullptr;
-		if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Pause)
+		if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Pause || m_SceneState == SceneState::Eject)
 			playPauseButton = (ImTextureID)m_PlayIcon->GetImTextureID();
 		else if(m_SceneState == SceneState::Play)
 			playPauseButton = (ImTextureID)m_PauseIcon->GetImTextureID();
@@ -914,7 +984,8 @@ namespace Blu
 			
 			else if (m_SceneState == SceneState::Pause)
 				OnSceneResume();
-			
+			else if (m_SceneState == SceneState::Eject)
+				OnSceneRepossess();
 		}
 		if (m_SceneState == SceneState::Pause)
 		{
@@ -937,6 +1008,25 @@ namespace Blu
 			}
 
 		}
+
+		// ── Eject / Possess button ────────────────────────────────────────────
+		if (m_SceneState == SceneState::Play)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button("Eject", ImVec2(50, size)))
+				OnSceneEject();
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+				ImGui::SetTooltip("F8 — free the camera, game keeps running");
+		}
+		else if (m_SceneState == SceneState::Eject)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button("Possess", ImVec2(60, size)))
+				OnSceneRepossess();
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+				ImGui::SetTooltip("F8 — re-possess the pawn");
+		}
+
 		ImGui::SameLine();
 		if (ImGui::ImageButton((ImTextureID)m_ExpandPlayOptionsIcon->GetImTextureID(), ImVec2(size - 5, size)))
 		{
@@ -1064,15 +1154,25 @@ namespace Blu
 		{
 			m_SceneState = SceneState::Play;
 			m_ViewPortFocused = true;
-			ImGui::SetWindowFocus("viewport"); 
+			ImGui::SetWindowFocus("viewport");
 
 			m_PlayButtonHit = true;
 			m_ActiveScene = Scene::Copy(m_EditorScene);
 
 			m_ActiveScene->OnRuntimeStart();
+
+			// Guarantee a primary camera exists; auto-links to any unconnected SpringArm
+			m_ActiveScene->EnsurePrimaryCamera();
+			m_ActiveScene->SetPlayerInputEnabled(true);
+
 			m_SceneMissing = false;
 			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 
+			// Capture mouse for game input — hide cursor and lock it to the window
+			m_F8Prev = false;
+			GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
 		}
 		else
 		{
@@ -1083,6 +1183,7 @@ namespace Blu
 	void BluEditorLayer::OnScenePause()
 	{
 		m_SceneState = SceneState::Pause;
+		m_ActiveScene->SetPlayerInputEnabled(false);
 		m_ActiveScene->SetScenePaused(true);
 
 	}
@@ -1090,6 +1191,7 @@ namespace Blu
 	void BluEditorLayer::OnSceneResume()
 	{
 		m_SceneState = SceneState::Play;
+		m_ActiveScene->SetPlayerInputEnabled(true);
 		m_ActiveScene->SetScenePaused(false);
 	}
 
@@ -1097,6 +1199,8 @@ namespace Blu
 	{
 		if (m_SceneState != SceneState::Edit)
 		{
+			m_ActiveScene->EndEject(); // no-op if not ejected
+			m_ActiveScene->SetPlayerInputEnabled(false);
 			m_ActiveScene->OnRuntimeStop();
 			m_ActiveScene = m_EditorScene;
 			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
@@ -1104,10 +1208,38 @@ namespace Blu
 			m_PlayButtonHit = false;
 			m_SceneState = SceneState::Edit;
 
+			// Release mouse back to the editor
+			GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
 		}
 			
 
 
+	}
+
+	void BluEditorLayer::OnSceneEject()
+	{
+		if (m_SceneState != SceneState::Play) return;
+		m_SceneState = SceneState::Eject;
+		m_ActiveScene->SetPlayerInputEnabled(false);
+		m_ActiveScene->BeginEject(&m_EditorCamera);
+
+		GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+	}
+
+	void BluEditorLayer::OnSceneRepossess()
+	{
+		if (m_SceneState != SceneState::Eject) return;
+		m_ActiveScene->EndEject();
+		m_SceneState = SceneState::Play;
+
+		GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+		m_ActiveScene->SetPlayerInputEnabled(true);
 	}
 
 	void BluEditorLayer::OnScenePlayNewWindow()
@@ -1233,6 +1365,7 @@ namespace Blu
 			ImGui::MenuItem("Content Browser", nullptr, &m_ShowContentBrowser);
 			ImGui::MenuItem("Output Log",      nullptr, &m_ShowOutputLog);
 			ImGui::MenuItem("Rendering",       nullptr, &m_ShowRendering);
+			ImGui::MenuItem("Diagnostics",     nullptr, &m_ShowDiagnostics);
 			ImGui::MenuItem("Input Map",       nullptr, &m_ShowInputMap);
 			ImGui::EndMenu();
 		}
@@ -1443,6 +1576,59 @@ namespace Blu
 					ImGui::SetScrollHereY(1.0f);
 
 				ImGui::EndChild();
+			}
+			ImGui::End();
+		}
+
+		if (m_ShowDiagnostics && m_ActiveScene)
+		{
+			ImGui::SetNextWindowSize(ImVec2(360, 300), ImGuiCond_FirstUseEver);
+			if (ImGui::Begin("Diagnostics", &m_ShowDiagnostics))
+			{
+				auto sceneStateName = [&]() -> const char*
+				{
+					switch (m_SceneState)
+					{
+						case SceneState::Edit:     return "Edit";
+						case SceneState::Play:     return "Play";
+						case SceneState::Pause:    return "Pause";
+						case SceneState::Simulate: return "Simulate";
+						case SceneState::Eject:    return "Eject";
+					}
+					return "Unknown";
+				};
+
+				SceneDiagnostics diagnostics = m_ActiveScene->GetDiagnostics();
+				std::string scenePath = m_ActiveScene->GetSceneFilePath().string();
+				if (scenePath.empty())
+					scenePath = "<unsaved>";
+
+				ImGui::Text("State                 %s", sceneStateName());
+				ImGui::Text("Scene                 %s", scenePath.c_str());
+				ImGui::Separator();
+				ImGui::Text("Entities              %u", diagnostics.EntityCount);
+				ImGui::Text("Native Scripts        %u", diagnostics.NativeScriptCount);
+				ImGui::Text("Spring Arms           %u", diagnostics.SpringArmCount);
+				ImGui::Text("Meshes                %u / %u drawable",
+				            diagnostics.DrawableMeshCount, diagnostics.MeshEntityCount);
+				if (diagnostics.DrawableMeshCount != diagnostics.MeshEntityCount)
+					ImGui::TextColored(ImVec4(1.0f, 0.65f, 0.2f, 1.0f), "Some mesh entities have no drawable asset");
+
+				ImGui::Separator();
+				ImGui::Text("Cameras               %u", diagnostics.CameraCount);
+				if (diagnostics.PrimaryCameraCount == 1)
+					ImGui::Text("Primary Cameras       1");
+				else
+					ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f),
+					                   "Primary Cameras       %u", diagnostics.PrimaryCameraCount);
+				ImGui::Text("Active Camera         %s",
+				            diagnostics.PrimaryCameraName.empty() ? "<none>" : diagnostics.PrimaryCameraName.c_str());
+
+				ImGui::Separator();
+				ImGui::Text("Player Input          %s", diagnostics.PlayerInputEnabled ? "Enabled" : "Disabled");
+				ImGui::Text("Eject Camera          %s", diagnostics.EjectCameraActive ? "Active" : "Inactive");
+				ImGui::Text("Possessed Pawn        %s",
+				            diagnostics.PossessedPawnName.empty() ? "<none>" : diagnostics.PossessedPawnName.c_str());
 			}
 			ImGui::End();
 		}

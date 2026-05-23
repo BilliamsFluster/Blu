@@ -1,0 +1,479 @@
+Scene: D:\GraphicsProgramming\GameEngine\Blu\Blu-Editor\LoadedScenes\Main
+Entities:
+  - Entity: 5999494653435601151
+    TagComponent:
+      Tag: Sphere_3
+    TransformComponent:
+      Translation: [-6, 10, 4]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.5, 0.100000001, 0.899999976]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.0500000007
+      PBR_Roughness: 0.300000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.00999999978
+      AngularDamping: 0.00999999978
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    SphereCollider3DComponent:
+      Radius: 0.5
+      Offset: [0, 0, 0]
+      Friction: 0.300000012
+      Restitution: 0.400000006
+      Density: 1000
+  - Entity: 2453618401398301372
+    TagComponent:
+      Tag: Sphere_2
+    TransformComponent:
+      Translation: [0, 16, -5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.899999976, 0.899999976, 0.100000001]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.0500000007
+      PBR_Roughness: 0.300000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.00999999978
+      AngularDamping: 0.00999999978
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    SphereCollider3DComponent:
+      Radius: 0.5
+      Offset: [0, 0, 0]
+      Friction: 0.300000012
+      Restitution: 0.600000024
+      Density: 1000
+  - Entity: 464447692683606073
+    TagComponent:
+      Tag: Sphere_1
+    TransformComponent:
+      Translation: [3, 14, 1]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.100000001, 0.899999976, 0.800000012]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.0500000007
+      PBR_Roughness: 0.300000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.00999999978
+      AngularDamping: 0.00999999978
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    SphereCollider3DComponent:
+      Radius: 0.5
+      Offset: [0, 0, 0]
+      Friction: 0.300000012
+      Restitution: 0.5
+      Density: 1000
+  - Entity: 10183583705594464239
+    TagComponent:
+      Tag: Sphere_0
+    TransformComponent:
+      Translation: [-3, 12, -2]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [1, 0.400000006, 0.100000001]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.0500000007
+      PBR_Roughness: 0.300000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.00999999978
+      AngularDamping: 0.00999999978
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    SphereCollider3DComponent:
+      Radius: 0.5
+      Offset: [0, 0, 0]
+      Friction: 0.300000012
+      Restitution: 0.699999988
+      Density: 1000
+  - Entity: 1098355073478592385
+    TagComponent:
+      Tag: Box_7
+    TransformComponent:
+      Translation: [0, 7, 3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.200000003, 0.600000024, 0.699999988]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.699999988
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0.300000012
+      Density: 1000
+  - Entity: 369167231387862427
+    TagComponent:
+      Tag: Box_6
+    TransformComponent:
+      Translation: [5, 5, 2]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.800000012, 0.550000012, 0.200000003]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.800000012
+      PBR_Roughness: 0.300000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0.300000012
+      Density: 1000
+  - Entity: 8085276804073809484
+    TagComponent:
+      Tag: Box_5
+    TransformComponent:
+      Translation: [-5, 3, 2]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.949999988, 0.949999988, 0.949999988]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.899999976
+      PBR_Roughness: 0.200000003
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0.300000012
+      Density: 1000
+  - Entity: 16307268165999030415
+    TagComponent:
+      Tag: Box_4
+    TransformComponent:
+      Translation: [2, 10, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.800000012, 0.300000012, 0.800000012]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.100000001
+      PBR_Roughness: 0.300000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0.300000012
+      Density: 1000
+  - Entity: 17676041033727284
+    TagComponent:
+      Tag: Box_3
+    TransformComponent:
+      Translation: [-2, 8, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.899999976, 0.699999988, 0.100000001]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.5
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0.300000012
+      Density: 1000
+  - Entity: 11567233636217006729
+    TagComponent:
+      Tag: Box_2
+    TransformComponent:
+      Translation: [4, 6, -3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.150000006, 0.300000012, 0.850000024]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.400000006
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0.300000012
+      Density: 1000
+  - Entity: 2089085769504950406
+    TagComponent:
+      Tag: Box_1
+    TransformComponent:
+      Translation: [0, 4, -3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.150000006, 0.75, 0.200000003]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.600000024
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0.300000012
+      Density: 1000
+  - Entity: 13279797253005603384
+    TagComponent:
+      Tag: Box_0
+    NativeScriptComponent:
+      ClassName: PlayerCharacter
+    TransformComponent:
+      Translation: [-4, 2, -3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.850000024, 0.150000006, 0.150000006]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.5
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0.300000012
+      Density: 1000
+  - Entity: 5942309385867904103
+    TagComponent:
+      Tag: Camera
+    NativeScriptComponent:
+      ClassName: ""
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 45
+      Primary: true
+      FixedAspectRatio: false
+    TransformComponent:
+      Translation: [0, 4, 14]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 17388802819210432911
+    TagComponent:
+      Tag: Ground
+    TransformComponent:
+      Translation: [0, -0.5, 0]
+      Rotation: [0, 0, 0]
+      Scale: [50, 1, 50]
+    MeshComponent:
+      FilePath: ""
+      PBR_AlbedoColor: [0.449999988, 0.419999987, 0.400000006]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.850000024
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 0
+      GravityScale: 1
+      LinearDamping: 0.0500000007
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [25, 0.5, 25]
+      Offset: [0, 0, 0]
+      Friction: 0.699999988
+      Restitution: 0
+      Density: 1000
+  - Entity: 8521464516481231412
+    TagComponent:
+      Tag: Sun
+    DirectionalLightComponent:
+      Direction: [0.259160548, -0.863868415, 0.431934208]
+      Ambient: [0.0799999982, 0.0799999982, 0.100000001]
+      Diffuse: [1, 0.949999988, 0.850000024]
+      Specular: [0.600000024, 0.600000024, 0.600000024]
+      Intensity: 1.20000005
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [-0.785398185, 0.52359879, 0]
+      Scale: [1, 1, 1]

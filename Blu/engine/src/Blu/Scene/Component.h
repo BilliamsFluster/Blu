@@ -117,10 +117,18 @@ namespace Blu
 
 	struct MeshComponent
 	{
+		enum class PrimitiveType
+		{
+			None = 0,
+			Cube,
+			Quad
+		};
+
 		Shared<class Mesh> MeshData;
 		Shared<class Material> MaterialInstance;
 		Shared<Model> ModelAsset;
 		std::string FilePath;
+		PrimitiveType Primitive = PrimitiveType::None;
 
 		MeshComponent() = default;
 		MeshComponent(const MeshComponent&) = default;
@@ -292,6 +300,37 @@ namespace Blu
 		CapsuleCollider3DComponent(const CapsuleCollider3DComponent&) = default;
 	};
 
+	// ─── Character Controller (Jolt CharacterVirtual) ─────────────────────────
+	// Attach to an entity that will be player/AI controlled.
+	// Scene creates the JPH::CharacterVirtual at runtime; ACharacter::Move/Jump
+	// write into _PendingMoveInput / _PendingJump which Scene consumes each frame.
+	struct CharacterControllerComponent
+	{
+		float     MoveSpeed   = 5.0f;
+		float     JumpImpulse = 7.0f;
+		float     StepHeight  = 0.35f;
+		float     SlopeLimit  = 45.0f;  // degrees
+
+		// Written by Scene each frame — read by ACharacter
+		bool      IsGrounded  = false;
+		glm::vec3 Velocity    = { 0.0f, 0.0f, 0.0f };
+
+		// Set by ACharacter::Move / Jump, consumed by Scene each physics tick
+		glm::vec3 _PendingMoveInput = { 0.0f, 0.0f, 0.0f };
+		bool      _PendingJump      = false;
+
+		// Runtime pointer — owned by Scene, never serialized
+		void* _RuntimeCharacter = nullptr;
+
+		CharacterControllerComponent() = default;
+		CharacterControllerComponent(const CharacterControllerComponent& o)
+			: MoveSpeed(o.MoveSpeed), JumpImpulse(o.JumpImpulse),
+			  StepHeight(o.StepHeight), SlopeLimit(o.SlopeLimit),
+			  IsGrounded(false), Velocity(0.0f),
+			  _PendingMoveInput(0.0f), _PendingJump(false),
+			  _RuntimeCharacter(nullptr) {}
+	};
+
 	// ─── Point Light ──────────────────────────────────────────────────────────
 	// Position is taken from the entity's TransformComponent::Translation.
 	// Attenuation formula: att = 1 / (Constant + Linear*d + Quadratic*d²)
@@ -367,6 +406,8 @@ namespace Blu
 		// Pitch / yaw of the arm (degrees).  Yaw is added to the entity's own yaw.
 		float     Pitch             = -15.0f;
 		float     Yaw               = 0.0f;
+		// If true, Yaw is relative to the target entity yaw; if false, Yaw is world/control yaw.
+		bool      InheritYaw        = true;
 		// Lag: how quickly the camera follows (0=instant, 1=very slow)
 		float     PositionLagSpeed  = 10.0f;
 		bool      EnableLag         = true;
@@ -468,7 +509,8 @@ namespace Blu
 		NativeScriptComponent, Rigidbody2DComponent,
 		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent, MeshLODComponent,
 		SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
-		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent>;
+		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent,
+		CharacterControllerComponent>;
 
 
 
