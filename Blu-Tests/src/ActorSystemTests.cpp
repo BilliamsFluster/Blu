@@ -11,6 +11,7 @@
 #include "Blu/Rendering/AssetManager.h"
 #include "Blu/Rendering/MaterialSystem.h"
 #include "Blu/Rendering/MaterialGraph.h"
+#include "Blu/Rendering/LightBufferData.h"
 #include "Blu/Rendering/SceneRenderPipeline.h"
 #include "Blu/Rendering/Terrain.h"
 #include "Blu/Utils/FileSystemService.h"
@@ -348,6 +349,22 @@ namespace
 		Require(openGLFallback.Stages[0] == Blu::SceneRenderStage::ForwardOpaque, "OpenGL fallback did not preserve the forward path");
 	}
 
+	void TestSharedLightBufferPacking()
+	{
+		Blu::DirLightData directional;
+		directional.Direction = { 0.0f, -1.0f, 0.0f };
+		Blu::PointLightData point;
+		point.Position = { 1.0f, 2.0f, 3.0f };
+		Blu::SpotLightData spot;
+		spot.Position = { 4.0f, 5.0f, 6.0f };
+
+		const Blu::LightDataGPU packed = Blu::BuildLightDataGPU({ directional }, { point }, { spot });
+		Require(packed.NumDirLights == 1 && packed.NumPointLights == 1 && packed.NumSpotLights == 1,
+			"shared light buffer counts were not packed");
+		Require(packed.PointLights[0].Position == point.Position, "shared point light position was not packed");
+		Require(packed.SpotLights[0].Position == spot.Position, "shared spot light position was not packed");
+	}
+
 	void TestWorldAuthoringContracts()
 	{
 		Blu::TerrainSpec terrainSpec;
@@ -422,6 +439,7 @@ int main()
 		TestMaterialResolver();
 		TestMaterialGraphCompiler();
 		TestSceneRenderPipelinePlan();
+		TestSharedLightBufferPacking();
 		TestWorldAuthoringContracts();
 		TestAudioBackendIsCompiled();
 		TestJoltConfigurationCompatibility();

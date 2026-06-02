@@ -92,17 +92,22 @@ namespace Blu
     void Renderer3D::SetFog(const FogSettings& fog)
     {
         s_Data3D->Fog = fog;
-        auto& sh = *s_Data3D->MeshShader;
-        sh.Bind();
-        sh.SetUniformInt   ("u_FogEnabled",      fog.Enabled ? 1 : 0);
-        sh.SetUniformFloat3("u_FogColor",        fog.Color);
-        sh.SetUniformFloat ("u_FogDensity",      fog.Density);
-        sh.SetUniformFloat ("u_FogHeightStart",  fog.HeightStart);
-        sh.SetUniformFloat ("u_FogHeightDensity",fog.HeightDensity);
-        sh.SetUniformFloat3("u_AerialColor",     fog.AerialColor);
-        sh.SetUniformFloat ("u_AerialStrength",  fog.AerialStrength);
-        sh.Flush();
-        sh.UnBind();
+        auto uploadFog = [&](Shader& shader)
+        {
+            shader.Bind();
+            shader.SetUniformInt   ("u_FogEnabled",      fog.Enabled ? 1 : 0);
+            shader.SetUniformFloat3("u_FogColor",        fog.Color);
+            shader.SetUniformFloat ("u_FogDensity",      fog.Density);
+            shader.SetUniformFloat ("u_FogHeightStart",  fog.HeightStart);
+            shader.SetUniformFloat ("u_FogHeightDensity",fog.HeightDensity);
+            shader.SetUniformFloat3("u_AerialColor",     fog.AerialColor);
+            shader.SetUniformFloat ("u_AerialStrength",  fog.AerialStrength);
+            shader.Flush();
+            shader.UnBind();
+        };
+        uploadFog(*s_Data3D->MeshShader);
+        if (s_Data3D->InstancedMeshShader)
+            uploadFog(*s_Data3D->InstancedMeshShader);
     }
 
     // -------------------------------------------------------------------------
@@ -134,6 +139,16 @@ namespace Blu
         PassLights(dirLights, pointLights, spotLights);
         s_Data3D->MeshShader->Flush();
         s_Data3D->MeshShader->UnBind();
+
+        if (s_Data3D->InstancedMeshShader)
+        {
+            auto& instancedShader = *s_Data3D->InstancedMeshShader;
+            instancedShader.Bind();
+            instancedShader.SetUniformBuffer("LightData", &s_Data3D->Lights, sizeof(s_Data3D->Lights));
+            instancedShader.SetUniformFloat3("u_ViewPos", s_Data3D->ViewPos);
+            instancedShader.Flush();
+            instancedShader.UnBind();
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
