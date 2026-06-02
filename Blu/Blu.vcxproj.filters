@@ -1401,6 +1401,12 @@
     <ClInclude Include="engine\src\Blu\Core\EntryPoint.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\FrameArena.h">
+      <Filter>src\Blu\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\GenerationalHandle.h">
+      <Filter>src\Blu\Core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Input.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
@@ -1704,6 +1710,9 @@
     <ClInclude Include="engine\src\Blu\Utils\AssetPath.h">
       <Filter>src\Blu\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Utils\FileSystemService.h">
+      <Filter>src\Blu\Utils</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Utils\Helpers.h">
       <Filter>src\Blu\Utils</Filter>
     </ClInclude>
@@ -1978,6 +1987,9 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\UI\RuntimeUI.cpp">
       <Filter>src\Blu\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Utils\FileSystemService.cpp">
+      <Filter>src\Blu\Utils</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp">
       <Filter>src\Blu\Utils</Filter>

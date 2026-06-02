@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include "Blu/Utils/FileSystemService.h"
 
 namespace Blu::AssetPath
 {
@@ -34,6 +35,10 @@ namespace Blu::AssetPath
 
 	inline std::filesystem::path ProjectRoot()
 	{
+		auto mountedRoot = FileSystemService::Get().Resolve("project://");
+		if (!mountedRoot.empty())
+			return mountedRoot;
+
 		std::error_code ec;
 		auto current = std::filesystem::current_path(ec);
 		if (ec)
@@ -53,7 +58,8 @@ namespace Blu::AssetPath
 
 	inline std::filesystem::path AssetsRoot()
 	{
-		return ProjectRoot() / "assets";
+		auto mountedAssets = FileSystemService::Get().Resolve("project://assets");
+		return mountedAssets.empty() ? ProjectRoot() / "assets" : mountedAssets;
 	}
 
 	inline std::string NormalizePath(const std::filesystem::path& path)
@@ -76,6 +82,8 @@ namespace Blu::AssetPath
 	{
 		if (path.empty())
 			return {};
+		if (FileSystemService::Get().IsVirtualPath(path))
+			return NormalizePath(path);
 
 		std::error_code ec;
 		auto projectRoot = ProjectRoot();
@@ -97,6 +105,8 @@ namespace Blu::AssetPath
 	{
 		if (path.empty())
 			return {};
+		if (FileSystemService::Get().IsVirtualPath(path))
+			return FileSystemService::Get().Resolve(path);
 
 		std::error_code ec;
 		if (path.is_absolute())

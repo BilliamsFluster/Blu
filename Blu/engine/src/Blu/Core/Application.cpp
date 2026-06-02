@@ -9,6 +9,7 @@
 #include "Blu/Rendering/VertexArray.h"
 #include "Blu/Rendering/Renderer.h"
 #include "Blu/Rendering/RendererAPI.h"
+#include "Blu/Rendering/AssetManager.h"
 #include "Blu/Core/Timestep.h"
 #include <GLFW/glfw3.h>
 #include "Blu/Events/WindowEvent.h"
@@ -44,6 +45,7 @@ namespace Blu
 
 		// Initialize the renderer and push the ImGui layer
 		Renderer::Init();
+		AssetManager::Get().Initialize();
 		PushOverlay(m_ImGuiLayer);
 		CheckGraphicsError();
 		
@@ -53,6 +55,7 @@ namespace Blu
 	
 	Application::~Application()
 	{
+		AssetManager::Get().Shutdown();
 		Renderer::Shutdown();
 	}
 

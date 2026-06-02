@@ -581,6 +581,8 @@
     <ClInclude Include="engine\src\Blu\Core\Application.h" />
     <ClInclude Include="engine\src\Blu\Core\Core.h" />
     <ClInclude Include="engine\src\Blu\Core\EntryPoint.h" />
+    <ClInclude Include="engine\src\Blu\Core\FrameArena.h" />
+    <ClInclude Include="engine\src\Blu\Core\GenerationalHandle.h" />
     <ClInclude Include="engine\src\Blu\Core\Input.h" />
     <ClInclude Include="engine\src\Blu\Core\InputMap.h" />
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h" />
@@ -682,6 +684,7 @@
     <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h" />
     <ClInclude Include="engine\src\Blu\UI\RuntimeUI.h" />
     <ClInclude Include="engine\src\Blu\Utils\AssetPath.h" />
+    <ClInclude Include="engine\src\Blu\Utils\FileSystemService.h" />
     <ClInclude Include="engine\src\Blu\Utils\Helpers.h" />
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h" />
     <ClInclude Include="engine\src\Blupch.h" />
@@ -781,6 +784,7 @@
     <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\SceneSerializer.cpp" />
     <ClCompile Include="engine\src\Blu\UI\RuntimeUI.cpp" />
+    <ClCompile Include="engine\src\Blu\Utils\FileSystemService.cpp" />
     <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

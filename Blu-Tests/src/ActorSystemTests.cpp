@@ -1,9 +1,13 @@
 #include "Blu/GameFramework/ActorSystem.h"
 #include "Blu/GameFramework/NativeClassRegistry.h"
 #include "Blu/Core/Log.h"
+#include "Blu/Core/FrameArena.h"
+#include "Blu/Core/GenerationalHandle.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/SceneSerializer.h"
+#include "Blu/Rendering/AssetManager.h"
+#include "Blu/Utils/FileSystemService.h"
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -159,6 +163,7 @@ namespace
 		std::ifstream migratedScene(migratedScenePath);
 		std::stringstream migratedText;
 		migratedText << migratedScene.rdbuf();
+		migratedScene.close();
 		Require(migratedText.str().find("ActorComponent:") != std::string::npos, "migrated scene did not write ActorComponent");
 		Require(migratedText.str().find("NativeScriptComponent:") == std::string::npos, "migrated scene wrote legacy NativeScriptComponent");
 
@@ -173,13 +178,81 @@ namespace
 		Require(std::abs(std::get<float>(reloadedActorComponent.Overrides.at("Speed")) - 4.25f) < 0.001f, "actor override did not persist");
 
 		std::error_code cleanupError;
-		std::filesystem::remove(legacyScenePath, cleanupError);
-		cleanupError.clear();
-		std::filesystem::remove(migratedScenePath, cleanupError);
-		cleanupError.clear();
-		std::filesystem::remove(testDirectory / "Migrated.assets.yaml", cleanupError);
-		cleanupError.clear();
-		std::filesystem::remove(testDirectory, cleanupError);
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
+	void TestMountedFilesystemAndAssetRegistry()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsFileSystem-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/Source.asset", "source"), "mounted write failed");
+		Require(fileSystem.Write("project://assets/Dependency.asset", "dependency"), "dependency write failed");
+		Require(fileSystem.Exists("project://assets/Source.asset"), "mounted exists failed");
+		Require(fileSystem.Resolve("project://../Escape.asset").empty(), "mounted traversal was not rejected");
+
+		std::string contents;
+		Require(fileSystem.Read("project://assets/Source.asset", contents), "mounted read failed");
+		Require(contents == "source", "mounted read returned incorrect contents");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+		const Blu::AssetHandle source = assets.Import("project://assets/Source.asset");
+		const Blu::AssetHandle dependency = assets.Import("project://assets/Dependency.asset");
+		Require((uint64_t)source != 0 && (uint64_t)dependency != 0, "asset import returned an invalid handle");
+		Require(assets.AddDependency(source, dependency), "asset dependency tracking failed");
+		Require(assets.SaveRegistry(), "asset registry save failed");
+		assets.Shutdown();
+
+		assets.Initialize();
+		const Blu::AssetMetadata* metadata = assets.FindMetadata(source);
+		Require(metadata != nullptr, "asset registry round trip lost metadata");
+		Require(metadata->Dependencies.size() == 1 && (uint64_t)metadata->Dependencies[0] == (uint64_t)dependency,
+			"asset registry round trip lost dependencies");
+		Require((uint64_t)assets.Import("project://assets/Source.asset") == (uint64_t)source,
+			"asset registry did not preserve stable handles");
+
+		Require(assets.Load(source) != nullptr, "asset metadata did not load");
+		Require(assets.Load(source) != nullptr, "asset cache did not return a second reference");
+		Require(assets.GetReferenceCount(source) == 2, "asset cache reference count was incorrect");
+		assets.Release(source);
+		assets.Release(source);
+		Require(assets.GetLoadedAssetCount() == 0, "asset cache did not release its final reference");
+		Require(assets.Load(Blu::AssetHandle(999999)) == nullptr, "stale asset handle loaded unexpectedly");
+		Require(!assets.GetDiagnostics().empty(), "stale asset handle did not emit a diagnostic");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
+	void TestLifetimeUtilities()
+	{
+		struct TestSlot;
+		struct TestValue
+		{
+			int Value = 0;
+		};
+
+		Blu::GenerationalRegistry<TestValue, TestSlot> registry;
+		const auto first = registry.Emplace(TestValue{ 7 });
+		Require(registry.Get(first) && registry.Get(first)->Value == 7, "generational registry did not return its live value");
+		Require(registry.Destroy(first), "generational registry did not destroy a live handle");
+		Require(registry.Get(first) == nullptr, "generational registry accepted a stale handle");
+		const auto second = registry.Emplace(TestValue{ 9 });
+		Require(second.Index == first.Index && second.Generation != first.Generation, "generational registry did not advance generation");
+
+		Blu::FrameArena arena(128);
+		auto* value = arena.Create<TestValue>(TestValue{ 11 });
+		Require(value->Value == 11 && arena.HasOutstandingAllocations(), "frame arena allocation failed");
+		arena.Reset();
+		Require(arena.GetBytesUsed() == 0 && arena.GetHighWaterMark() >= sizeof(TestValue), "frame arena reset diagnostics failed");
 	}
 }
 
@@ -192,6 +265,8 @@ int main()
 		TestMissingClassDoesNotCreateActor();
 		TestGameModeRegistration();
 		TestLegacySceneMigrationWritesActorComponent();
+		TestMountedFilesystemAndAssetRegistry();
+		TestLifetimeUtilities();
 	}
 	catch (const std::exception& error)
 	{
