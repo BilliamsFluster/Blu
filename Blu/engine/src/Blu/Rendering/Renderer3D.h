@@ -6,6 +6,7 @@
 #include "Frustum.h"
 #include "CascadedShadowMap.h"
 #include "Animation.h"
+#include "LightBufferData.h"
 
 namespace Blu
 {
@@ -13,6 +14,7 @@ namespace Blu
     class Camera;
     struct MeshComponent;
     class CascadedShadowMap;
+    class DeferredRenderer;
 
     // ─────────────────────────────────────────────────────────────────────────
     // POD light descriptors assembled each frame directly from the ECS.
@@ -117,6 +119,7 @@ namespace Blu
         // Upload all cascade matrices + splits to the mesh shader, bind the CSM array texture.
         static void BindCSM(const glm::mat4 lightVPs[CascadedShadowMap::NUM_CASCADES],
                             const glm::vec3& cascadeSplits);
+        static void SetShadowsEnabled(bool enabled);
 
         static Shared<CascadedShadowMap> GetCSM() { return s_Data3D->CSMInstance; }
 
@@ -124,6 +127,9 @@ namespace Blu
         static void PassLights(const std::vector<DirLightData>&   dirLights,
                                const std::vector<PointLightData>& pointLights,
                                const std::vector<SpotLightData>&  spotLights);
+        static void DrawSkinnedMeshForward(const glm::mat4& transform, MeshComponent& mc,
+                                           const std::vector<glm::mat4>& boneMatrices,
+                                           int entityID);
 
         static constexpr int kMaxInstances = 256; // max per-batch for cbuffer packing
 
@@ -134,11 +140,16 @@ namespace Blu
             Shared<class Shader>       InstancedMeshShader;
             Shared<class Shader>       SkinnedMeshShader;
             Shared<CascadedShadowMap>  CSMInstance;
+            Unique<DeferredRenderer>    Deferred;
             glm::mat4                  ViewProjectionMatrix = glm::mat4(1.0f);
             glm::mat4                  ViewMatrix           = glm::mat4(1.0f);
             glm::vec3                  ViewPos              = glm::vec3(0.0f);
             Frustum                    ViewFrustum;
+            LightDataGPU               Lights = {};
+            ShadowDataGPU              Shadows = {};
+            FogSettings                Fog;
             bool                       IBLEnabled  = false;
+            bool                       HasShadowMap = false;
             float                      IBLStrength = 1.0f;
         };
         static Renderer3DData* s_Data3D;

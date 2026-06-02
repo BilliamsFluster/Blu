@@ -254,6 +254,12 @@ namespace Blu
         return m_ColorAttachments[index].srv.Get();
     }
 
+    ID3D11RenderTargetView* D3D11FrameBuffer::GetColorAttachmentRTV(uint32_t index) const
+    {
+        BLU_CORE_ASSERT(index < m_ColorAttachments.size(), "Attachment index out of range");
+        return m_ColorAttachments[index].rtv.Get();
+    }
+
     void D3D11FrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
     {
         BLU_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size(), "Attachment index out of range");

@@ -8,6 +8,7 @@
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Rendering/AssetManager.h"
 #include "Blu/Rendering/MaterialSystem.h"
+#include "Blu/Rendering/SceneRenderPipeline.h"
 #include "Blu/Utils/FileSystemService.h"
 #include <cmath>
 #include <filesystem>
@@ -296,6 +297,25 @@ namespace
 		const Blu::ResolvedMaterial legacyResolved = resolver.ResolveLegacy(legacy, {});
 		Require(std::abs(legacyResolved.Parameters.Roughness - 0.65f) < 0.001f, "legacy material compatibility resolution failed");
 	}
+
+	void TestSceneRenderPipelinePlan()
+	{
+		const Blu::SceneRenderPipelinePlan deferred =
+			Blu::BuildSceneRenderPipelinePlan(Blu::RenderPath::Deferred, Blu::RendererAPI::API::Direct3D);
+		Require(deferred.UsesDeferred(), "DX11 deferred request did not select deferred rendering");
+		Require(deferred.Stages.size() == 5, "DX11 deferred pipeline had an unexpected stage count");
+		Require(deferred.Stages[0] == Blu::SceneRenderStage::GBufferGeometry, "DX11 deferred pipeline did not begin with G-buffer geometry");
+		Require(deferred.Stages[1] == Blu::SceneRenderStage::DeferredLighting, "DX11 deferred pipeline did not light after geometry");
+		Require(deferred.Stages[2] == Blu::SceneRenderStage::ForwardTransparent, "DX11 deferred pipeline did not retain transparent forward rendering");
+		Require(deferred.Stages[3] == Blu::SceneRenderStage::Skybox, "DX11 deferred pipeline did not render the skybox before composition");
+		Require(deferred.Stages[4] == Blu::SceneRenderStage::PostProcessComposition, "DX11 deferred pipeline did not finish with composition");
+
+		const Blu::SceneRenderPipelinePlan openGLFallback =
+			Blu::BuildSceneRenderPipelinePlan(Blu::RenderPath::Deferred, Blu::RendererAPI::API::OpenGL);
+		Require(!openGLFallback.UsesDeferred(), "OpenGL selected the DX11-only deferred path");
+		Require(openGLFallback.EffectivePath == Blu::RenderPath::Forward, "OpenGL deferred request did not fall back to forward rendering");
+		Require(openGLFallback.Stages[0] == Blu::SceneRenderStage::ForwardOpaque, "OpenGL fallback did not preserve the forward path");
+	}
 }
 
 int main()
@@ -310,6 +330,7 @@ int main()
 		TestMountedFilesystemAndAssetRegistry();
 		TestLifetimeUtilities();
 		TestMaterialResolver();
+		TestSceneRenderPipelinePlan();
 	}
 	catch (const std::exception& error)
 	{

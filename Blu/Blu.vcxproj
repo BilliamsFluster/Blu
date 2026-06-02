@@ -621,6 +621,7 @@
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Buffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11CascadedShadowMap.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Context.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11DeferredRenderer.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11FrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Material.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11PipelineState.h" />
@@ -648,11 +649,13 @@
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\CascadedShadowMap.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\DeferredRenderer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Frustum.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\LightBufferData.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Material.h" />
     <ClInclude Include="engine\src\Blu\Rendering\MaterialAsset.h" />
     <ClInclude Include="engine\src\Blu\Rendering\MaterialSystem.h" />
@@ -668,6 +671,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer3D.h" />
     <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\SceneRenderPipeline.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ShadowMap.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Skybox.h" />
@@ -728,6 +732,7 @@
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11CascadedShadowMap.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Context.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11DeferredRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11FrameBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11PipelineState.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11PostProcess.cpp" />
@@ -755,9 +760,11 @@
     <ClCompile Include="engine\src\Blu\Rendering\AssetManager.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\DeferredRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\LightBufferData.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\MaterialAsset.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\MaterialSystem.cpp" />
@@ -772,6 +779,7 @@
     <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer3D.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\SceneRenderPipeline.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp" />

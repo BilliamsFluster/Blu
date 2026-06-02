@@ -1944,6 +1944,7 @@ namespace Blu
 	void Scene::ShadowPass(const std::vector<DirLightData>& dirLights,
 	                        const glm::mat4& cameraVP, float cameraNear, float cameraFar)
 	{
+	    Renderer3D::SetShadowsEnabled(false);
 	    if (!m_UseShadows || dirLights.empty()) return;
 
 	    const glm::vec3 lightDir = glm::normalize(dirLights[0].Direction);
