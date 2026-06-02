@@ -17,6 +17,7 @@ namespace Blu
 
         void Initialize();
         void Shutdown();
+        bool IsBackendCompiled() const;
 
         // --- Resource management -----------------------------------------
         // Loads a sound from disk; returns a handle that must be released with

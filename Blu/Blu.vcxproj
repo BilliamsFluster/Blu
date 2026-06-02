@@ -76,7 +76,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_HAS_MINIAUDIO;MA_NO_JACK;MA_NO_ENCODING;BLU_DEBUG;JPH_ENABLE_ASSERTS;JPH_DEBUG_RENDERER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_HAS_MINIAUDIO;MA_NO_JACK;MA_NO_ENCODING;BLU_RELEASE;NDEBUG;JPH_PROFILE_ENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -124,7 +124,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_DIST;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_HAS_MINIAUDIO;MA_NO_JACK;MA_NO_ENCODING;BLU_DIST;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -575,6 +575,7 @@
     <ClInclude Include="engine\ExternalDependencies\glm\glm\vector_relational.hpp" />
     <ClInclude Include="engine\ExternalDependencies\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="engine\ExternalDependencies\miniaudio\miniaudio.h" />
     <ClInclude Include="engine\ExternalDependencies\stb_image\stb_image.h" />
     <ClInclude Include="engine\src\Blu.h" />
     <ClInclude Include="engine\src\Blu\Audio\AudioEngine.h" />
@@ -618,6 +619,7 @@
     <ClInclude Include="engine\src\Blu\Math\Math.h" />
     <ClInclude Include="engine\src\Blu\Physics\Physics2D.h" />
     <ClInclude Include="engine\src\Blu\Physics\Physics3D.h" />
+    <ClInclude Include="engine\src\Blu\Physics\Physics3DDiagnostics.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Buffer.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11CascadedShadowMap.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Context.h" />
@@ -703,6 +705,10 @@
     </ClCompile>
     <ClCompile Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="engine\ExternalDependencies\miniaudio\miniaudio.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
     <ClCompile Include="engine\src\Blu\Audio\AudioEngine.cpp" />

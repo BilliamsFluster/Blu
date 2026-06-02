@@ -3,6 +3,8 @@
 #include "Blu/Core/Log.h"
 #include "Blu/Core/FrameArena.h"
 #include "Blu/Core/GenerationalHandle.h"
+#include "Blu/Audio/AudioEngine.h"
+#include "Blu/Physics/Physics3DDiagnostics.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/SceneSerializer.h"
@@ -316,6 +318,16 @@ namespace
 		Require(openGLFallback.EffectivePath == Blu::RenderPath::Forward, "OpenGL deferred request did not fall back to forward rendering");
 		Require(openGLFallback.Stages[0] == Blu::SceneRenderStage::ForwardOpaque, "OpenGL fallback did not preserve the forward path");
 	}
+
+	void TestAudioBackendIsCompiled()
+	{
+		Require(Blu::AudioEngine::Get().IsBackendCompiled(), "miniaudio backend was not compiled into Blu");
+	}
+
+	void TestJoltConfigurationCompatibility()
+	{
+		Require(Blu::IsJoltConfigurationCompatible(), "Blu and Jolt were compiled with incompatible configuration defines");
+	}
 }
 
 int main()
@@ -331,6 +343,8 @@ int main()
 		TestLifetimeUtilities();
 		TestMaterialResolver();
 		TestSceneRenderPipelinePlan();
+		TestAudioBackendIsCompiled();
+		TestJoltConfigurationCompatibility();
 	}
 	catch (const std::exception& error)
 	{

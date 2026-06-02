@@ -4,14 +4,9 @@
 
 // ---------------------------------------------------------------------------
 // miniaudio integration
-// Drop  miniaudio.h  into:
-//   Blu/engine/ExternalDependencies/miniaudio/miniaudio.h
-// then add BLU_HAS_MINIAUDIO to the project's preprocessor definitions.
+// miniaudio is compiled once from ExternalDependencies/miniaudio/miniaudio.c.
 // ---------------------------------------------------------------------------
 #ifdef BLU_HAS_MINIAUDIO
-#define MA_IMPLEMENTATION
-#define MA_NO_JACK         // avoid JACK dependency on Windows
-#define MA_NO_ENCODING     // encoder not needed
 #pragma warning(push)
 #pragma warning(disable : 4244 4267 4996)
 #include "../../ExternalDependencies/miniaudio/miniaudio.h"
@@ -60,6 +55,15 @@ AudioEngine& AudioEngine::Get()
 {
     static AudioEngine instance;
     return instance;
+}
+
+bool AudioEngine::IsBackendCompiled() const
+{
+#ifdef BLU_HAS_MINIAUDIO
+    return true;
+#else
+    return false;
+#endif
 }
 
 // ---------------------------------------------------------------------------

@@ -153,6 +153,8 @@ namespace Blu
     class Physics3DWorld
     {
     public:
+        static bool IsConfigurationCompatible();
+
         Physics3DWorld() = default;
         ~Physics3DWorld();
 

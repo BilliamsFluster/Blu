@@ -34,6 +34,9 @@
     <Filter Include="ExternalDependencies\imgui\backends">
       <UniqueIdentifier>{E3A09D1E-4F5A-08C9-D8B9-22A34472BE38}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ExternalDependencies\miniaudio">
+      <UniqueIdentifier>{FD1C33BC-E942-FD22-D288-82EEBE4D22EF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ExternalDependencies\stb_image">
       <UniqueIdentifier>{49CD6FEB-35F3-3952-1E39-BF1D0AFE5E1E}</UniqueIdentifier>
     </Filter>
@@ -1383,6 +1386,9 @@
     <ClInclude Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.h">
       <Filter>ExternalDependencies\imgui\backends</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\miniaudio\miniaudio.h">
+      <Filter>ExternalDependencies\miniaudio</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ExternalDependencies\stb_image\stb_image.h">
       <Filter>ExternalDependencies\stb_image</Filter>
     </ClInclude>
@@ -1510,6 +1516,9 @@
       <Filter>src\Blu\Physics</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Physics\Physics3D.h">
+      <Filter>src\Blu\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Physics\Physics3DDiagnostics.h">
       <Filter>src\Blu\Physics</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Buffer.h">
@@ -1747,6 +1756,9 @@
     </ClCompile>
     <ClCompile Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.cpp">
       <Filter>ExternalDependencies\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ExternalDependencies\miniaudio\miniaudio.c">
+      <Filter>ExternalDependencies\miniaudio</Filter>
     </ClCompile>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
       <Filter>ExternalDependencies\stb_image</Filter>

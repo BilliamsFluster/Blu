@@ -92,6 +92,8 @@ project "Blu"
 		"%{prj.name}/engine/src/**.h",
 		"%{prj.name}/engine/src/**.cpp",
 		"%{prj.name}/engine/ExternalDependencies/stb_image/**.cpp",
+		"%{prj.name}/engine/ExternalDependencies/miniaudio/**.c",
+		"%{prj.name}/engine/ExternalDependencies/miniaudio/**.h",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.h",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.hpp",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.inl",
@@ -150,6 +152,10 @@ project "Blu"
 	filter {"files:Blu/engine/ExternalDependencies/imgui/backends/*.cpp"}
 		flags {"NoPCH"}
 
+	filter {"files:Blu/engine/ExternalDependencies/miniaudio/*.c"}
+		flags {"NoPCH"}
+		warnings "Off"
+
 	
 	--buildoptions { "/wd4251" } for dll
 
@@ -175,19 +181,22 @@ project "Blu"
 			"IMGUI_DEFINE_MATH_OPERATORS",
 			"ASSIMP_BUILD_NO_EXPORT",
 			"JPH_DISABLE_CUSTOM_ALLOCATOR",
+			"BLU_HAS_MINIAUDIO",
+			"MA_NO_JACK",
+			"MA_NO_ENCODING",
 			--"BLU_ENABLE_ASSERTS"
 		}
 
 		
 
 	filter "configurations:Debug"
-		defines "BLU_DEBUG"
+		defines { "BLU_DEBUG", "JPH_ENABLE_ASSERTS", "JPH_DEBUG_RENDERER" }
 		buildoptions "/MTd"
 		symbols "on"
 		--linkoptions { "/NODEFAULTLIB:MSVCRT" }
 
 	filter "configurations:Release"
-		defines { "BLU_RELEASE", "NDEBUG" }
+		defines { "BLU_RELEASE", "NDEBUG", "JPH_PROFILE_ENABLED" }
 		buildoptions "/MT"
 		optimize "on"
 
