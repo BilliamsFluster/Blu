@@ -1,4 +1,5 @@
 #include "GameLayer.h"
+#include "AzureGameModule.h"
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/SceneSerializer.h"
@@ -93,7 +94,9 @@ namespace Azure
 
 	void GameLayer::OnAttach()
 	{
+		RegisterAzureGameModule();
 		m_Scene = std::make_shared<Blu::Scene>();
+		m_Scene->SetGameModeClassID("Azure::ZombieGameMode");
 
 		bool loaded = false;
 		const std::string requestedScene = ResolveStartupScene();
@@ -157,8 +160,7 @@ namespace Azure
 			arm.EnableLag = true;
 			arm.PositionLagSpeed = 10.0f;
 
-			auto& nsc = player.AddComponent<Blu::NativeScriptComponent>();
-			nsc.ClassName = "PlayerCharacter";
+			player.AddComponent<Blu::ActorComponent>().ClassID = "Azure::PlayerCharacter";
 		}
 
 		bool hasUIRoot = false;

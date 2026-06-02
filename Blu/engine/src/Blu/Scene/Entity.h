@@ -14,6 +14,7 @@ namespace Blu
 		Entity(const Entity& other) = default;
 
 		UUID GetUUID() { return  GetComponent<IDComponent>().ID; }
+		Scene* GetScene() const { return m_Scene; }
 		template<typename T>
 		bool HasComponent()
 		{

@@ -8,4 +8,6 @@
 #include "APawn.h"
 #include "ACharacter.h"
 #include "AGameMode.h"
+#include "ActorSystem.h"
+#include "NativeClassRegistry.h"
 #include "ActorRegistry.h"

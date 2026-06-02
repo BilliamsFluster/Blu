@@ -606,7 +606,10 @@
     <ClInclude Include="engine\src\Blu\GameFramework\AGameMode.h" />
     <ClInclude Include="engine\src\Blu\GameFramework\APawn.h" />
     <ClInclude Include="engine\src\Blu\GameFramework\ActorRegistry.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\ActorSystem.h" />
     <ClInclude Include="engine\src\Blu\GameFramework\GameFramework.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\NativeClass.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\NativeClassRegistry.h" />
     <ClInclude Include="engine\src\Blu\GameFramework\UObject.h" />
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
     <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h" />
@@ -711,6 +714,8 @@
     <ClCompile Include="engine\src\Blu\GameFramework\AActor.cpp" />
     <ClCompile Include="engine\src\Blu\GameFramework\ACharacter.cpp" />
     <ClCompile Include="engine\src\Blu\GameFramework\ActorRegistry.cpp" />
+    <ClCompile Include="engine\src\Blu\GameFramework\ActorSystem.cpp" />
+    <ClCompile Include="engine\src\Blu\GameFramework\NativeClassRegistry.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp" />

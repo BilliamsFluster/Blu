@@ -30,6 +30,7 @@
 #include "Blu/Audio/AudioEngine.h"
 #include "FreeFlyCamera.h"
 #include "AssetPreviewService.h"
+#include "AzureGameModule.h"
 #include "yaml-cpp/yaml.h"
 #include <fstream>
 // D3D11Context.h already pulls in <d3d11.h> — include it last so Windows headers
@@ -204,6 +205,12 @@ namespace Blu
 
 	void BluEditorLayer::OnAttach()
 	{
+		Azure::RegisterAzureGameModule();
+		NativeClassRegistry::Get().RegisterActor<CameraController>(
+			"Blu::CameraController", "Camera Controller", "Engine", { "CameraController" });
+		NativeClassRegistry::Get().RegisterActor<FreeFlyCamera>(
+			"BluEditor::FreeFlyCamera", "Free Fly Camera", "Editor", { "FreeFlyCamera" });
+
 		std::filesystem::create_directories("Blu-Editor/config");
 		m_EditorSettingsPath = "Blu-Editor/config/EditorSettings.yaml";
 		m_ImGuiIniPath = std::filesystem::path("Blu-Editor/config/imgui.ini").generic_string();
@@ -287,7 +294,7 @@ namespace Blu
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<CameraComponent>();
 		m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
-		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+		m_CameraEntity.AddComponent<ActorComponent>().ClassID = "Blu::CameraController";
 
 		m_EditorCamera = EditorCamera(30, 1.778f, 0.1f, 1000.0f);
 		m_ActorPreviewCamera = EditorCamera(35.0f, 1.0f, 0.1f, 5000.0f);
@@ -1115,8 +1122,7 @@ namespace Blu
 			cc.Primary = true;
 			cc.Camera.SetViewportSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
-			auto& nsc = cam.AddComponent<NativeScriptComponent>();
-			nsc.Bind<FreeFlyCamera>();
+			cam.AddComponent<ActorComponent>().ClassID = "BluEditor::FreeFlyCamera";
 		}
 
 		// ── Dynamic boxes ────────────────────────────────────────────────────
@@ -1228,9 +1234,8 @@ namespace Blu
 			arm.EnableLag        = true;
 			arm.PositionLagSpeed = 10.0f;
 
-			// NativeScript — resolved via ActorRegistry on Play
-			auto& nsc = player.AddComponent<NativeScriptComponent>();
-			nsc.ClassName = "PlayerCharacter";
+			// Resolved through the native class registry on Play.
+			player.AddComponent<ActorComponent>().ClassID = "Azure::PlayerCharacter";
 		}
 
 		// Enable the full pipeline by default

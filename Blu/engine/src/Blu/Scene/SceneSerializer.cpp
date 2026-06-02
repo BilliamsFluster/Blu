@@ -15,6 +15,7 @@
 #include "Blu/Utils/Helpers.h"
 #include "Blu/Utils/AssetPath.h"
 #include "Blu/LightSystem/LightManager.h"
+#include "Blu/GameFramework/NativeClassRegistry.h"
 
 
 namespace YAML
@@ -150,6 +151,57 @@ namespace Blu
 		out << YAML::EndSeq;
 		return out;
 	}
+
+	static const char* GetNativePropertyTypeName(const NativePropertyValue& value)
+	{
+		switch (value.index())
+		{
+			case 0: return "Bool";
+			case 1: return "Integer";
+			case 2: return "Float";
+			case 3: return "String";
+			case 4: return "Vec2";
+			case 5: return "Vec3";
+			case 6: return "Vec4";
+			case 7: return "AssetReference";
+			case 8: return "EntityReference";
+			default: return "String";
+		}
+	}
+
+	static void SerializeNativePropertyValue(YAML::Emitter& out, const NativePropertyValue& value)
+	{
+		std::visit([&out](const auto& typedValue)
+		{
+			using TValue = std::decay_t<decltype(typedValue)>;
+			if constexpr (std::is_same_v<TValue, NativeAssetReference>)
+				out << typedValue.Path;
+			else if constexpr (std::is_same_v<TValue, NativeEntityReference>)
+				out << typedValue.UUID;
+			else
+				out << typedValue;
+		}, value);
+	}
+
+	static bool DeserializeNativePropertyValue(const YAML::Node& propertyNode, NativePropertyValue& outValue)
+	{
+		if (!propertyNode || !propertyNode["Type"] || !propertyNode["Value"])
+			return false;
+
+		const std::string type = propertyNode["Type"].as<std::string>();
+		const YAML::Node value = propertyNode["Value"];
+		if (type == "Bool") outValue = value.as<bool>();
+		else if (type == "Integer") outValue = value.as<int64_t>();
+		else if (type == "Float") outValue = value.as<float>();
+		else if (type == "String") outValue = value.as<std::string>();
+		else if (type == "Vec2") outValue = value.as<glm::vec2>();
+		else if (type == "Vec3") outValue = value.as<glm::vec3>();
+		else if (type == "Vec4") outValue = value.as<glm::vec4>();
+		else if (type == "AssetReference") outValue = NativeAssetReference{ value.as<std::string>() };
+		else if (type == "EntityReference") outValue = NativeEntityReference{ value.as<uint64_t>() };
+		else return false;
+		return true;
+	}
 	YAML::Emitter& operator <<(YAML::Emitter& out, const ParticleProps& pProps)
 	{
 		out << YAML::Flow;
@@ -266,12 +318,25 @@ namespace Blu
 			out << YAML::EndMap;
 
 		}
-		if (entity.HasComponent<NativeScriptComponent>())
+		if (entity.HasComponent<ActorComponent>())
 		{
-			auto& nsc = entity.GetComponent<NativeScriptComponent>();
-			out << YAML::Key << "NativeScriptComponent";
+			auto& actorComponent = entity.GetComponent<ActorComponent>();
+			out << YAML::Key << "ActorComponent";
 			out << YAML::BeginMap;
-			out << YAML::Key << "ClassName" << YAML::Value << nsc.ClassName;
+			out << YAML::Key << "ClassID" << YAML::Value << actorComponent.ClassID;
+			if (!actorComponent.Overrides.empty())
+			{
+				out << YAML::Key << "Overrides" << YAML::Value << YAML::BeginMap;
+				for (const auto& [propertyName, value] : actorComponent.Overrides)
+				{
+					out << YAML::Key << propertyName << YAML::Value << YAML::BeginMap;
+					out << YAML::Key << "Type" << YAML::Value << GetNativePropertyTypeName(value);
+					out << YAML::Key << "Value" << YAML::Value;
+					SerializeNativePropertyValue(out, value);
+					out << YAML::EndMap;
+				}
+				out << YAML::EndMap;
+			}
 			out << YAML::EndMap;
 		}
 		if (entity.HasComponent<PointLightComponent>())
@@ -680,6 +745,8 @@ namespace Blu
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << AssetPath::ToProjectRelative(filepath);
+		if (!m_Scene->GetGameModeClassID().empty())
+			out << YAML::Key << "GameMode" << YAML::Value << m_Scene->GetGameModeClassID();
 
 		// ── Scene rendering settings ────────────────────────────────────────
 		out << YAML::Key << "RenderSettings" << YAML::Value << YAML::BeginMap;
@@ -882,6 +949,8 @@ namespace Blu
 			return false;
 		
 		std::string sceneName = data["Scene"].as<std::string>();
+		if (data["GameMode"])
+			m_Scene->SetGameModeClassID(data["GameMode"].as<std::string>());
 
 		// ── Scene rendering settings ─────────────────────────────────────────
 		auto rs = data["RenderSettings"];
@@ -891,7 +960,9 @@ namespace Blu
 			if (rs["UsePostProcess"]) m_Scene->SetUsePostProcess(rs["UsePostProcess"].as<bool>());
 			if (rs["UseSkybox"])    m_Scene->SetUseSkybox(rs["UseSkybox"].as<bool>());
 			if (rs["UseTimeOfDay"]) m_Scene->SetUseTimeOfDay(rs["UseTimeOfDay"].as<bool>());
-			if (!m_Scene->m_Skybox) m_Scene->m_Skybox = std::make_shared<Skybox>();
+			const bool hasSkyboxSettings = rs["Sky_Turbidity"] || rs["Sky_SkyExposure"] || rs["Sky_GroundColor"];
+			if ((m_Scene->GetUseSkybox() || hasSkyboxSettings) && !m_Scene->m_Skybox)
+				m_Scene->m_Skybox = std::make_shared<Skybox>();
 			if (m_Scene->GetSkybox() && rs["Sky_Turbidity"])
 			{
 				auto& sky = *m_Scene->GetSkybox();
@@ -1386,11 +1457,26 @@ namespace Blu
 					if (spotLightComponent["AttQuadratic"])   sl.AttQuadratic   = spotLightComponent["AttQuadratic"].as<float>();
 				}
 
-			auto nativeScriptComponent = entity["NativeScriptComponent"];
-				if (nativeScriptComponent)
+				auto actorComponentNode = entity["ActorComponent"];
+				auto legacyNativeScriptNode = entity["NativeScriptComponent"];
+				if (actorComponentNode || legacyNativeScriptNode)
 				{
-					auto& nsc = deserializedEntity.AddComponent<NativeScriptComponent>();
-					nsc.ClassName = nativeScriptComponent["ClassName"].as<std::string>("");
+					auto& actorComponent = deserializedEntity.AddComponent<ActorComponent>();
+					const std::string serializedClassID = actorComponentNode
+						? actorComponentNode["ClassID"].as<std::string>("")
+						: legacyNativeScriptNode["ClassName"].as<std::string>("");
+					actorComponent.ClassID = NativeClassRegistry::Get().ResolveClassID(serializedClassID);
+
+					auto overridesNode = actorComponentNode ? actorComponentNode["Overrides"] : YAML::Node();
+					if (overridesNode && overridesNode.IsMap())
+					{
+						for (const auto& property : overridesNode)
+						{
+							NativePropertyValue value;
+							if (DeserializeNativePropertyValue(property.second, value))
+								actorComponent.Overrides[property.first.as<std::string>()] = std::move(value);
+						}
+					}
 				}
 
 				auto springArmNode = entity["SpringArmComponent"];

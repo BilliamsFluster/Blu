@@ -1476,7 +1476,16 @@
     <ClInclude Include="engine\src\Blu\GameFramework\ActorRegistry.h">
       <Filter>src\Blu\GameFramework</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\ActorSystem.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\GameFramework\GameFramework.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\NativeClass.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\NativeClassRegistry.h">
       <Filter>src\Blu\GameFramework</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\GameFramework\UObject.h">
@@ -1767,6 +1776,12 @@
       <Filter>src\Blu\GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\GameFramework\ActorRegistry.cpp">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\GameFramework\ActorSystem.cpp">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\GameFramework\NativeClassRegistry.cpp">
       <Filter>src\Blu\GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp">

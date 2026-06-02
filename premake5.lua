@@ -201,6 +201,62 @@ project "Blu"
 	-- filter {"system:windows", "configurations:Release"}
 	-- buildoptions "/MT"
 
+project "Azure-Game"
+	location "Azure-Game"
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++20"
+	staticruntime "on"
+	dependson { "Blu" }
+
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files
+	{
+		"Azure/src/Actors/**.h",
+		"Azure/src/Actors/**.cpp",
+		"Azure/src/GameModes/**.h",
+		"Azure/src/GameModes/**.cpp",
+		"Azure/src/AzureGameModule.h",
+		"Azure/src/AzureGameModule.cpp"
+	}
+
+	includedirs
+	{
+		"$(SolutionDir)Azure/src",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
+		"$(SolutionDir)Blu/engine/src",
+		"%{IncludeDir.entt}"
+	}
+
+	links { "Blu" }
+
+	filter "system:windows"
+		systemversion "latest"
+		defines
+		{
+			"BLU_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS"
+		}
+
+	filter "configurations:Debug"
+		defines "BLU_DEBUG"
+		symbols "on"
+		runtime "Debug"
+		buildoptions "/MTd"
+
+	filter "configurations:Release"
+		defines { "BLU_RELEASE", "NDEBUG" }
+		optimize "on"
+		runtime "Release"
+		buildoptions "/MT"
+
+	filter "configurations:Dist"
+		defines { "BLU_DIST", "NDEBUG" }
+		optimize "on"
+
 project "Azure"
 	location "Azure"
 	kind "ConsoleApp"
@@ -216,6 +272,12 @@ project "Azure"
 	{
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
+	}
+	removefiles
+	{
+		"%{prj.name}/src/Actors/**",
+		"%{prj.name}/src/GameModes/**",
+		"%{prj.name}/src/AzureGameModule.cpp"
 	}
 
 	includedirs 
@@ -233,6 +295,7 @@ project "Azure"
 	
 	links
 	{
+		"Azure-Game",
 		"Blu"
 	}
 	--buildoptions { "/wd4251" } for dll
@@ -289,7 +352,7 @@ project "Blu-Editor"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "on" 
-	dependson { "Blu" }
+	dependson { "Blu", "Azure-Game" }
 
 
 
@@ -313,6 +376,7 @@ project "Blu-Editor"
 		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
 		"$(SolutionDir)Blu/engine/src",
+		"$(SolutionDir)Azure/src",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/imgui",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/include",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include",
@@ -331,6 +395,7 @@ project "Blu-Editor"
 	links
 	{
 		"Blu",
+		"Azure-Game",
 		"ImGui",
 		"GLFW",
 		"yaml",
@@ -376,6 +441,68 @@ project "Blu-Editor"
 			"%{Library.msvcrt}",
 		}
 
+
+	filter "configurations:Dist"
+		defines { "BLU_DIST", "NDEBUG" }
+		optimize "on"
+
+project "Blu-Tests"
+	location "Blu-Tests"
+	kind "ConsoleApp"
+	language "C++"
+	cppdialect "C++20"
+	staticruntime "on"
+	dependson { "Blu" }
+
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files
+	{
+		"%{prj.name}/src/**.cpp"
+	}
+
+	includedirs
+	{
+		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
+		"$(SolutionDir)Blu/engine/src",
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.yaml}"
+	}
+
+	links
+	{
+		"Blu",
+		"ImGui",
+		"GLFW",
+		"yaml",
+		"Glad",
+		"assimp"
+	}
+
+	filter "system:windows"
+		systemversion "latest"
+		defines
+		{
+			"BLU_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS",
+			"ASSIMP_BUILD_NO_EXPORT"
+		}
+
+	filter "configurations:Debug"
+		defines "BLU_DEBUG"
+		symbols "on"
+		runtime "Debug"
+		buildoptions "/MTd"
+		links { "%{Library.msvcrtd}" }
+
+	filter "configurations:Release"
+		defines { "BLU_RELEASE", "NDEBUG" }
+		optimize "on"
+		runtime "Release"
+		buildoptions "/MT"
+		links { "%{Library.msvcrt}" }
 
 	filter "configurations:Dist"
 		defines { "BLU_DIST", "NDEBUG" }

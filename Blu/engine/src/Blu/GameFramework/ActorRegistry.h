@@ -1,4 +1,5 @@
 #pragma once
+#include "NativeClassRegistry.h"
 #include <unordered_map>
 #include <functional>
 #include <string>
@@ -22,11 +23,12 @@ namespace Blu
 		std::unordered_map<std::string, FactoryFn> m_Factories;
 	};
 
+	template<typename T>
 	struct ActorAutoRegister
 	{
-		ActorAutoRegister(const std::string& name, ActorRegistry::FactoryFn fn)
+		ActorAutoRegister(const std::string& classID, const std::string& displayName)
 		{
-			ActorRegistry::Get().Register(name, fn);
+			NativeClassRegistry::Get().RegisterActor<T>(classID, displayName, "Gameplay", { displayName });
 		}
 	};
 }
@@ -36,4 +38,4 @@ namespace Blu
 // FullType    — the fully-qualified C++ type (e.g. Azure::PlayerCharacter).
 // Usage:  BLU_REGISTER_ACTOR(PlayerCharacter, Azure::PlayerCharacter);
 #define BLU_REGISTER_ACTOR(EditorName, FullType) \
-	static Blu::ActorAutoRegister _actor_auto_reg_##EditorName(#EditorName, []() -> Blu::AActor* { return new FullType(); })
+	static Blu::ActorAutoRegister<FullType> _actor_auto_reg_##EditorName(#FullType, #EditorName)

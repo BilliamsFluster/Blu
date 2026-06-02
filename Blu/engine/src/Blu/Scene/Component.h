@@ -12,13 +12,13 @@
 #include "Blu/Audio/AudioEngine.h"
 #include "Blu/Rendering/Animation.h"
 #include "Blu/Rendering/Animator.h"
+#include "Blu/GameFramework/NativeClass.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
 namespace Blu
 {
-	class AActor;
 	class Entity;
 	
 	struct IDComponent
@@ -199,21 +199,11 @@ namespace Blu
 		CameraComponent(const CameraComponent&) = default;
 		
 	};
-	struct NativeScriptComponent
+	struct ActorComponent
 	{
-		AActor*     Instance          = nullptr;
-		std::string ClassName;                     // set from editor or Bind<T>()
+		ActorClassID ClassID;
+		PropertyOverrideMap Overrides;
 
-		AActor*(*InstantiateScript)()              = nullptr;
-		void (*DestroyScript)(NativeScriptComponent*) = nullptr;
-
-		// Programmatic bind — T must derive from AActor.
-		template<typename T>
-		void Bind()
-		{
-			InstantiateScript = []() { return static_cast<AActor*>(new T()); };
-			DestroyScript     = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
-		}
 	};
 
 	struct Rigidbody2DComponent
@@ -592,7 +582,7 @@ namespace Blu
 	using AllComponents =
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
-		NativeScriptComponent, Rigidbody2DComponent,
+		ActorComponent, Rigidbody2DComponent,
 		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
 		SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
 		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent,

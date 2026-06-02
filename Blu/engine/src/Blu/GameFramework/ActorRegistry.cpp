@@ -13,6 +13,15 @@ namespace Blu
 	void ActorRegistry::Register(const std::string& name, FactoryFn fn)
 	{
 		m_Factories[name] = std::move(fn);
+		NativeClassRegistry::Get().RegisterClass({
+			name,
+			name,
+			"Legacy",
+			NativeClassKind::Actor,
+			[factory = m_Factories[name]]() -> Unique<UObject> { return Unique<UObject>(factory()); },
+			{ name },
+			{}
+		});
 	}
 
 	AActor* ActorRegistry::Instantiate(const std::string& name) const
