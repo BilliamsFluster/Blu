@@ -655,6 +655,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Material.h" />
     <ClInclude Include="engine\src\Blu\Rendering\MaterialAsset.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\MaterialSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Mesh.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ModelLoader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\OrthographicCamera.h" />
@@ -759,6 +760,7 @@
     <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\MaterialAsset.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\MaterialSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Mesh.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\ModelLoader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\OrthographicCamera.cpp" />

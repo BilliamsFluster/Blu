@@ -11,6 +11,7 @@
 
 #include "RenderCommand.h"
 #include "PipelineState.h"
+#include "MaterialSystem.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 
@@ -269,9 +270,21 @@ namespace Blu
 
 
     // Choose and bind the correct pipeline state for a material
-    static void BindPipelineForMaterial(const Material& mat)
+    static MaterialRenderContext GetMaterialRenderContext(bool skinned = false, bool foliage = false)
     {
-        switch (mat.Blend)
+        return { RenderSettings::GetPath(), skinned, foliage };
+    }
+
+    static bool IsTransparentMaterial(const Material& mat, const MaterialRenderContext& context = GetMaterialRenderContext())
+    {
+        const ResolvedMaterial resolved = MaterialResolver::Get().ResolveLegacy(mat, context);
+        return resolved.Blend == BlendMode::Transparent || resolved.Blend == BlendMode::Additive;
+    }
+
+    static void BindPipelineForMaterial(const Material& mat, const MaterialRenderContext& context = GetMaterialRenderContext())
+    {
+        const ResolvedMaterial resolved = MaterialResolver::Get().ResolveLegacy(mat, context);
+        switch (resolved.Blend)
         {
         case BlendMode::Transparent:
             PipelineStateCache::GetTransparent()->Bind();
@@ -281,7 +294,7 @@ namespace Blu
             break;
         default:
             // Opaque or Masked — use CullNone for TwoSided, Back-cull otherwise
-            if (mat.TwoSided)
+            if (resolved.TwoSided)
                 PipelineStateCache::GetCullNone()->Bind();
             else
                 PipelineStateCache::GetOpaque()->Bind();
@@ -318,7 +331,7 @@ namespace Blu
                 dc.EntityID     = entityID;
                 dc.DistToCamera = glm::length(worldCenter - s_Data3D->ViewPos);
 
-                if (mat.IsTransparent())
+                if (IsTransparentMaterial(mat))
                     s_TransparentDrawCalls.push_back(dc);
                 else
                     s_OpaqueDrawCalls.push_back(dc);
@@ -350,7 +363,7 @@ namespace Blu
             dc.EntityID     = entityID;
             dc.DistToCamera = glm::length(worldPos - s_Data3D->ViewPos);
 
-            if (mat.IsTransparent())
+            if (IsTransparentMaterial(mat))
                 s_TransparentDrawCalls.push_back(dc);
             else
                 s_OpaqueDrawCalls.push_back(dc);
@@ -514,6 +527,7 @@ namespace Blu
                 ? *mc.ModelAsset->Materials[submesh.MaterialIndex]
                 : (mc.MaterialInstance ? *mc.MaterialInstance : Material{});
 
+            BindPipelineForMaterial(mat, GetMaterialRenderContext(true, false));
             mat.Bind(sh);
             sh.Flush();
             submesh.VAO->Bind();
@@ -575,6 +589,7 @@ namespace Blu
                         ? *model->Materials[submesh.MaterialIndex]
                         : Material{});
 
+                (void)MaterialResolver::Get().ResolveLegacy(mat, GetMaterialRenderContext(false, true));
                 mat.Bind(sh);
                 sh.Flush();
                 RenderCommand::DrawIndexedInstanced(submesh.VAO, submesh.IndexCount, (uint32_t)batchCount);

@@ -7,6 +7,7 @@
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Rendering/AssetManager.h"
+#include "Blu/Rendering/MaterialSystem.h"
 #include "Blu/Utils/FileSystemService.h"
 #include <cmath>
 #include <filesystem>
@@ -254,6 +255,47 @@ namespace
 		arena.Reset();
 		Require(arena.GetBytesUsed() == 0 && arena.GetHighWaterMark() >= sizeof(TestValue), "frame arena reset diagnostics failed");
 	}
+
+	void TestMaterialResolver()
+	{
+		auto& resolver = Blu::MaterialResolver::Get();
+		resolver.Clear();
+
+		auto materialTemplate = std::make_shared<Blu::MaterialTemplate>();
+		materialTemplate->Handle = Blu::AssetHandle(1001);
+		materialTemplate->Blend = Blu::BlendMode::Masked;
+		materialTemplate->TwoSided = true;
+		materialTemplate->Defaults.Roughness = 0.8f;
+		materialTemplate->Textures.Normal = Blu::AssetHandle(404);
+		resolver.RegisterTemplate(materialTemplate);
+
+		auto materialInstance = std::make_shared<Blu::MaterialInstance>();
+		materialInstance->Handle = Blu::AssetHandle(1002);
+		materialInstance->TemplateHandle = materialTemplate->Handle;
+		materialInstance->Overrides.Roughness = 0.25f;
+		resolver.RegisterInstance(materialInstance);
+
+		Blu::MaterialRenderContext context;
+		context.Path = Blu::RenderPath::Deferred;
+		context.Skinned = true;
+		const Blu::ResolvedMaterial resolved = resolver.Resolve(materialTemplate->Handle, materialInstance->Handle, context);
+		Require(std::abs(resolved.Parameters.Roughness - 0.25f) < 0.001f, "material instance override did not win over template default");
+		Require(resolved.Blend == Blu::BlendMode::Masked && resolved.TwoSided, "material template settings did not resolve");
+		Require(resolved.Permutation.Has(Blu::MaterialPermutation::Deferred), "deferred material permutation was not selected");
+		Require(resolved.Permutation.Has(Blu::MaterialPermutation::Skinned), "skinned material permutation was not selected");
+		Require(resolved.Permutation.Has(Blu::MaterialPermutation::Masked), "masked material permutation was not selected");
+		Require(!resolved.MissingTextureSlots.empty(), "missing material texture was not reported");
+
+		materialTemplate->Blend = Blu::BlendMode::Transparent;
+		const Blu::ResolvedMaterial transparent = resolver.Resolve(materialTemplate->Handle, materialInstance->Handle, context);
+		Require(transparent.EffectivePath == Blu::RenderPath::Forward, "transparent deferred material did not fall back to forward");
+		Require(transparent.Permutation.Has(Blu::MaterialPermutation::Transparent), "transparent material permutation was not selected");
+
+		Blu::Material legacy;
+		legacy.Roughness = 0.65f;
+		const Blu::ResolvedMaterial legacyResolved = resolver.ResolveLegacy(legacy, {});
+		Require(std::abs(legacyResolved.Parameters.Roughness - 0.65f) < 0.001f, "legacy material compatibility resolution failed");
+	}
 }
 
 int main()
@@ -267,6 +309,7 @@ int main()
 		TestLegacySceneMigrationWritesActorComponent();
 		TestMountedFilesystemAndAssetRegistry();
 		TestLifetimeUtilities();
+		TestMaterialResolver();
 	}
 	catch (const std::exception& error)
 	{

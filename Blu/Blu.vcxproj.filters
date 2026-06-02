@@ -1623,6 +1623,9 @@
     <ClInclude Include="engine\src\Blu\Rendering\MaterialAsset.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\MaterialSystem.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Mesh.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
@@ -1911,6 +1914,9 @@
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\MaterialAsset.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\MaterialSystem.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Mesh.cpp">
