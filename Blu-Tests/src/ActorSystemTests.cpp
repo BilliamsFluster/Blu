@@ -14,6 +14,7 @@
 #include "Blu/Rendering/LightBufferData.h"
 #include "Blu/Rendering/SceneRenderPipeline.h"
 #include "Blu/Rendering/Terrain.h"
+#include "Blu/UI/RuntimeUI.h"
 #include "Blu/Utils/FileSystemService.h"
 #include <cmath>
 #include <filesystem>
@@ -419,6 +420,21 @@ namespace
 		Require(Blu::AudioEngine::Get().IsBackendCompiled(), "miniaudio backend was not compiled into Blu");
 	}
 
+	void TestAuthoredGameplaySliceAssets()
+	{
+		Blu::UIDocument hud;
+		Require(Blu::RuntimeUI::LoadDocument("assets/ui/GameplayHUD.bluui", hud), "authored gameplay HUD did not load");
+		Require(!hud.Widgets.empty(), "authored gameplay HUD has no widgets");
+
+		std::ifstream scene("Blu-Editor/assets/scenes/GameplayCoreTest.blu");
+		std::stringstream sceneText;
+		sceneText << scene.rdbuf();
+		const std::string yaml = sceneText.str();
+		Require(yaml.find("ActorComponent:") != std::string::npos, "gameplay slice does not use native actor components");
+		Require(yaml.find("NativeScriptComponent:") == std::string::npos, "gameplay slice still contains legacy native script components");
+		Require(yaml.find("TerrainComponent:") != std::string::npos, "gameplay slice does not persist terrain");
+	}
+
 	void TestJoltConfigurationCompatibility()
 	{
 		Require(Blu::IsJoltConfigurationCompatible(), "Blu and Jolt were compiled with incompatible configuration defines");
@@ -442,6 +458,7 @@ int main()
 		TestSharedLightBufferPacking();
 		TestWorldAuthoringContracts();
 		TestAudioBackendIsCompiled();
+		TestAuthoredGameplaySliceAssets();
 		TestJoltConfigurationCompatibility();
 	}
 	catch (const std::exception& error)
