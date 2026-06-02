@@ -1,6 +1,119 @@
-Scene: D:\GraphicsProgramming\GameEngine\Blu\Blu-Editor\LoadedScenes\Main.blu
+Scene: Blu-Editor/LoadedScenes/Main.blu
+RenderSettings:
+  UseShadows: true
+  UsePostProcess: true
+  UseSkybox: true
+  UseTimeOfDay: false
+  Sky_Turbidity: 2.5
+  Sky_SkyExposure: 0.0250000004
+  Sky_GroundColor: [0.219999999, 0.180000007, 0.140000001]
+  Sky_SunColor: [1, 0.949999988, 0.800000012]
+  Sky_SunSize: 0.999499977
+  Sky_SunStrength: 3
+  Sky_CloudColor: [0.920000017, 0.930000007, 0.970000029]
+  Sky_CloudCoverage: 0.449999988
+  Sky_CloudDensity: 0
+  Sky_CloudSoftness: 0.349999994
+  Sky_CloudHeight: 600
+  Sky_CloudScale: 900
+  Sky_CloudWindDirection: [1, 0.349999994]
+  Sky_CloudScrollSpeed: 0.0149999997
+  Sky_CloudShadowing: 0.649999976
+  Sky_CloudHorizonFade: 0.219999999
+  PP_EnableBloom: true
+  PP_BloomThreshold: 1
+  PP_BloomStrength: 0.0500000007
+  PP_EnableFXAA: true
+  PP_PreviewMode: 0
+  PP_EnableSSAO: true
+  PP_SSAORadius: 0.5
+  PP_SSAOBias: 0.0250000004
+  PP_SSAOPower: 2
+  PP_SSAOSamples: 16
+  PP_SSAOStrength: 1
+  ToD_NormalizedTime: 0.5
+  ToD_AutoAdvance: false
+  ToD_DayDuration: 600
+  ToD_SunAzimuth: 45
+  ToD_SunMaxStrength: 5
+  ToD_SunNoonTurbidity: 2
+  ToD_SunHazeTurbidity: 3.5
+  Fog_Enabled: false
+  Fog_Color: [0.5, 0.550000012, 0.620000005]
+  Fog_Density: 0
+  Fog_HeightStart: 0
+  Fog_HeightDensity: 0
+  Fog_AerialColor: [0.550000012, 0.730000019, 0.899999976]
+  Fog_AerialStrength: 0
 Entities:
-  - Entity: 13888015252253057025
+  - Entity: 2062929155525929124
+    TagComponent:
+      Tag: PlayerCamera
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 45
+      Primary: true
+      FixedAspectRatio: false
+    TransformComponent:
+      Translation: [0, 6.25291443, 10.7955551]
+      Rotation: [-0.414921731, -0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 7777810368408998103
+    TagComponent:
+      Tag: PlayerCharacter
+    NativeScriptComponent:
+      ClassName: PlayerCharacter
+    TransformComponent:
+      Translation: [0, 2, 5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.850000024, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 1.70000005, 0.600000024]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.200000003, 0.5, 1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.5
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.550000012
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 5
+      JumpImpulse: 7
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+    SpringArmComponent:
+      ArmLength: 6
+      SocketOffset: [0, 1, 0]
+      PivotOffset: [0, 1.70000005, 0]
+      Pitch: -15
+      Yaw: 0
+      InheritYaw: false
+      PositionLagSpeed: 10
+      EnableLag: true
+      TargetCameraUUID: 2062929155525929124
+  - Entity: 6973006748462399700
     TagComponent:
       Tag: Sphere_3
     TransformComponent:
@@ -35,7 +148,7 @@ Entities:
       Friction: 0.300000012
       Restitution: 0.400000006
       Density: 1000
-  - Entity: 5025730505478083461
+  - Entity: 15033390338935380469
     TagComponent:
       Tag: Sphere_2
     TransformComponent:
@@ -70,7 +183,7 @@ Entities:
       Friction: 0.300000012
       Restitution: 0.600000024
       Density: 1000
-  - Entity: 1941658615234945377
+  - Entity: 17208990236890392975
     TagComponent:
       Tag: Sphere_1
     TransformComponent:
@@ -105,7 +218,7 @@ Entities:
       Friction: 0.300000012
       Restitution: 0.5
       Density: 1000
-  - Entity: 9088634883233216923
+  - Entity: 15842784190833764670
     TagComponent:
       Tag: Sphere_0
     TransformComponent:
@@ -140,7 +253,7 @@ Entities:
       Friction: 0.300000012
       Restitution: 0.699999988
       Density: 1000
-  - Entity: 11529528233308377207
+  - Entity: 8216293537713254667
     TagComponent:
       Tag: Box_7
     TransformComponent:
@@ -175,7 +288,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.300000012
       Density: 1000
-  - Entity: 13901679751202746458
+  - Entity: 11567815172257695808
     TagComponent:
       Tag: Box_6
     TransformComponent:
@@ -210,7 +323,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.300000012
       Density: 1000
-  - Entity: 10556241769076209481
+  - Entity: 16801155595186179865
     TagComponent:
       Tag: Box_5
     TransformComponent:
@@ -245,7 +358,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.300000012
       Density: 1000
-  - Entity: 10903116528845369755
+  - Entity: 16015925163367014381
     TagComponent:
       Tag: Box_4
     TransformComponent:
@@ -280,7 +393,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.300000012
       Density: 1000
-  - Entity: 297567992733925862
+  - Entity: 17912241097355855183
     TagComponent:
       Tag: Box_3
     TransformComponent:
@@ -315,7 +428,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.300000012
       Density: 1000
-  - Entity: 6886232484093661562
+  - Entity: 14987061617948415930
     TagComponent:
       Tag: Box_2
     TransformComponent:
@@ -350,7 +463,7 @@ Entities:
       Friction: 0.5
       Restitution: 0.300000012
       Density: 1000
-  - Entity: 10670508125141252965
+  - Entity: 12530716460375187127
     TagComponent:
       Tag: Box_1
     TransformComponent:
@@ -385,13 +498,11 @@ Entities:
       Friction: 0.5
       Restitution: 0.300000012
       Density: 1000
-  - Entity: 899110220577887373
+  - Entity: 2001444608606670215
     TagComponent:
-      Tag: PlayerCharacter
-    NativeScriptComponent:
-      ClassName: PlayerCharacter
+      Tag: Box_0
     TransformComponent:
-      Translation: [-4.001297, 1.99997842, -2.99953079]
+      Translation: [-4, 2, -3]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
@@ -408,26 +519,23 @@ Entities:
       Mat_ShadingModel: 0
       Mat_TwoSided: false
       Mat_AlphaCutoff: 0.5
-    CapsuleCollider3DComponent:
-      Radius: 0.300000012
-      HalfHeight: 0.550000012
+    Rigidbody3DComponent:
+      BodyType: 1
+      GravityScale: 1
+      LinearDamping: 0.0199999996
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
       Offset: [0, 0, 0]
       Friction: 0.5
-      Restitution: 0
+      Restitution: 0.300000012
       Density: 1000
-    SpringArmComponent:
-      ArmLength: 6
-      SocketOffset: [0, 1, 0]
-      PivotOffset: [0, 1.70000005, 0]
-      Pitch: -15
-      Yaw: 0
-      InheritYaw: false
-      PositionLagSpeed: 10
-      EnableLag: true
-      TargetCameraUUID: 413057794287939265
-  - Entity: 413057794287939265
+  - Entity: 3310291513029842750
     TagComponent:
-      Tag: PlayerCamera
+      Tag: Camera
     NativeScriptComponent:
       ClassName: ""
     CameraComponent:
@@ -439,13 +547,13 @@ Entities:
         PerspectiveFar: 1000
         PerspectiveNear: 0.00999999978
         PerspectiveFOV: 45
-      Primary: true
+      Primary: false
       FixedAspectRatio: false
     TransformComponent:
-      Translation: [-4.001297, 6.25289297, -8.79508591]
-      Rotation: [0.414209723, 0, 0]
+      Translation: [0, 4, 14]
+      Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 18195063479900643291
+  - Entity: 8841641017798055694
     TagComponent:
       Tag: Ground
     TransformComponent:
@@ -480,7 +588,7 @@ Entities:
       Friction: 0.699999988
       Restitution: 0
       Density: 1000
-  - Entity: 608547887127336365
+  - Entity: 4985196034499930771
     TagComponent:
       Tag: Sun
     DirectionalLightComponent:

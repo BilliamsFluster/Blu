@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"D:\\\\GraphicsProgramming\\\\GameEngine\\\\Blu\\\\engine\\\\src\\\\Blu\\\\Asset\" -Filter \"*.h\")",
+      "Bash(Select-Object Name, FullName)"
+    ]
+  }
+}

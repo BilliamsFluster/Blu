@@ -326,6 +326,17 @@ namespace Blu
         }
         else if (mc.MeshData)
         {
+            // Frustum-cull the primitive against its local bounding sphere
+            // (transformed to world space). Matches the Model path above so
+            // ground planes, cubes and terrain stop drawing when off-screen.
+            glm::vec3 worldCenter = glm::vec3(transform * glm::vec4(mc.MeshData->GetBoundingCenter(), 1.0f));
+            float worldRadius = mc.MeshData->GetBoundingRadius() * std::max({
+                glm::length(glm::vec3(transform[0])),
+                glm::length(glm::vec3(transform[1])),
+                glm::length(glm::vec3(transform[2]))});
+            if (worldRadius > 0.0f && !s_Data3D->ViewFrustum.TestSphere(worldCenter, worldRadius))
+                return;
+
             const Material& mat = mc.MaterialInstance ? *mc.MaterialInstance
                                                        : ResolveMaterial(mc, -1);
 

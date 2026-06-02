@@ -86,6 +86,11 @@ namespace Blu
         const Shared<VertexArray>& GetVertexArray() const { return m_VertexArray; }
         uint32_t GetIndexCount() const { return m_IndexCount; }
 
+        // Local-space bounding sphere, computed from the vertices at construction.
+        // Used for frustum culling of primitive (non-Model) meshes in Renderer3D.
+        const glm::vec3& GetBoundingCenter() const { return m_BoundingCenter; }
+        float            GetBoundingRadius() const { return m_BoundingRadius; }
+
         static Shared<Mesh> CreateCube();
         static Shared<Mesh> CreateQuad();
 
@@ -93,5 +98,7 @@ namespace Blu
         Shared<VertexArray>  m_VertexArray;
         Shared<VertexBuffer> m_VertexBuffer;
         uint32_t             m_IndexCount = 0;
+        glm::vec3            m_BoundingCenter = glm::vec3(0.0f);
+        float                m_BoundingRadius = 0.0f;
     };
 }

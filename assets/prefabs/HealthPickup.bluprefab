@@ -1,0 +1,29 @@
+Scene: assets/prefabs/HealthPickup.bluprefab
+Prefab: true
+PrefabVersion: 1
+Entities:
+  - Entity: 1000000003
+    TagComponent:
+      Tag: HealthPickup
+    TransformComponent:
+      Translation: [2.0, 0.5, 2.0]
+      Rotation: [0.0, 0.0, 0.0]
+      Scale: [0.35, 0.35, 0.35]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.9, 0.15, 0.15]
+      PBR_AlbedoAlpha: 1.0
+      PBR_Metallic: 0.0
+      PBR_Roughness: 0.35
+      PBR_AO: 1.0
+    InteractableComponent:
+      Enabled: true
+      DisplayName: Health Pickup
+      InteractionRadius: 1.6
+      InteractionType: 0
+    PickupComponent:
+      PickupType: 0
+      Amount: 25.0
+      Count: 1
+      ConsumeOnPickup: true

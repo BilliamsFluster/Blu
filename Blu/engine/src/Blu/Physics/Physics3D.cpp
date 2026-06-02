@@ -139,6 +139,53 @@ namespace Blu
                 shape = result.Get();
                 break;
             }
+            case Physics3DShapeType::Mesh:
+            {
+                if (bodyType != Physics3DBodyType::Static)
+                {
+                    BLU_CORE_WARN("Physics3DWorld: mesh collision only supports static bodies");
+                    return UINT32_MAX;
+                }
+
+                if (spec.MeshTriangleVertices.size() < 3)
+                {
+                    BLU_CORE_WARN("Physics3DWorld: mesh collision skipped because it has no triangles");
+                    return UINT32_MAX;
+                }
+
+                JPH::TriangleList triangles;
+                const size_t sourceTriangleCount = spec.MeshTriangleVertices.size() / 3;
+                triangles.reserve(sourceTriangleCount * (spec.MeshDoubleSided ? 2 : 1));
+
+                auto toFloat3 = [](const glm::vec3& v)
+                {
+                    return JPH::Float3(v.x, v.y, v.z);
+                };
+
+                for (size_t i = 0; i + 2 < spec.MeshTriangleVertices.size(); i += 3)
+                {
+                    const glm::vec3& v0 = spec.MeshTriangleVertices[i + 0];
+                    const glm::vec3& v1 = spec.MeshTriangleVertices[i + 1];
+                    const glm::vec3& v2 = spec.MeshTriangleVertices[i + 2];
+
+                    triangles.emplace_back(toFloat3(v0), toFloat3(v1), toFloat3(v2), 0);
+                    if (spec.MeshDoubleSided)
+                        triangles.emplace_back(toFloat3(v0), toFloat3(v2), toFloat3(v1), 0);
+                }
+
+                JPH::MeshShapeSettings meshSettings(triangles);
+                meshSettings.mBuildQuality = JPH::MeshShapeSettings::EBuildQuality::FavorRuntimePerformance;
+
+                auto result = meshSettings.Create();
+                if (result.HasError())
+                {
+                    BLU_CORE_WARN("Jolt MeshShape creation failed: {0}", result.GetError().c_str());
+                    return UINT32_MAX;
+                }
+
+                shape = result.Get();
+                break;
+            }
             default:
                 BLU_CORE_ASSERT(false, "Unknown Physics3DShapeType");
                 return UINT32_MAX;
@@ -188,7 +235,11 @@ namespace Blu
             creationSettings,
             activate ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
 
-        BLU_CORE_ASSERT(!bodyID.IsInvalid(), "Jolt failed to create body — max bodies exceeded?");
+        if (bodyID.IsInvalid())
+        {
+            BLU_CORE_ERROR("Jolt failed to create body - max bodies exceeded?");
+            return UINT32_MAX;
+        }
 
         return bodyID.GetIndexAndSequenceNumber();
     }
@@ -256,6 +307,31 @@ namespace Blu
             JPH::RVec3(position.x, position.y, position.z),
             JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
             deltaTime);
+    }
+
+    bool Physics3DWorld::CastRay(const glm::vec3& origin, const glm::vec3& direction, glm::vec3& outHitPosition) const
+    {
+        if (!m_PhysicsSystem || glm::dot(direction, direction) <= 0.000001f)
+            return false;
+
+        JPH::RRayCast ray(
+            JPH::RVec3(origin.x, origin.y, origin.z),
+            JPH::Vec3(direction.x, direction.y, direction.z));
+
+        JPH::RayCastResult hit;
+        auto bpFilter = m_PhysicsSystem->GetDefaultBroadPhaseLayerFilter(Physics3DLayers::MOVING);
+        auto layerFilter = m_PhysicsSystem->GetDefaultLayerFilter(Physics3DLayers::MOVING);
+        JPH::BodyFilter bodyFilter;
+
+        if (!m_PhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit, bpFilter, layerFilter, bodyFilter))
+            return false;
+
+        JPH::RVec3 position = ray.GetPointOnRay(hit.mFraction);
+        outHitPosition = glm::vec3(
+            static_cast<float>(position.GetX()),
+            static_cast<float>(position.GetY()),
+            static_cast<float>(position.GetZ()));
+        return true;
     }
 
 } // namespace Blu

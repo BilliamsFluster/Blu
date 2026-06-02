@@ -39,6 +39,14 @@ namespace Blu
 		void SaveSceneAs();
 		void SaveCurrentScene();
 		void UIDrawTitlebar(float& outTitlebarHeight);
+		void ResetEditorLayout();
+		void LoadEditorSettings();
+		void SaveEditorSettings();
+		void DrawActorEditor();
+		void RenderActorPreview();
+		void DrawPlaytestHUD();
+		void SaveSelectedAsPrefab();
+		Entity InstantiatePrefabAsset(const std::filesystem::path& path);
 
 		void OnScenePlay();
 		void OnScenePause();
@@ -52,6 +60,9 @@ namespace Blu
 
 		void DisplayMissingSceneWarning();
 	private:
+		void QueueStaticCollisionPrompt(Entity entity);
+		void DrawStaticCollisionImportPrompt();
+
 		Blu::OrthographicCameraController m_CameraController;
 		Blu::EditorCamera m_EditorCamera;
 		Blu::ParticleSystem m_ParticleSystem;
@@ -68,7 +79,9 @@ namespace Blu
 		Blu::Shared<Blu::OpenGLShader> m_FlatColorShader, m_QuadShader;
 		Blu::Shared<Blu::FrameBuffer> m_FrameBuffer;
 		Blu::Shared<Blu::FrameBuffer> m_CameraViewFrameBuffer;
+		Blu::Shared<Blu::FrameBuffer> m_ActorPreviewFrameBuffer;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+		glm::vec2 m_ActorPreviewSize = { 512.0f, 512.0f };
 		Entity m_CameraEntity;
 		bool m_ViewPortFocused  = false;
 		bool m_ViewPortHovered  = false;
@@ -86,6 +99,18 @@ namespace Blu
 		bool m_PlayButtonHit = false;
 		bool m_PendingEntityPick = false;
 		bool m_F8Prev = false;
+		bool m_ShowStaticCollisionImportPrompt = false;
+		bool m_ResetEditorLayout = false;
+		bool m_ShowActorEditor = false;
+		bool m_ActorPreviewHovered = false;
+		bool m_ActorPreviewFocused = false;
+		bool m_ResetActorPreviewCamera = true;
+		bool m_ShowSelectedColliderDebug = true;
+		bool m_ShowCharacterDebug = true;
+		bool m_ShowMeshColliderDebug = true;
+		bool m_ShowCameraDebug = true;
+		Entity m_PendingStaticCollisionEntity;
+		std::string m_PendingStaticCollisionModelName;
 		
 
 		float translationSnapValue = 0.5f;
@@ -96,8 +121,13 @@ namespace Blu
 		glm::vec2 m_ViewportBounds[2];
 		Shared<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Shared<ContentBrowserPanel> m_ContentBrowserPanel;
+		EditorCamera m_ActorPreviewCamera;
 		glm::vec2 m_ViewportOffset;
 		int m_DrawnEntityID;
+		Entity m_ActorEditorEntity;
+		UUID m_LastActorPreviewEntityID = 0;
+		std::string m_ImGuiIniPath;
+		std::filesystem::path m_EditorSettingsPath;
 
 		enum class SceneState
 		{
@@ -144,6 +174,7 @@ namespace Blu
 		bool m_ShowContentBrowser = true;
 		bool m_ShowOutputLog      = true;
 		bool m_ShowRendering      = true;
+		bool m_ShowRenderPath     = true;
 		bool m_ShowDiagnostics    = true;
 		bool m_ShowInputMap       = false;
 

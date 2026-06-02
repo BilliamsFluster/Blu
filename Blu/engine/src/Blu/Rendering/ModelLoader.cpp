@@ -267,6 +267,17 @@ namespace Blu
             }
         }
 
+        // FBX often stores a relative path such as "tex\\Palette.jpg" while the
+        // embedded texture table only reports "Palette.jpg". Match on leaf name
+        // before falling back to sidecar files.
+        std::string requestedFilename = fs::path(pathStr).filename().string();
+        for (uint32_t t = 0; t < scene->mNumTextures; ++t)
+        {
+            std::string embeddedFilename = fs::path(scene->mTextures[t]->mFilename.C_Str()).filename().string();
+            if (!requestedFilename.empty() && requestedFilename == embeddedFilename)
+                return LoadEmbeddedTexture(scene->mTextures[t], requestedFilename, modelName);
+        }
+
         // Regular file path
         return LoadTexture(pathStr, modelName, modelDir);
     }
@@ -720,15 +731,12 @@ namespace Blu
             }
         }
 
-        // Upload all submesh vertex data to GPU at load time, then free CPU copies.
+        // Static mesh collision cooks from render mesh triangles, so static model
+        // CPU vertices/indices stay resident after GPU upload for now.
         for (auto& submesh : model->Meshes)
-        {
             UploadSubMeshGPU(submesh);
-            submesh.Vertices.clear();
-            submesh.Vertices.shrink_to_fit();
-            submesh.Indices.clear();
-            submesh.Indices.shrink_to_fit();
-        }
+
+        // Skinned collision is not generated from render triangles in this milestone.
         for (auto& sub : model->SkinnedMeshes)
         {
             UploadSkinnedSubMeshGPU(sub);

@@ -1,0 +1,17 @@
+Scene: assets/prefabs/DirectionalLight.bluprefab
+Prefab: true
+PrefabVersion: 1
+Entities:
+  - Entity: 1000000004
+    TagComponent:
+      Tag: DirectionalLight
+    TransformComponent:
+      Translation: [0.0, 8.0, 0.0]
+      Rotation: [0.0, 0.0, 0.0]
+      Scale: [1.0, 1.0, 1.0]
+    DirectionalLightComponent:
+      Direction: [-0.2, -1.0, -0.3]
+      Ambient: [0.12, 0.12, 0.12]
+      Diffuse: [0.95, 0.90, 0.82]
+      Specular: [0.5, 0.5, 0.5]
+      Intensity: 2.0

@@ -34,9 +34,10 @@ cbuffer SkyboxCB : register(b0)
     float    u_SunStrength;    float3 _pad0;              // 16
 
     float3   u_CloudColor;     float  u_CloudCoverage;    // 16
-    float    u_CloudDensity;   float  u_CloudHeight;      // 8
-    float    u_CloudScale;     float  u_Time;             // 8
-    float    u_CloudScrollSpeed; float3 _cloudPad;        // 16
+    float    u_CloudDensity;   float  u_CloudSoftness;    // 8
+    float    u_CloudHeight;    float  u_CloudScale;       // 8
+    float2   u_CloudWindDir;   float  u_CloudScrollSpeed; float u_Time; // 16
+    float    u_CloudShadowing; float  u_CloudHorizonFade; float2 _cloudPad; // 16
 };
 
 struct PS_In  { float4 Position : SV_Position; float2 NDC : TEXCOORD0; };
@@ -141,7 +142,9 @@ float cloudFBM(float2 p)
 {
     float2 q = float2(fbm(p + float2(0.0f, 0.0f)),
                       fbm(p + float2(5.2f, 1.3f)));
-    return fbm(p + 3.5f * q);
+    float base = fbm(p + 3.5f * q);
+    float detail = fbm(p * 3.25f + q * 1.7f);
+    return saturate(base * 0.72f + detail * 0.28f);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -203,26 +206,31 @@ PS_Out main(PS_In IN)
         {
             float3 hitPos   = camPos + worldRay * tHit;
             float2 uv       = hitPos.xz / max(u_CloudScale, 1.0f);
-            float2 scrolled = uv + float2(u_Time * u_CloudScrollSpeed,
-                                          u_Time * u_CloudScrollSpeed * 0.7f);
+            float2 windDir = normalize(abs(u_CloudWindDir.x) + abs(u_CloudWindDir.y) > 0.001f
+                ? u_CloudWindDir
+                : float2(1.0f, 0.35f));
+            float2 crossWind = float2(-windDir.y, windDir.x);
+            float2 scrolled = uv + windDir * (u_Time * u_CloudScrollSpeed)
+                                  + crossWind * (u_Time * u_CloudScrollSpeed * 0.18f);
 
             float noise     = cloudFBM(scrolled);
             float threshold = 1.0f - u_CloudCoverage;
-            float softWidth = max(0.02f, u_CloudCoverage * 0.20f);
+            float softWidth = max(0.015f, lerp(0.02f, 0.38f, saturate(u_CloudSoftness)));
             float rawCloud  = saturate((noise - threshold) / softWidth);
+            rawCloud = smoothstep(0.0f, 1.0f, rawCloud);
 
             // Self-shadow: offset sample toward the projected sun direction
             float2 sunXZ     = float2(sunDir.x, sunDir.z);
             float  sunYSafe  = max(sunDir.y, 0.05f);
-            float  shadowNoise = cloudFBM(scrolled + (sunXZ / sunYSafe) * 0.05f);
+            float  shadowNoise = cloudFBM(scrolled + (sunXZ / sunYSafe) * 0.065f);
             float  selfShadow  = 1.0f - saturate(
-                saturate((shadowNoise - threshold) / softWidth) * 0.8f);
+                saturate((shadowNoise - threshold) / softWidth) * saturate(u_CloudShadowing));
 
             float cloudAlpha = rawCloud * u_CloudDensity;
 
             // Two-stage fade: angle fade to hide grazing geometry + distance fade
             // to prevent the flat cloud plane from being visible at the horizon.
-            cloudAlpha *= smoothstep(0.0f, 0.22f, worldRay.y);
+            cloudAlpha *= smoothstep(0.0f, max(0.02f, u_CloudHorizonFade), worldRay.y);
             cloudAlpha *= saturate(5000.0f / max(tHit, 1.0f));
 
             if (cloudAlpha > 0.001f)

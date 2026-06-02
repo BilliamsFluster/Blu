@@ -1,0 +1,60 @@
+Scene: assets/prefabs/PlayerCharacter.bluprefab
+Prefab: true
+PrefabVersion: 1
+Entities:
+  - Entity: 1000000000000000003
+    TagComponent:
+      Tag: PlayerCharacter
+    NativeScriptComponent:
+      ClassName: PlayerCharacter
+    TransformComponent:
+      Translation: [0, 1, 5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.850000024, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 1.70000005, 0.600000024]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.150000006, 0.519999981, 0.949999988]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.5
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.550000012
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 5
+      JumpImpulse: 7
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+    PlayerStatsComponent:
+      Health: 50
+      MaxHealth: 100
+      Stamina: 100
+      MaxStamina: 100
+      StaminaRegenRate: 20
+      SprintStaminaDrain: 25
+    SpringArmComponent:
+      ArmLength: 6
+      SocketOffset: [0, 1, 0]
+      PivotOffset: [0, 1.70000005, 0]
+      Pitch: -15
+      Yaw: 0
+      InheritYaw: false
+      PositionLagSpeed: 10
+      EnableLag: true
+      TargetCameraUUID: 1000000000000000004

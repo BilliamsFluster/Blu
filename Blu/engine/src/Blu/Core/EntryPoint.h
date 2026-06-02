@@ -6,7 +6,9 @@ extern  Blu::Application* Blu::CreateApplication();
 int main(int argc, char** argv) // main entry point
 {
 	Blu::Log::Init();
-	
+
+	// Capture args before CreateApplication() so layers can read them in OnAttach.
+	Blu::Application::SetCommandLineArgs(argc, argv);
 
 	BLU_PROFILE_BEGIN_SESSION("Startup", "BluProfile-Startup.json");
 	auto app = Blu::CreateApplication();

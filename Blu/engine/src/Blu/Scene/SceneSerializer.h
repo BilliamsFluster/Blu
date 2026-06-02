@@ -1,5 +1,6 @@
 #pragma once
 #include "Scene.h"
+#include "Entity.h"
 #include "Blu/Core/Core.h"
 
 namespace Blu
@@ -13,6 +14,8 @@ namespace Blu
 		void Serialize(const std::string& filepath);
 		void SerializeBinary(const std::string& filepath);
 		void SerializeLoadedScene(const std::string& filepath);
+		bool SerializePrefab(Entity entity, const std::string& filepath);
+		bool DeserializePrefab(const std::string& filepath, Entity* outEntity = nullptr);
 
 		bool Deserialize(const std::string& filepath);
 		std::string DeserializeLoadedScene();

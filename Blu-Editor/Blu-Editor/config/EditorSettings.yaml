@@ -1,0 +1,23 @@
+Version: 1
+Window:
+  X: 0
+  Y: 0
+  Width: 1936
+  Height: 1119
+  Maximized: false
+Panels:
+  Outliner: true
+  Details: true
+  ContentBrowser: true
+  OutputLog: true
+  Rendering: true
+  Diagnostics: true
+  ActorEditor: false
+Debug:
+  SelectedCollider: true
+  Character: true
+  MeshCollider: true
+  Camera: true
+ContentBrowser:
+  Directory: assets
+  ThumbnailSize: 80

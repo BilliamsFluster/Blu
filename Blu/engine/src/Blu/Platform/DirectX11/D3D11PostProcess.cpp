@@ -9,6 +9,7 @@
 #include "Blu/Rendering/Renderer.h"
 #include "Blu/Rendering/RenderCommand.h"
 #include "Blu/Rendering/PipelineState.h"
+#include "Blu/Core/Log.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -92,7 +93,51 @@ namespace Blu
             dev->CreateSamplerState(&sd, m_LinearSampler.GetAddressOf());
         }
 
+        CreateFallbackTextures();
         CreateFullscreenQuad();
+    }
+
+    void D3D11PostProcess::CreateFallbackTextures()
+    {
+        auto* dev = D3D11Context::Get()->GetDevice();
+        auto createSolid = [&](uint8_t r, uint8_t g, uint8_t b, uint8_t a,
+                               Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>& outSRV)
+        {
+            uint8_t pixel[4] = { r, g, b, a };
+
+            D3D11_TEXTURE2D_DESC desc = {};
+            desc.Width = 1;
+            desc.Height = 1;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            desc.SampleDesc.Count = 1;
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+            D3D11_SUBRESOURCE_DATA data = {};
+            data.pSysMem = pixel;
+            data.SysMemPitch = sizeof(pixel);
+
+            Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
+            HRESULT hr = dev->CreateTexture2D(&desc, &data, texture.GetAddressOf());
+            if (FAILED(hr))
+            {
+                BLU_CORE_ERROR("D3D11PostProcess: failed to create fallback texture");
+                return;
+            }
+
+            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Format = desc.Format;
+            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+            srvDesc.Texture2D.MipLevels = 1;
+            hr = dev->CreateShaderResourceView(texture.Get(), &srvDesc, outSRV.GetAddressOf());
+            if (FAILED(hr))
+                BLU_CORE_ERROR("D3D11PostProcess: failed to create fallback SRV");
+        };
+
+        createSolid(0, 0, 0, 255, m_BlackFallbackSRV);
+        createSolid(255, 255, 255, 255, m_WhiteFallbackSRV);
     }
 
     void D3D11PostProcess::CreateBloomFBs(uint32_t w, uint32_t h)
@@ -186,7 +231,52 @@ namespace Blu
         float fw = static_cast<float>(spec.Width);
         float fh = static_cast<float>(spec.Height);
 
-        if (EnableBloom)
+        bool useBloom = EnableBloom;
+        bool useFXAA = EnableFXAA;
+        bool useSSAO = EnableSSAO;
+        switch (Preview)
+        {
+            case PreviewMode::Full:
+                break;
+            case PreviewMode::TonemapOnly:
+                useBloom = false; useFXAA = false; useSSAO = false;
+                break;
+            case PreviewMode::BloomOnly:
+                useBloom = true; useFXAA = false; useSSAO = false;
+                break;
+            case PreviewMode::FXAAOnly:
+                useBloom = false; useFXAA = true; useSSAO = false;
+                break;
+            case PreviewMode::SSAOOnly:
+                useBloom = false; useFXAA = false; useSSAO = true;
+                break;
+            case PreviewMode::Bypass:
+            {
+                auto* ctx = D3D11Context::Get();
+                ID3D11RenderTargetView* rtv = m_SavedOutputRTV
+                    ? m_SavedOutputRTV.Get()
+                    : ctx->GetBackbufferRTV();
+                dc->OMSetRenderTargets(1, &rtv, nullptr);
+                D3D11_VIEWPORT vp = {};
+                vp.Width = fw;
+                vp.Height = fh;
+                vp.MaxDepth = 1.0f;
+                dc->RSSetViewports(1, &vp);
+                dc->PSSetSamplers(0, 1, m_LinearSampler.GetAddressOf());
+                m_DefaultShader->Bind();
+                dc->PSSetShaderResources(0, 1, &sceneSRV);
+                m_FullscreenQuadVAO->Bind();
+                RenderCommand::DrawIndexed(m_FullscreenQuadVAO, m_IndexCount);
+                m_FullscreenQuadVAO->UnBind();
+                m_DefaultShader->UnBind();
+                ID3D11ShaderResourceView* nullSRV = nullptr;
+                dc->PSSetShaderResources(0, 1, &nullSRV);
+                m_SavedOutputRTV.Reset();
+                return;
+            }
+        }
+
+        if (useBloom)
         {
             // ── Bloom extract + first downsample ─────────────────────────────────
             {
@@ -321,7 +411,7 @@ namespace Blu
 
         // ── SSAO pass ────────────────────────────────────────────────────────────
         ID3D11ShaderResourceView* aoSRV = nullptr;
-        if (EnableSSAO && m_SSAOShader && m_SSAOBlurShader)
+        if (useSSAO && m_SSAOShader && m_SSAOBlurShader)
         {
             auto* d3dScene  = static_cast<D3D11FrameBuffer*>(m_SceneFB.get());
             ID3D11ShaderResourceView* depthSRV = d3dScene->GetDepthSRV();
@@ -426,21 +516,31 @@ namespace Blu
             dc->PSSetSamplers(0, 1, m_LinearSampler.GetAddressOf());
 
             auto* bloomFB = static_cast<D3D11FrameBuffer*>(m_BloomUpFBs[0].get());
-            ID3D11ShaderResourceView* bloomSRV = EnableBloom ? bloomFB->GetColorAttachmentSRV(0) : nullptr;
+            ID3D11ShaderResourceView* bloomSRV = (useBloom && bloomFB)
+                ? bloomFB->GetColorAttachmentSRV(0)
+                : m_BlackFallbackSRV.Get();
+            if (!bloomSRV)
+                bloomSRV = m_BlackFallbackSRV.Get();
+
+            ID3D11ShaderResourceView* finalAOSRV = (useSSAO && aoSRV) ? aoSRV : m_WhiteFallbackSRV.Get();
+            if (!sceneSRV)
+                BLU_CORE_ERROR("D3D11PostProcess: scene color SRV is null before composite");
+            if (!bloomSRV)
+                BLU_CORE_ERROR("D3D11PostProcess: bloom fallback SRV is null before composite");
+            if (!finalAOSRV)
+                BLU_CORE_ERROR("D3D11PostProcess: AO fallback SRV is null before composite");
 
             m_CompositeShader->Bind();
-            m_CompositeShader->SetUniformFloat("u_BloomStrength", EnableBloom ? BloomStrength : 0.0f);
-            m_CompositeShader->SetUniformFloat("u_EnableFXAA",    EnableFXAA ? 1.0f : 0.0f);
+            m_CompositeShader->SetUniformFloat("u_EnableBloom",   useBloom ? 1.0f : 0.0f);
+            m_CompositeShader->SetUniformFloat("u_BloomStrength", useBloom ? BloomStrength : 0.0f);
+            m_CompositeShader->SetUniformFloat("u_EnableFXAA",    useFXAA ? 1.0f : 0.0f);
             m_CompositeShader->SetUniformFloat("u_InvW",          1.0f / fw);
             m_CompositeShader->SetUniformFloat("u_InvH",          1.0f / fh);
-            m_CompositeShader->SetUniformFloat("u_SSAOStrength",  (EnableSSAO && aoSRV) ? SSAOStrength : 0.0f);
+            m_CompositeShader->SetUniformFloat("u_SSAOStrength",  (useSSAO && aoSRV) ? SSAOStrength : 0.0f);
             m_CompositeShader->Flush();
             dc->PSSetShaderResources(0, 1, &sceneSRV);
-            {
-                ID3D11ShaderResourceView* nullSRV = nullptr;
-                dc->PSSetShaderResources(1, 1, (EnableBloom && bloomSRV) ? &bloomSRV : &nullSRV);
-                dc->PSSetShaderResources(2, 1, (aoSRV) ? &aoSRV : &nullSRV);
-            }
+            dc->PSSetShaderResources(1, 1, &bloomSRV);
+            dc->PSSetShaderResources(2, 1, &finalAOSRV);
             m_FullscreenQuadVAO->Bind();
             RenderCommand::DrawIndexed(m_FullscreenQuadVAO, m_IndexCount);
             m_FullscreenQuadVAO->UnBind();

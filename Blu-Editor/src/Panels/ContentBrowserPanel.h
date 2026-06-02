@@ -2,18 +2,34 @@
 #include <filesystem>
 #include <map>
 #include <deque>
+#include <functional>
+#include <string>
+#include <vector>
 #include "Blu/Core/Core.h"
 #include "Blu/Rendering/Texture.h"
+#include "Blu/Rendering/FrameBuffer.h"
+#include "Blu/Rendering/EditorCamera.h"
 
 
 namespace Blu
 {
+	struct Model;
+
 	class ContentBrowserPanel
 	{
 	public:
 		ContentBrowserPanel();
 
 		void OnImGuiRender();
+		void SetSaveAllCallback(std::function<void()> callback) { m_SaveAllCallback = std::move(callback); }
+		void SetImportModelCallback(std::function<void(const std::filesystem::path&)> callback) { m_ImportModelCallback = std::move(callback); }
+		void SetGenerateStaticCollisionCallback(std::function<void(const std::filesystem::path&)> callback) { m_GenerateStaticCollisionCallback = std::move(callback); }
+		void SetInstantiatePrefabCallback(std::function<void(const std::filesystem::path&)> callback) { m_InstantiatePrefabCallback = std::move(callback); }
+		void SetSaveSelectedAsPrefabCallback(std::function<void()> callback) { m_SaveSelectedAsPrefabCallback = std::move(callback); }
+		void SetBrowserDirectory(const std::filesystem::path& directory);
+		const std::filesystem::path& GetCurrentDirectory() const { return m_CurrentDirectory; }
+		void SetThumbnailSize(float size) { m_ThumbnailSize = size; }
+		float GetThumbnailSize() const { return m_ThumbnailSize; }
 
 
 		//class ImTextureID GetTextureFromFile(const std::filesystem::path& filePath);
@@ -29,6 +45,23 @@ namespace Blu
 		void CreateNewFolder(const std::filesystem::path& directory, const std::string& baseName);
 
 	private:
+		struct ThumbnailCacheEntry
+		{
+			Shared<Texture2D> Texture;
+			std::filesystem::file_time_type LastWriteTime;
+		};
+
+		struct ModelThumbnailCacheEntry
+		{
+			Shared<FrameBuffer> Framebuffer;
+			std::filesystem::file_time_type LastWriteTime;
+			bool Failed = false;
+		};
+
+		Shared<Texture2D> GetImageThumbnail(const std::filesystem::path& path);
+		uint64_t GetModelThumbnail(const std::filesystem::path& path, bool& failed);
+		bool RenderModelThumbnail(const std::filesystem::path& path, ModelThumbnailCacheEntry& entry);
+
 		std::filesystem::path m_CurrentDirectory;
 		std::map<std::string, bool> m_DirectoryExpandedState;
 
@@ -38,9 +71,20 @@ namespace Blu
 		std::map<std::string, Blu::Shared<Blu::Texture2D>> m_FileIcons;
 		std::map<std::string, Blu::Shared<Blu::Texture2D>> m_Textures;
 		std::map<std::string, Shared<Texture2D>> m_TextureCache;
+		std::map<std::string, ThumbnailCacheEntry> m_ImageThumbnailCache;
+		std::map<std::string, ModelThumbnailCacheEntry> m_ModelThumbnailCache;
 		std::deque<std::filesystem::path> m_NavigationHistory;
+		EditorCamera m_ModelThumbnailCamera;
+		uint32_t m_ModelThumbnailsRenderedThisFrame = 0;
 
 		bool m_ObjectClicked = false;
+		int m_SortMode = 0;
+		std::string m_SelectedFilename;
+		std::function<void()> m_SaveAllCallback;
+		std::function<void(const std::filesystem::path&)> m_ImportModelCallback;
+		std::function<void(const std::filesystem::path&)> m_GenerateStaticCollisionCallback;
+		std::function<void(const std::filesystem::path&)> m_InstantiatePrefabCallback;
+		std::function<void()> m_SaveSelectedAsPrefabCallback;
 
 
 

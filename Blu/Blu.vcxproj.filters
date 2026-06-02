@@ -85,6 +85,9 @@
     <Filter Include="src\Blu\Scene">
       <UniqueIdentifier>{FC0EC887-68CF-43BE-310A-8D3B9D89889A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\UI">
+      <UniqueIdentifier>{A0D1A7C2-35B0-4E46-9553-2D4154D11523}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Blu\Scripting">
       <UniqueIdentifier>{61EE0219-CD04-01AF-167C-8CD082D1D136}</UniqueIdentifier>
     </Filter>
@@ -1662,6 +1665,9 @@
     <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h">
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\UI\RuntimeUI.h">
+      <Filter>src\Blu\UI</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h">
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
@@ -1921,6 +1927,9 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp">
       <Filter>src\Blu\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\UI\RuntimeUI.cpp">
+      <Filter>src\Blu\UI</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Scene\SceneSerializer.cpp">
       <Filter>src\Blu\Scene</Filter>

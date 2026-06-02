@@ -15,5 +15,34 @@
     <ClCompile Include="src\Azure2D.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\GameLayer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actors\PlayerCharacter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actors\ZombieCharacter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actors\ZombieTestActor.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\GameLayer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Actors\PlayerCharacter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Actors\ZombieCharacter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Actors\ZombieTestActor.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameModes\ZombieGameMode.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

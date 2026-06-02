@@ -10,6 +10,16 @@ namespace Blu
     class PostProcess
     {
     public:
+        enum class PreviewMode
+        {
+            Full = 0,
+            TonemapOnly,
+            BloomOnly,
+            FXAAOnly,
+            SSAOOnly,
+            Bypass
+        };
+
         virtual ~PostProcess() = default;
 
         static Shared<PostProcess> Create(uint32_t width, uint32_t height);
@@ -30,6 +40,7 @@ namespace Blu
         float BloomStrength   = 0.05f;
 
         bool  EnableFXAA      = true;
+        PreviewMode Preview   = PreviewMode::Full;
 
         // SSAO
         bool  EnableSSAO     = true;

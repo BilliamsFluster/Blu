@@ -5,6 +5,8 @@
 #include "Blu/Events/EventDispatcher.h"
 #include "Blu/Rendering/OrthographicCamera.h"
 #include "Blu/ImGui/ImGuiLayer.h"
+#include <vector>
+#include <string>
 
 
 
@@ -34,7 +36,17 @@ namespace Blu
 		inline static Application& Get() { return *s_Instance; }
 		inline Window& GetWindow() { return *m_Window; }
 		bool IsMaximized() const;
-		
+
+		// Command-line arguments captured in main() before CreateApplication() runs,
+		// so layers can read them during OnAttach (e.g. a startup scene override).
+		static const std::vector<std::string>& GetCommandLineArgs() { return s_CommandLineArgs; }
+		static void SetCommandLineArgs(int argc, char** argv)
+		{
+			s_CommandLineArgs.clear();
+			for (int i = 0; i < argc; ++i)
+				s_CommandLineArgs.emplace_back(argv[i]);
+		}
+
 	private:
 		Unique<Window> m_Window;
 		Shared<Layers::ImGuiLayer> m_ImGuiLayer;
@@ -47,6 +59,7 @@ namespace Blu
 		float m_LastFrameTime = 0.0f;
 	private:
 		static Application* s_Instance;
+		static std::vector<std::string> s_CommandLineArgs;
 	};
 	
 	//needs to be defined in client

@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <cstdint>
+#include <vector>
 
 // Jolt headers — included here because Physics3D.h is an internal header
 // (only included by Physics3D.cpp and Scene.cpp).
@@ -16,11 +17,16 @@
 #include "Jolt/Physics/Collision/Shape/BoxShape.h"
 #include "Jolt/Physics/Collision/Shape/SphereShape.h"
 #include "Jolt/Physics/Collision/Shape/CapsuleShape.h"
+#include "Jolt/Physics/Collision/Shape/MeshShape.h"
 #include "Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h"
+#include "Jolt/Physics/Collision/RayCast.h"
+#include "Jolt/Physics/Collision/CastResult.h"
+#include "Jolt/Physics/Collision/NarrowPhaseQuery.h"
 #include "Jolt/Physics/Collision/ShapeFilter.h"
 #include "Jolt/Physics/Body/BodyCreationSettings.h"
 #include "Jolt/Physics/Body/BodyActivationListener.h"
 #include "Jolt/Physics/Character/CharacterVirtual.h"
+#include "Jolt/Geometry/Triangle.h"
 
 namespace Blu
 {
@@ -109,7 +115,8 @@ namespace Blu
     {
         Box     = 0,
         Sphere,
-        Capsule
+        Capsule,
+        Mesh
     };
 
     // All data needed to create a physics body (filled from ECS components)
@@ -126,6 +133,10 @@ namespace Blu
         // Capsule
         float      HalfHeight  = 1.0f;
         // (Capsule radius re-uses Radius above)
+
+        // Mesh
+        std::vector<glm::vec3> MeshTriangleVertices;
+        bool       MeshDoubleSided = true;
 
         // Shared
         glm::vec3  Offset      = { 0.0f, 0.0f, 0.0f };
@@ -167,6 +178,8 @@ namespace Blu
 
         // Move a kinematic body to a new world-space transform.
         void MoveKinematic(uint32_t bodyID, const glm::vec3& position, const glm::quat& rotation, float deltaTime);
+
+        bool CastRay(const glm::vec3& origin, const glm::vec3& direction, glm::vec3& outHitPosition) const;
 
         bool IsValid() const { return m_PhysicsSystem != nullptr; }
 

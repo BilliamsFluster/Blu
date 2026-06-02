@@ -21,7 +21,8 @@ namespace Blu
 	}
 
 	Application* Application::s_Instance = nullptr;
-	
+	std::vector<std::string> Application::s_CommandLineArgs;
+
 	
 	bool Application::IsMaximized() const
 	{

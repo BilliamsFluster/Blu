@@ -23,6 +23,7 @@ namespace Blu
     private:
         void CreateBloomFBs(uint32_t w, uint32_t h);
         void CreateFullscreenQuad();
+        void CreateFallbackTextures();
 
         // ── Frame buffers ─────────────────────────────────────────────────────────
         Shared<FrameBuffer> m_SceneFB;              // HDR scene capture (RGBA16F, full res)
@@ -53,6 +54,8 @@ namespace Blu
         // ── Samplers ─────────────────────────────────────────────────────────────
         Microsoft::WRL::ComPtr<ID3D11SamplerState> m_PointSampler;
         Microsoft::WRL::ComPtr<ID3D11SamplerState> m_LinearSampler;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_BlackFallbackSRV;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_WhiteFallbackSRV;
 
         // RTVs saved when Begin() was called:
         //   slot 0 = editor color attachment — composite target for Submit()

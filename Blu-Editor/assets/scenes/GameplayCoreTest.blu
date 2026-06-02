@@ -1,0 +1,305 @@
+Scene: assets/scenes/GameplayCoreTest.blu
+RenderSettings:
+  UseShadows: true
+  UsePostProcess: true
+  UseSkybox: true
+  UseTimeOfDay: false
+  Sky_Turbidity: 2.5
+  Sky_SkyExposure: 0.0199999996
+  Sky_GroundColor: [0.349999994, 0.340000004, 0.319999993]
+  Sky_SunColor: [1, 0.959999979, 0.879999995]
+  Sky_SunSize: 0.999499977
+  Sky_SunStrength: 8
+  Sky_CloudColor: [0.920000017, 0.930000007, 0.970000029]
+  Sky_CloudCoverage: 0.379999995
+  Sky_CloudDensity: 0.449999988
+  Sky_CloudSoftness: 0.550000012
+  Sky_CloudHeight: 600
+  Sky_CloudScale: 900
+  Sky_CloudWindDirection: [1, 0.349999994]
+  Sky_CloudScrollSpeed: 0.0149999997
+  Sky_CloudShadowing: 0.449999988
+  Sky_CloudHorizonFade: 0.219999999
+  PP_EnableBloom: true
+  PP_BloomThreshold: 1
+  PP_BloomStrength: 0.0500000007
+  PP_EnableFXAA: true
+  PP_PreviewMode: 0
+  PP_EnableSSAO: true
+  PP_SSAORadius: 0.5
+  PP_SSAOBias: 0.0250000004
+  PP_SSAOPower: 1.5
+  PP_SSAOSamples: 16
+  PP_SSAOStrength: 1
+  ToD_NormalizedTime: 0.5
+  ToD_AutoAdvance: false
+  ToD_DayDuration: 120
+  ToD_SunAzimuth: 45
+  ToD_SunMaxStrength: 10
+  ToD_SunNoonTurbidity: 2.20000005
+  ToD_SunHazeTurbidity: 4.5
+  Fog_Enabled: false
+  Fog_Color: [0.550000012, 0.579999983, 0.649999976]
+  Fog_Density: 0.0149999997
+  Fog_HeightStart: 0
+  Fog_HeightDensity: 0.0250000004
+  Fog_AerialColor: [0.699999988, 0.779999971, 0.899999976]
+  Fog_AerialStrength: 0.100000001
+Entities:
+  - Entity: 1000000000000000009
+    TagComponent:
+      Tag: GameplayHUD
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    UIRootComponent:
+      DocumentPath: assets/ui/GameplayHUD.bluui
+      Visible: true
+      Scale: 1
+  - Entity: 1000000000000000008
+    TagComponent:
+      Tag: BloomReference
+    TransformComponent:
+      Translation: [4.00080252, 0.75, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1.5, 1]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.850000024, 0.949999988, 1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.200000003
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.649999976, 0.819999993, 1]
+      PBR_EmissiveStrength: 3.5
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+  - Entity: 1000000000000000007
+    TagComponent:
+      Tag: ZombieTest
+    NativeScriptComponent:
+      ClassName: ZombieTestActor
+    TransformComponent:
+      Translation: [0, 1, -6]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.850000024, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 1.70000005, 0.600000024]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.720000029, 0.119999997, 0.100000001]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.649999976
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.25, 0.0199999996, 0.0199999996]
+      PBR_EmissiveStrength: 0.100000001
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.550000012
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4000001
+      JumpImpulse: 0
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+  - Entity: 1000000000000000006
+    TagComponent:
+      Tag: StaminaPickup
+    TransformComponent:
+      Translation: [-2.00294828, 0.484181404, 2.00317097]
+      Rotation: [0, 0, 0]
+      Scale: [0.5, 0.5, 0.5]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.949999988, 0.819999993, 0.119999997]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.349999994
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.449999988, 0.319999993, 0.0199999996]
+      PBR_EmissiveStrength: 0.349999994
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    InteractableComponent:
+      Enabled: true
+      DisplayName: Stamina Pickup
+      InteractionRadius: 2
+      InteractionType: 0
+    PickupComponent:
+      PickupType: 1
+      Amount: 30
+      Count: 1
+      ConsumeOnPickup: true
+  - Entity: 1000000000000000005
+    TagComponent:
+      Tag: HealthPickup
+    TransformComponent:
+      Translation: [1.99985075, 0.499971867, 2.00005627]
+      Rotation: [0, 0, 0]
+      Scale: [0.5, 0.5, 0.5]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.100000001, 0.899999976, 0.25]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.349999994
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.0500000007, 0.400000006, 0.100000001]
+      PBR_EmissiveStrength: 0.400000006
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    InteractableComponent:
+      Enabled: true
+      DisplayName: Health Pickup
+      InteractionRadius: 2
+      InteractionType: 0
+    PickupComponent:
+      PickupType: 0
+      Amount: 25
+      Count: 1
+      ConsumeOnPickup: true
+  - Entity: 1000000000000000004
+    TagComponent:
+      Tag: PlayerCamera
+    NativeScriptComponent:
+      ClassName: ""
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 45
+      Primary: true
+      FixedAspectRatio: false
+    TransformComponent:
+      Translation: [0, 5.25291443, 10.7955551]
+      Rotation: [-0.414921731, -0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 1000000000000000003
+    TagComponent:
+      Tag: PlayerCharacter
+    NativeScriptComponent:
+      ClassName: PlayerCharacter
+    TransformComponent:
+      Translation: [0, 1, 5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.850000024, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 1.70000005, 0.600000024]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.150000006, 0.519999981, 0.949999988]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.5
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.550000012
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 5
+      JumpImpulse: 7
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+    PlayerStatsComponent:
+      Health: 50
+      MaxHealth: 100
+      Stamina: 100
+      MaxStamina: 100
+      StaminaRegenRate: 20
+      SprintStaminaDrain: 25
+    SpringArmComponent:
+      ArmLength: 6
+      SocketOffset: [0, 1, 0]
+      PivotOffset: [0, 1.70000005, 0]
+      Pitch: -15
+      Yaw: 0
+      InheritYaw: false
+      PositionLagSpeed: 10
+      EnableLag: true
+      TargetCameraUUID: 1000000000000000004
+  - Entity: 1000000000000000002
+    TagComponent:
+      Tag: Ground
+    TransformComponent:
+      Translation: [0, -0.5, 0]
+      Rotation: [0, 0, 0]
+      Scale: [30, 1, 30]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.449999988, 0.419999987, 0.400000006]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.850000024
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    Rigidbody3DComponent:
+      BodyType: 0
+      GravityScale: 1
+      LinearDamping: 0.0500000007
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [15, 0.5, 15]
+      Offset: [0, 0, 0]
+      Friction: 0.800000012
+      Restitution: 0
+      Density: 1000
+  - Entity: 1000000000000000001
+    TagComponent:
+      Tag: Sun
+    DirectionalLightComponent:
+      Direction: [0.259160548, -0.863868415, 0.431934208]
+      Ambient: [0.0799999982, 0.0799999982, 0.100000001]
+      Diffuse: [1, 0.949999988, 0.850000024]
+      Specular: [0.600000024, 0.600000024, 0.600000024]
+      Intensity: 1.20000005
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [-0.785398185, 0.52359879, 0]
+      Scale: [1, 1, 1]

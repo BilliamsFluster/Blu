@@ -1,0 +1,33 @@
+Scene: assets/prefabs/StaticProp.bluprefab
+Prefab: true
+PrefabVersion: 1
+Entities:
+  - Entity: 1000000005
+    TagComponent:
+      Tag: StaticProp
+    TransformComponent:
+      Translation: [0.0, 0.5, 0.0]
+      Rotation: [0.0, 0.0, 0.0]
+      Scale: [1.0, 1.0, 1.0]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.55, 0.58]
+      PBR_AlbedoAlpha: 1.0
+      PBR_Metallic: 0.0
+      PBR_Roughness: 0.5
+      PBR_AO: 1.0
+    Rigidbody3DComponent:
+      BodyType: 0
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+      GravityScale: 1.0
+      LinearDamping: 0.05
+      AngularDamping: 0.05
+    BoxCollider3DComponent:
+      HalfExtents: [0.5, 0.5, 0.5]
+      Offset: [0.0, 0.0, 0.0]
+      Friction: 0.5
+      Restitution: 0.0
+      Density: 1000.0

@@ -2,6 +2,8 @@
 #include "Blu/GameFramework/ACharacter.h"
 #include "Blu/Core/InputMap.h"
 
+namespace Blu { class Entity; }
+
 namespace Azure
 {
 	// The player-controlled character.
@@ -18,12 +20,17 @@ namespace Azure
 	private:
 		void ResetMouseLookState();
 		void FaceMovementDirection(const glm::vec3& moveDir, float dt);
+		void UpdateStats(float dt, bool wantsSprint, bool isMoving, float& outSpeedScale);
+		void TryInteract();
+		bool TryPickupOverlap();
+		bool ApplyPickup(Blu::Entity pickupEntity);
 
 		float m_Yaw       = 0.0f;
 		float m_Pitch     = 0.0f;
 		float m_PrevMouseX = 0.0f;
 		float m_PrevMouseY = 0.0f;
 		bool  m_FirstMouse = true;
+		bool  m_InteractHeld = false;
 		float m_TickAccum  = 0.0f;
 		float m_TotalTime  = 0.0f;
 	};

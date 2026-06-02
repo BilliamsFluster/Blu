@@ -3,12 +3,13 @@
 
 cbuffer CompositeParams : register(b0)
 {
+    float  u_EnableBloom;     // 1 = sample bloom texture, 0 = do not touch t1
     float  u_BloomStrength;   // scalar applied to bloom before add
     float  u_EnableFXAA;      // 1 = enable, 0 = skip
     float  u_InvW;            // 1 / viewport width
     float  u_InvH;            // 1 / viewport height
     float  u_SSAOStrength;    // 0 = off, 1 = full AO darkening
-    float3 _pad;
+    float2 _pad;
 };
 
 Texture2D    u_SceneTexture  : register(t0); // HDR scene
@@ -90,9 +91,10 @@ float4 main(PS_IN IN) : SV_Target
     else
         hdr = u_SceneTexture.Sample(u_LinearSampler, uv).rgb;
 
-    // Add bloom
+    // Bloom always samples a valid SRV; the C++ side binds a black fallback
+    // and sets strength to zero when bloom is disabled.
     float3 bloom = u_BloomTexture.Sample(u_LinearSampler, uv).rgb;
-    hdr += bloom * u_BloomStrength;
+    hdr += bloom * u_BloomStrength * u_EnableBloom;
 
     // SSAO — multiply into scene before tonemapping (dims indirect light)
     if (u_SSAOStrength > 0.0)

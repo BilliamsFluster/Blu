@@ -1,0 +1,37 @@
+Scene: assets/prefabs/ZombieTest.bluprefab
+Prefab: true
+PrefabVersion: 1
+Entities:
+  - Entity: 1000000002
+    TagComponent:
+      Tag: ZombieTest
+    TransformComponent:
+      Translation: [4.0, 2.0, 4.0]
+      Rotation: [0.0, 0.0, 0.0]
+      Scale: [1.0, 1.0, 1.0]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.75, 0.25]
+      PBR_AlbedoAlpha: 1.0
+      PBR_Metallic: 0.0
+      PBR_Roughness: 0.6
+      PBR_AO: 1.0
+    VisualOffsetComponent:
+      Translation: [0.0, 0.9, 0.0]
+      Rotation: [0.0, 0.0, 0.0]
+      Scale: [0.7, 1.8, 0.7]
+    CapsuleCollider3DComponent:
+      Radius: 0.35
+      HalfHeight: 0.65
+      Offset: [0.0, 1.0, 0.0]
+      Friction: 0.5
+      Restitution: 0.0
+      Density: 1000.0
+    CharacterControllerComponent:
+      MoveSpeed: 3.2
+      JumpImpulse: 0.0
+      StepHeight: 0.35
+      SlopeLimit: 45.0
+    NativeScriptComponent:
+      ClassName: ZombieTestActor

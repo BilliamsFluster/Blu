@@ -9,6 +9,23 @@ namespace Blu
 		APawn::BeginPlay();
 		if (!HasComponent<CharacterControllerComponent>())
 			AddComponent<CharacterControllerComponent>();
+		if (!HasComponent<CapsuleCollider3DComponent>())
+		{
+			auto& capsule = AddComponent<CapsuleCollider3DComponent>();
+			capsule.Radius = 0.3f;
+			capsule.HalfHeight = 0.55f;
+		}
+		if (!HasComponent<VisualOffsetComponent>() && HasComponent<MeshComponent>())
+		{
+			auto& mesh = GetComponent<MeshComponent>();
+			if (mesh.Primitive == MeshComponent::PrimitiveType::Cube && mesh.FilePath.empty() && !mesh.ModelAsset)
+			{
+				auto& capsule = GetComponent<CapsuleCollider3DComponent>();
+				auto& visual = AddComponent<VisualOffsetComponent>();
+				visual.Translation = capsule.Offset + glm::vec3(0.0f, capsule.HalfHeight + capsule.Radius, 0.0f);
+				visual.Scale = glm::vec3(capsule.Radius * 2.0f, (capsule.HalfHeight + capsule.Radius) * 2.0f, capsule.Radius * 2.0f);
+			}
+		}
 	}
 
 	void ACharacter::Move(glm::vec3 worldDirection)

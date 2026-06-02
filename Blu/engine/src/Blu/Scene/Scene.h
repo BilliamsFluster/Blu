@@ -6,6 +6,7 @@
 #include "Blu/Rendering/TimeOfDay.h"
 #include <filesystem>
 #include <string>
+#include <vector>
 
 class b2World;
 namespace Blu
@@ -22,12 +23,77 @@ namespace Blu
 		uint32_t PrimaryCameraCount = 0;
 		uint32_t MeshEntityCount = 0;
 		uint32_t DrawableMeshCount = 0;
+		uint32_t VisualOffsetCount = 0;
 		uint32_t SpringArmCount = 0;
 		uint32_t NativeScriptCount = 0;
+		uint32_t AssetReferenceCount = 0;
+		uint32_t MissingAssetCount = 0;
+		uint32_t ExternalAssetCount = 0;
+		uint32_t ImportedAssetCount = 0;
+		uint32_t Rigidbody3DCount = 0;
+		uint32_t StaticBody3DCount = 0;
+		uint32_t DynamicBody3DCount = 0;
+		uint32_t KinematicBody3DCount = 0;
+		uint32_t RuntimePhysicsBody3DCount = 0;
+		uint32_t BoxCollider3DCount = 0;
+		uint32_t SphereCollider3DCount = 0;
+		uint32_t CapsuleCollider3DCount = 0;
+		uint32_t MeshCollider3DCount = 0;
+		uint32_t MeshColliderTriangleCount = 0;
+		uint32_t MissingCollider3DCount = 0;
+		uint32_t InvalidMeshCollider3DCount = 0;
+		uint32_t PhysicsBodyCreationFailureCount = 0;
+		uint32_t CharacterControllerCount = 0;
+		uint32_t RuntimeCharacterControllerCount = 0;
+		uint32_t InvalidCharacterColliderCount = 0;
+		uint32_t InteractableCount = 0;
+		uint32_t PickupCount = 0;
+		uint32_t ActiveZombieCount = 0;
+		uint32_t UIRootCount = 0;
+		uint32_t RuntimeUIWidgetCount = 0;
+		bool RuntimeUIRendered = false;
+		bool RuntimeUIMissingDocument = false;
+		float RuntimeUIViewportWidth = 0.0f;
+		float RuntimeUIViewportHeight = 0.0f;
 		bool PlayerInputEnabled = false;
 		bool EjectCameraActive = false;
+		bool PossessedPawnGrounded = false;
+		bool PossessedPawnHasVisualOffset = false;
+		bool PossessedPawnHasStats = false;
+		float PossessedPawnCapsuleRadius = 0.0f;
+		float PossessedPawnCapsuleHalfHeight = 0.0f;
+		float PossessedPawnHealth = 0.0f;
+		float PossessedPawnMaxHealth = 0.0f;
+		float PossessedPawnStamina = 0.0f;
+		float PossessedPawnMaxStamina = 0.0f;
+		glm::vec3 PossessedPawnFeetPosition = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 PossessedPawnVelocity = { 0.0f, 0.0f, 0.0f };
 		std::string PrimaryCameraName;
 		std::string PossessedPawnName;
+		std::string NearbyInteractableName;
+		std::string RuntimeUIDocumentPath;
+	};
+
+	struct AssetDependency
+	{
+		std::string Type;
+		std::string Path;
+		std::string ResolvedPath;
+		uint64_t SourceEntity = 0;
+		std::string SourceTag;
+		std::string SourceComponent;
+		bool Exists = false;
+		bool External = false;
+		bool Imported = false;
+	};
+
+	struct SceneAssetManifest
+	{
+		std::vector<AssetDependency> Dependencies;
+		uint32_t ReferencedCount = 0;
+		uint32_t MissingCount = 0;
+		uint32_t ExternalCount = 0;
+		uint32_t ImportedCount = 0;
 	};
 
 	class Scene
@@ -93,6 +159,12 @@ namespace Blu
 		void SetPlayerInputEnabled(bool enabled);
 		bool IsPlayerInputEnabled() const { return m_PlayerInputEnabled; }
 		SceneDiagnostics GetDiagnostics();
+		SceneAssetManifest CollectAssetManifest();
+		bool GenerateStaticMeshCollision(Entity entity, std::string* outMessage = nullptr);
+		bool FitCharacterVisualToCapsule(Entity entity, std::string* outMessage = nullptr);
+		bool ResetVisualOffset(Entity entity, std::string* outMessage = nullptr);
+		bool SnapCharacterFeetToGround(Entity entity, std::string* outMessage = nullptr);
+		Entity CloneEntityFrom(Entity source, const std::string& nameOverride = {});
 
 		// Eject mode: game logic keeps running but viewport renders from the editor camera.
 		void BeginEject(EditorCamera* cam) { m_EjectCamera = cam; }
@@ -113,10 +185,26 @@ namespace Blu
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
 	private:
+		struct PostProcessSettingsSnapshot
+		{
+			bool EnableBloom = true;
+			float BloomThreshold = 1.0f;
+			float BloomStrength = 0.05f;
+			bool EnableFXAA = true;
+			int Preview = 0;
+			bool EnableSSAO = true;
+			float SSAORadius = 0.5f;
+			float SSAOBias = 0.025f;
+			float SSAOPower = 1.5f;
+			int SSAOSamples = 16;
+			float SSAOStrength = 1.0f;
+		};
+
 		void Render2DPass(class EditorCamera& camera, Timestep deltaTime);
 		void Render2DPass(Camera& camera, const glm::mat4& transform, Timestep deltaTime, bool updateParticles);
 		void Render3DPass(class EditorCamera& camera);
 		void Render3DPass(Camera& camera, const glm::mat4& transform);
+		void RenderRuntimeUI();
 		void ShadowPass(const std::vector<DirLightData>& dirLights,
 		                const glm::mat4& cameraVP, float cameraNear, float cameraFar);
 		void UpdateSpringArmCameras(float deltaTime);
@@ -125,12 +213,22 @@ namespace Blu
 		bool        m_ScenePaused    = false;
 		bool        m_PlayerInputEnabled = true;
 		int         m_StepFrames    = 0;
+		uint32_t   m_Physics3DBodyCreationFailureCount = 0;
 		bool        m_UseShadows    = false;
 		bool        m_UsePostProcess= false;
 		bool        m_UseSkybox     = false;
 		bool        m_UseTimeOfDay  = false;
+		bool        m_HasPostProcessSettings = false;
+		PostProcessSettingsSnapshot m_PostProcessSettings;
 		FogSettings             m_Fog;
 		TimeOfDayController     m_TimeOfDay;
 		float       m_ElapsedTime   = 0.0f;
+		uint32_t   m_LastRuntimeUIRootCount = 0;
+		uint32_t   m_LastRuntimeUIWidgetCount = 0;
+		bool       m_LastRuntimeUIRendered = false;
+		bool       m_LastRuntimeUIMissingDocument = false;
+		float      m_LastRuntimeUIViewportWidth = 0.0f;
+		float      m_LastRuntimeUIViewportHeight = 0.0f;
+		std::string m_LastRuntimeUIDocumentPath;
 	};
 }

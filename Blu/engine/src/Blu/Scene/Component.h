@@ -134,6 +134,24 @@ namespace Blu
 		MeshComponent(const MeshComponent&) = default;
 	};
 
+	struct VisualOffsetComponent
+	{
+		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
+
+		VisualOffsetComponent() = default;
+		VisualOffsetComponent(const VisualOffsetComponent&) = default;
+
+		glm::mat4 GetTransform() const
+		{
+			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
+			return glm::translate(glm::mat4(1.0f), Translation)
+				* rotation
+				* glm::scale(glm::mat4(1.0f), Scale);
+		}
+	};
+
 	// ── Level of Detail ───────────────────────────────────────────────────────
 	// Each LOD entry pairs a loaded model with a maximum camera distance at which
 	// it should be rendered. Levels are checked nearest-first; the last entry's
@@ -300,6 +318,25 @@ namespace Blu
 		CapsuleCollider3DComponent(const CapsuleCollider3DComponent&) = default;
 	};
 
+	struct MeshCollider3DComponent
+	{
+		bool Enabled          = true;
+		bool DoubleSided      = true;
+		float Friction        = 0.5f;
+		float Restitution     = 0.0f;
+
+		uint32_t RuntimeTriangleCount = 0;
+		bool RuntimeBodyCreated       = false;
+		std::string RuntimeStatus;
+
+		MeshCollider3DComponent() = default;
+		MeshCollider3DComponent(const MeshCollider3DComponent& other)
+			: Enabled(other.Enabled), DoubleSided(other.DoubleSided),
+			  Friction(other.Friction), Restitution(other.Restitution),
+			  RuntimeTriangleCount(0), RuntimeBodyCreated(false), RuntimeStatus()
+		{}
+	};
+
 	// ─── Character Controller (Jolt CharacterVirtual) ─────────────────────────
 	// Attach to an entity that will be player/AI controlled.
 	// Scene creates the JPH::CharacterVirtual at runtime; ACharacter::Move/Jump
@@ -329,6 +366,55 @@ namespace Blu
 			  IsGrounded(false), Velocity(0.0f),
 			  _PendingMoveInput(0.0f), _PendingJump(false),
 			  _RuntimeCharacter(nullptr) {}
+	};
+
+	struct InteractableComponent
+	{
+		enum class InteractionType { Pickup = 0, Trigger, Usable };
+
+		bool Enabled = true;
+		std::string DisplayName = "Interactable";
+		float InteractionRadius = 2.0f;
+		InteractionType Type = InteractionType::Pickup;
+
+		InteractableComponent() = default;
+		InteractableComponent(const InteractableComponent&) = default;
+	};
+
+	struct PickupComponent
+	{
+		enum class PickupType { Health = 0, Stamina, GenericItem };
+
+		PickupType Type = PickupType::Health;
+		float Amount = 25.0f;
+		int Count = 1;
+		bool ConsumeOnPickup = true;
+
+		PickupComponent() = default;
+		PickupComponent(const PickupComponent&) = default;
+	};
+
+	struct PlayerStatsComponent
+	{
+		float Health = 100.0f;
+		float MaxHealth = 100.0f;
+		float Stamina = 100.0f;
+		float MaxStamina = 100.0f;
+		float StaminaRegenRate = 20.0f;
+		float SprintStaminaDrain = 25.0f;
+
+		PlayerStatsComponent() = default;
+		PlayerStatsComponent(const PlayerStatsComponent&) = default;
+	};
+
+	struct UIRootComponent
+	{
+		std::string DocumentPath = "assets/ui/GameplayHUD.bluui";
+		bool Visible = true;
+		float Scale = 1.0f;
+
+		UIRootComponent() = default;
+		UIRootComponent(const UIRootComponent&) = default;
 	};
 
 	// ─── Point Light ──────────────────────────────────────────────────────────
@@ -507,10 +593,11 @@ namespace Blu
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
 		NativeScriptComponent, Rigidbody2DComponent,
-		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent, MeshLODComponent,
+		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
 		SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
 		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent,
-		CharacterControllerComponent>;
+		MeshCollider3DComponent, CharacterControllerComponent,
+		InteractableComponent, PickupComponent, PlayerStatsComponent>;
 
 
 

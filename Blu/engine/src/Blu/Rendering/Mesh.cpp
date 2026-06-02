@@ -1,11 +1,30 @@
 #include "Blupch.h"
 #include "Mesh.h"
+#include <cfloat>
+#include <cmath>
 
 namespace Blu
 {
     Mesh::Mesh(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
     {
         m_IndexCount = (uint32_t)indices.size();
+
+        // Compute a local-space bounding sphere from the AABB centre so primitive
+        // meshes can be frustum-culled just like loaded Model submeshes.
+        if (!vertices.empty())
+        {
+            glm::vec3 minP(FLT_MAX), maxP(-FLT_MAX);
+            for (const auto& v : vertices)
+            {
+                minP = glm::min(minP, v.Position);
+                maxP = glm::max(maxP, v.Position);
+            }
+            m_BoundingCenter = (minP + maxP) * 0.5f;
+            float r2 = 0.0f;
+            for (const auto& v : vertices)
+                r2 = glm::max(r2, glm::dot(v.Position - m_BoundingCenter, v.Position - m_BoundingCenter));
+            m_BoundingRadius = std::sqrt(r2);
+        }
 
         m_VertexArray  = VertexArray::Create();
         m_VertexBuffer = VertexBuffer::Create((uint32_t)(vertices.size() * sizeof(Vertex3D)));

@@ -62,9 +62,16 @@ namespace Blu
         m_Shader->SetUniformFloat3("u_CloudColor",      CloudColor);
         m_Shader->SetUniformFloat("u_CloudCoverage",    CloudCoverage);
         m_Shader->SetUniformFloat("u_CloudDensity",     CloudDensity);
+        m_Shader->SetUniformFloat("u_CloudSoftness",    CloudSoftness);
         m_Shader->SetUniformFloat("u_CloudHeight",      CloudHeight);
         m_Shader->SetUniformFloat("u_CloudScale",       CloudScale);
+        glm::vec2 windDir = glm::dot(CloudWindDirection, CloudWindDirection) > 0.0001f
+            ? glm::normalize(CloudWindDirection)
+            : glm::vec2(1.0f, 0.35f);
+        m_Shader->SetUniformFloat2("u_CloudWindDir",    windDir);
         m_Shader->SetUniformFloat("u_CloudScrollSpeed", CloudScrollSpeed);
+        m_Shader->SetUniformFloat("u_CloudShadowing",   CloudShadowing);
+        m_Shader->SetUniformFloat("u_CloudHorizonFade", CloudHorizonFade);
         m_Shader->SetUniformFloat("u_Time",             time);
         m_Shader->Flush();
 

@@ -140,10 +140,12 @@
   <ItemGroup>
     <ClCompile Include="src\BluEditor.cpp" />
     <ClCompile Include="src\BluEditorLayer.cpp" />
+    <ClCompile Include="src\AssetPreviewService.cpp" />
     <ClCompile Include="src\Panels\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp" />
     <!-- Azure game actors compiled into editor so ActorRegistry is populated on Play -->
     <ClCompile Include="..\Azure\src\Actors\PlayerCharacter.cpp" />
+    <ClCompile Include="..\Azure\src\Actors\ZombieTestActor.cpp" />
     <ClCompile Include="..\Azure\src\Actors\ZombieCharacter.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -3,14 +3,19 @@
 #include "Blu/Physics/Physics3D.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Rendering/Renderer3D.h"
+#include "Blu/Rendering/Material.h"
 #include "Blu/Rendering/CascadedShadowMap.h"
 #include "Blu/Rendering/PostProcess.h"
+#include "Blu/UI/RuntimeUI.h"
 #include "Blu/Rendering/Skybox.h"
+#include "Blu/Rendering/Texture.h"
 #include "Blu/Rendering/TimeOfDay.h"
 #include "Blu/GameFramework/GameFramework.h"
 #include "Entity.h"
 #include "Blu/Rendering/EditorCamera.h"
 #include "Blu/Rendering/Shader.h"
+#include "Blu/Rendering/ModelLoader.h"
+#include "Blu/Utils/AssetPath.h"
 #include "box2d/b2_world.h"
 #include "box2d/b2_body.h"
 #include "box2d/b2_fixture.h"
@@ -21,8 +26,10 @@
 #include "Blu/Rendering/Animator.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/norm.hpp>
 #include <cfloat>
 #include <algorithm>
+#include <limits>
 
 namespace Blu
 {
@@ -48,6 +55,207 @@ namespace Blu
 		return b2BodyType::b2_staticBody;
 	}
 
+	static uint32_t CountModelCollisionTriangles(const Shared<Model>& model)
+	{
+		if (!model)
+			return 0;
+
+		uint32_t triangleCount = 0;
+		for (const auto& submesh : model->Meshes)
+			triangleCount += (uint32_t)(submesh.Indices.size() / 3);
+		return triangleCount;
+	}
+
+	static bool HasEnabled3DCollider(Entity entity)
+	{
+		if (entity.HasComponent<BoxCollider3DComponent>() ||
+			entity.HasComponent<SphereCollider3DComponent>() ||
+			entity.HasComponent<CapsuleCollider3DComponent>())
+			return true;
+
+		if (entity.HasComponent<MeshCollider3DComponent>())
+			return entity.GetComponent<MeshCollider3DComponent>().Enabled;
+
+		return false;
+	}
+
+	static glm::mat4 GetRenderTransform(const entt::registry& registry, entt::entity entity, const TransformComponent& transform)
+	{
+		glm::mat4 renderTransform = transform.GetTransform();
+		if (registry.any_of<VisualOffsetComponent>(entity))
+			renderTransform *= registry.get<VisualOffsetComponent>(entity).GetTransform();
+
+		return renderTransform;
+	}
+
+	static void ReadCharacterCapsule(Entity entity, float& outRadius, float& outHalfHeight, glm::vec3& outOffset)
+	{
+		outRadius = 0.3f;
+		outHalfHeight = 0.55f;
+		outOffset = { 0.0f, 0.0f, 0.0f };
+
+		if (!entity.HasComponent<CapsuleCollider3DComponent>())
+			return;
+
+		auto& cap = entity.GetComponent<CapsuleCollider3DComponent>();
+		outRadius = std::max(0.01f, cap.Radius);
+		outHalfHeight = std::max(0.01f, cap.HalfHeight);
+		outOffset = cap.Offset;
+	}
+
+	static bool IsCharacterColliderValid(Entity entity)
+	{
+		if (!entity.HasComponent<CapsuleCollider3DComponent>())
+			return false;
+
+		auto& cap = entity.GetComponent<CapsuleCollider3DComponent>();
+		return cap.Radius > 0.0f && cap.HalfHeight > 0.0f;
+	}
+
+	static JPH::CharacterVirtual* CreateRuntimeCharacter(
+		Entity entity,
+		const TransformComponent& tc,
+		CharacterControllerComponent& ccc,
+		Physics3DWorld* physicsWorld,
+		std::string& outStatus)
+	{
+		if (!physicsWorld || !physicsWorld->IsValid())
+		{
+			outStatus = "No active Physics3D world";
+			return nullptr;
+		}
+
+		if (!entity.HasComponent<CapsuleCollider3DComponent>())
+		{
+			outStatus = "Character Controller requires Capsule Collider 3D";
+			return nullptr;
+		}
+
+		float radius = 0.0f;
+		float halfHeight = 0.0f;
+		glm::vec3 offset;
+		ReadCharacterCapsule(entity, radius, halfHeight, offset);
+
+		if (radius <= 0.0f || halfHeight <= 0.0f)
+		{
+			outStatus = "Character capsule radius/height must be greater than zero";
+			return nullptr;
+		}
+
+		JPH::CapsuleShapeSettings capsuleSettings(halfHeight, radius);
+		auto capsuleResult = capsuleSettings.Create();
+		if (capsuleResult.HasError())
+		{
+			outStatus = capsuleResult.GetError().c_str();
+			return nullptr;
+		}
+
+		JPH::RotatedTranslatedShapeSettings offsetSettings(
+			JPH::Vec3(offset.x, offset.y + halfHeight + radius, offset.z),
+			JPH::Quat::sIdentity(),
+			capsuleResult.Get());
+		auto shapeResult = offsetSettings.Create();
+		if (shapeResult.HasError())
+		{
+			outStatus = shapeResult.GetError().c_str();
+			return nullptr;
+		}
+
+		JPH::CharacterVirtualSettings settings;
+		settings.mUp = JPH::Vec3::sAxisY();
+		settings.mMaxSlopeAngle = JPH::DegreesToRadians(ccc.SlopeLimit);
+		settings.mShape = shapeResult.Get();
+
+		auto* character = new JPH::CharacterVirtual(
+			&settings,
+			JPH::RVec3(tc.Translation.x, tc.Translation.y, tc.Translation.z),
+			JPH::Quat::sIdentity(),
+			physicsWorld->GetPhysicsSystem());
+
+		outStatus = "Runtime character active";
+		return character;
+	}
+
+	static bool BuildMeshColliderSpec(
+		Entity entity,
+		TransformComponent& tc,
+		MeshComponent& mesh,
+		MeshCollider3DComponent& collider,
+		const std::filesystem::path& sceneFilePath,
+		Physics3DBodySpec& spec,
+		std::string& outStatus)
+	{
+		if (!collider.Enabled)
+		{
+			outStatus = "Mesh collider is disabled";
+			return false;
+		}
+
+		if (!mesh.ModelAsset && !mesh.FilePath.empty())
+			mesh.ModelAsset = ModelLoader::Load(AssetPath::ResolvePath(mesh.FilePath, sceneFilePath).string());
+
+		if (!mesh.ModelAsset)
+		{
+			outStatus = "Mesh collider has no loaded model";
+			return false;
+		}
+
+		if (CountModelCollisionTriangles(mesh.ModelAsset) == 0 && !mesh.FilePath.empty())
+			mesh.ModelAsset = ModelLoader::Load(AssetPath::ResolvePath(mesh.FilePath, sceneFilePath).string());
+
+		if (CountModelCollisionTriangles(mesh.ModelAsset) == 0)
+		{
+			outStatus = "Mesh collider has no CPU triangle data";
+			return false;
+		}
+
+		glm::mat4 scaleTransform = glm::scale(glm::mat4(1.0f), tc.Scale);
+		spec.ShapeType = Physics3DShapeType::Mesh;
+		spec.MeshDoubleSided = collider.DoubleSided;
+		spec.Friction = collider.Friction;
+		spec.Restitution = collider.Restitution;
+		spec.MeshTriangleVertices.clear();
+
+		for (const auto& submesh : mesh.ModelAsset->Meshes)
+		{
+			if (submesh.Vertices.empty() || submesh.Indices.empty())
+				continue;
+
+			glm::mat4 localTransform = scaleTransform * submesh.LocalTransform;
+			for (size_t i = 0; i + 2 < submesh.Indices.size(); i += 3)
+			{
+				uint32_t i0 = submesh.Indices[i + 0];
+				uint32_t i1 = submesh.Indices[i + 1];
+				uint32_t i2 = submesh.Indices[i + 2];
+				if (i0 >= submesh.Vertices.size() || i1 >= submesh.Vertices.size() || i2 >= submesh.Vertices.size())
+					continue;
+
+				glm::vec3 v0 = glm::vec3(localTransform * glm::vec4(submesh.Vertices[i0].Position, 1.0f));
+				glm::vec3 v1 = glm::vec3(localTransform * glm::vec4(submesh.Vertices[i1].Position, 1.0f));
+				glm::vec3 v2 = glm::vec3(localTransform * glm::vec4(submesh.Vertices[i2].Position, 1.0f));
+
+				glm::vec3 edge0 = v1 - v0;
+				glm::vec3 edge1 = v2 - v0;
+				if (glm::dot(glm::cross(edge0, edge1), glm::cross(edge0, edge1)) < 0.00000001f)
+					continue;
+
+				spec.MeshTriangleVertices.push_back(v0);
+				spec.MeshTriangleVertices.push_back(v1);
+				spec.MeshTriangleVertices.push_back(v2);
+			}
+		}
+
+		collider.RuntimeTriangleCount = (uint32_t)(spec.MeshTriangleVertices.size() / 3);
+		if (collider.RuntimeTriangleCount == 0)
+		{
+			outStatus = "Mesh collider cooked zero valid triangles";
+			return false;
+		}
+
+		outStatus = "Ready (" + std::to_string(collider.RuntimeTriangleCount) + " triangles)";
+		return true;
+	}
+
 	Scene::Scene()
 	{
 		m_LightManager = std::make_shared<LightManager>();
@@ -70,7 +278,23 @@ namespace Blu
 		}
 
 		if (!m_PostProcess && width > 0 && height > 0)
+		{
 			m_PostProcess = PostProcess::Create((uint32_t)width, (uint32_t)height);
+			if (m_HasPostProcessSettings && m_PostProcess)
+			{
+				m_PostProcess->EnableBloom    = m_PostProcessSettings.EnableBloom;
+				m_PostProcess->BloomThreshold = m_PostProcessSettings.BloomThreshold;
+				m_PostProcess->BloomStrength  = m_PostProcessSettings.BloomStrength;
+				m_PostProcess->EnableFXAA     = m_PostProcessSettings.EnableFXAA;
+				m_PostProcess->Preview        = (PostProcess::PreviewMode)m_PostProcessSettings.Preview;
+				m_PostProcess->EnableSSAO     = m_PostProcessSettings.EnableSSAO;
+				m_PostProcess->SSAORadius     = m_PostProcessSettings.SSAORadius;
+				m_PostProcess->SSAOBias       = m_PostProcessSettings.SSAOBias;
+				m_PostProcess->SSAOPower      = m_PostProcessSettings.SSAOPower;
+				m_PostProcess->SSAOSamples    = m_PostProcessSettings.SSAOSamples;
+				m_PostProcess->SSAOStrength   = m_PostProcessSettings.SSAOStrength;
+			}
+		}
 		else if (m_PostProcess)
 			m_PostProcess->Resize((uint32_t)width, (uint32_t)height);
 
@@ -139,11 +363,18 @@ namespace Blu
 		CopyComponent<DirectionalLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<SpotLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<MeshComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<VisualOffsetComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		CopyComponent<Rigidbody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<SphereCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<CapsuleCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<MeshCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CharacterControllerComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<InteractableComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<PickupComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<PlayerStatsComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<UIRootComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<SpringArmComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<AnimatorComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<MeshLODComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -154,6 +385,8 @@ namespace Blu
 		newScene->m_UsePostProcess = scene->m_UsePostProcess;
 		newScene->m_UseSkybox      = scene->m_UseSkybox;
 		newScene->m_Fog            = scene->m_Fog;
+		newScene->m_HasPostProcessSettings = scene->m_HasPostProcessSettings;
+		newScene->m_PostProcessSettings = scene->m_PostProcessSettings;
 		if (scene->m_UseSkybox && scene->m_Skybox)
 		{
 			newScene->m_Skybox = std::make_shared<Skybox>();
@@ -168,9 +401,13 @@ namespace Blu
 			dst.CloudColor       = src.CloudColor;
 			dst.CloudCoverage    = src.CloudCoverage;
 			dst.CloudDensity     = src.CloudDensity;
+			dst.CloudSoftness    = src.CloudSoftness;
 			dst.CloudHeight      = src.CloudHeight;
 			dst.CloudScale       = src.CloudScale;
+			dst.CloudWindDirection = src.CloudWindDirection;
 			dst.CloudScrollSpeed = src.CloudScrollSpeed;
+			dst.CloudShadowing   = src.CloudShadowing;
+			dst.CloudHorizonFade = src.CloudHorizonFade;
 		}
 		if (scene->m_UsePostProcess && scene->m_PostProcess &&
 		    newScene->m_ViewportWidth > 0 && newScene->m_ViewportHeight > 0)
@@ -181,6 +418,7 @@ namespace Blu
 			newScene->m_PostProcess->BloomThreshold = scene->m_PostProcess->BloomThreshold;
 			newScene->m_PostProcess->BloomStrength  = scene->m_PostProcess->BloomStrength;
 			newScene->m_PostProcess->EnableFXAA     = scene->m_PostProcess->EnableFXAA;
+			newScene->m_PostProcess->Preview        = scene->m_PostProcess->Preview;
 			newScene->m_PostProcess->EnableSSAO     = scene->m_PostProcess->EnableSSAO;
 			newScene->m_PostProcess->SSAORadius     = scene->m_PostProcess->SSAORadius;
 			newScene->m_PostProcess->SSAOBias       = scene->m_PostProcess->SSAOBias;
@@ -373,6 +611,14 @@ namespace Blu
 		SceneDiagnostics diagnostics;
 		diagnostics.PlayerInputEnabled = m_PlayerInputEnabled;
 		diagnostics.EjectCameraActive = m_EjectCamera != nullptr;
+		diagnostics.UIRootCount = m_LastRuntimeUIRootCount;
+		diagnostics.RuntimeUIWidgetCount = m_LastRuntimeUIWidgetCount;
+		diagnostics.RuntimeUIRendered = m_LastRuntimeUIRendered;
+		diagnostics.RuntimeUIMissingDocument = m_LastRuntimeUIMissingDocument;
+		diagnostics.RuntimeUIViewportWidth = m_LastRuntimeUIViewportWidth;
+		diagnostics.RuntimeUIViewportHeight = m_LastRuntimeUIViewportHeight;
+		diagnostics.RuntimeUIDocumentPath = m_LastRuntimeUIDocumentPath;
+		Entity possessedEntity;
 
 		auto entityView = m_Registry.view<IDComponent>();
 		for (auto e : entityView)
@@ -400,6 +646,74 @@ namespace Blu
 				diagnostics.DrawableMeshCount++;
 		}
 
+		for (auto e : m_Registry.view<VisualOffsetComponent>())
+			diagnostics.VisualOffsetCount++;
+
+		auto rb3dView = m_Registry.view<Rigidbody3DComponent>();
+		for (auto e : rb3dView)
+		{
+			Entity entity = { e, this };
+			auto& rb = rb3dView.get<Rigidbody3DComponent>(e);
+
+			diagnostics.Rigidbody3DCount++;
+			if (rb.RuntimeBodyID != UINT32_MAX)
+				diagnostics.RuntimePhysicsBody3DCount++;
+
+			switch (rb.Type)
+			{
+				case Rigidbody3DComponent::BodyType::Static:    diagnostics.StaticBody3DCount++; break;
+				case Rigidbody3DComponent::BodyType::Dynamic:   diagnostics.DynamicBody3DCount++; break;
+				case Rigidbody3DComponent::BodyType::Kinematic: diagnostics.KinematicBody3DCount++; break;
+			}
+
+			if (!HasEnabled3DCollider(entity))
+				diagnostics.MissingCollider3DCount++;
+		}
+
+		for (auto e : m_Registry.view<BoxCollider3DComponent>())
+			diagnostics.BoxCollider3DCount++;
+		for (auto e : m_Registry.view<SphereCollider3DComponent>())
+			diagnostics.SphereCollider3DCount++;
+		for (auto e : m_Registry.view<CapsuleCollider3DComponent>())
+			diagnostics.CapsuleCollider3DCount++;
+
+		auto meshColliderView = m_Registry.view<MeshCollider3DComponent>();
+		for (auto e : meshColliderView)
+		{
+			Entity entity = { e, this };
+			auto& collider = meshColliderView.get<MeshCollider3DComponent>(e);
+			diagnostics.MeshCollider3DCount++;
+
+			if (!collider.Enabled)
+				continue;
+
+			uint32_t triangleCount = collider.RuntimeTriangleCount;
+			if (entity.HasComponent<MeshComponent>())
+				triangleCount = std::max(triangleCount, CountModelCollisionTriangles(entity.GetComponent<MeshComponent>().ModelAsset));
+			diagnostics.MeshColliderTriangleCount += triangleCount;
+
+			bool valid = entity.HasComponent<MeshComponent>() &&
+			             entity.GetComponent<MeshComponent>().ModelAsset &&
+			             triangleCount > 0 &&
+			             entity.HasComponent<Rigidbody3DComponent>() &&
+			             entity.GetComponent<Rigidbody3DComponent>().Type == Rigidbody3DComponent::BodyType::Static;
+			if (!valid)
+				diagnostics.InvalidMeshCollider3DCount++;
+		}
+		diagnostics.PhysicsBodyCreationFailureCount = m_Physics3DBodyCreationFailureCount;
+
+		auto characterView = m_Registry.view<CharacterControllerComponent>();
+		for (auto e : characterView)
+		{
+			Entity entity = { e, this };
+			auto& ccc = characterView.get<CharacterControllerComponent>(e);
+			diagnostics.CharacterControllerCount++;
+			if (ccc._RuntimeCharacter)
+				diagnostics.RuntimeCharacterControllerCount++;
+			if (!IsCharacterColliderValid(entity))
+				diagnostics.InvalidCharacterColliderCount++;
+		}
+
 		auto springArmView = m_Registry.view<SpringArmComponent>();
 		for (auto e : springArmView)
 			diagnostics.SpringArmCount++;
@@ -410,6 +724,8 @@ namespace Blu
 			auto& nsc = scriptView.get<NativeScriptComponent>(e);
 			if (!nsc.ClassName.empty() || nsc.Instance)
 				diagnostics.NativeScriptCount++;
+			if (nsc.Instance && (nsc.ClassName == "ZombieTestActor" || nsc.ClassName == "ZombieCharacter"))
+				diagnostics.ActiveZombieCount++;
 
 			if (nsc.Instance)
 			{
@@ -417,11 +733,372 @@ namespace Blu
 				{
 					if (m_Registry.any_of<TagComponent>(e))
 						diagnostics.PossessedPawnName = m_Registry.get<TagComponent>(e).Tag;
+
+					Entity pawnEntity = { e, this };
+					possessedEntity = pawnEntity;
+					diagnostics.PossessedPawnHasVisualOffset = pawnEntity.HasComponent<VisualOffsetComponent>();
+					if (pawnEntity.HasComponent<TransformComponent>())
+						diagnostics.PossessedPawnFeetPosition = pawnEntity.GetComponent<TransformComponent>().Translation;
+					if (pawnEntity.HasComponent<PlayerStatsComponent>())
+					{
+						auto& stats = pawnEntity.GetComponent<PlayerStatsComponent>();
+						diagnostics.PossessedPawnHasStats = true;
+						diagnostics.PossessedPawnHealth = stats.Health;
+						diagnostics.PossessedPawnMaxHealth = stats.MaxHealth;
+						diagnostics.PossessedPawnStamina = stats.Stamina;
+						diagnostics.PossessedPawnMaxStamina = stats.MaxStamina;
+					}
+					if (pawnEntity.HasComponent<CharacterControllerComponent>())
+					{
+						auto& ccc = pawnEntity.GetComponent<CharacterControllerComponent>();
+						diagnostics.PossessedPawnGrounded = ccc.IsGrounded;
+						diagnostics.PossessedPawnVelocity = ccc.Velocity;
+					}
+					if (pawnEntity.HasComponent<CapsuleCollider3DComponent>())
+					{
+						auto& cap = pawnEntity.GetComponent<CapsuleCollider3DComponent>();
+						diagnostics.PossessedPawnCapsuleRadius = cap.Radius;
+						diagnostics.PossessedPawnCapsuleHalfHeight = cap.HalfHeight;
+					}
 				}
 			}
 		}
 
+		for (auto e : m_Registry.view<InteractableComponent>())
+			diagnostics.InteractableCount++;
+		for (auto e : m_Registry.view<PickupComponent>())
+			diagnostics.PickupCount++;
+
+		if (possessedEntity && possessedEntity.HasComponent<TransformComponent>())
+		{
+			const glm::vec3 playerPos = possessedEntity.GetComponent<TransformComponent>().Translation;
+			float bestDistSq = std::numeric_limits<float>::max();
+			auto interactableView = m_Registry.view<TransformComponent, InteractableComponent>();
+			for (auto e : interactableView)
+			{
+				auto&& [tc, interactable] = interactableView.get<TransformComponent, InteractableComponent>(e);
+				if (!interactable.Enabled)
+					continue;
+
+				float distSq = glm::length2(tc.Translation - playerPos);
+				float radiusSq = interactable.InteractionRadius * interactable.InteractionRadius;
+				if (distSq <= radiusSq && distSq < bestDistSq)
+				{
+					bestDistSq = distSq;
+					if (!interactable.DisplayName.empty())
+						diagnostics.NearbyInteractableName = interactable.DisplayName;
+					else if (m_Registry.any_of<TagComponent>(e))
+						diagnostics.NearbyInteractableName = m_Registry.get<TagComponent>(e).Tag;
+					else
+						diagnostics.NearbyInteractableName = "<unnamed>";
+				}
+			}
+		}
+
+		auto manifest = CollectAssetManifest();
+		diagnostics.AssetReferenceCount = manifest.ReferencedCount;
+		diagnostics.MissingAssetCount = manifest.MissingCount;
+		diagnostics.ExternalAssetCount = manifest.ExternalCount;
+		diagnostics.ImportedAssetCount = manifest.ImportedCount;
+
 		return diagnostics;
+	}
+
+	SceneAssetManifest Scene::CollectAssetManifest()
+	{
+		SceneAssetManifest manifest;
+
+		auto addDependency = [&](entt::entity entity, const std::string& type, const std::string& rawPath, const std::string& component)
+		{
+			if (rawPath.empty())
+				return;
+
+			AssetDependency dependency;
+			dependency.Type = type;
+			dependency.Path = AssetPath::ToProjectRelative(rawPath);
+
+			auto resolved = AssetPath::ResolvePath(rawPath, m_SceneFilePath);
+			dependency.ResolvedPath = AssetPath::NormalizePath(resolved);
+			dependency.Exists = std::filesystem::exists(resolved);
+			dependency.External = AssetPath::IsExternal(rawPath);
+			dependency.Imported = AssetPath::IsImported(dependency.Path);
+			dependency.SourceComponent = component;
+
+			if (m_Registry.any_of<IDComponent>(entity))
+				dependency.SourceEntity = (uint64_t)m_Registry.get<IDComponent>(entity).ID;
+			if (m_Registry.any_of<TagComponent>(entity))
+				dependency.SourceTag = m_Registry.get<TagComponent>(entity).Tag;
+
+			manifest.ReferencedCount++;
+			if (!dependency.Exists)
+				manifest.MissingCount++;
+			if (dependency.External)
+				manifest.ExternalCount++;
+			if (dependency.Imported)
+				manifest.ImportedCount++;
+
+			manifest.Dependencies.push_back(std::move(dependency));
+		};
+
+		auto addMaterialDependencies = [&](entt::entity entity, const Shared<Material>& material, const std::string& componentPrefix)
+		{
+			if (!material)
+				return;
+
+			auto addTexture = [&](const std::string& slot, Shared<Texture2D>& texture)
+			{
+				if (texture)
+					addDependency(entity, "Texture", texture->GetTexturePath(), componentPrefix + "." + slot);
+			};
+
+			addTexture("Albedo", material->AlbedoMap);
+			addTexture("Normal", material->NormalMap);
+			addTexture("MetallicRoughness", material->MetallicRoughnessMap);
+			addTexture("AO", material->AOMap);
+			addTexture("Emissive", material->EmissiveMap);
+		};
+
+		auto meshView = m_Registry.view<MeshComponent>();
+		for (auto entity : meshView)
+		{
+			auto& mesh = meshView.get<MeshComponent>(entity);
+			addDependency(entity, "Model", mesh.FilePath, "MeshComponent");
+			addMaterialDependencies(entity, mesh.MaterialInstance, "MeshComponent.Material");
+
+			if (mesh.ModelAsset)
+			{
+				int materialIndex = 0;
+				for (auto& material : mesh.ModelAsset->Materials)
+					addMaterialDependencies(entity, material, "MeshComponent.ModelMaterial" + std::to_string(materialIndex++));
+			}
+		}
+
+		auto spriteView = m_Registry.view<SpriteRendererComponent>();
+		for (auto entity : spriteView)
+		{
+			auto& sprite = spriteView.get<SpriteRendererComponent>(entity);
+			addMaterialDependencies(entity, sprite.MaterialInstance, "SpriteRendererComponent.Material");
+		}
+
+		auto foliageView = m_Registry.view<FoliageComponent>();
+		for (auto entity : foliageView)
+		{
+			auto& foliage = foliageView.get<FoliageComponent>(entity);
+			addDependency(entity, "Model", foliage.FilePath, "FoliageComponent");
+			if (foliage.ModelAsset)
+			{
+				int materialIndex = 0;
+				for (auto& material : foliage.ModelAsset->Materials)
+					addMaterialDependencies(entity, material, "FoliageComponent.ModelMaterial" + std::to_string(materialIndex++));
+			}
+		}
+
+		auto lodView = m_Registry.view<MeshLODComponent>();
+		for (auto entity : lodView)
+		{
+			auto& lod = lodView.get<MeshLODComponent>(entity);
+			for (size_t i = 0; i < lod.Levels.size(); ++i)
+			{
+				auto& level = lod.Levels[i];
+				addDependency(entity, "Model", level.FilePath, "MeshLODComponent.Level" + std::to_string(i));
+			}
+		}
+
+		auto audioView = m_Registry.view<AudioSourceComponent>();
+		for (auto entity : audioView)
+		{
+			auto& audio = audioView.get<AudioSourceComponent>(entity);
+			addDependency(entity, "Audio", audio.FilePath, "AudioSourceComponent");
+		}
+
+		auto uiView = m_Registry.view<UIRootComponent>();
+		for (auto entity : uiView)
+		{
+			auto& ui = uiView.get<UIRootComponent>(entity);
+			addDependency(entity, "UI", ui.DocumentPath, "UIRootComponent");
+		}
+
+		return manifest;
+	}
+
+	bool Scene::GenerateStaticMeshCollision(Entity entity, std::string* outMessage)
+	{
+		auto setMessage = [&](const std::string& message)
+		{
+			if (outMessage)
+				*outMessage = message;
+		};
+
+		if (!entity)
+		{
+			setMessage("No entity selected");
+			return false;
+		}
+
+		if (!entity.HasComponent<MeshComponent>())
+		{
+			setMessage("Selected entity has no Mesh Renderer");
+			return false;
+		}
+
+		auto& mesh = entity.GetComponent<MeshComponent>();
+		if (!mesh.ModelAsset && !mesh.FilePath.empty())
+			mesh.ModelAsset = ModelLoader::Load(AssetPath::ResolvePath(mesh.FilePath, m_SceneFilePath).string());
+
+		if (!mesh.ModelAsset)
+		{
+			setMessage("Mesh Renderer has no loaded model");
+			return false;
+		}
+
+		if (CountModelCollisionTriangles(mesh.ModelAsset) == 0 && !mesh.FilePath.empty())
+			mesh.ModelAsset = ModelLoader::Load(AssetPath::ResolvePath(mesh.FilePath, m_SceneFilePath).string());
+
+		const uint32_t triangleCount = CountModelCollisionTriangles(mesh.ModelAsset);
+		if (triangleCount == 0)
+		{
+			setMessage("Model has no CPU triangle data; reload or reimport the model");
+			return false;
+		}
+
+		Rigidbody3DComponent* rb = nullptr;
+		if (entity.HasComponent<Rigidbody3DComponent>())
+			rb = &entity.GetComponent<Rigidbody3DComponent>();
+		else
+			rb = &entity.AddComponent<Rigidbody3DComponent>();
+
+		rb->Type = Rigidbody3DComponent::BodyType::Static;
+		rb->RuntimeBodyID = UINT32_MAX;
+
+		MeshCollider3DComponent* collider = nullptr;
+		if (entity.HasComponent<MeshCollider3DComponent>())
+			collider = &entity.GetComponent<MeshCollider3DComponent>();
+		else
+			collider = &entity.AddComponent<MeshCollider3DComponent>();
+
+		collider->Enabled = true;
+		collider->RuntimeTriangleCount = triangleCount;
+		collider->RuntimeBodyCreated = false;
+		collider->RuntimeStatus = "Ready (" + std::to_string(triangleCount) + " triangles)";
+
+		setMessage("Static mesh collision ready: " + std::to_string(triangleCount) + " triangles");
+		return true;
+	}
+
+	bool Scene::FitCharacterVisualToCapsule(Entity entity, std::string* outMessage)
+	{
+		auto setMessage = [&](const std::string& message)
+		{
+			if (outMessage)
+				*outMessage = message;
+		};
+
+		if (!entity)
+		{
+			setMessage("No entity selected");
+			return false;
+		}
+
+		if (!entity.HasComponent<CapsuleCollider3DComponent>())
+		{
+			setMessage("Selected entity has no Capsule Collider 3D");
+			return false;
+		}
+
+		auto& capsule = entity.GetComponent<CapsuleCollider3DComponent>();
+		if (capsule.Radius <= 0.0f || capsule.HalfHeight <= 0.0f)
+		{
+			setMessage("Capsule radius and half height must be greater than zero");
+			return false;
+		}
+
+		VisualOffsetComponent* visual = nullptr;
+		if (entity.HasComponent<VisualOffsetComponent>())
+			visual = &entity.GetComponent<VisualOffsetComponent>();
+		else
+			visual = &entity.AddComponent<VisualOffsetComponent>();
+
+		const float diameter = capsule.Radius * 2.0f;
+		const float fullHeight = (capsule.HalfHeight + capsule.Radius) * 2.0f;
+		visual->Translation = capsule.Offset + glm::vec3(0.0f, capsule.HalfHeight + capsule.Radius, 0.0f);
+
+		if (entity.HasComponent<MeshComponent>())
+		{
+			auto& mesh = entity.GetComponent<MeshComponent>();
+			if (mesh.Primitive == MeshComponent::PrimitiveType::Cube && mesh.FilePath.empty() && !mesh.ModelAsset)
+				visual->Scale = { diameter, fullHeight, diameter };
+		}
+
+		setMessage("Visual offset fitted to capsule");
+		return true;
+	}
+
+	bool Scene::ResetVisualOffset(Entity entity, std::string* outMessage)
+	{
+		if (!entity)
+		{
+			if (outMessage)
+				*outMessage = "No entity selected";
+			return false;
+		}
+
+		VisualOffsetComponent* visual = nullptr;
+		if (entity.HasComponent<VisualOffsetComponent>())
+			visual = &entity.GetComponent<VisualOffsetComponent>();
+		else
+			visual = &entity.AddComponent<VisualOffsetComponent>();
+
+		visual->Translation = { 0.0f, 0.0f, 0.0f };
+		visual->Rotation = { 0.0f, 0.0f, 0.0f };
+		visual->Scale = { 1.0f, 1.0f, 1.0f };
+
+		if (outMessage)
+			*outMessage = "Visual offset reset";
+		return true;
+	}
+
+	bool Scene::SnapCharacterFeetToGround(Entity entity, std::string* outMessage)
+	{
+		auto setMessage = [&](const std::string& message)
+		{
+			if (outMessage)
+				*outMessage = message;
+		};
+
+		if (!entity || !entity.HasComponent<TransformComponent>())
+		{
+			setMessage("Selected entity has no Transform");
+			return false;
+		}
+
+		if (!m_Physics3DWorld || !m_Physics3DWorld->IsValid())
+		{
+			setMessage("Snap Feet To Ground requires active Play/Simulate physics");
+			return false;
+		}
+
+		auto& tc = entity.GetComponent<TransformComponent>();
+		glm::vec3 hitPosition;
+		const glm::vec3 rayOrigin = tc.Translation + glm::vec3(0.0f, 5.0f, 0.0f);
+		if (!m_Physics3DWorld->CastRay(rayOrigin, glm::vec3(0.0f, -200.0f, 0.0f), hitPosition))
+		{
+			setMessage("No ground found below selected entity");
+			return false;
+		}
+
+		tc.Translation.y = hitPosition.y;
+		if (entity.HasComponent<CharacterControllerComponent>())
+		{
+			auto& ccc = entity.GetComponent<CharacterControllerComponent>();
+			if (ccc._RuntimeCharacter)
+			{
+				auto* character = static_cast<JPH::CharacterVirtual*>(ccc._RuntimeCharacter);
+				character->SetPosition(JPH::RVec3(tc.Translation.x, tc.Translation.y, tc.Translation.z));
+			}
+		}
+
+		setMessage("Character feet snapped to ground");
+		return true;
 	}
 
 	Entity Scene::DuplicateEntity(Entity& targetEntity)
@@ -462,6 +1139,85 @@ namespace Blu
 		}
 		return Entity{};
 	}
+
+	Entity Scene::CloneEntityFrom(Entity source, const std::string& nameOverride)
+	{
+		if (!source || !source.HasComponent<TagComponent>() || !source.HasComponent<TransformComponent>())
+			return {};
+
+		const std::string name = nameOverride.empty() ? source.GetComponent<TagComponent>().Tag : nameOverride;
+		Entity destination = CreateEntity(name);
+		destination.GetComponent<TransformComponent>() = source.GetComponent<TransformComponent>();
+
+		auto copy = [&]<typename T>()
+		{
+			if (source.HasComponent<T>() && !destination.HasComponent<T>())
+				m_Registry.emplace<T>((entt::entity)destination, source.GetComponent<T>());
+		};
+
+		copy.template operator()<ParticleSystemComponent>();
+		copy.template operator()<SpriteRendererComponent>();
+		copy.template operator()<CircleRendererComponent>();
+		copy.template operator()<Rigidbody2DComponent>();
+		copy.template operator()<BoxCollider2DComponent>();
+		copy.template operator()<CircleCollider2DComponent>();
+		copy.template operator()<CameraComponent>();
+		copy.template operator()<NativeScriptComponent>();
+		copy.template operator()<PointLightComponent>();
+		copy.template operator()<DirectionalLightComponent>();
+		copy.template operator()<SpotLightComponent>();
+		copy.template operator()<MeshComponent>();
+		copy.template operator()<VisualOffsetComponent>();
+		copy.template operator()<Rigidbody3DComponent>();
+		copy.template operator()<BoxCollider3DComponent>();
+		copy.template operator()<SphereCollider3DComponent>();
+		copy.template operator()<CapsuleCollider3DComponent>();
+		copy.template operator()<MeshCollider3DComponent>();
+		copy.template operator()<CharacterControllerComponent>();
+		copy.template operator()<InteractableComponent>();
+		copy.template operator()<PickupComponent>();
+		copy.template operator()<PlayerStatsComponent>();
+		copy.template operator()<UIRootComponent>();
+		copy.template operator()<SpringArmComponent>();
+		copy.template operator()<AnimatorComponent>();
+		copy.template operator()<MeshLODComponent>();
+		copy.template operator()<AudioSourceComponent>();
+		copy.template operator()<FoliageComponent>();
+
+		if (destination.HasComponent<NativeScriptComponent>())
+		{
+			auto& nsc = destination.GetComponent<NativeScriptComponent>();
+			nsc.Instance = nullptr;
+			if (!nsc.ClassName.empty())
+			{
+				nsc.InstantiateScript = nullptr;
+				nsc.DestroyScript = nullptr;
+			}
+		}
+		if (destination.HasComponent<Rigidbody3DComponent>())
+			destination.GetComponent<Rigidbody3DComponent>().RuntimeBodyID = UINT32_MAX;
+		if (destination.HasComponent<CharacterControllerComponent>())
+		{
+			auto& controller = destination.GetComponent<CharacterControllerComponent>();
+			controller._RuntimeCharacter = nullptr;
+			controller._PendingMoveInput = glm::vec3(0.0f);
+			controller._PendingJump = false;
+			controller.IsGrounded = false;
+			controller.Velocity = glm::vec3(0.0f);
+		}
+		if (destination.HasComponent<MeshCollider3DComponent>())
+		{
+			auto& collider = destination.GetComponent<MeshCollider3DComponent>();
+			collider.RuntimeBodyCreated = false;
+			collider.RuntimeTriangleCount = 0;
+			collider.RuntimeStatus.clear();
+		}
+		if (destination.HasComponent<AudioSourceComponent>())
+			destination.GetComponent<AudioSourceComponent>()._RuntimeHandle = kInvalidSound;
+
+		return destination;
+	}
+
 	void Scene::OnRuntimeStart()
 	{
 		OnPhysics2DStart();
@@ -473,7 +1229,7 @@ namespace Blu
 			[&](auto entity, AudioSourceComponent& asc, const TransformComponent& tc)
 			{
 				if (asc.FilePath.empty()) return;
-				asc._RuntimeHandle = AudioEngine::Get().LoadSound(asc.FilePath);
+				asc._RuntimeHandle = AudioEngine::Get().LoadSound(AssetPath::ResolvePath(asc.FilePath, m_SceneFilePath).string());
 				if (asc._RuntimeHandle == kInvalidSound) return;
 
 				AudioEngine::Get().SetVolume (asc._RuntimeHandle, asc.Volume);
@@ -554,6 +1310,21 @@ namespace Blu
 	{
 		m_Physics3DWorld = new Physics3DWorld();
 		m_Physics3DWorld->Init({ 0.0f, -9.81f, 0.0f });
+		m_Physics3DBodyCreationFailureCount = 0;
+		for (auto e : m_Registry.view<MeshCollider3DComponent>())
+		{
+			auto& collider = m_Registry.get<MeshCollider3DComponent>(e);
+			collider.RuntimeBodyCreated = false;
+			collider.RuntimeStatus.clear();
+		}
+		for (auto e : m_Registry.view<CharacterControllerComponent>())
+		{
+			auto& ccc = m_Registry.get<CharacterControllerComponent>(e);
+			ccc.IsGrounded = false;
+			ccc.Velocity = { 0.0f, 0.0f, 0.0f };
+			ccc._PendingMoveInput = { 0.0f, 0.0f, 0.0f };
+			ccc._PendingJump = false;
+		}
 
 		auto view = m_Registry.view<Rigidbody3DComponent>();
 		for (auto e : view)
@@ -561,9 +1332,12 @@ namespace Blu
 			Entity entity = { e, this };
 			auto& tc = entity.GetComponent<TransformComponent>();
 			auto& rb = entity.GetComponent<Rigidbody3DComponent>();
+			rb.RuntimeBodyID = UINT32_MAX;
 
 			// Build body spec from whichever collider component is present
 			Physics3DBodySpec spec;
+			MeshCollider3DComponent* meshCollider = entity.HasComponent<MeshCollider3DComponent>()
+				? &entity.GetComponent<MeshCollider3DComponent>() : nullptr;
 
 			if (entity.HasComponent<BoxCollider3DComponent>())
 			{
@@ -598,11 +1372,43 @@ namespace Blu
 				spec.Restitution = cc.Restitution;
 				spec.Density   = cc.Density;
 			}
+			else if (meshCollider && meshCollider->Enabled)
+			{
+				meshCollider->RuntimeBodyCreated = false;
+				meshCollider->RuntimeTriangleCount = 0;
+				meshCollider->RuntimeStatus.clear();
+
+				if (rb.Type != Rigidbody3DComponent::BodyType::Static)
+				{
+					meshCollider->RuntimeStatus = "Mesh Collider supports Static Rigidbody3D only";
+					m_Physics3DBodyCreationFailureCount++;
+					BLU_CORE_WARN("Physics3D: entity has MeshCollider3D but Rigidbody3D is not Static");
+					continue;
+				}
+
+				if (!entity.HasComponent<MeshComponent>())
+				{
+					meshCollider->RuntimeStatus = "Mesh Collider requires a Mesh Renderer";
+					m_Physics3DBodyCreationFailureCount++;
+					continue;
+				}
+
+				std::string status;
+				if (!BuildMeshColliderSpec(entity, tc, entity.GetComponent<MeshComponent>(), *meshCollider, m_SceneFilePath, spec, status))
+				{
+					meshCollider->RuntimeStatus = status;
+					m_Physics3DBodyCreationFailureCount++;
+					BLU_CORE_WARN("Physics3D: mesh collider skipped: {0}", status);
+					continue;
+				}
+
+				meshCollider->RuntimeStatus = status;
+			}
 			else
 			{
-				// No collider component — default to a unit box so the body still works
-				spec.ShapeType   = Physics3DShapeType::Box;
-				spec.HalfExtents = { 0.5f, 0.5f, 0.5f };
+				m_Physics3DBodyCreationFailureCount++;
+				BLU_CORE_WARN("Physics3D: Rigidbody3D has no enabled 3D collider; skipping body");
+				continue;
 			}
 
 			// Derive world-space rotation from euler angles stored in TransformComponent
@@ -619,6 +1425,17 @@ namespace Blu
 
 			rb.RuntimeBodyID = m_Physics3DWorld->AddBody(
 				tc.Translation, worldRotation, bodyType, spec);
+			if (rb.RuntimeBodyID == UINT32_MAX)
+			{
+				m_Physics3DBodyCreationFailureCount++;
+				if (meshCollider)
+					meshCollider->RuntimeStatus = "Jolt failed to create runtime body";
+			}
+			else if (meshCollider && spec.ShapeType == Physics3DShapeType::Mesh)
+			{
+				meshCollider->RuntimeBodyCreated = true;
+				meshCollider->RuntimeStatus = "Runtime body active (" + std::to_string(meshCollider->RuntimeTriangleCount) + " triangles)";
+			}
 		}
 
 		// Create JPH::CharacterVirtual for each entity with CharacterControllerComponent
@@ -630,49 +1447,14 @@ namespace Blu
 				auto& tc  = entity.GetComponent<TransformComponent>();
 				auto& ccc = entity.GetComponent<CharacterControllerComponent>();
 
-				float radius     = 0.3f;
-				float halfHeight = 0.55f; // total standing height ≈ 1.7 m
-
-				if (entity.HasComponent<CapsuleCollider3DComponent>())
+				std::string status;
+				ccc._RuntimeCharacter = CreateRuntimeCharacter(entity, tc, ccc, m_Physics3DWorld, status);
+				if (!ccc._RuntimeCharacter)
 				{
-					auto& cap = entity.GetComponent<CapsuleCollider3DComponent>();
-					radius     = cap.Radius;
-					halfHeight = cap.HalfHeight;
-				}
-
-				// Capsule with bottom at y=0 (feet at origin)
-				JPH::CapsuleShapeSettings capsuleSettings(halfHeight, radius);
-				auto capsuleResult = capsuleSettings.Create();
-				if (capsuleResult.HasError())
-				{
-					BLU_CORE_ERROR("CharacterVirtual: capsule shape failed: {0}", capsuleResult.GetError().c_str());
+					m_Physics3DBodyCreationFailureCount++;
+					BLU_CORE_ERROR("CharacterVirtual: {0}", status);
 					continue;
 				}
-
-				// Offset so the capsule bottom sits at y=0
-				JPH::RotatedTranslatedShapeSettings offsetSettings(
-					JPH::Vec3(0.0f, halfHeight + radius, 0.0f),
-					JPH::Quat::sIdentity(),
-					capsuleResult.Get());
-				auto shapeResult = offsetSettings.Create();
-				if (shapeResult.HasError())
-				{
-					BLU_CORE_ERROR("CharacterVirtual: offset shape failed: {0}", shapeResult.GetError().c_str());
-					continue;
-				}
-
-				JPH::CharacterVirtualSettings settings;
-				settings.mUp             = JPH::Vec3::sAxisY();
-				settings.mMaxSlopeAngle  = JPH::DegreesToRadians(ccc.SlopeLimit);
-				settings.mShape          = shapeResult.Get();
-
-				auto* character = new JPH::CharacterVirtual(
-					&settings,
-					JPH::RVec3(tc.Translation.x, tc.Translation.y, tc.Translation.z),
-					JPH::Quat::sIdentity(),
-					m_Physics3DWorld->GetPhysicsSystem());
-
-				ccc._RuntimeCharacter = character;
 				BLU_CORE_INFO("CharacterVirtual created for entity at ({0:.1f},{1:.1f},{2:.1f})",
 					tc.Translation.x, tc.Translation.y, tc.Translation.z);
 			}
@@ -689,6 +1471,14 @@ namespace Blu
 			{
 				auto& rb = view.get<Rigidbody3DComponent>(e);
 				rb.RuntimeBodyID = UINT32_MAX;
+			}
+
+			auto meshColliderView = m_Registry.view<MeshCollider3DComponent>();
+			for (auto e : meshColliderView)
+			{
+				auto& collider = meshColliderView.get<MeshCollider3DComponent>(e);
+				collider.RuntimeBodyCreated = false;
+				collider.RuntimeStatus.clear();
 			}
 
 			// Destroy CharacterVirtual instances
@@ -709,6 +1499,7 @@ namespace Blu
 
 			delete m_Physics3DWorld;
 			m_Physics3DWorld = nullptr;
+			m_Physics3DBodyCreationFailureCount = 0;
 		}
 	}
 
@@ -931,6 +1722,18 @@ namespace Blu
 		Renderer2D::EndScene();
 	}
 
+	void Scene::RenderRuntimeUI()
+	{
+		auto result = RuntimeUI::RenderGameplayHUD(*this, m_ViewportWidth, m_ViewportHeight);
+		m_LastRuntimeUIRootCount = result.UIRootCount;
+		m_LastRuntimeUIWidgetCount = result.WidgetCount;
+		m_LastRuntimeUIRendered = result.Rendered;
+		m_LastRuntimeUIMissingDocument = result.MissingDocument;
+		m_LastRuntimeUIViewportWidth = result.ViewportWidth;
+		m_LastRuntimeUIViewportHeight = result.ViewportHeight;
+		m_LastRuntimeUIDocumentPath = result.DocumentPath;
+	}
+
 	void Scene::Render3DPass(EditorCamera& camera)
 	{
 		std::vector<DirLightData>   dirLights;
@@ -949,13 +1752,14 @@ namespace Blu
 			for (auto& entity : view)
 			{
 				auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+				glm::mat4 renderTransform = GetRenderTransform(m_Registry, entity, transform);
 
 				// Skinned draw path
 				if (mesh.ModelAsset && mesh.ModelAsset->HasSkeleton() &&
 				    m_Registry.any_of<AnimatorComponent>(entity))
 				{
 					auto& anim = m_Registry.get<AnimatorComponent>(entity);
-					Renderer3D::DrawSkinnedMesh(transform.GetTransform(), mesh,
+					Renderer3D::DrawSkinnedMesh(renderTransform, mesh,
 					                            anim.FinalBoneMatrices, (int)entity);
 					continue;
 				}
@@ -965,10 +1769,10 @@ namespace Blu
 				if (m_Registry.any_of<MeshLODComponent>(entity))
 				{
 					auto& lod = m_Registry.get<MeshLODComponent>(entity);
-					float dist = glm::length(glm::vec3(transform.GetTransform()[3]) - camPos);
+					float dist = glm::length(glm::vec3(renderTransform[3]) - camPos);
 					if (auto lodModel = lod.SelectLOD(dist)) mesh.ModelAsset = lodModel;
 				}
-				Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+				Renderer3D::DrawMesh(renderTransform, mesh, (int)entity);
 				mesh.ModelAsset = savedModel;
 			}
 		}
@@ -1017,13 +1821,14 @@ namespace Blu
 			for (auto& entity : view)
 			{
 				auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+				glm::mat4 renderTransform = GetRenderTransform(m_Registry, entity, transform);
 
 				// Skinned draw path
 				if (mesh.ModelAsset && mesh.ModelAsset->HasSkeleton() &&
 				    m_Registry.any_of<AnimatorComponent>(entity))
 				{
 					auto& anim = m_Registry.get<AnimatorComponent>(entity);
-					Renderer3D::DrawSkinnedMesh(transform.GetTransform(), mesh,
+					Renderer3D::DrawSkinnedMesh(renderTransform, mesh,
 					                            anim.FinalBoneMatrices, (int)entity);
 					continue;
 				}
@@ -1032,10 +1837,10 @@ namespace Blu
 				if (m_Registry.any_of<MeshLODComponent>(entity))
 				{
 					auto& lod = m_Registry.get<MeshLODComponent>(entity);
-					float dist = glm::length(glm::vec3(transform.GetTransform()[3]) - camPos);
+					float dist = glm::length(glm::vec3(renderTransform[3]) - camPos);
 					if (auto lodModel = lod.SelectLOD(dist)) mesh.ModelAsset = lodModel;
 				}
-				Renderer3D::DrawMesh(transform.GetTransform(), mesh, (int)entity);
+				Renderer3D::DrawMesh(renderTransform, mesh, (int)entity);
 				mesh.ModelAsset = savedModel;
 			}
 		}
@@ -1166,7 +1971,7 @@ namespace Blu
 	            for (auto entity : view)
 	            {
 	                auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
-	                Renderer3D::DrawMeshShadow(transform.GetTransform(), mesh);
+	                Renderer3D::DrawMeshShadow(GetRenderTransform(m_Registry, entity, transform), mesh);
 	            }
 	        }
 	        Renderer3D::EndCSMPass();
@@ -1375,30 +2180,13 @@ namespace Blu
 				// Lazy-create CharacterVirtual if BeginPlay added the component after OnPhysics3DStart
 				if (!ccc._RuntimeCharacter)
 				{
-					float radius     = 0.3f;
-					float halfHeight = 0.55f;
-					JPH::CapsuleShapeSettings capsuleSettings(halfHeight, radius);
-					auto capsuleResult = capsuleSettings.Create();
-					if (!capsuleResult.HasError())
+					Entity entity = { e, this };
+					std::string status;
+					ccc._RuntimeCharacter = CreateRuntimeCharacter(entity, tc, ccc, m_Physics3DWorld, status);
+					if (!ccc._RuntimeCharacter)
 					{
-						JPH::RotatedTranslatedShapeSettings offsetSettings(
-							JPH::Vec3(0.0f, halfHeight + radius, 0.0f),
-							JPH::Quat::sIdentity(),
-							capsuleResult.Get());
-						auto shapeResult = offsetSettings.Create();
-						if (!shapeResult.HasError())
-						{
-							JPH::CharacterVirtualSettings settings;
-							settings.mUp            = JPH::Vec3::sAxisY();
-							settings.mMaxSlopeAngle = JPH::DegreesToRadians(ccc.SlopeLimit);
-							settings.mShape         = shapeResult.Get();
-							auto* character = new JPH::CharacterVirtual(
-								&settings,
-								JPH::RVec3(tc.Translation.x, tc.Translation.y, tc.Translation.z),
-								JPH::Quat::sIdentity(),
-								m_Physics3DWorld->GetPhysicsSystem());
-							ccc._RuntimeCharacter = character;
-						}
+						m_Physics3DBodyCreationFailureCount++;
+						BLU_CORE_WARN("CharacterVirtual lazy creation failed: {0}", status);
 					}
 				}
 				if (!ccc._RuntimeCharacter) continue;
@@ -1496,6 +2284,7 @@ namespace Blu
 			Render3DPass(*m_EjectCamera);
 			if (m_UsePostProcess && m_PostProcess)
 				m_PostProcess->Submit();
+			RenderRuntimeUI();
 			AudioEngine::Get().OnUpdate();
 			return;
 		}
@@ -1523,6 +2312,7 @@ namespace Blu
 
 			if (m_UsePostProcess && m_PostProcess)
 				m_PostProcess->Submit();
+			RenderRuntimeUI();
 
 			// Update 3D audio listener to match the primary camera.
 			glm::vec3 camPos = glm::vec3(cameraTransform[3]);
