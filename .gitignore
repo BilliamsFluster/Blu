@@ -73,6 +73,7 @@ Blu-Editor/BluProfile-Startup.json
 
 # Editor-local workspace state
 Blu-Editor/config/
+.claude/worktrees/
 
 # -----------------------------------------------------------------------
 # OS noise

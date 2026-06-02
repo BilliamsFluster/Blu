@@ -55,6 +55,11 @@ group"Dependencies"
 	include "Blu/engine/ExternalDependencies/box2d"
 	include "Blu/engine/ExternalDependencies/assimp"
 	include "Blu/engine/ExternalDependencies/jolt"
+
+	project "Box2D"
+		filter "configurations:Debug"
+			buildoptions { "/FS" }
+		filter {}
 -- Setup multiple premake files per directory so we can include them in here
 group "Core"
 	--include "Blu"
@@ -182,12 +187,12 @@ project "Blu"
 		--linkoptions { "/NODEFAULTLIB:MSVCRT" }
 
 	filter "configurations:Release"
-		defines "BLU_RELEASE"
+		defines { "BLU_RELEASE", "NDEBUG" }
 		buildoptions "/MT"
 		optimize "on"
 
 	filter "configurations:Dist"
-		defines "BLU_DIST"
+		defines { "BLU_DIST", "NDEBUG" }
 		buildoptions "/MT"
 		optimize "on"
 	
@@ -258,7 +263,7 @@ project "Azure"
 
 
 	filter "configurations:Release"
-		defines "BLU_RELEASE"
+		defines { "BLU_RELEASE", "NDEBUG" }
 		optimize "on"
 		runtime "Release"
 		buildoptions "/MT"
@@ -268,7 +273,7 @@ project "Azure"
 		}
 
 	filter "configurations:Dist"
-		defines "BLU_DIST"
+		defines { "BLU_DIST", "NDEBUG" }
 		optimize "on"
 
 
@@ -361,7 +366,7 @@ project "Blu-Editor"
 		}
 
 	filter "configurations:Release"
-		defines "BLU_RELEASE"
+		defines { "BLU_RELEASE", "NDEBUG" }
 		optimize "on"
 		runtime "Release"
 		buildoptions "/MT"
@@ -373,5 +378,5 @@ project "Blu-Editor"
 
 
 	filter "configurations:Dist"
-		defines "BLU_DIST"
+		defines { "BLU_DIST", "NDEBUG" }
 		optimize "on"

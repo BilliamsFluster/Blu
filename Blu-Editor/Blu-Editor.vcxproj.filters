@@ -6,17 +6,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AssetPreviewService.cpp" />
     <ClCompile Include="src\BluEditor.cpp" />
     <ClCompile Include="src\BluEditorLayer.cpp" />
-    <ClCompile Include="src\AssetPreviewService.cpp" />
     <ClCompile Include="src\Panels\ContentBrowserPanel.cpp">
       <Filter>Panels</Filter>
     </ClCompile>
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp">
       <Filter>Panels</Filter>
     </ClCompile>
-    <ClCompile Include="..\Azure\src\Actors\PlayerCharacter.cpp" />
-    <ClCompile Include="..\Azure\src\Actors\ZombieCharacter.cpp" />
-    <ClCompile Include="..\Azure\src\Actors\ZombieTestActor.cpp" />
   </ItemGroup>
 </Project>

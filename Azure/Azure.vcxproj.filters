@@ -1,48 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="$(SolutionDir)">
-      <UniqueIdentifier>{36EB0717-22B9-FB1C-0B4D-6C43F7B9D781}</UniqueIdentifier>
+    <Filter Include="Actors">
+      <UniqueIdentifier>{D152BFA6-BDF4-E97C-A6AF-FDD092F070CD}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src">
-      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    <Filter Include="GameModes">
+      <UniqueIdentifier>{9764667D-03CF-1AF4-4C0D-CC99B8B6F848}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Azure.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Azure2D.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameLayer.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Actors\PlayerCharacter.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Actors\ZombieCharacter.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Actors\ZombieTestActor.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\GameLayer.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\Actors\PlayerCharacter.h">
-      <Filter>src</Filter>
+      <Filter>Actors</Filter>
     </ClInclude>
     <ClInclude Include="src\Actors\ZombieCharacter.h">
-      <Filter>src</Filter>
+      <Filter>Actors</Filter>
     </ClInclude>
     <ClInclude Include="src\Actors\ZombieTestActor.h">
-      <Filter>src</Filter>
+      <Filter>Actors</Filter>
     </ClInclude>
+    <ClInclude Include="src\Azure2D.h" />
+    <ClInclude Include="src\GameLayer.h" />
     <ClInclude Include="src\GameModes\ZombieGameMode.h">
-      <Filter>src</Filter>
+      <Filter>GameModes</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Actors\PlayerCharacter.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actors\ZombieCharacter.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actors\ZombieTestActor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Azure.cpp" />
+    <ClCompile Include="src\Azure2D.cpp" />
+    <ClCompile Include="src\GameLayer.cpp" />
   </ItemGroup>
 </Project>

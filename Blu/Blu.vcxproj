@@ -76,7 +76,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_ENABLE_ASSERTS;JPH_DEBUG_RENDERER;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_PROFILE_ENABLED;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -124,7 +124,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Blupch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;BLU_BUILD_DLL;GLFW_INCLUDE_NONE;NOMINMAX;IMGUI_DEFINE_MATH_OPERATORS;ASSIMP_BUILD_NO_EXPORT;JPH_DISABLE_CUSTOM_ALLOCATOR;BLU_DIST;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -577,12 +577,12 @@
     <ClInclude Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="engine\ExternalDependencies\stb_image\stb_image.h" />
     <ClInclude Include="engine\src\Blu.h" />
+    <ClInclude Include="engine\src\Blu\Audio\AudioEngine.h" />
     <ClInclude Include="engine\src\Blu\Core\Application.h" />
     <ClInclude Include="engine\src\Blu\Core\Core.h" />
     <ClInclude Include="engine\src\Blu\Core\EntryPoint.h" />
     <ClInclude Include="engine\src\Blu\Core\Input.h" />
     <ClInclude Include="engine\src\Blu\Core\InputMap.h" />
-    <ClInclude Include="engine\src\Blu\Audio\AudioEngine.h" />
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\Layer.h" />
     <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
@@ -601,6 +601,13 @@
     <ClInclude Include="engine\src\Blu\Events\KeyEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\MouseEvent.h" />
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\AActor.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\ACharacter.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\AGameMode.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\APawn.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\ActorRegistry.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\GameFramework.h" />
+    <ClInclude Include="engine\src\Blu\GameFramework\UObject.h" />
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h" />
     <ClInclude Include="engine\src\Blu\LightSystem\LightManager.h" />
     <ClInclude Include="engine\src\Blu\Math\Math.h" />
@@ -617,6 +624,7 @@
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Shader.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11ShadowMap.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Texture.h" />
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.h" />
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11VertexArray.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.h" />
@@ -628,6 +636,8 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Animation.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Animator.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Asset.h" />
     <ClInclude Include="engine\src\Blu\Rendering\AssetManager.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
@@ -637,6 +647,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Frustum.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Material.h" />
     <ClInclude Include="engine\src\Blu\Rendering\MaterialAsset.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Mesh.h" />
@@ -645,24 +656,20 @@
     <ClInclude Include="engine\src\Blu\Rendering\ParticleSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\PipelineState.h" />
     <ClInclude Include="engine\src\Blu\Rendering\PostProcess.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Skybox.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\TimeOfDay.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Terrain.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Animation.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\Animator.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\TextureCube.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h" />
-    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.h" />
     <ClInclude Include="engine\src\Blu\Rendering\RenderCommand.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\RenderSettings.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer2D.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Renderer3D.h" />
     <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h" />
-    <ClInclude Include="engine\src\Blu\Rendering\RenderSettings.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ShadowMap.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Skybox.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\Terrain.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h" />
     <ClInclude Include="engine\src\Blu\Rendering\TextureAsset.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\TextureCube.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\TimeOfDay.h" />
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h" />
     <ClInclude Include="engine\src\Blu\Scene\CameraController.h" />
     <ClInclude Include="engine\src\Blu\Scene\Component.h" />
@@ -671,13 +678,7 @@
     <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h" />
     <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h" />
     <ClInclude Include="engine\src\Blu\UI\RuntimeUI.h" />
-    <ClInclude Include="engine\src\Blu\GameFramework\AActor.h" />
-    <ClInclude Include="engine\src\Blu\GameFramework\ACharacter.h" />
-    <ClInclude Include="engine\src\Blu\GameFramework\AGameMode.h" />
-    <ClInclude Include="engine\src\Blu\GameFramework\APawn.h" />
-    <ClInclude Include="engine\src\Blu\GameFramework\ActorRegistry.h" />
-    <ClInclude Include="engine\src\Blu\GameFramework\GameFramework.h" />
-    <ClInclude Include="engine\src\Blu\GameFramework\UObject.h" />
+    <ClInclude Include="engine\src\Blu\Utils\AssetPath.h" />
     <ClInclude Include="engine\src\Blu\Utils\Helpers.h" />
     <ClInclude Include="engine\src\Blu\Utils\PlatformUtils.h" />
     <ClInclude Include="engine\src\Blupch.h" />
@@ -693,13 +694,13 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp" />
+    <ClCompile Include="engine\src\Blu\Audio\AudioEngine.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\InputMap.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
     <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
-    <ClCompile Include="engine\src\Blu\Core\InputMap.cpp" />
-    <ClCompile Include="engine\src\Blu\Audio\AudioEngine.cpp" />
     <ClCompile Include="engine\src\Blu\Core\UUID.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
@@ -707,6 +708,9 @@
     <ClCompile Include="engine\src\Blu\Events\KeyEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\MouseEvent.cpp" />
     <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp" />
+    <ClCompile Include="engine\src\Blu\GameFramework\AActor.cpp" />
+    <ClCompile Include="engine\src\Blu\GameFramework\ACharacter.cpp" />
+    <ClCompile Include="engine\src\Blu\GameFramework\ActorRegistry.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="engine\src\Blu\LightSystem\LightManager.cpp" />
@@ -722,6 +726,7 @@
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Shader.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11ShadowMap.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Texture.cpp" />
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11VertexArray.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\OpenGL\OpenGLBuffer.cpp" />
@@ -735,12 +740,15 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsPlatformUtils.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Animation.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Asset.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\AssetManager.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\MaterialAsset.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Mesh.cpp" />
@@ -749,32 +757,25 @@
     <ClCompile Include="engine\src\Blu\Rendering\ParticleSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\PipelineState.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\RenderSettings.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer2D.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Renderer3D.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\RenderSettings.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\TimeOfDay.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Animation.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp" />
-    <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp" />
-    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\TextureAsset.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\TimeOfDay.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\CameraController.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Component.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Entity.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\Scene.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp" />
-    <ClCompile Include="engine\src\Blu\UI\RuntimeUI.cpp" />
-    <ClCompile Include="engine\src\Blu\GameFramework\AActor.cpp" />
-    <ClCompile Include="engine\src\Blu\GameFramework\ActorRegistry.cpp" />
     <ClCompile Include="engine\src\Blu\Scene\SceneSerializer.cpp" />
-    <ClCompile Include="engine\src\Blu\GameFramework\ACharacter.cpp" />
+    <ClCompile Include="engine\src\Blu\UI\RuntimeUI.cpp" />
     <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp" />
     <ClCompile Include="engine\src\Blupch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
