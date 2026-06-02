@@ -12,6 +12,9 @@
     <ClCompile Include="src\Panels\ContentBrowserPanel.cpp">
       <Filter>Panels</Filter>
     </ClCompile>
+    <ClCompile Include="src\Panels\MaterialGraphPanel.cpp">
+      <Filter>Panels</Filter>
+    </ClCompile>
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp">
       <Filter>Panels</Filter>
     </ClCompile>

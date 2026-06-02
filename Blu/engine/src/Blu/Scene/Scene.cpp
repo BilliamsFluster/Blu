@@ -366,6 +366,7 @@ namespace Blu
 		CopyComponent<SpotLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<MeshComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<VisualOffsetComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<TerrainComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		CopyComponent<Rigidbody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -880,6 +881,13 @@ namespace Blu
 			}
 		}
 
+		auto terrainView = m_Registry.view<TerrainComponent>();
+		for (auto entity : terrainView)
+		{
+			auto& terrain = terrainView.get<TerrainComponent>(entity);
+			addDependency(entity, "Texture", terrain.Spec.HeightmapPath, "TerrainComponent.Heightmap");
+		}
+
 		auto spriteView = m_Registry.view<SpriteRendererComponent>();
 		for (auto entity : spriteView)
 		{
@@ -989,6 +997,46 @@ namespace Blu
 		collider->RuntimeStatus = "Ready (" + std::to_string(triangleCount) + " triangles)";
 
 		setMessage("Static mesh collision ready: " + std::to_string(triangleCount) + " triangles");
+		return true;
+	}
+
+	bool Scene::RebuildTerrain(Entity entity, std::string* outMessage)
+	{
+		auto setMessage = [&](const std::string& message)
+		{
+			if (outMessage)
+				*outMessage = message;
+		};
+
+		if (!entity || !entity.HasComponent<TerrainComponent>())
+		{
+			setMessage("TerrainComponent is required.");
+			return false;
+		}
+
+		auto& terrain = entity.GetComponent<TerrainComponent>();
+		terrain.Spec = SanitizeTerrainSpec(terrain.Spec);
+
+		TerrainSpec generationSpec = terrain.Spec;
+		if (!generationSpec.HeightmapPath.empty())
+			generationSpec.HeightmapPath = AssetPath::ResolvePath(generationSpec.HeightmapPath, m_SceneFilePath).string();
+
+		auto terrainMesh = GenerateTerrain(generationSpec);
+		if (!terrainMesh)
+		{
+			setMessage("Terrain mesh generation failed.");
+			return false;
+		}
+
+		auto& mesh = entity.HasComponent<MeshComponent>()
+			? entity.GetComponent<MeshComponent>()
+			: entity.AddComponent<MeshComponent>();
+		mesh.MeshData = std::move(terrainMesh);
+		mesh.Primitive = MeshComponent::PrimitiveType::None;
+		if (!mesh.MaterialInstance)
+			mesh.MaterialInstance = Material::Create();
+
+		setMessage("Terrain mesh rebuilt.");
 		return true;
 	}
 
@@ -1175,6 +1223,7 @@ namespace Blu
 		copy.template operator()<SpotLightComponent>();
 		copy.template operator()<MeshComponent>();
 		copy.template operator()<VisualOffsetComponent>();
+		copy.template operator()<TerrainComponent>();
 		copy.template operator()<Rigidbody3DComponent>();
 		copy.template operator()<BoxCollider3DComponent>();
 		copy.template operator()<SphereCollider3DComponent>();
@@ -1800,7 +1849,8 @@ namespace Blu
 			{
 				auto& fc = fview.get<FoliageComponent>(entity);
 				if (fc.ModelAsset && !fc.Transforms.empty())
-					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms);
+					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms, nullptr,
+						{ fc.WindEnabled, fc.WindDirection, fc.WindStrength, fc.WindFrequency, m_ElapsedTime });
 			}
 		}
 
@@ -1868,7 +1918,8 @@ namespace Blu
 			{
 				auto& fc = fview.get<FoliageComponent>(entity);
 				if (fc.ModelAsset && !fc.Transforms.empty())
-					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms);
+					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms, nullptr,
+						{ fc.WindEnabled, fc.WindDirection, fc.WindStrength, fc.WindFrequency, m_ElapsedTime });
 			}
 		}
 
@@ -2069,9 +2120,9 @@ namespace Blu
 					anim.SkelData = mesh.ModelAsset->SkelData;
 				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
 
-				const AnimationClip& clip = anim.SkelData->Clips[
-					std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1)];
-				Animator::Update(dt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
+				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
+				Animator::Update(anim.Playing ? dt : 0.0f, anim.CurrentTime, anim.Loop, anim.SpeedScale,
 				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
 			}
 		}
@@ -2121,9 +2172,9 @@ namespace Blu
 					anim.SkelData = mesh.ModelAsset->SkelData;
 				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
 
-				const AnimationClip& clip = anim.SkelData->Clips[
-					std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1)];
-				Animator::Update(dt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
+				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
+				Animator::Update(anim.Playing ? dt : 0.0f, anim.CurrentTime, anim.Loop, anim.SpeedScale,
 				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
 			}
 		}

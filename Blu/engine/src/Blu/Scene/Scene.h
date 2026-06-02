@@ -168,6 +168,7 @@ namespace Blu
 		SceneDiagnostics GetDiagnostics();
 		SceneAssetManifest CollectAssetManifest();
 		bool GenerateStaticMeshCollision(Entity entity, std::string* outMessage = nullptr);
+		bool RebuildTerrain(Entity entity, std::string* outMessage = nullptr);
 		bool FitCharacterVisualToCapsule(Entity entity, std::string* outMessage = nullptr);
 		bool ResetVisualOffset(Entity entity, std::string* outMessage = nullptr);
 		bool SnapCharacterFeetToGround(Entity entity, std::string* outMessage = nullptr);

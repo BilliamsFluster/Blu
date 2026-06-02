@@ -533,7 +533,8 @@ namespace Blu
 
     void Renderer3D::DrawMeshInstanced(const Shared<Model>& model,
         const std::vector<glm::mat4>& transforms,
-                                       const Material* overrideMat)
+                                       const Material* overrideMat,
+                                       FoliageWindSettings wind)
     {
         if (!model || model->Meshes.empty() || transforms.empty()) return;
         if (!s_Data3D->InstancedMeshShader) return;
@@ -542,6 +543,12 @@ namespace Blu
         sh.Bind();
         sh.SetUniformMat4("u_ViewProjectionMatrix", s_Data3D->ViewProjectionMatrix);
         sh.SetUniformFloat3("u_ViewPos", s_Data3D->ViewPos);
+        WindDataGPU windGPU = {};
+        windGPU.Direction = wind.Enabled ? wind.Direction : glm::vec3(0.0f);
+        windGPU.Strength = wind.Enabled ? wind.Strength : 0.0f;
+        windGPU.Frequency = wind.Frequency;
+        windGPU.Time = wind.Time;
+        sh.SetUniformBuffer("WindData", &windGPU, sizeof(windGPU));
         sh.Flush();
 
         PipelineStateCache::GetCullNone()->Bind(); // two-sided for foliage leaves

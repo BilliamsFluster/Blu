@@ -142,6 +142,7 @@
     <ClCompile Include="src\BluEditor.cpp" />
     <ClCompile Include="src\BluEditorLayer.cpp" />
     <ClCompile Include="src\Panels\ContentBrowserPanel.cpp" />
+    <ClCompile Include="src\Panels\MaterialGraphPanel.cpp" />
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -12,6 +12,7 @@
 #include "Blu/Audio/AudioEngine.h"
 #include "Blu/Rendering/Animation.h"
 #include "Blu/Rendering/Animator.h"
+#include "Blu/Rendering/Terrain.h"
 #include "Blu/GameFramework/NativeClass.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -132,6 +133,14 @@ namespace Blu
 
 		MeshComponent() = default;
 		MeshComponent(const MeshComponent&) = default;
+	};
+
+	struct TerrainComponent
+	{
+		TerrainSpec Spec;
+
+		TerrainComponent() = default;
+		TerrainComponent(const TerrainComponent&) = default;
 	};
 
 	struct VisualOffsetComponent
@@ -584,7 +593,7 @@ namespace Blu
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
 		ActorComponent, Rigidbody2DComponent,
 		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
-		SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
+		TerrainComponent, SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
 		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent,
 		MeshCollider3DComponent, CharacterControllerComponent,
 		InteractableComponent, PickupComponent, PlayerStatsComponent>;

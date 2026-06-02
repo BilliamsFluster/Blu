@@ -10,7 +10,9 @@
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Rendering/AssetManager.h"
 #include "Blu/Rendering/MaterialSystem.h"
+#include "Blu/Rendering/MaterialGraph.h"
 #include "Blu/Rendering/SceneRenderPipeline.h"
+#include "Blu/Rendering/Terrain.h"
 #include "Blu/Utils/FileSystemService.h"
 #include <cmath>
 #include <filesystem>
@@ -300,6 +302,33 @@ namespace
 		Require(std::abs(legacyResolved.Parameters.Roughness - 0.65f) < 0.001f, "legacy material compatibility resolution failed");
 	}
 
+	void TestMaterialGraphCompiler()
+	{
+		Blu::MaterialGraph graph;
+		graph.Blend = Blu::BlendMode::Masked;
+		graph.TwoSided = true;
+		const auto roughness = graph.AddScalarParameter("Roughness", 0.35f);
+		const auto albedo = graph.AddVector4Parameter("Albedo", glm::vec4(0.2f, 0.4f, 0.6f, 1.0f));
+		const auto normal = graph.AddTextureParameter("Normal", Blu::AssetHandle(404));
+		graph.Connect(Blu::MaterialGraphInput::Roughness, roughness);
+		graph.Connect(Blu::MaterialGraphInput::AlbedoColor, albedo);
+		graph.Connect(Blu::MaterialGraphInput::NormalTexture, normal);
+
+		const auto compiled = Blu::MaterialGraphCompiler::Compile(graph, Blu::AssetHandle(2001));
+		Require(compiled.Succeeded(), "valid material graph did not compile");
+		Require((uint64_t)compiled.Template->Handle == 2001, "material graph compiler lost the template handle");
+		Require(std::abs(compiled.Template->Defaults.Roughness - 0.35f) < 0.001f, "material graph scalar did not compile");
+		Require(compiled.Template->Defaults.AlbedoColor == glm::vec4(0.2f, 0.4f, 0.6f, 1.0f), "material graph vector did not compile");
+		Require((uint64_t)compiled.Template->Textures.Normal == 404, "material graph texture did not compile");
+		Require((compiled.Template->Features & (uint32_t)Blu::MaterialFeature::NormalMap) != 0, "material graph texture feature was not enabled");
+
+		Blu::MaterialGraph invalidGraph;
+		const auto wrongType = invalidGraph.AddScalarParameter("NotAColor", 1.0f);
+		invalidGraph.Connect(Blu::MaterialGraphInput::AlbedoColor, wrongType);
+		const auto invalid = Blu::MaterialGraphCompiler::Compile(invalidGraph, Blu::AssetHandle(2002));
+		Require(!invalid.Succeeded() && !invalid.Diagnostics.empty(), "invalid material graph compiled without diagnostics");
+	}
+
 	void TestSceneRenderPipelinePlan()
 	{
 		const Blu::SceneRenderPipelinePlan deferred =
@@ -317,6 +346,55 @@ namespace
 		Require(!openGLFallback.UsesDeferred(), "OpenGL selected the DX11-only deferred path");
 		Require(openGLFallback.EffectivePath == Blu::RenderPath::Forward, "OpenGL deferred request did not fall back to forward rendering");
 		Require(openGLFallback.Stages[0] == Blu::SceneRenderStage::ForwardOpaque, "OpenGL fallback did not preserve the forward path");
+	}
+
+	void TestWorldAuthoringContracts()
+	{
+		Blu::TerrainSpec terrainSpec;
+		terrainSpec.GridWidth = 2;
+		terrainSpec.GridHeight = 3;
+		terrainSpec.CellSize = 2.0f;
+		const Blu::TerrainMeshData meshData = Blu::BuildTerrainMeshData(terrainSpec);
+		Require(meshData.Vertices.size() == 12, "terrain CPU builder returned an unexpected vertex count");
+		Require(meshData.Indices.size() == 36, "terrain CPU builder returned an unexpected index count");
+
+		Blu::TerrainSpec invalidSpec;
+		invalidSpec.GridWidth = 0;
+		invalidSpec.GridHeight = -4;
+		invalidSpec.CellSize = 0.0f;
+		invalidSpec.HeightScale = -1.0f;
+		const Blu::TerrainSpec sanitized = Blu::SanitizeTerrainSpec(invalidSpec);
+		Require(sanitized.GridWidth == 1 && sanitized.GridHeight == 1, "terrain dimensions were not sanitized");
+		Require(sanitized.CellSize > 0.0f && sanitized.HeightScale == 0.0f, "terrain scalar values were not sanitized");
+
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsWorldAuthoring-" + std::to_string((uint64_t)Blu::UUID()));
+		const std::filesystem::path scenePath = testDirectory / "WorldAuthoring.blu";
+		std::filesystem::create_directories(testDirectory);
+
+		auto scene = std::make_shared<Blu::Scene>();
+		Blu::Entity entity = scene->CreateEntity("AuthoredWorldSystems");
+		entity.AddComponent<Blu::TerrainComponent>().Spec = terrainSpec;
+		auto& animator = entity.AddComponent<Blu::AnimatorComponent>();
+		animator.CurrentClipIndex = 3;
+		animator.CurrentTime = 12.5f;
+		animator.Playing = false;
+		animator.Loop = false;
+		animator.SpeedScale = 0.75f;
+
+		Blu::SceneSerializer serializer(scene);
+		serializer.Serialize(scenePath.string());
+		std::ifstream serializedScene(scenePath);
+		std::stringstream serializedText;
+		serializedText << serializedScene.rdbuf();
+		const std::string yaml = serializedText.str();
+		Require(yaml.find("TerrainComponent:") != std::string::npos, "terrain descriptor was not serialized");
+		Require(yaml.find("GridWidth: 2") != std::string::npos, "terrain width was not serialized");
+		Require(yaml.find("AnimatorComponent:") != std::string::npos, "animator authoring state was not serialized");
+		Require(yaml.find("Playing: false") != std::string::npos, "animator playback state was not serialized");
+
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
 	void TestAudioBackendIsCompiled()
@@ -342,7 +420,9 @@ int main()
 		TestMountedFilesystemAndAssetRegistry();
 		TestLifetimeUtilities();
 		TestMaterialResolver();
+		TestMaterialGraphCompiler();
 		TestSceneRenderPipelinePlan();
+		TestWorldAuthoringContracts();
 		TestAudioBackendIsCompiled();
 		TestJoltConfigurationCompatibility();
 	}

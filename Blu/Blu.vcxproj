@@ -660,6 +660,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\LightBufferData.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Material.h" />
     <ClInclude Include="engine\src\Blu\Rendering\MaterialAsset.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\MaterialGraph.h" />
     <ClInclude Include="engine\src\Blu\Rendering\MaterialSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Mesh.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ModelLoader.h" />
@@ -773,6 +774,7 @@
     <ClCompile Include="engine\src\Blu\Rendering\LightBufferData.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\MaterialAsset.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\MaterialGraph.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\MaterialSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Mesh.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\ModelLoader.cpp" />

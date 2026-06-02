@@ -74,6 +74,15 @@ namespace Blu
         float     AerialStrength = 0.0f;   // 0 = off; 1 = full sky-colour bleed at horizon
     };
 
+    struct FoliageWindSettings
+    {
+        bool Enabled = true;
+        glm::vec3 Direction = { 1.0f, 0.0f, 0.0f };
+        float Strength = 0.05f;
+        float Frequency = 1.5f;
+        float Time = 0.0f;
+    };
+
     class Renderer3D
     {
     public:
@@ -90,7 +99,8 @@ namespace Blu
         // Splits into batches of kMaxInstances internally.
         static void DrawMeshInstanced(const Shared<Model>& model,
                                       const std::vector<glm::mat4>& transforms,
-                                      const Material* overrideMat = nullptr);
+                                      const Material* overrideMat = nullptr,
+                                      FoliageWindSettings wind = {});
 
         // Skinned mesh draw — uses Skinned_Mesh.hlsl with bone matrix cbuffer.
         static void DrawSkinnedMesh(const glm::mat4& transform, MeshComponent& mc,

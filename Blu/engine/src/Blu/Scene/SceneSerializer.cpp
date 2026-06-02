@@ -497,6 +497,17 @@ namespace Blu
 
 			out << YAML::EndMap;
 		}
+		if (entity.HasComponent<TerrainComponent>())
+		{
+			auto spec = SanitizeTerrainSpec(entity.GetComponent<TerrainComponent>().Spec);
+			out << YAML::Key << "TerrainComponent" << YAML::BeginMap;
+			out << YAML::Key << "GridWidth" << YAML::Value << spec.GridWidth;
+			out << YAML::Key << "GridHeight" << YAML::Value << spec.GridHeight;
+			out << YAML::Key << "CellSize" << YAML::Value << spec.CellSize;
+			out << YAML::Key << "HeightScale" << YAML::Value << spec.HeightScale;
+			out << YAML::Key << "HeightmapPath" << YAML::Value << SerializeAssetPath(spec.HeightmapPath);
+			out << YAML::EndMap;
+		}
 		if (entity.HasComponent<MeshLODComponent>())
 		{
 			auto& lod = entity.GetComponent<MeshLODComponent>();
@@ -526,6 +537,17 @@ namespace Blu
 			for (const auto& transform : foliage.Transforms)
 				out << transform;
 			out << YAML::EndSeq;
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<AnimatorComponent>())
+		{
+			auto& animator = entity.GetComponent<AnimatorComponent>();
+			out << YAML::Key << "AnimatorComponent" << YAML::BeginMap;
+			out << YAML::Key << "CurrentClipIndex" << YAML::Value << animator.CurrentClipIndex;
+			out << YAML::Key << "CurrentTime" << YAML::Value << animator.CurrentTime;
+			out << YAML::Key << "Playing" << YAML::Value << animator.Playing;
+			out << YAML::Key << "Loop" << YAML::Value << animator.Loop;
+			out << YAML::Key << "SpeedScale" << YAML::Value << animator.SpeedScale;
 			out << YAML::EndMap;
 		}
 		if (entity.HasComponent<AudioSourceComponent>())
@@ -1310,6 +1332,7 @@ namespace Blu
 					if (dirLightComponent["Specular"])  dl.Specular  = dirLightComponent["Specular"].as<glm::vec3>();
 					if (dirLightComponent["Intensity"]) dl.Intensity = dirLightComponent["Intensity"].as<float>();
 				}
+				auto terrainComponent = entity["TerrainComponent"];
 				auto meshComponent = entity["MeshComponent"];
 				if (meshComponent)
 				{
@@ -1336,7 +1359,7 @@ namespace Blu
 
 					if (!mc.ModelAsset)
 					{
-						if (mc.Primitive == MeshComponent::PrimitiveType::None && mc.FilePath.empty())
+						if (mc.Primitive == MeshComponent::PrimitiveType::None && mc.FilePath.empty() && !terrainComponent)
 						{
 							// Legacy primitive-only scenes had MeshData at edit time but saved no
 							// mesh identity. Existing sample scenes used cube visuals for these.
@@ -1376,6 +1399,20 @@ namespace Blu
 					loadTex("Tex_MetallicRoughness", mc.MaterialInstance->MetallicRoughnessMap);
 					loadTex("Tex_AO",      mc.MaterialInstance->AOMap);
 					loadTex("Tex_Emissive", mc.MaterialInstance->EmissiveMap);
+				}
+
+				if (terrainComponent)
+				{
+					auto& terrain = deserializedEntity.AddComponent<TerrainComponent>();
+					if (terrainComponent["GridWidth"])     terrain.Spec.GridWidth     = terrainComponent["GridWidth"].as<int>();
+					if (terrainComponent["GridHeight"])    terrain.Spec.GridHeight    = terrainComponent["GridHeight"].as<int>();
+					if (terrainComponent["CellSize"])      terrain.Spec.CellSize      = terrainComponent["CellSize"].as<float>();
+					if (terrainComponent["HeightScale"])   terrain.Spec.HeightScale   = terrainComponent["HeightScale"].as<float>();
+					if (terrainComponent["HeightmapPath"])
+						terrain.Spec.HeightmapPath = NormalizeLoadedAssetPath(
+							terrainComponent["HeightmapPath"].as<std::string>(), sceneFilePath, "TerrainComponent.HeightmapPath");
+					terrain.Spec = SanitizeTerrainSpec(terrain.Spec);
+					m_Scene->RebuildTerrain(deserializedEntity);
 				}
 
 				auto meshLODComponent = entity["MeshLODComponent"];
@@ -1438,6 +1475,17 @@ namespace Blu
 					if (audioSourceComponent["Spatial"])     audio.Spatial     = audioSourceComponent["Spatial"].as<bool>();
 					if (audioSourceComponent["MinDistance"]) audio.MinDistance = audioSourceComponent["MinDistance"].as<float>();
 					if (audioSourceComponent["MaxDistance"]) audio.MaxDistance = audioSourceComponent["MaxDistance"].as<float>();
+				}
+
+				auto animatorComponent = entity["AnimatorComponent"];
+				if (animatorComponent)
+				{
+					auto& animator = deserializedEntity.AddComponent<AnimatorComponent>();
+					if (animatorComponent["CurrentClipIndex"]) animator.CurrentClipIndex = animatorComponent["CurrentClipIndex"].as<int>();
+					if (animatorComponent["CurrentTime"])      animator.CurrentTime      = animatorComponent["CurrentTime"].as<float>();
+					if (animatorComponent["Playing"])          animator.Playing          = animatorComponent["Playing"].as<bool>();
+					if (animatorComponent["Loop"])             animator.Loop             = animatorComponent["Loop"].as<bool>();
+					if (animatorComponent["SpeedScale"])       animator.SpeedScale       = animatorComponent["SpeedScale"].as<float>();
 				}
 
 				auto spotLightComponent = entity["SpotLightComponent"];

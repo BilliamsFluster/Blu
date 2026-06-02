@@ -219,6 +219,7 @@ namespace Blu
 		m_ActiveScene = std::make_shared<Scene>();
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
+		m_MaterialGraphPanel = std::make_shared<MaterialGraphPanel>();
 		m_SceneHierarchyPanel->SetOpenActorEditorCallback([this](Entity entity)
 		{
 			if (!entity)
@@ -1682,6 +1683,7 @@ namespace Blu
 			ImGui::MenuItem("Diagnostics",     nullptr, &m_ShowDiagnostics);
 			ImGui::MenuItem("Actor Editor",    nullptr, &m_ShowActorEditor);
 			ImGui::MenuItem("Input Map",       nullptr, &m_ShowInputMap);
+			ImGui::MenuItem("Material Graph",  nullptr, &m_ShowMaterialGraph);
 			ImGui::Separator();
 			if (ImGui::MenuItem("Reset Editor Layout"))
 				m_ResetEditorLayout = true;
@@ -1690,6 +1692,7 @@ namespace Blu
 		if (ImGui::BeginMenu("Tools"))
 		{
 			if (ImGui::MenuItem("Terrain Editor", nullptr, &m_ShowTerrainPanel)) {}
+			if (ImGui::MenuItem("Material Graph", nullptr, &m_ShowMaterialGraph)) {}
 			if (ImGui::MenuItem("Input Map", nullptr, &m_ShowInputMap)) {}
 			ImGui::EndMenu();
 		}
@@ -2768,7 +2771,7 @@ namespace Blu
 					std::string path = FileDialogs::OpenFile(
 					    "Image (*.png;*.jpg;*.bmp;*.tga)\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All\0*.*\0");
 					if (!path.empty())
-						m_TerrainSpec.HeightmapPath = path;
+						m_TerrainSpec.HeightmapPath = AssetPath::ImportTexturePath(path, "Terrain");
 				}
 				if (!m_TerrainSpec.HeightmapPath.empty() && ImGui::Button("Clear Heightmap", ImVec2(-1, 0)))
 					m_TerrainSpec.HeightmapPath.clear();
@@ -2786,12 +2789,13 @@ namespace Blu
 
 				if (generate)
 				{
-					auto mesh = Blu::GenerateTerrain(m_TerrainSpec);
-					if (mesh)
+					m_TerrainSpec = Blu::SanitizeTerrainSpec(m_TerrainSpec);
+					Entity terrainEntity = m_ActiveScene->CreateEntity("Terrain");
+					auto& terrain = terrainEntity.AddComponent<TerrainComponent>();
+					terrain.Spec = m_TerrainSpec;
+					std::string message;
+					if (m_ActiveScene->RebuildTerrain(terrainEntity, &message))
 					{
-						Entity terrainEntity = m_ActiveScene->CreateEntity("Terrain");
-						auto& mc = terrainEntity.AddComponent<MeshComponent>();
-						mc.MeshData = mesh;
 						m_SceneHierarchyPanel->SetSelectedEntity(terrainEntity);
 						BLU_CORE_INFO("Terrain generated: {}×{} grid", m_TerrainSpec.GridWidth, m_TerrainSpec.GridHeight);
 					}
@@ -2799,6 +2803,9 @@ namespace Blu
 			}
 			ImGui::End();
 		}
+
+		if (m_MaterialGraphPanel)
+			m_MaterialGraphPanel->OnImGuiRender(&m_ShowMaterialGraph);
 		
 		
 		

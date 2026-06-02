@@ -745,6 +745,7 @@ namespace Blu
 			AddComponentSearchResult<SpriteRendererComponent>(entity, "Rendering", "Sprite Renderer", "", [](auto&) {});
 			AddComponentSearchResult<CircleRendererComponent>(entity, "Rendering", "Circle Renderer", "", [](auto&) {});
 			AddComponentSearchResult<MeshComponent>(entity, "Rendering", "Mesh Renderer", "", [](auto& mc) { mc.MeshData = Mesh::CreateCube(); mc.Primitive = MeshComponent::PrimitiveType::Cube; mc.MaterialInstance = Material::Create(); });
+			AddComponentSearchResult<TerrainComponent>(entity, "Rendering", "Terrain", "Use Rebuild Terrain after editing the descriptor.", [](auto&) {});
 			AddComponentSearchResult<MeshLODComponent>(entity, "Rendering", "Mesh LOD", "", [](auto&) {});
 			AddComponentSearchResult<Rigidbody3DComponent>(entity, "Physics", "Rigidbody 3D", "Requires a Box/Sphere/Capsule/Mesh collider to create a runtime body.", [](auto&) {});
 			AddComponentSearchResult<BoxCollider3DComponent>(entity, "Physics", "Box Collider 3D", "", [](auto&) {});
@@ -1948,6 +1949,35 @@ namespace Blu
 		});
 
 		// ── Animator Component ────────────────────────────────────────────────────
+		DrawComponent<TerrainComponent>("Terrain", entity, [&](auto& terrain)
+		{
+			terrain.Spec = SanitizeTerrainSpec(terrain.Spec);
+			ImGui::DragInt("Width (quads)", &terrain.Spec.GridWidth, 1.0f, 1, 1024);
+			ImGui::DragInt("Height (quads)", &terrain.Spec.GridHeight, 1.0f, 1, 1024);
+			ImGui::DragFloat("Cell Size", &terrain.Spec.CellSize, 0.1f, 0.001f, 100.0f);
+			ImGui::DragFloat("Height Scale", &terrain.Spec.HeightScale, 0.5f, 0.0f, 2000.0f);
+
+			char heightmapPath[512] = {};
+			std::strncpy(heightmapPath, terrain.Spec.HeightmapPath.c_str(), sizeof(heightmapPath) - 1);
+			if (ImGui::InputText("Heightmap", heightmapPath, sizeof(heightmapPath)))
+				terrain.Spec.HeightmapPath = AssetPath::ToProjectRelative(heightmapPath);
+			ImGui::SameLine();
+			if (ImGui::Button("...##terrain"))
+			{
+				std::string path = FileDialogs::OpenFile(
+					"Image (*.png;*.jpg;*.bmp;*.tga)\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All\0*.*\0");
+				if (!path.empty())
+					terrain.Spec.HeightmapPath = AssetPath::ImportTexturePath(path, GetAssetOwnerName(entity));
+			}
+
+			if (ImGui::Button("Rebuild Terrain") && m_Context)
+			{
+				std::string message;
+				if (!m_Context->RebuildTerrain(entity, &message))
+					BLU_CORE_WARN("Terrain rebuild failed: {}", message);
+			}
+		});
+
 		DrawComponent<AnimatorComponent>("Animator", entity, [&](auto& anim)
 		{
 			// Populate SkelData from MeshComponent if not already set
@@ -1969,6 +1999,7 @@ namespace Blu
 			auto& clips = anim.SkelData->Clips;
 			if (!clips.empty())
 			{
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)clips.size() - 1);
 				const char* preview = clips[anim.CurrentClipIndex].Name.c_str();
 				if (ImGui::BeginCombo("Clip", preview))
 				{
