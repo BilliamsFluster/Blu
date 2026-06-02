@@ -67,8 +67,8 @@ Entities:
   - Entity: 7777810368408998103
     TagComponent:
       Tag: PlayerCharacter
-    NativeScriptComponent:
-      ClassName: PlayerCharacter
+    ActorComponent:
+      ClassID: Azure::PlayerCharacter
     TransformComponent:
       Translation: [0, 2, 5]
       Rotation: [0, 0, 0]
@@ -536,8 +536,6 @@ Entities:
   - Entity: 3310291513029842750
     TagComponent:
       Tag: Camera
-    NativeScriptComponent:
-      ClassName: ""
     CameraComponent:
       Camera:
         ProjectionType: 0

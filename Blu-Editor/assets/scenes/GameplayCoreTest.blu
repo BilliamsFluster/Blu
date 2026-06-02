@@ -81,8 +81,8 @@ Entities:
   - Entity: 1000000000000000007
     TagComponent:
       Tag: ZombieTest
-    NativeScriptComponent:
-      ClassName: ZombieTestActor
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
     TransformComponent:
       Translation: [0, 1, -6]
       Rotation: [0, 0, 0]
@@ -182,8 +182,6 @@ Entities:
   - Entity: 1000000000000000004
     TagComponent:
       Tag: PlayerCamera
-    NativeScriptComponent:
-      ClassName: ""
     CameraComponent:
       Camera:
         ProjectionType: 0
@@ -202,8 +200,8 @@ Entities:
   - Entity: 1000000000000000003
     TagComponent:
       Tag: PlayerCharacter
-    NativeScriptComponent:
-      ClassName: PlayerCharacter
+    ActorComponent:
+      ClassID: Azure::PlayerCharacter
     TransformComponent:
       Translation: [0, 1, 5]
       Rotation: [0, 0, 0]

@@ -5,8 +5,8 @@ Entities:
   - Entity: 1000000000000000003
     TagComponent:
       Tag: PlayerCharacter
-    NativeScriptComponent:
-      ClassName: PlayerCharacter
+    ActorComponent:
+      ClassID: Azure::PlayerCharacter
     TransformComponent:
       Translation: [0, 1, 5]
       Rotation: [0, 0, 0]
