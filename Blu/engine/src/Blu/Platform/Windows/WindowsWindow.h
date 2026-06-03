@@ -21,6 +21,7 @@ namespace Blu
 		bool IsTitleBarHovered() const { return m_TitleBarHovered; }
 		void SetTitleBarHovered(bool hovered)  {m_TitleBarHovered = hovered; }
 		WindowProps GetWindowProps() const { return m_WindowProps; }
+		void ClampToWorkArea();
 		//Windows attributes
 	private:
 		virtual void Init(const WindowProps& props);

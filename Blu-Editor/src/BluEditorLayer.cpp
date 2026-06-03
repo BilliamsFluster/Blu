@@ -1750,8 +1750,7 @@ namespace Blu
 			auto MakeCtrl = [&](const char* id, ImVec4 hoverBg, ImVec4 activeBg,
 			                    auto drawIcon) -> bool
 			{
-				ImGui::InvisibleButton(id, ImVec2(ctrlW, barH));
-				bool clicked = ImGui::IsItemClicked();
+				const bool pressed = ImGui::InvisibleButton(id, ImVec2(ctrlW, barH));
 				bool hov     = ImGui::IsItemHovered();
 				bool act     = ImGui::IsItemActive();
 				if (hov) controlHovered = true;
@@ -1765,7 +1764,7 @@ namespace Blu
 
 				ImVec2 c = { (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f };
 				drawIcon(dl, c, kIcon);
-				return clicked;
+				return pressed;
 			};
 
 			// Jump to right-side start, inset from the frame border
@@ -1893,6 +1892,7 @@ namespace Blu
 						glfwSetWindowPos(glfwWin, window["X"].as<int>(), window["Y"].as<int>());
 					if (window["Width"] && window["Height"])
 						glfwSetWindowSize(glfwWin, window["Width"].as<int>(), window["Height"].as<int>());
+					static_cast<WindowsWindow&>(Application::Get().GetWindow()).ClampToWorkArea();
 					if (window["Maximized"] && window["Maximized"].as<bool>())
 						glfwMaximizeWindow(glfwWin);
 				}
@@ -1918,6 +1918,10 @@ namespace Blu
 		GLFWwindow* glfwWin = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
 		if (glfwWin)
 		{
+			const bool maximized = glfwGetWindowAttrib(glfwWin, GLFW_MAXIMIZED) == GLFW_TRUE;
+			if (!maximized)
+				static_cast<WindowsWindow&>(Application::Get().GetWindow()).ClampToWorkArea();
+
 			int x = 0, y = 0, w = 0, h = 0;
 			glfwGetWindowPos(glfwWin, &x, &y);
 			glfwGetWindowSize(glfwWin, &w, &h);
@@ -1926,7 +1930,7 @@ namespace Blu
 			out << YAML::Key << "Y" << YAML::Value << y;
 			out << YAML::Key << "Width" << YAML::Value << w;
 			out << YAML::Key << "Height" << YAML::Value << h;
-			out << YAML::Key << "Maximized" << YAML::Value << (glfwGetWindowAttrib(glfwWin, GLFW_MAXIMIZED) == GLFW_TRUE);
+			out << YAML::Key << "Maximized" << YAML::Value << maximized;
 			out << YAML::EndMap;
 		}
 

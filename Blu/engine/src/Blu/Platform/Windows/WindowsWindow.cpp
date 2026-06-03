@@ -20,18 +20,72 @@ namespace Blu
 	static bool    s_GLFWInitialized = false;
 	static WNDPROC s_GlfwWndProc     = nullptr;   // original GLFW window proc
 
+	static constexpr int s_MinWindowWidth  = 640;
+	static constexpr int s_MinWindowHeight = 360;
+
+	static bool GetMonitorInfoForWindow(HWND hwnd, MONITORINFO& monitorInfo)
+	{
+		monitorInfo = {};
+		monitorInfo.cbSize = sizeof(MONITORINFO);
+
+		HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+		return monitor && GetMonitorInfo(monitor, &monitorInfo);
+	}
+
+	static int ClampCoord(int value, int minValue, int maxValue)
+	{
+		if (maxValue < minValue)
+			return minValue;
+		return std::clamp(value, minValue, maxValue);
+	}
+
+	static void ClampWindowRectToNearestWorkArea(HWND hwnd)
+	{
+		if (!hwnd)
+			return;
+
+		MONITORINFO monitorInfo;
+		if (!GetMonitorInfoForWindow(hwnd, monitorInfo))
+			return;
+
+		RECT rect{};
+		if (!GetWindowRect(hwnd, &rect))
+			return;
+
+		const RECT& work = monitorInfo.rcWork;
+		const int workWidth = work.right - work.left;
+		const int workHeight = work.bottom - work.top;
+		if (workWidth <= 0 || workHeight <= 0)
+			return;
+
+		int width = rect.right - rect.left;
+		int height = rect.bottom - rect.top;
+		width = std::min(std::max(width, 1), workWidth);
+		height = std::min(std::max(height, 1), workHeight);
+
+		const int x = ClampCoord(rect.left, work.left, work.right - width);
+		const int y = ClampCoord(rect.top, work.top, work.bottom - height);
+
+		if (x == rect.left && y == rect.top && width == rect.right - rect.left && height == rect.bottom - rect.top)
+			return;
+
+		SetWindowPos(hwnd, nullptr, x, y, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
+	}
+
 	// -------------------------------------------------------------------------
 	// Custom Win32 window procedure
 	//
-	// Intercepts three messages that the stock GLFW proc does not handle
+	// Intercepts five messages that the stock GLFW proc does not handle
 	// correctly for a borderless-but-resizable window:
 	//
 	//  WM_NCCALCSIZE  – Returns 0 so Windows treats the entire window rect as
 	//                   client area (no NC frame / caption drawn).  When the
-	//                   window is maximised Windows adds an ~8 px "sizeframe"
-	//                   margin on every side to push resize handles off-screen;
-	//                   we strip that margin so content fills the monitor edge
-	//                   to edge and our ImGui controls land at the right pixel.
+	//                   window is maximised Windows may propose a rect outside
+	//                   the usable work area; we clamp it so the ImGui titlebar
+	//                   remains visible.
+	//
+	//  WM_GETMINMAXINFO - Makes maximise use the monitor work area instead of
+	//                   raw monitor bounds.
 	//
 	//  WM_NCHITTEST   – Delegates resize-border detection to DefWindowProc (it
 	//                   honours WS_THICKFRAME), then returns HTCAPTION over
@@ -55,18 +109,42 @@ namespace Blu
 					auto& r = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam)->rgrc[0];
 					if (IsZoomed(hwnd))
 					{
-						// Trim the margins Windows adds beyond the monitor edges
-						// when maximised so client content fills the whole screen.
-						int bx = GetSystemMetrics(SM_CXSIZEFRAME)
-						       + GetSystemMetrics(SM_CXPADDEDBORDER);
-						int by = GetSystemMetrics(SM_CYSIZEFRAME)
-						       + GetSystemMetrics(SM_CXPADDEDBORDER);
-						r.left   += bx;  r.right  -= bx;
-						r.top    += by;  r.bottom -= by;
+						// Clamp maximized client content to the usable monitor area
+						// so the custom titlebar never starts above the screen.
+						MONITORINFO monitorInfo;
+						if (GetMonitorInfoForWindow(hwnd, monitorInfo))
+						{
+							const RECT& work = monitorInfo.rcWork;
+							r.left   = std::max(r.left,   work.left);
+							r.top    = std::max(r.top,    work.top);
+							r.right  = std::min(r.right,  work.right);
+							r.bottom = std::min(r.bottom, work.bottom);
+						}
 					}
 					return 0;   // entire window rect → client area
 				}
 				break;
+			}
+
+			case WM_GETMINMAXINFO:
+			{
+				auto* minMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
+				MONITORINFO monitorInfo;
+				if (GetMonitorInfoForWindow(hwnd, monitorInfo))
+				{
+					const RECT& monitor = monitorInfo.rcMonitor;
+					const RECT& work = monitorInfo.rcWork;
+					const int workWidth = work.right - work.left;
+					const int workHeight = work.bottom - work.top;
+
+					minMaxInfo->ptMaxPosition.x = work.left - monitor.left;
+					minMaxInfo->ptMaxPosition.y = work.top - monitor.top;
+					minMaxInfo->ptMaxSize.x = workWidth;
+					minMaxInfo->ptMaxSize.y = workHeight;
+					minMaxInfo->ptMaxTrackSize.x = workWidth;
+					minMaxInfo->ptMaxTrackSize.y = workHeight;
+				}
+				return 0;
 			}
 
 			case WM_NCHITTEST:
@@ -113,6 +191,10 @@ namespace Blu
 				// Suppress the NC repaint on focus-change so no ghost title bar
 				// flashes.  lParam = -1 tells Windows to skip NC drawing.
 				return DefWindowProc(hwnd, msg, wParam, -1L);
+
+			case WM_CLOSE:
+				Application::Get().Close();
+				return 0;
 
 			case WM_SIZE:
 			{
@@ -163,10 +245,7 @@ namespace Blu
 	void Blu::WindowsWindow::Init(const WindowProps& props)
 	{
 		BLU_PROFILE_FUNCTION();
-		m_Data.Title  = props.Title;
-		m_Data.Width  = props.Width;
-		m_Data.Height = props.Height;
-		BLU_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+		m_Data.Title = props.Title;
 
 		if (!s_GLFWInitialized)
 		{
@@ -174,6 +253,35 @@ namespace Blu
 			BLU_CORE_ASSERT(success, "Could not initialise GLFW!");
 			s_GLFWInitialized = true;
 		}
+
+		int initialWidth = static_cast<int>(props.Width);
+		int initialHeight = static_cast<int>(props.Height);
+		int initialX = 0;
+		int initialY = 0;
+		bool placeAtWorkAreaOrigin = false;
+
+		if (props.CustomTitleBar)
+		{
+			if (GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor())
+			{
+				int workX = 0, workY = 0, workWidth = 0, workHeight = 0;
+				glfwGetMonitorWorkarea(primaryMonitor, &workX, &workY, &workWidth, &workHeight);
+				if (workWidth > 0 && workHeight > 0)
+				{
+					placeAtWorkAreaOrigin = initialWidth >= workWidth || initialHeight >= workHeight;
+					initialWidth = std::min(std::max(initialWidth, s_MinWindowWidth), workWidth);
+					initialHeight = std::min(std::max(initialHeight, s_MinWindowHeight), workHeight);
+					initialX = workX;
+					initialY = workY;
+				}
+			}
+		}
+
+		m_Data.Width = static_cast<unsigned int>(initialWidth);
+		m_Data.Height = static_cast<unsigned int>(initialHeight);
+		m_WindowProps.Width = m_Data.Width;
+		m_WindowProps.Height = m_Data.Height;
+		BLU_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, m_Data.Width, m_Data.Height);
 
 		// Hint for custom GLFW forks that expose GLFW_TITLEBAR.
 		// Standard GLFW silently ignores unknown hints — safe to leave in.
@@ -184,8 +292,10 @@ namespace Blu
 		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height,
+		m_Window = glfwCreateWindow(initialWidth, initialHeight,
 		                            m_Data.Title.c_str(), nullptr, nullptr);
+		if (placeAtWorkAreaOrigin)
+			glfwSetWindowPos(m_Window, initialX, initialY);
 
 		// Create and initialise the graphics context before subclassing so that
 		// D3D11Context::Get() is valid when WM_SIZE first fires.
@@ -218,6 +328,7 @@ namespace Blu
 			// immediately so the caption removal takes visible effect.
 			SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
 			             SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+			ClampWindowRectToNearestWorkArea(hwnd);
 		}
 		// ─────────────────────────────────────────────────────────────────────
 
@@ -229,6 +340,14 @@ namespace Blu
 		glfwSetCursorPosCallback(m_Window,    GLFWCallbacks::MouseMovedCallback);
 		glfwSetScrollCallback(m_Window,       GLFWCallbacks::MouseButtonScrolledCallback);
 		glfwSetCharCallback(m_Window,         GLFWCallbacks::CharCallback);
+	}
+
+	void Blu::WindowsWindow::ClampToWorkArea()
+	{
+		if (!m_Window)
+			return;
+
+		ClampWindowRectToNearestWorkArea(glfwGetWin32Window(m_Window));
 	}
 
 	void Blu::WindowsWindow::Shutdown()

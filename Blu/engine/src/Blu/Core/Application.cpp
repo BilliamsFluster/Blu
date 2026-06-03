@@ -36,12 +36,12 @@ namespace Blu
 		
 	{
 		BLU_PROFILE_FUNCTION();
+		s_Instance = this;
 		
 		
 		// Initialize the application's window and ImGui layer
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(name)));
 		m_ImGuiLayer = std::make_shared<Layers::ImGuiLayer>();
-		s_Instance = this;
 
 		// Initialize the renderer and push the ImGui layer
 		Renderer::Init();
@@ -107,7 +107,8 @@ namespace Blu
 
 				// Update the window and check if it should be closed
 				m_Window->OnUpdate();
-				m_Running = !m_Window->ShouldClose();
+				if (m_Window->ShouldClose())
+					m_Running = false;
 
 				// Update all layers
 				for (Shared<Layers::Layer> layer : m_LayerStack)
