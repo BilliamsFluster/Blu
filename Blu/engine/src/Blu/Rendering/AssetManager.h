@@ -1,44 +1,75 @@
 #pragma once
 #include "Blu/Core/Core.h"
 #include "Asset.h"
+#include <string>
+#include <type_traits>
 #include <unordered_map>
+#include <vector>
 
 namespace Blu
 {
-    class AssetManager
-    {
-    public:
-        static AssetManager& Get();
+	struct AssetMetadata
+	{
+		AssetHandle Handle = AssetHandle(0);
+		AssetType Type = AssetType::None;
+		std::string VirtualPath;
+		std::string SourcePath;
+		std::vector<AssetHandle> Dependencies;
+	};
 
-        void Initialize();
-        void Shutdown();
+	class AssetManager
+	{
+	public:
+		static AssetManager& Get();
 
-        Shared<Asset> GetAsset(AssetHandle handle);
-        bool HasAsset(AssetHandle handle) const;
+		void Initialize();
+		void Shutdown();
+		void Reset();
+		void SetRegistryPath(std::string registryPath);
 
-        AssetHandle ImportAsset(const std::string& filepath);
-        bool SaveAsset(AssetHandle handle);
+		AssetHandle Import(const std::string& filepath);
+		Shared<Asset> Load(AssetHandle handle);
+		bool Save(AssetHandle handle);
+		void Release(AssetHandle handle);
+		const AssetMetadata* FindMetadata(AssetHandle handle) const;
+		bool AddDependency(AssetHandle asset, AssetHandle dependency);
+		bool SaveRegistry() const;
 
-        template<typename T>
-        Shared<T> GetAssetAs(AssetHandle handle)
-        {
-            static_assert(std::is_base_of_v<Asset, T>, "T must derive from Asset");
-            return std::static_pointer_cast<T>(GetAsset(handle));
-        }
+		// Compatibility entry points retained while existing rendering code migrates.
+		Shared<Asset> GetAsset(AssetHandle handle) { return Load(handle); }
+		bool HasAsset(AssetHandle handle) const;
+		AssetHandle ImportAsset(const std::string& filepath) { return Import(filepath); }
+		bool SaveAsset(AssetHandle handle) { return Save(handle); }
 
-        const std::unordered_map<AssetHandle, Shared<Asset>>& GetAllAssets() const { return m_Assets; }
-        const std::unordered_map<std::string, AssetHandle>& GetPathIndex() const { return m_PathIndex; }
+		template<typename T>
+		Shared<T> GetAssetAs(AssetHandle handle)
+		{
+			static_assert(std::is_base_of_v<Asset, T>, "T must derive from Asset");
+			return std::dynamic_pointer_cast<T>(Load(handle));
+		}
 
-    private:
-        AssetManager() = default;
-        ~AssetManager() = default;
-        AssetManager(const AssetManager&) = delete;
-        AssetManager& operator=(const AssetManager&) = delete;
+		uint32_t GetReferenceCount(AssetHandle handle) const;
+		size_t GetLoadedAssetCount() const { return m_Assets.size(); }
+		const std::vector<std::string>& GetDiagnostics() const { return m_Diagnostics; }
+		const std::unordered_map<AssetHandle, Shared<Asset>>& GetAllAssets() const { return m_Assets; }
+		const std::unordered_map<std::string, AssetHandle>& GetPathIndex() const { return m_PathIndex; }
 
-        void LoadAssetRegistry();
+	private:
+		AssetManager() = default;
+		~AssetManager() = default;
+		AssetManager(const AssetManager&) = delete;
+		AssetManager& operator=(const AssetManager&) = delete;
 
-        std::unordered_map<AssetHandle, Shared<Asset>> m_Assets;
-        std::unordered_map<std::string, AssetHandle>   m_PathIndex;
-        bool m_Initialized = false;
-    };
+		void LoadAssetRegistry();
+		void AddDiagnostic(const std::string& diagnostic);
+		std::string NormalizeAssetPath(const std::string& filepath) const;
+		static AssetType InferAssetType(const std::string& filepath);
+
+		std::unordered_map<AssetHandle, Shared<Asset>> m_Assets;
+		std::unordered_map<AssetHandle, AssetMetadata> m_Metadata;
+		std::unordered_map<std::string, AssetHandle> m_PathIndex;
+		std::vector<std::string> m_Diagnostics;
+		std::string m_RegistryPath = "cache://AssetRegistry.yaml";
+		bool m_Initialized = false;
+	};
 }

@@ -1,7 +1,4 @@
 #include "ZombieCharacter.h"
-#include "Blu/GameFramework/ActorRegistry.h"
-
-BLU_REGISTER_ACTOR(ZombieCharacter, Azure::ZombieCharacter);
 
 namespace Azure
 {

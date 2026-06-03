@@ -34,6 +34,9 @@
     <Filter Include="ExternalDependencies\imgui\backends">
       <UniqueIdentifier>{E3A09D1E-4F5A-08C9-D8B9-22A34472BE38}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ExternalDependencies\miniaudio">
+      <UniqueIdentifier>{FD1C33BC-E942-FD22-D288-82EEBE4D22EF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ExternalDependencies\stb_image">
       <UniqueIdentifier>{49CD6FEB-35F3-3952-1E39-BF1D0AFE5E1E}</UniqueIdentifier>
     </Filter>
@@ -43,17 +46,20 @@
     <Filter Include="src\Blu">
       <UniqueIdentifier>{9F662FA9-0B46-AE44-145E-391B80BC14A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Audio">
+      <UniqueIdentifier>{E02F8C86-4CF0-07BD-152B-513A81AA4C99}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Blu\Core">
       <UniqueIdentifier>{57861C23-43E9-ABC7-EC6E-E47DD8B0774A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Blu\Audio">
-      <UniqueIdentifier>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Blu\Debug">
       <UniqueIdentifier>{55ACB986-C16C-35BD-8AA7-7E3AF6267A99}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Blu\Events">
       <UniqueIdentifier>{A3897961-8F57-6D67-78EB-DD8D645849CC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Blu\GameFramework">
+      <UniqueIdentifier>{16F0597F-825C-157A-4B50-ADD7B77B37E2}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Blu\ImGui">
       <UniqueIdentifier>{09171887-75D7-93BD-3E12-DD3AAA91D899}</UniqueIdentifier>
@@ -86,10 +92,7 @@
       <UniqueIdentifier>{FC0EC887-68CF-43BE-310A-8D3B9D89889A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Blu\UI">
-      <UniqueIdentifier>{A0D1A7C2-35B0-4E46-9553-2D4154D11523}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Blu\Scripting">
-      <UniqueIdentifier>{61EE0219-CD04-01AF-167C-8CD082D1D136}</UniqueIdentifier>
+      <UniqueIdentifier>{6CA91507-5861-5754-C168-30B0AD3FF244}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Blu\Utils">
       <UniqueIdentifier>{3FA3F587-AB63-71BE-749E-BA3BE01DB69A}</UniqueIdentifier>
@@ -1383,11 +1386,17 @@
     <ClInclude Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.h">
       <Filter>ExternalDependencies\imgui\backends</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ExternalDependencies\miniaudio\miniaudio.h">
+      <Filter>ExternalDependencies\miniaudio</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ExternalDependencies\stb_image\stb_image.h">
       <Filter>ExternalDependencies\stb_image</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Audio\AudioEngine.h">
+      <Filter>src\Blu\Audio</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Application.h">
       <Filter>src\Blu\Core</Filter>
@@ -1398,14 +1407,17 @@
     <ClInclude Include="engine\src\Blu\Core\EntryPoint.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\FrameArena.h">
+      <Filter>src\Blu\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\GenerationalHandle.h">
+      <Filter>src\Blu\Core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\Input.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\InputMap.h">
       <Filter>src\Blu\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Audio\AudioEngine.h">
-      <Filter>src\Blu\Audio</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h">
       <Filter>src\Blu\Core</Filter>
@@ -1461,6 +1473,36 @@
     <ClInclude Include="engine\src\Blu\Events\WindowEvent.h">
       <Filter>src\Blu\Events</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\AActor.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\ACharacter.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\AGameMode.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\APawn.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\ActorRegistry.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\ActorSystem.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\GameFramework.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\NativeClass.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\NativeClassRegistry.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\GameFramework\UObject.h">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\ImGui\ImGuiLayer.h">
       <Filter>src\Blu\ImGui</Filter>
     </ClInclude>
@@ -1476,6 +1518,9 @@
     <ClInclude Include="engine\src\Blu\Physics\Physics3D.h">
       <Filter>src\Blu\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Physics\Physics3DDiagnostics.h">
+      <Filter>src\Blu\Physics</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Buffer.h">
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClInclude>
@@ -1483,6 +1528,9 @@
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Context.h">
+      <Filter>src\Blu\Platform\DirectX11</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11DeferredRenderer.h">
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11FrameBuffer.h">
@@ -1507,6 +1555,9 @@
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11Texture.h">
+      <Filter>src\Blu\Platform\DirectX11</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.h">
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11VertexArray.h">
@@ -1542,6 +1593,12 @@
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Animation.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Animator.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Asset.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
@@ -1557,6 +1614,9 @@
     <ClInclude Include="engine\src\Blu\Rendering\CascadedShadowMap.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\DeferredRenderer.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
@@ -1569,10 +1629,22 @@
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\LightBufferData.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Material.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\MaterialAsset.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\MaterialGraph.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\MaterialSystem.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Mesh.h">
@@ -1593,31 +1665,10 @@
     <ClInclude Include="engine\src\Blu\Rendering\PostProcess.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\Skybox.h">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\TimeOfDay.h">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\Terrain.h">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\Animation.h">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\Animator.h">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\TextureCube.h">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.h">
-      <Filter>src\Blu\Platform\DirectX11</Filter>
-    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\RenderCommand.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\RenderSettings.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Renderer.h">
@@ -1632,16 +1683,31 @@
     <ClInclude Include="engine\src\Blu\Rendering\RendererAPI.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\SceneRenderPipeline.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\ShadowMap.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Skybox.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\Terrain.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\TextureAsset.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\TextureCube.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\TimeOfDay.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\VertexArray.h">
@@ -1668,14 +1734,11 @@
     <ClInclude Include="engine\src\Blu\UI\RuntimeUI.h">
       <Filter>src\Blu\UI</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Scene\ScriptableEntity.h">
-      <Filter>src\Blu\Scene</Filter>
+    <ClInclude Include="engine\src\Blu\Utils\AssetPath.h">
+      <Filter>src\Blu\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="engine\src\Blu\Scripting\ScriptEngine.h">
-      <Filter>src\Blu\Scripting</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\src\Blu\Scripting\ScriptJoiner.h">
-      <Filter>src\Blu\Scripting</Filter>
+    <ClInclude Include="engine\src\Blu\Utils\FileSystemService.h">
+      <Filter>src\Blu\Utils</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Utils\Helpers.h">
       <Filter>src\Blu\Utils</Filter>
@@ -1697,10 +1760,19 @@
     <ClCompile Include="engine\ExternalDependencies\imgui\backends\imgui_impl_glfw.cpp">
       <Filter>ExternalDependencies\imgui\backends</Filter>
     </ClCompile>
+    <ClCompile Include="engine\ExternalDependencies\miniaudio\miniaudio.c">
+      <Filter>ExternalDependencies\miniaudio</Filter>
+    </ClCompile>
     <ClCompile Include="engine\ExternalDependencies\stb_image\stb_image.cpp">
       <Filter>ExternalDependencies\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Audio\AudioEngine.cpp">
+      <Filter>src\Blu\Audio</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\Application.cpp">
+      <Filter>src\Blu\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\InputMap.cpp">
       <Filter>src\Blu\Core</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\Layer.cpp">
@@ -1714,12 +1786,6 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp">
       <Filter>src\Blu\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Core\InputMap.cpp">
-      <Filter>src\Blu\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Audio\AudioEngine.cpp">
-      <Filter>src\Blu\Audio</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\UUID.cpp">
       <Filter>src\Blu\Core</Filter>
@@ -1741,6 +1807,21 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\WindowEvent.cpp">
       <Filter>src\Blu\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\GameFramework\AActor.cpp">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\GameFramework\ACharacter.cpp">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\GameFramework\ActorRegistry.cpp">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\GameFramework\ActorSystem.cpp">
+      <Filter>src\Blu\GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\GameFramework\NativeClassRegistry.cpp">
+      <Filter>src\Blu\GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\ImGui\ImGuiBuild.cpp">
       <Filter>src\Blu\ImGui</Filter>
@@ -1766,6 +1847,9 @@
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Context.cpp">
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11DeferredRenderer.cpp">
+      <Filter>src\Blu\Platform\DirectX11</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11FrameBuffer.cpp">
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClCompile>
@@ -1785,6 +1869,9 @@
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11Texture.cpp">
+      <Filter>src\Blu\Platform\DirectX11</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.cpp">
       <Filter>src\Blu\Platform\DirectX11</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11VertexArray.cpp">
@@ -1826,6 +1913,12 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Animation.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Asset.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
@@ -1838,16 +1931,31 @@
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\DeferredRenderer.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\LightBufferData.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\MaterialAsset.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\MaterialGraph.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\MaterialSystem.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Mesh.cpp">
@@ -1868,6 +1976,9 @@
     <ClCompile Include="engine\src\Blu\Rendering\RenderCommand.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\RenderSettings.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Renderer.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
@@ -1877,37 +1988,28 @@
     <ClCompile Include="engine\src\Blu\Rendering\Renderer3D.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Rendering\TimeOfDay.cpp">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Rendering\Animation.cpp">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Platform\DirectX11\D3D11TextureCube.cpp">
-      <Filter>src\Blu\Platform\DirectX11</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp">
-      <Filter>src\Blu\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\RendererAPI.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\SceneRenderPipeline.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\TextureAsset.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\TimeOfDay.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\VertexArray.cpp">
@@ -1928,20 +2030,14 @@
     <ClCompile Include="engine\src\Blu\Scene\SceneCamera.cpp">
       <Filter>src\Blu\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\UI\RuntimeUI.cpp">
-      <Filter>src\Blu\UI</Filter>
-    </ClCompile>
     <ClCompile Include="engine\src\Blu\Scene\SceneSerializer.cpp">
       <Filter>src\Blu\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Scene\ScriptableEntity.cpp">
-      <Filter>src\Blu\Scene</Filter>
+    <ClCompile Include="engine\src\Blu\UI\RuntimeUI.cpp">
+      <Filter>src\Blu\UI</Filter>
     </ClCompile>
-    <ClCompile Include="engine\src\Blu\Scripting\ScriptEngine.cpp">
-      <Filter>src\Blu\Scripting</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\src\Blu\Scripting\ScriptJoiner.cpp">
-      <Filter>src\Blu\Scripting</Filter>
+    <ClCompile Include="engine\src\Blu\Utils\FileSystemService.cpp">
+      <Filter>src\Blu\Utils</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Utils\Helpers.cpp">
       <Filter>src\Blu\Utils</Filter>

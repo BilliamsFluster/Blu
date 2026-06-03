@@ -40,8 +40,19 @@ namespace Blu
             fy);
     }
 
-    Shared<Mesh> GenerateTerrain(const TerrainSpec& spec)
+    TerrainSpec SanitizeTerrainSpec(const TerrainSpec& spec)
     {
+        TerrainSpec sanitized = spec;
+        sanitized.GridWidth = std::max(1, sanitized.GridWidth);
+        sanitized.GridHeight = std::max(1, sanitized.GridHeight);
+        sanitized.CellSize = std::max(0.001f, sanitized.CellSize);
+        sanitized.HeightScale = std::max(0.0f, sanitized.HeightScale);
+        return sanitized;
+    }
+
+    TerrainMeshData BuildTerrainMeshData(const TerrainSpec& authoredSpec)
+    {
+        const TerrainSpec spec = SanitizeTerrainSpec(authoredSpec);
         const int numCols = spec.GridWidth  + 1; // vertex columns
         const int numRows = spec.GridHeight + 1; // vertex rows
 
@@ -144,6 +155,12 @@ namespace Blu
             v.Tangent = (glm::length(v.Tangent) > 1e-6f)
                 ? glm::normalize(v.Tangent) : glm::vec3(1.0f, 0.0f, 0.0f);
 
-        return std::make_shared<Mesh>(vertices, indices);
+        return { std::move(vertices), std::move(indices) };
+    }
+
+    Shared<Mesh> GenerateTerrain(const TerrainSpec& spec)
+    {
+        TerrainMeshData data = BuildTerrainMeshData(spec);
+        return std::make_shared<Mesh>(data.Vertices, data.Indices);
     }
 }

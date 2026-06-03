@@ -1,12 +1,12 @@
 #include "GameLayer.h"
+#include "AzureGameModule.h"
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Events/WindowEvent.h"
+#include "Blu/Utils/FileSystemService.h"
 #include <filesystem>
-#include <array>
-#include <fstream>
-#include <vector>
+#include <sstream>
 
 namespace Azure
 {
@@ -24,29 +24,25 @@ namespace Azure
 		// per line, '#' comments). Dependency-free so Azure needn't link yaml-cpp.
 		static std::string ReadConfigStartupScene()
 		{
-			const std::array<std::string, 4> cfgCandidates = {
-				"Game.config", "Azure/Game.config", "../Azure/Game.config", "../../Azure/Game.config"
-			};
-			for (const auto& cfg : cfgCandidates)
+			std::string contents;
+			if (!Blu::FileSystemService::Get().Read("project://Azure/Game.config", contents))
+				return {};
+
+			std::istringstream in(contents);
+			std::string line;
+			while (std::getline(in, line))
 			{
-				if (!std::filesystem::exists(cfg))
+				std::string t = Trim(line);
+				if (t.empty() || t[0] == '#')
 					continue;
-				std::ifstream in(cfg);
-				std::string line;
-				while (std::getline(in, line))
+				if (t.rfind("StartupScene", 0) == 0)
 				{
-					std::string t = Trim(line);
-					if (t.empty() || t[0] == '#')
-						continue;
-					if (t.rfind("StartupScene", 0) == 0)
+					size_t colon = t.find(':');
+					if (colon != std::string::npos)
 					{
-						size_t colon = t.find(':');
-						if (colon != std::string::npos)
-						{
-							std::string value = Trim(t.substr(colon + 1));
-							if (!value.empty())
-								return value;
-						}
+						std::string value = Trim(t.substr(colon + 1));
+						if (!value.empty())
+							return value;
 					}
 				}
 			}
@@ -69,47 +65,38 @@ namespace Azure
 			if (!fromConfig.empty())
 				return fromConfig;
 
-			return "LoadedScenes/Main.blu";
+			return "editor://LoadedScenes/Main.blu";
 		}
 
-		// Expand a (possibly relative) scene path into candidate locations so it
-		// resolves regardless of the process working directory.
-		static std::vector<std::string> ExpandSceneCandidates(const std::string& path)
+		// Relative paths from older launch profiles remain editor-relative. New
+		// configuration should use an explicit mounted virtual path.
+		static std::filesystem::path ResolveStartupScenePath(const std::string& path)
 		{
-			std::vector<std::string> out;
-			out.push_back(path);
-			if (!std::filesystem::path(path).is_absolute())
-			{
-				const char* prefixes[] = {
-					"Blu-Editor/", "../Blu-Editor/", "../../Blu-Editor/",
-					"Azure/", "../Azure/", "../../Azure/"
-				};
-				for (const char* p : prefixes)
-					out.push_back(std::string(p) + path);
-			}
-			return out;
+			auto& fileSystem = Blu::FileSystemService::Get();
+			if (fileSystem.IsVirtualPath(path))
+				return fileSystem.Resolve(path);
+			if (std::filesystem::path(path).is_absolute())
+				return path;
+			return fileSystem.Resolve("editor://" + path);
 		}
 	}
 
 	void GameLayer::OnAttach()
 	{
+		RegisterAzureGameModule();
 		m_Scene = std::make_shared<Blu::Scene>();
+		m_Scene->SetGameModeClassID("Azure::ZombieGameMode");
 
 		bool loaded = false;
 		const std::string requestedScene = ResolveStartupScene();
 
-		for (const auto& scenePath : ExpandSceneCandidates(requestedScene))
+		const std::filesystem::path scenePath = ResolveStartupScenePath(requestedScene);
+		if (!scenePath.empty() && std::filesystem::exists(scenePath))
 		{
-			if (!std::filesystem::exists(scenePath))
-				continue;
-
 			Blu::SceneSerializer serializer(m_Scene);
-			loaded = serializer.Deserialize(scenePath);
+			loaded = serializer.Deserialize(scenePath.string());
 			if (loaded)
-			{
-				BLU_INFO("GameLayer: loaded startup scene '{0}'", scenePath);
-				break;
-			}
+				BLU_INFO("GameLayer: loaded startup scene '{0}'", scenePath.string());
 		}
 
 		if (!loaded)
@@ -157,8 +144,7 @@ namespace Azure
 			arm.EnableLag = true;
 			arm.PositionLagSpeed = 10.0f;
 
-			auto& nsc = player.AddComponent<Blu::NativeScriptComponent>();
-			nsc.ClassName = "PlayerCharacter";
+			player.AddComponent<Blu::ActorComponent>().ClassID = "Azure::PlayerCharacter";
 		}
 
 		bool hasUIRoot = false;

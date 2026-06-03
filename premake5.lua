@@ -55,6 +55,11 @@ group"Dependencies"
 	include "Blu/engine/ExternalDependencies/box2d"
 	include "Blu/engine/ExternalDependencies/assimp"
 	include "Blu/engine/ExternalDependencies/jolt"
+
+	project "Box2D"
+		filter "configurations:Debug"
+			buildoptions { "/FS" }
+		filter {}
 -- Setup multiple premake files per directory so we can include them in here
 group "Core"
 	--include "Blu"
@@ -87,6 +92,8 @@ project "Blu"
 		"%{prj.name}/engine/src/**.h",
 		"%{prj.name}/engine/src/**.cpp",
 		"%{prj.name}/engine/ExternalDependencies/stb_image/**.cpp",
+		"%{prj.name}/engine/ExternalDependencies/miniaudio/**.c",
+		"%{prj.name}/engine/ExternalDependencies/miniaudio/**.h",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.h",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.hpp",
 		"%{prj.name}/engine/ExternalDependencies/glm/**.inl",
@@ -145,6 +152,10 @@ project "Blu"
 	filter {"files:Blu/engine/ExternalDependencies/imgui/backends/*.cpp"}
 		flags {"NoPCH"}
 
+	filter {"files:Blu/engine/ExternalDependencies/miniaudio/*.c"}
+		flags {"NoPCH"}
+		warnings "Off"
+
 	
 	--buildoptions { "/wd4251" } for dll
 
@@ -170,24 +181,27 @@ project "Blu"
 			"IMGUI_DEFINE_MATH_OPERATORS",
 			"ASSIMP_BUILD_NO_EXPORT",
 			"JPH_DISABLE_CUSTOM_ALLOCATOR",
+			"BLU_HAS_MINIAUDIO",
+			"MA_NO_JACK",
+			"MA_NO_ENCODING",
 			--"BLU_ENABLE_ASSERTS"
 		}
 
 		
 
 	filter "configurations:Debug"
-		defines "BLU_DEBUG"
+		defines { "BLU_DEBUG", "JPH_ENABLE_ASSERTS", "JPH_DEBUG_RENDERER" }
 		buildoptions "/MTd"
 		symbols "on"
 		--linkoptions { "/NODEFAULTLIB:MSVCRT" }
 
 	filter "configurations:Release"
-		defines "BLU_RELEASE"
+		defines { "BLU_RELEASE", "NDEBUG", "JPH_PROFILE_ENABLED" }
 		buildoptions "/MT"
 		optimize "on"
 
 	filter "configurations:Dist"
-		defines "BLU_DIST"
+		defines { "BLU_DIST", "NDEBUG" }
 		buildoptions "/MT"
 		optimize "on"
 	
@@ -195,6 +209,62 @@ project "Blu"
 		-- refer to premake wiki on more info
 	-- filter {"system:windows", "configurations:Release"}
 	-- buildoptions "/MT"
+
+project "Azure-Game"
+	location "Azure-Game"
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++20"
+	staticruntime "on"
+	dependson { "Blu" }
+
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files
+	{
+		"Azure/src/Actors/**.h",
+		"Azure/src/Actors/**.cpp",
+		"Azure/src/GameModes/**.h",
+		"Azure/src/GameModes/**.cpp",
+		"Azure/src/AzureGameModule.h",
+		"Azure/src/AzureGameModule.cpp"
+	}
+
+	includedirs
+	{
+		"$(SolutionDir)Azure/src",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
+		"$(SolutionDir)Blu/engine/src",
+		"%{IncludeDir.entt}"
+	}
+
+	links { "Blu" }
+
+	filter "system:windows"
+		systemversion "latest"
+		defines
+		{
+			"BLU_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS"
+		}
+
+	filter "configurations:Debug"
+		defines "BLU_DEBUG"
+		symbols "on"
+		runtime "Debug"
+		buildoptions "/MTd"
+
+	filter "configurations:Release"
+		defines { "BLU_RELEASE", "NDEBUG" }
+		optimize "on"
+		runtime "Release"
+		buildoptions "/MT"
+
+	filter "configurations:Dist"
+		defines { "BLU_DIST", "NDEBUG" }
+		optimize "on"
 
 project "Azure"
 	location "Azure"
@@ -212,6 +282,12 @@ project "Azure"
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
 	}
+	removefiles
+	{
+		"%{prj.name}/src/Actors/**",
+		"%{prj.name}/src/GameModes/**",
+		"%{prj.name}/src/AzureGameModule.cpp"
+	}
 
 	includedirs 
 	{
@@ -228,6 +304,7 @@ project "Azure"
 	
 	links
 	{
+		"Azure-Game",
 		"Blu"
 	}
 	--buildoptions { "/wd4251" } for dll
@@ -258,7 +335,7 @@ project "Azure"
 
 
 	filter "configurations:Release"
-		defines "BLU_RELEASE"
+		defines { "BLU_RELEASE", "NDEBUG" }
 		optimize "on"
 		runtime "Release"
 		buildoptions "/MT"
@@ -268,7 +345,7 @@ project "Azure"
 		}
 
 	filter "configurations:Dist"
-		defines "BLU_DIST"
+		defines { "BLU_DIST", "NDEBUG" }
 		optimize "on"
 
 
@@ -284,7 +361,7 @@ project "Blu-Editor"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "on" 
-	dependson { "Blu" }
+	dependson { "Blu", "Azure-Game" }
 
 
 
@@ -308,6 +385,7 @@ project "Blu-Editor"
 		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
 		"$(SolutionDir)Blu/engine/src",
+		"$(SolutionDir)Azure/src",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/imgui",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/include",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include",
@@ -326,6 +404,7 @@ project "Blu-Editor"
 	links
 	{
 		"Blu",
+		"Azure-Game",
 		"ImGui",
 		"GLFW",
 		"yaml",
@@ -361,7 +440,7 @@ project "Blu-Editor"
 		}
 
 	filter "configurations:Release"
-		defines "BLU_RELEASE"
+		defines { "BLU_RELEASE", "NDEBUG" }
 		optimize "on"
 		runtime "Release"
 		buildoptions "/MT"
@@ -373,5 +452,67 @@ project "Blu-Editor"
 
 
 	filter "configurations:Dist"
-		defines "BLU_DIST"
+		defines { "BLU_DIST", "NDEBUG" }
+		optimize "on"
+
+project "Blu-Tests"
+	location "Blu-Tests"
+	kind "ConsoleApp"
+	language "C++"
+	cppdialect "C++20"
+	staticruntime "on"
+	dependson { "Blu" }
+
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files
+	{
+		"%{prj.name}/src/**.cpp"
+	}
+
+	includedirs
+	{
+		"$(SolutionDir)Blu/engine/ExternalDependencies/spdlog/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/glm",
+		"$(SolutionDir)Blu/engine/src",
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.yaml}"
+	}
+
+	links
+	{
+		"Blu",
+		"ImGui",
+		"GLFW",
+		"yaml",
+		"Glad",
+		"assimp"
+	}
+
+	filter "system:windows"
+		systemversion "latest"
+		defines
+		{
+			"BLU_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS",
+			"ASSIMP_BUILD_NO_EXPORT"
+		}
+
+	filter "configurations:Debug"
+		defines "BLU_DEBUG"
+		symbols "on"
+		runtime "Debug"
+		buildoptions "/MTd"
+		links { "%{Library.msvcrtd}" }
+
+	filter "configurations:Release"
+		defines { "BLU_RELEASE", "NDEBUG" }
+		optimize "on"
+		runtime "Release"
+		buildoptions "/MT"
+		links { "%{Library.msvcrt}" }
+
+	filter "configurations:Dist"
+		defines { "BLU_DIST", "NDEBUG" }
 		optimize "on"

@@ -81,8 +81,8 @@ Entities:
   - Entity: 1000000000000000007
     TagComponent:
       Tag: ZombieTest
-    NativeScriptComponent:
-      ClassName: ZombieTestActor
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
     TransformComponent:
       Translation: [0, 1, -6]
       Rotation: [0, 0, 0]
@@ -182,8 +182,6 @@ Entities:
   - Entity: 1000000000000000004
     TagComponent:
       Tag: PlayerCamera
-    NativeScriptComponent:
-      ClassName: ""
     CameraComponent:
       Camera:
         ProjectionType: 0
@@ -202,8 +200,8 @@ Entities:
   - Entity: 1000000000000000003
     TagComponent:
       Tag: PlayerCharacter
-    NativeScriptComponent:
-      ClassName: PlayerCharacter
+    ActorComponent:
+      ClassID: Azure::PlayerCharacter
     TransformComponent:
       Translation: [0, 1, 5]
       Rotation: [0, 0, 0]
@@ -259,12 +257,12 @@ Entities:
     TagComponent:
       Tag: Ground
     TransformComponent:
-      Translation: [0, -0.5, 0]
+      Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [30, 1, 30]
+      Scale: [1, 1, 1]
     MeshComponent:
       FilePath: ""
-      PrimitiveType: 1
+      PrimitiveType: 0
       PBR_AlbedoColor: [0.449999988, 0.419999987, 0.400000006]
       PBR_AlbedoAlpha: 1
       PBR_Metallic: 0
@@ -276,6 +274,12 @@ Entities:
       Mat_ShadingModel: 0
       Mat_TwoSided: false
       Mat_AlphaCutoff: 0.5
+    TerrainComponent:
+      GridWidth: 30
+      GridHeight: 30
+      CellSize: 1
+      HeightScale: 0
+      HeightmapPath: ""
     Rigidbody3DComponent:
       BodyType: 0
       GravityScale: 1
@@ -286,7 +290,7 @@ Entities:
       FixedRotationZ: false
     BoxCollider3DComponent:
       HalfExtents: [15, 0.5, 15]
-      Offset: [0, 0, 0]
+      Offset: [0, -0.5, 0]
       Friction: 0.800000012
       Restitution: 0
       Density: 1000

@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;ASSIMP_BUILD_NO_EXPORT;BLU_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)Azure\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Azure\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -97,8 +97,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;ASSIMP_BUILD_NO_EXPORT;BLU_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)Azure\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;ASSIMP_BUILD_NO_EXPORT;BLU_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Azure\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -120,8 +120,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;ASSIMP_BUILD_NO_EXPORT;BLU_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)Azure\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BLU_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;ASSIMP_BUILD_NO_EXPORT;BLU_DIST;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\ExternalDependencies\glm;$(SolutionDir)Blu\engine\src;$(SolutionDir)Azure\src;$(SolutionDir)Blu\engine\ExternalDependencies\imgui;$(SolutionDir)Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -138,19 +138,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AssetPreviewService.cpp" />
     <ClCompile Include="src\BluEditor.cpp" />
     <ClCompile Include="src\BluEditorLayer.cpp" />
-    <ClCompile Include="src\AssetPreviewService.cpp" />
     <ClCompile Include="src\Panels\ContentBrowserPanel.cpp" />
+    <ClCompile Include="src\Panels\MaterialGraphPanel.cpp" />
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp" />
-    <!-- Azure game actors compiled into editor so ActorRegistry is populated on Play -->
-    <ClCompile Include="..\Azure\src\Actors\PlayerCharacter.cpp" />
-    <ClCompile Include="..\Azure\src\Actors\ZombieTestActor.cpp" />
-    <ClCompile Include="..\Azure\src\Actors\ZombieCharacter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Blu\Blu.vcxproj">
       <Project>{08DA870B-74E3-877C-FD5E-9E7C6967937C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Azure-Game\Azure-Game.vcxproj">
+      <Project>{13DC1FF0-FF93-613D-689B-3A995472FC2D}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Blu\engine\ExternalDependencies\imgui\ImGui.vcxproj">
       <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>

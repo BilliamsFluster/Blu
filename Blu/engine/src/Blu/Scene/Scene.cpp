@@ -259,6 +259,7 @@ namespace Blu
 	Scene::Scene()
 	{
 		m_LightManager = std::make_shared<LightManager>();
+		m_ActorSystem = std::make_unique<ActorSystem>(*this);
 		OnRuntimeStop(); // make sure there are not any instances that may create compounding for gravity and etc
 	}
 
@@ -330,6 +331,7 @@ namespace Blu
 		newScene->m_ViewportHeight = scene->m_ViewportHeight;
 		newScene->m_ViewportWidth = scene->m_ViewportWidth;
 		newScene->m_SceneFilePath = scene->m_SceneFilePath;
+		newScene->m_GameModeClassID = scene->m_GameModeClassID;
 		std::unordered_map<UUID, entt::entity> enttMap;
 
 		auto& srcSceneRegistry = scene->m_Registry;
@@ -358,12 +360,13 @@ namespace Blu
 		CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		
 		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<ActorComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<DirectionalLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<SpotLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<MeshComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<VisualOffsetComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<TerrainComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		CopyComponent<Rigidbody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 		CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -536,16 +539,13 @@ namespace Blu
 				auto& camera = camView.get<CameraComponent>(ce);
 				camera.Primary = (cameraEntity == playerCamera);
 
-				if (cameraEntity == playerCamera || !m_Registry.any_of<NativeScriptComponent>(ce))
+				if (cameraEntity == playerCamera || !m_Registry.any_of<ActorComponent>(ce))
 					continue;
 
-				auto& nsc = m_Registry.get<NativeScriptComponent>(ce);
-				if (nsc.Instance && nsc.DestroyScript)
-					nsc.DestroyScript(&nsc);
-				nsc.Instance          = nullptr;
-				nsc.ClassName         = {};
-				nsc.InstantiateScript = nullptr;
-				nsc.DestroyScript     = nullptr;
+				auto& actorComponent = m_Registry.get<ActorComponent>(ce);
+				m_ActorSystem->QueueDestroy(cameraEntity.GetUUID());
+				actorComponent.ClassID.clear();
+				actorComponent.Overrides.clear();
 			}
 
 			UUID playerCameraUUID = playerCamera.GetUUID();
@@ -580,18 +580,24 @@ namespace Blu
 		}
 		return {};
 	}
+	AActor* Scene::FindActor(UUID id) const
+	{
+		return m_ActorSystem ? m_ActorSystem->FindActor(id) : nullptr;
+	}
 	void Scene::SetPlayerInputEnabled(bool enabled)
 	{
 		m_PlayerInputEnabled = enabled;
 
-		auto view = m_Registry.view<NativeScriptComponent>();
+		auto view = m_Registry.view<ActorComponent, IDComponent>();
 		for (auto e : view)
 		{
-			auto& nsc = view.get<NativeScriptComponent>(e);
-			if (!nsc.Instance)
+			auto& actorComponent = view.get<ActorComponent>(e);
+			AActor* actor = FindActor(view.get<IDComponent>(e).ID);
+			if (!actor)
 				continue;
 
-			bool playerCandidate = nsc.ClassName == "PlayerCharacter";
+			const NativeClassID resolvedClassID = NativeClassRegistry::Get().ResolveClassID(actorComponent.ClassID);
+			bool playerCandidate = resolvedClassID == "Azure::PlayerCharacter" || actorComponent.ClassID == "PlayerCharacter";
 			if (!playerCandidate && m_Registry.any_of<TagComponent>(e))
 			{
 				const auto& tag = m_Registry.get<TagComponent>(e).Tag;
@@ -601,7 +607,7 @@ namespace Blu
 			if (!playerCandidate)
 				continue;
 
-			if (auto* pawn = dynamic_cast<APawn*>(nsc.Instance))
+			if (auto* pawn = dynamic_cast<APawn*>(actor))
 				pawn->SetPlayerControlled(enabled);
 		}
 	}
@@ -718,18 +724,20 @@ namespace Blu
 		for (auto e : springArmView)
 			diagnostics.SpringArmCount++;
 
-		auto scriptView = m_Registry.view<NativeScriptComponent>();
+		auto scriptView = m_Registry.view<ActorComponent, IDComponent>();
 		for (auto e : scriptView)
 		{
-			auto& nsc = scriptView.get<NativeScriptComponent>(e);
-			if (!nsc.ClassName.empty() || nsc.Instance)
+			auto& actorComponent = scriptView.get<ActorComponent>(e);
+			AActor* actor = FindActor(scriptView.get<IDComponent>(e).ID);
+			if (!actorComponent.ClassID.empty())
 				diagnostics.NativeScriptCount++;
-			if (nsc.Instance && (nsc.ClassName == "ZombieTestActor" || nsc.ClassName == "ZombieCharacter"))
+			const NativeClassID resolvedClassID = NativeClassRegistry::Get().ResolveClassID(actorComponent.ClassID);
+			if (actor && (resolvedClassID == "Azure::ZombieTestActor" || resolvedClassID == "Azure::ZombieCharacter"))
 				diagnostics.ActiveZombieCount++;
 
-			if (nsc.Instance)
+			if (actor)
 			{
-				if (auto* pawn = dynamic_cast<APawn*>(nsc.Instance); pawn && pawn->IsPlayerControlled())
+				if (auto* pawn = dynamic_cast<APawn*>(actor); pawn && pawn->IsPlayerControlled())
 				{
 					if (m_Registry.any_of<TagComponent>(e))
 						diagnostics.PossessedPawnName = m_Registry.get<TagComponent>(e).Tag;
@@ -873,6 +881,13 @@ namespace Blu
 			}
 		}
 
+		auto terrainView = m_Registry.view<TerrainComponent>();
+		for (auto entity : terrainView)
+		{
+			auto& terrain = terrainView.get<TerrainComponent>(entity);
+			addDependency(entity, "Texture", terrain.Spec.HeightmapPath, "TerrainComponent.Heightmap");
+		}
+
 		auto spriteView = m_Registry.view<SpriteRendererComponent>();
 		for (auto entity : spriteView)
 		{
@@ -982,6 +997,46 @@ namespace Blu
 		collider->RuntimeStatus = "Ready (" + std::to_string(triangleCount) + " triangles)";
 
 		setMessage("Static mesh collision ready: " + std::to_string(triangleCount) + " triangles");
+		return true;
+	}
+
+	bool Scene::RebuildTerrain(Entity entity, std::string* outMessage)
+	{
+		auto setMessage = [&](const std::string& message)
+		{
+			if (outMessage)
+				*outMessage = message;
+		};
+
+		if (!entity || !entity.HasComponent<TerrainComponent>())
+		{
+			setMessage("TerrainComponent is required.");
+			return false;
+		}
+
+		auto& terrain = entity.GetComponent<TerrainComponent>();
+		terrain.Spec = SanitizeTerrainSpec(terrain.Spec);
+
+		TerrainSpec generationSpec = terrain.Spec;
+		if (!generationSpec.HeightmapPath.empty())
+			generationSpec.HeightmapPath = AssetPath::ResolvePath(generationSpec.HeightmapPath, m_SceneFilePath).string();
+
+		auto terrainMesh = GenerateTerrain(generationSpec);
+		if (!terrainMesh)
+		{
+			setMessage("Terrain mesh generation failed.");
+			return false;
+		}
+
+		auto& mesh = entity.HasComponent<MeshComponent>()
+			? entity.GetComponent<MeshComponent>()
+			: entity.AddComponent<MeshComponent>();
+		mesh.MeshData = std::move(terrainMesh);
+		mesh.Primitive = MeshComponent::PrimitiveType::None;
+		if (!mesh.MaterialInstance)
+			mesh.MaterialInstance = Material::Create();
+
+		setMessage("Terrain mesh rebuilt.");
 		return true;
 	}
 
@@ -1162,12 +1217,13 @@ namespace Blu
 		copy.template operator()<BoxCollider2DComponent>();
 		copy.template operator()<CircleCollider2DComponent>();
 		copy.template operator()<CameraComponent>();
-		copy.template operator()<NativeScriptComponent>();
+		copy.template operator()<ActorComponent>();
 		copy.template operator()<PointLightComponent>();
 		copy.template operator()<DirectionalLightComponent>();
 		copy.template operator()<SpotLightComponent>();
 		copy.template operator()<MeshComponent>();
 		copy.template operator()<VisualOffsetComponent>();
+		copy.template operator()<TerrainComponent>();
 		copy.template operator()<Rigidbody3DComponent>();
 		copy.template operator()<BoxCollider3DComponent>();
 		copy.template operator()<SphereCollider3DComponent>();
@@ -1184,16 +1240,6 @@ namespace Blu
 		copy.template operator()<AudioSourceComponent>();
 		copy.template operator()<FoliageComponent>();
 
-		if (destination.HasComponent<NativeScriptComponent>())
-		{
-			auto& nsc = destination.GetComponent<NativeScriptComponent>();
-			nsc.Instance = nullptr;
-			if (!nsc.ClassName.empty())
-			{
-				nsc.InstantiateScript = nullptr;
-				nsc.DestroyScript = nullptr;
-			}
-		}
 		if (destination.HasComponent<Rigidbody3DComponent>())
 			destination.GetComponent<Rigidbody3DComponent>().RuntimeBodyID = UINT32_MAX;
 		if (destination.HasComponent<CharacterControllerComponent>())
@@ -1222,6 +1268,20 @@ namespace Blu
 	{
 		OnPhysics2DStart();
 		OnPhysics3DStart();
+		if (!m_GameModeClassID.empty())
+		{
+			m_GameMode = NativeClassRegistry::Get().Create<AGameMode>(m_GameModeClassID);
+			if (m_GameMode)
+			{
+				m_GameMode->BeginPlay();
+				m_GameMode->OnGameStart();
+			}
+			else
+			{
+				BLU_CORE_WARN("Scene: native game mode class '{0}' is not registered", m_GameModeClassID);
+			}
+		}
+		m_ActorSystem->Start();
 
 		// --- Audio ---
 		AudioEngine::Get().Initialize();
@@ -1505,12 +1565,13 @@ namespace Blu
 
 	void Scene::OnRuntimeStop()
 	{
-		m_Registry.view<NativeScriptComponent>().each([](auto /*entity*/, auto& nsc) {
-			if (nsc.Instance) {
-				nsc.Instance->EndPlay();
-				nsc.DestroyScript(&nsc);
-			}
-		});
+		if (m_ActorSystem)
+			m_ActorSystem->Stop();
+		if (m_GameMode)
+		{
+			m_GameMode->EndPlay();
+			m_GameMode.reset();
+		}
 
 		if (m_PhysicsWorld)
 		{
@@ -1588,7 +1649,10 @@ namespace Blu
 	}
 	void Scene::DestroyEntity(Entity entity)
 	{
-		m_EntityMap.erase(entity.GetUUID());
+		const UUID id = entity.GetUUID();
+		if (m_ActorSystem)
+			m_ActorSystem->DestroyNow(id);
+		m_EntityMap.erase(id);
 		m_Registry.destroy(entity);
 	}
     // ─── Helper: collect raw light data from the ECS ─────────────────────────--
@@ -1785,7 +1849,8 @@ namespace Blu
 			{
 				auto& fc = fview.get<FoliageComponent>(entity);
 				if (fc.ModelAsset && !fc.Transforms.empty())
-					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms);
+					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms, nullptr,
+						{ fc.WindEnabled, fc.WindDirection, fc.WindStrength, fc.WindFrequency, m_ElapsedTime });
 			}
 		}
 
@@ -1853,7 +1918,8 @@ namespace Blu
 			{
 				auto& fc = fview.get<FoliageComponent>(entity);
 				if (fc.ModelAsset && !fc.Transforms.empty())
-					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms);
+					Renderer3D::DrawMeshInstanced(fc.ModelAsset, fc.Transforms, nullptr,
+						{ fc.WindEnabled, fc.WindDirection, fc.WindStrength, fc.WindFrequency, m_ElapsedTime });
 			}
 		}
 
@@ -1929,6 +1995,7 @@ namespace Blu
 	void Scene::ShadowPass(const std::vector<DirLightData>& dirLights,
 	                        const glm::mat4& cameraVP, float cameraNear, float cameraFar)
 	{
+	    Renderer3D::SetShadowsEnabled(false);
 	    if (!m_UseShadows || dirLights.empty()) return;
 
 	    const glm::vec3 lightDir = glm::normalize(dirLights[0].Direction);
@@ -2053,9 +2120,9 @@ namespace Blu
 					anim.SkelData = mesh.ModelAsset->SkelData;
 				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
 
-				const AnimationClip& clip = anim.SkelData->Clips[
-					std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1)];
-				Animator::Update(dt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
+				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
+				Animator::Update(anim.Playing ? dt : 0.0f, anim.CurrentTime, anim.Loop, anim.SpeedScale,
 				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
 			}
 		}
@@ -2105,44 +2172,16 @@ namespace Blu
 					anim.SkelData = mesh.ModelAsset->SkelData;
 				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
 
-				const AnimationClip& clip = anim.SkelData->Clips[
-					std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1)];
-				Animator::Update(dt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
+				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
+				Animator::Update(anim.Playing ? dt : 0.0f, anim.CurrentTime, anim.Loop, anim.SpeedScale,
 				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
 			}
 		}
 
-		{
-			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
-				{
-					if (!nsc.Instance)
-					{
-						if (nsc.InstantiateScript)
-						{
-							nsc.Instance = nsc.InstantiateScript();
-						}
-						else if (!nsc.ClassName.empty())
-						{
-							nsc.Instance = ActorRegistry::Get().Instantiate(nsc.ClassName);
-							if (nsc.Instance)
-								nsc.DestroyScript = [](NativeScriptComponent* n) { delete n->Instance; n->Instance = nullptr; };
-							else
-								BLU_CORE_WARN("Scene: ActorRegistry could not instantiate '{0}' — class not registered. Check BLU_REGISTER_ACTOR in the actor's .cpp.", nsc.ClassName);
-						}
-
-						if (nsc.Instance)
-						{
-							nsc.Instance->m_Entity = Entity{ entity, this };
-							nsc.Instance->m_Scene  = this;
-							nsc.Instance->BeginPlay();
-						}
-					}
-					if (nsc.Instance)
-					{
-						nsc.Instance->Tick(deltaTime);
-					}
-				});
-		}
+		m_ActorSystem->Tick(dt);
+		if (m_GameMode)
+			m_GameMode->Tick(dt);
 
 		{
 			const int32_t velocityIterations = 6;

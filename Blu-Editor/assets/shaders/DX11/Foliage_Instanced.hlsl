@@ -54,10 +54,22 @@ struct PointLight
     float3 Att;      float _p2;
 };
 
+struct SpotLight
+{
+    float3 Position;  float Range;
+    float3 Direction; float Intensity;
+    float3 Ambient;   float _p0;
+    float3 Diffuse;   float _p1;
+    float3 Specular;  float _p2;
+    float3 Att;       float InnerCutoff;
+    float  OuterCutoff; float3 _p3;
+};
+
 cbuffer LightData : register(b3)
 {
     DirectionalLight u_DirLights[4];
     PointLight       u_PointLights[8];
+    SpotLight        u_SpotLights[4];
     int  u_NumDirLights;
     int  u_NumPointLights;
     int  u_NumSpotLights;

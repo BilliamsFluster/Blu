@@ -8,7 +8,7 @@ namespace Blu
 
 	// AActor is the base class for anything that exists in a scene.
 	// It wraps an entt::entity and provides typed component accessors.
-	// Subclass this (or APawn / ACharacter) via NativeScriptComponent::Bind<T>().
+	// Subclass this (or APawn / ACharacter) and register it with NativeClassRegistry.
 	class AActor : public UObject
 	{
 	public:
@@ -44,5 +44,6 @@ namespace Blu
 		Entity  m_Entity;
 		Scene*  m_Scene = nullptr;
 		friend class Scene;
+		friend class ActorSystem;
 	};
 }

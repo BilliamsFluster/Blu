@@ -1,5 +1,4 @@
 #include "ZombieTestActor.h"
-#include "Blu/GameFramework/ActorRegistry.h"
 #include "Blu/Core/Log.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Entity.h"
@@ -7,8 +6,6 @@
 #include <glm/gtx/norm.hpp>
 #include <algorithm>
 #include <limits>
-
-BLU_REGISTER_ACTOR(ZombieTestActor, Azure::ZombieTestActor);
 
 namespace Azure
 {

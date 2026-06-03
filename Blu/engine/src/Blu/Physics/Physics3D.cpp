@@ -1,5 +1,6 @@
 #include "Blupch.h"
 #include "Physics3D.h"
+#include "Physics3DDiagnostics.h"
 #include "Blu/Core/Core.h"
 #include "Blu/Core/Log.h"
 
@@ -12,6 +13,16 @@ JPH_SUPPRESS_WARNINGS
 
 namespace Blu
 {
+    bool IsJoltConfigurationCompatible()
+    {
+        return JPH::VerifyJoltVersionID();
+    }
+
+    bool Physics3DWorld::IsConfigurationCompatible()
+    {
+        return IsJoltConfigurationCompatible();
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Jolt process-level init / shutdown
     // ──────────────────────────────────────────────────────────────────────────

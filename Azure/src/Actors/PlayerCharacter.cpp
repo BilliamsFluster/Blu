@@ -1,5 +1,4 @@
 #include "PlayerCharacter.h"
-#include "Blu/GameFramework/ActorRegistry.h"
 #include "Blu/Core/Log.h"
 #include "Blu/Core/Input.h"
 #include "Blu/Core/KeyCodes.h"
@@ -11,8 +10,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-
-BLU_REGISTER_ACTOR(PlayerCharacter, Azure::PlayerCharacter);
 
 namespace Azure
 {

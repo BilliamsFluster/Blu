@@ -44,8 +44,11 @@ namespace Blu
 
         // Convenience for DX11-aware code that wants the raw SRV
         ID3D11ShaderResourceView* GetColorAttachmentSRV(uint32_t index = 0) const;
+        ID3D11RenderTargetView* GetColorAttachmentRTV(uint32_t index = 0) const;
         // SRV over the depth texture (R24_UNORM_X8_TYPELESS view) — null if no depth attachment
         ID3D11ShaderResourceView* GetDepthSRV() const { return m_DepthSRV.Get(); }
+        ID3D11DepthStencilView* GetDepthStencilView() const { return m_DSV.Get(); }
+        ID3D11Texture2D* GetDepthTexture() const { return m_DepthTexture.Get(); }
 
     private:
         void Invalidate();

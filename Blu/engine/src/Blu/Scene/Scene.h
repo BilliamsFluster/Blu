@@ -12,6 +12,9 @@ class b2World;
 namespace Blu
 {
 	class Entity;
+	class AActor;
+	class AGameMode;
+	class ActorSystem;
 	class PostProcess;
 	class Skybox;
 	class Physics3DWorld;
@@ -109,6 +112,10 @@ namespace Blu
 		Entity EnsurePrimaryCamera();
 		Entity FindEntityByName(std::string_view name);
 		Entity GetEntityByUUID(UUID id);
+		AActor* FindActor(UUID id) const;
+		void SetGameModeClassID(const std::string& classID) { m_GameModeClassID = classID; }
+		const std::string& GetGameModeClassID() const { return m_GameModeClassID; }
+		AGameMode* GetGameMode() const { return m_GameMode.get(); }
 		template<typename... Components>
 		auto GetAllEntitiesWith()
 		{
@@ -161,6 +168,7 @@ namespace Blu
 		SceneDiagnostics GetDiagnostics();
 		SceneAssetManifest CollectAssetManifest();
 		bool GenerateStaticMeshCollision(Entity entity, std::string* outMessage = nullptr);
+		bool RebuildTerrain(Entity entity, std::string* outMessage = nullptr);
 		bool FitCharacterVisualToCapsule(Entity entity, std::string* outMessage = nullptr);
 		bool ResetVisualOffset(Entity entity, std::string* outMessage = nullptr);
 		bool SnapCharacterFeetToGround(Entity entity, std::string* outMessage = nullptr);
@@ -172,6 +180,9 @@ namespace Blu
 
 	private:
 		entt::registry m_Registry; // container for all of our entt components
+		Unique<ActorSystem> m_ActorSystem;
+		Unique<AGameMode> m_GameMode;
+		std::string m_GameModeClassID;
 		float m_ViewportWidth = 0.0f, m_ViewportHeight = 0.0f;
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
 		std::filesystem::path m_SceneFilePath; 

@@ -38,6 +38,71 @@ namespace Blu
 		return Texture2D::Create(AssetPath::ResolvePath(importedPath).string());
 	}
 
+	static void DrawNativePropertyOverride(ActorComponent& actorComponent, const NativePropertyDescriptor& property)
+	{
+		auto override = actorComponent.Overrides.find(property.Name);
+		bool enabled = override != actorComponent.Overrides.end();
+		if (ImGui::Checkbox(("##override_" + property.Name).c_str(), &enabled))
+		{
+			if (enabled)
+				actorComponent.Overrides[property.Name] = property.DefaultValue;
+			else
+				actorComponent.Overrides.erase(property.Name);
+		}
+		ImGui::SameLine();
+		ImGui::TextUnformatted(property.Name.c_str());
+		if (!enabled)
+			return;
+
+		ImGui::Indent();
+		NativePropertyValue& value = actorComponent.Overrides[property.Name];
+		const std::string controlID = "##value_" + property.Name;
+		switch (property.Type)
+		{
+			case NativePropertyType::Bool:
+				ImGui::Checkbox(controlID.c_str(), &std::get<bool>(value));
+				break;
+			case NativePropertyType::Integer:
+				ImGui::InputScalar(controlID.c_str(), ImGuiDataType_S64, &std::get<int64_t>(value));
+				break;
+			case NativePropertyType::Float:
+				ImGui::DragFloat(controlID.c_str(), &std::get<float>(value), 0.1f);
+				break;
+			case NativePropertyType::String:
+			{
+				char buffer[256] = {};
+				strncpy_s(buffer, std::get<std::string>(value).c_str(), sizeof(buffer) - 1);
+				if (ImGui::InputText(controlID.c_str(), buffer, sizeof(buffer)))
+					std::get<std::string>(value) = buffer;
+				break;
+			}
+			case NativePropertyType::Vec2:
+				ImGui::DragFloat2(controlID.c_str(), glm::value_ptr(std::get<glm::vec2>(value)), 0.1f);
+				break;
+			case NativePropertyType::Vec3:
+				ImGui::DragFloat3(controlID.c_str(), glm::value_ptr(std::get<glm::vec3>(value)), 0.1f);
+				break;
+			case NativePropertyType::Vec4:
+				ImGui::DragFloat4(controlID.c_str(), glm::value_ptr(std::get<glm::vec4>(value)), 0.1f);
+				break;
+			case NativePropertyType::AssetReference:
+			{
+				char buffer[256] = {};
+				strncpy_s(buffer, std::get<NativeAssetReference>(value).Path.c_str(), sizeof(buffer) - 1);
+				if (ImGui::InputText(controlID.c_str(), buffer, sizeof(buffer)))
+					std::get<NativeAssetReference>(value).Path = buffer;
+				break;
+			}
+			case NativePropertyType::EntityReference:
+			{
+				auto& entityReference = std::get<NativeEntityReference>(value);
+				ImGui::InputScalar(controlID.c_str(), ImGuiDataType_U64, &entityReference.UUID);
+				break;
+			}
+		}
+		ImGui::Unindent();
+	}
+
 	static uint32_t CountModelCollisionTriangles(const Shared<Model>& model)
 	{
 		if (!model)
@@ -104,7 +169,7 @@ namespace Blu
 
 	static const char* EntityIcon(Entity entity)
 	{
-		if (entity.HasComponent<CharacterControllerComponent>() || entity.HasComponent<NativeScriptComponent>())
+		if (entity.HasComponent<CharacterControllerComponent>() || entity.HasComponent<ActorComponent>())
 			return "[P]";
 		if (entity.HasComponent<CameraComponent>())
 			return "[C]";
@@ -279,7 +344,7 @@ namespace Blu
 	bool SceneHierarchyPanel::PassesActiveFilters(Entity entity) const
 	{
 		const bool isCharacter = entity.HasComponent<CharacterControllerComponent>();
-		const bool isScript = entity.HasComponent<NativeScriptComponent>();
+		const bool isScript = entity.HasComponent<ActorComponent>();
 		const bool isCamera = entity.HasComponent<CameraComponent>();
 		const bool isLight = EntityHasLight(entity);
 		const bool isMesh = entity.HasComponent<MeshComponent>() || entity.HasComponent<SpriteRendererComponent>() || entity.HasComponent<CircleRendererComponent>();
@@ -680,6 +745,7 @@ namespace Blu
 			AddComponentSearchResult<SpriteRendererComponent>(entity, "Rendering", "Sprite Renderer", "", [](auto&) {});
 			AddComponentSearchResult<CircleRendererComponent>(entity, "Rendering", "Circle Renderer", "", [](auto&) {});
 			AddComponentSearchResult<MeshComponent>(entity, "Rendering", "Mesh Renderer", "", [](auto& mc) { mc.MeshData = Mesh::CreateCube(); mc.Primitive = MeshComponent::PrimitiveType::Cube; mc.MaterialInstance = Material::Create(); });
+			AddComponentSearchResult<TerrainComponent>(entity, "Rendering", "Terrain", "Use Rebuild Terrain after editing the descriptor.", [](auto&) {});
 			AddComponentSearchResult<MeshLODComponent>(entity, "Rendering", "Mesh LOD", "", [](auto&) {});
 			AddComponentSearchResult<Rigidbody3DComponent>(entity, "Physics", "Rigidbody 3D", "Requires a Box/Sphere/Capsule/Mesh collider to create a runtime body.", [](auto&) {});
 			AddComponentSearchResult<BoxCollider3DComponent>(entity, "Physics", "Box Collider 3D", "", [](auto&) {});
@@ -694,7 +760,7 @@ namespace Blu
 			AddComponentSearchResult<AudioSourceComponent>(entity, "Audio", "Audio Source", "", [](auto&) {});
 			AddComponentSearchResult<AnimatorComponent>(entity, "Animation", "Animator", "", [](auto&) {});
 			AddComponentSearchResult<FoliageComponent>(entity, "Foliage", "Foliage (GPU Instanced)", "", [](auto&) {});
-			AddComponentSearchResult<NativeScriptComponent>(entity, "Gameplay", "Native Script", "", [](auto&) {});
+			AddComponentSearchResult<ActorComponent>(entity, "Gameplay", "Native Actor", "", [](auto&) {});
 			ImGui::SeparatorText("Legacy List");
 			if (!m_SelectedEntity.HasComponent<CameraComponent>())
 			{
@@ -918,11 +984,11 @@ namespace Blu
 					ImGui::CloseCurrentPopup();
 				}
 			}
-			if (!m_SelectedEntity.HasComponent<NativeScriptComponent>())
+			if (!m_SelectedEntity.HasComponent<ActorComponent>())
 			{
-				if (ImGui::MenuItem("Native Script"))
+				if (ImGui::MenuItem("Native Actor"))
 				{
-					m_SelectedEntity.AddComponent<NativeScriptComponent>();
+					m_SelectedEntity.AddComponent<ActorComponent>();
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -1883,6 +1949,35 @@ namespace Blu
 		});
 
 		// ── Animator Component ────────────────────────────────────────────────────
+		DrawComponent<TerrainComponent>("Terrain", entity, [&](auto& terrain)
+		{
+			terrain.Spec = SanitizeTerrainSpec(terrain.Spec);
+			ImGui::DragInt("Width (quads)", &terrain.Spec.GridWidth, 1.0f, 1, 1024);
+			ImGui::DragInt("Height (quads)", &terrain.Spec.GridHeight, 1.0f, 1, 1024);
+			ImGui::DragFloat("Cell Size", &terrain.Spec.CellSize, 0.1f, 0.001f, 100.0f);
+			ImGui::DragFloat("Height Scale", &terrain.Spec.HeightScale, 0.5f, 0.0f, 2000.0f);
+
+			char heightmapPath[512] = {};
+			std::strncpy(heightmapPath, terrain.Spec.HeightmapPath.c_str(), sizeof(heightmapPath) - 1);
+			if (ImGui::InputText("Heightmap", heightmapPath, sizeof(heightmapPath)))
+				terrain.Spec.HeightmapPath = AssetPath::ToProjectRelative(heightmapPath);
+			ImGui::SameLine();
+			if (ImGui::Button("...##terrain"))
+			{
+				std::string path = FileDialogs::OpenFile(
+					"Image (*.png;*.jpg;*.bmp;*.tga)\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All\0*.*\0");
+				if (!path.empty())
+					terrain.Spec.HeightmapPath = AssetPath::ImportTexturePath(path, GetAssetOwnerName(entity));
+			}
+
+			if (ImGui::Button("Rebuild Terrain") && m_Context)
+			{
+				std::string message;
+				if (!m_Context->RebuildTerrain(entity, &message))
+					BLU_CORE_WARN("Terrain rebuild failed: {}", message);
+			}
+		});
+
 		DrawComponent<AnimatorComponent>("Animator", entity, [&](auto& anim)
 		{
 			// Populate SkelData from MeshComponent if not already set
@@ -1904,6 +1999,7 @@ namespace Blu
 			auto& clips = anim.SkelData->Clips;
 			if (!clips.empty())
 			{
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)clips.size() - 1);
 				const char* preview = clips[anim.CurrentClipIndex].Name.c_str();
 				if (ImGui::BeginCombo("Clip", preview))
 				{
@@ -2055,21 +2151,30 @@ namespace Blu
 			}
 		});
 
-		// ── Native Script ─────────────────────────────────────────────────────────
-		DrawComponent<NativeScriptComponent>("Native Script", entity, [](auto& nsc)
+		// ── Native Actor ──────────────────────────────────────────────────────────
+		DrawComponent<ActorComponent>("Native Actor", entity, [entity](auto& actorComponent) mutable
 		{
-			const auto& registry = ActorRegistry::Get().GetAll();
+			const auto classes = NativeClassRegistry::Get().GetClasses(NativeClassKind::Actor);
+			const NativeClassDescriptor* selectedDescriptor = NativeClassRegistry::Get().FindDescriptor(actorComponent.ClassID);
 
-			const char* preview = nsc.ClassName.empty() ? "(None)" : nsc.ClassName.c_str();
+			const char* preview = actorComponent.ClassID.empty()
+				? "(None)"
+				: (selectedDescriptor ? selectedDescriptor->DisplayName.c_str() : actorComponent.ClassID.c_str());
 			if (ImGui::BeginCombo("Class##nsc", preview))
 			{
-				if (ImGui::Selectable("(None)", nsc.ClassName.empty()))
-					nsc.ClassName.clear();
-				for (auto& [name, _] : registry)
+				if (ImGui::Selectable("(None)", actorComponent.ClassID.empty()))
 				{
-					bool selected = (nsc.ClassName == name);
-					if (ImGui::Selectable(name.c_str(), selected))
-						nsc.ClassName = name;
+					actorComponent.ClassID.clear();
+					actorComponent.Overrides.clear();
+				}
+				for (const NativeClassDescriptor* descriptor : classes)
+				{
+					bool selected = actorComponent.ClassID == descriptor->ID;
+					if (ImGui::Selectable(descriptor->DisplayName.c_str(), selected))
+					{
+						actorComponent.ClassID = descriptor->ID;
+						actorComponent.Overrides.clear();
+					}
 					if (selected)
 						ImGui::SetItemDefaultFocus();
 				}
@@ -2078,25 +2183,27 @@ namespace Blu
 
 			// Manual text entry — type the class name when the dropdown is empty
 			char buf[128] = {};
-			if (!nsc.ClassName.empty())
-				strncpy_s(buf, nsc.ClassName.c_str(), sizeof(buf) - 1);
+			if (!actorComponent.ClassID.empty())
+				strncpy_s(buf, actorComponent.ClassID.c_str(), sizeof(buf) - 1);
 			ImGui::SetNextItemWidth(-1.0f);
 			if (ImGui::InputText("##nsc_manual", buf, sizeof(buf)))
-				nsc.ClassName = buf;
+				actorComponent.ClassID = buf;
 
 			ImGui::Spacing();
-			if (nsc.Instance)
+			if (entity.GetScene() && entity.GetScene()->FindActor(entity.GetUUID()))
 				ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Running");
-			else if (!nsc.ClassName.empty())
-				ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Will bind \"%s\" on Play", nsc.ClassName.c_str());
+			else if (!actorComponent.ClassID.empty())
+				ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Will create \"%s\" on Play", actorComponent.ClassID.c_str());
 			else
 				ImGui::TextDisabled("No class selected.");
 
-			if (nsc.ClassName == "ZombieTestActor")
+			selectedDescriptor = NativeClassRegistry::Get().FindDescriptor(actorComponent.ClassID);
+			if (selectedDescriptor && !selectedDescriptor->Properties.empty())
 			{
 				ImGui::Separator();
-				ImGui::TextDisabled("Zombie Test Actor");
-				ImGui::TextWrapped("Direct-steering chase enemy. Configure detection, attack range, and damage in the actor defaults for this milestone.");
+				ImGui::TextDisabled("Property Overrides");
+				for (const NativePropertyDescriptor& property : selectedDescriptor->Properties)
+					DrawNativePropertyOverride(actorComponent, property);
 			}
 		});
 

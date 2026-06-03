@@ -1,9 +1,3 @@
-[submodule "Blu/ExternalDependencies/spdlog"]
-	path = Blu/ExternalDependencies/spdlog
-	url = https://github.com/gabime/spdlog
-[submodule "Blu/ExternalDependencies/GLFW"]
-	path = Blu/ExternalDependencies/GLFW
-	url = https://github.com/BilliamsFluster/glfw
 [submodule "Blu/engine/ExternalDependencies/glm"]
 	path = Blu/engine/ExternalDependencies/glm
 	url = https://github.com/g-truc/glm

@@ -30,6 +30,7 @@
 #include "Blu/Audio/AudioEngine.h"
 #include "FreeFlyCamera.h"
 #include "AssetPreviewService.h"
+#include "AzureGameModule.h"
 #include "yaml-cpp/yaml.h"
 #include <fstream>
 // D3D11Context.h already pulls in <d3d11.h> — include it last so Windows headers
@@ -204,6 +205,12 @@ namespace Blu
 
 	void BluEditorLayer::OnAttach()
 	{
+		Azure::RegisterAzureGameModule();
+		NativeClassRegistry::Get().RegisterActor<CameraController>(
+			"Blu::CameraController", "Camera Controller", "Engine", { "CameraController" });
+		NativeClassRegistry::Get().RegisterActor<FreeFlyCamera>(
+			"BluEditor::FreeFlyCamera", "Free Fly Camera", "Editor", { "FreeFlyCamera" });
+
 		std::filesystem::create_directories("Blu-Editor/config");
 		m_EditorSettingsPath = "Blu-Editor/config/EditorSettings.yaml";
 		m_ImGuiIniPath = std::filesystem::path("Blu-Editor/config/imgui.ini").generic_string();
@@ -212,6 +219,7 @@ namespace Blu
 		m_ActiveScene = std::make_shared<Scene>();
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
+		m_MaterialGraphPanel = std::make_shared<MaterialGraphPanel>();
 		m_SceneHierarchyPanel->SetOpenActorEditorCallback([this](Entity entity)
 		{
 			if (!entity)
@@ -287,7 +295,7 @@ namespace Blu
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<CameraComponent>();
 		m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
-		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+		m_CameraEntity.AddComponent<ActorComponent>().ClassID = "Blu::CameraController";
 
 		m_EditorCamera = EditorCamera(30, 1.778f, 0.1f, 1000.0f);
 		m_ActorPreviewCamera = EditorCamera(35.0f, 1.0f, 0.1f, 5000.0f);
@@ -1115,8 +1123,7 @@ namespace Blu
 			cc.Primary = true;
 			cc.Camera.SetViewportSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
-			auto& nsc = cam.AddComponent<NativeScriptComponent>();
-			nsc.Bind<FreeFlyCamera>();
+			cam.AddComponent<ActorComponent>().ClassID = "BluEditor::FreeFlyCamera";
 		}
 
 		// ── Dynamic boxes ────────────────────────────────────────────────────
@@ -1228,9 +1235,8 @@ namespace Blu
 			arm.EnableLag        = true;
 			arm.PositionLagSpeed = 10.0f;
 
-			// NativeScript — resolved via ActorRegistry on Play
-			auto& nsc = player.AddComponent<NativeScriptComponent>();
-			nsc.ClassName = "PlayerCharacter";
+			// Resolved through the native class registry on Play.
+			player.AddComponent<ActorComponent>().ClassID = "Azure::PlayerCharacter";
 		}
 
 		// Enable the full pipeline by default
@@ -1677,6 +1683,7 @@ namespace Blu
 			ImGui::MenuItem("Diagnostics",     nullptr, &m_ShowDiagnostics);
 			ImGui::MenuItem("Actor Editor",    nullptr, &m_ShowActorEditor);
 			ImGui::MenuItem("Input Map",       nullptr, &m_ShowInputMap);
+			ImGui::MenuItem("Material Graph",  nullptr, &m_ShowMaterialGraph);
 			ImGui::Separator();
 			if (ImGui::MenuItem("Reset Editor Layout"))
 				m_ResetEditorLayout = true;
@@ -1685,6 +1692,7 @@ namespace Blu
 		if (ImGui::BeginMenu("Tools"))
 		{
 			if (ImGui::MenuItem("Terrain Editor", nullptr, &m_ShowTerrainPanel)) {}
+			if (ImGui::MenuItem("Material Graph", nullptr, &m_ShowMaterialGraph)) {}
 			if (ImGui::MenuItem("Input Map", nullptr, &m_ShowInputMap)) {}
 			ImGui::EndMenu();
 		}
@@ -1742,8 +1750,7 @@ namespace Blu
 			auto MakeCtrl = [&](const char* id, ImVec4 hoverBg, ImVec4 activeBg,
 			                    auto drawIcon) -> bool
 			{
-				ImGui::InvisibleButton(id, ImVec2(ctrlW, barH));
-				bool clicked = ImGui::IsItemClicked();
+				const bool pressed = ImGui::InvisibleButton(id, ImVec2(ctrlW, barH));
 				bool hov     = ImGui::IsItemHovered();
 				bool act     = ImGui::IsItemActive();
 				if (hov) controlHovered = true;
@@ -1757,7 +1764,7 @@ namespace Blu
 
 				ImVec2 c = { (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f };
 				drawIcon(dl, c, kIcon);
-				return clicked;
+				return pressed;
 			};
 
 			// Jump to right-side start, inset from the frame border
@@ -1885,6 +1892,7 @@ namespace Blu
 						glfwSetWindowPos(glfwWin, window["X"].as<int>(), window["Y"].as<int>());
 					if (window["Width"] && window["Height"])
 						glfwSetWindowSize(glfwWin, window["Width"].as<int>(), window["Height"].as<int>());
+					static_cast<WindowsWindow&>(Application::Get().GetWindow()).ClampToWorkArea();
 					if (window["Maximized"] && window["Maximized"].as<bool>())
 						glfwMaximizeWindow(glfwWin);
 				}
@@ -1910,6 +1918,10 @@ namespace Blu
 		GLFWwindow* glfwWin = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
 		if (glfwWin)
 		{
+			const bool maximized = glfwGetWindowAttrib(glfwWin, GLFW_MAXIMIZED) == GLFW_TRUE;
+			if (!maximized)
+				static_cast<WindowsWindow&>(Application::Get().GetWindow()).ClampToWorkArea();
+
 			int x = 0, y = 0, w = 0, h = 0;
 			glfwGetWindowPos(glfwWin, &x, &y);
 			glfwGetWindowSize(glfwWin, &w, &h);
@@ -1918,7 +1930,7 @@ namespace Blu
 			out << YAML::Key << "Y" << YAML::Value << y;
 			out << YAML::Key << "Width" << YAML::Value << w;
 			out << YAML::Key << "Height" << YAML::Value << h;
-			out << YAML::Key << "Maximized" << YAML::Value << (glfwGetWindowAttrib(glfwWin, GLFW_MAXIMIZED) == GLFW_TRUE);
+			out << YAML::Key << "Maximized" << YAML::Value << maximized;
 			out << YAML::EndMap;
 		}
 
@@ -2763,7 +2775,7 @@ namespace Blu
 					std::string path = FileDialogs::OpenFile(
 					    "Image (*.png;*.jpg;*.bmp;*.tga)\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All\0*.*\0");
 					if (!path.empty())
-						m_TerrainSpec.HeightmapPath = path;
+						m_TerrainSpec.HeightmapPath = AssetPath::ImportTexturePath(path, "Terrain");
 				}
 				if (!m_TerrainSpec.HeightmapPath.empty() && ImGui::Button("Clear Heightmap", ImVec2(-1, 0)))
 					m_TerrainSpec.HeightmapPath.clear();
@@ -2781,12 +2793,13 @@ namespace Blu
 
 				if (generate)
 				{
-					auto mesh = Blu::GenerateTerrain(m_TerrainSpec);
-					if (mesh)
+					m_TerrainSpec = Blu::SanitizeTerrainSpec(m_TerrainSpec);
+					Entity terrainEntity = m_ActiveScene->CreateEntity("Terrain");
+					auto& terrain = terrainEntity.AddComponent<TerrainComponent>();
+					terrain.Spec = m_TerrainSpec;
+					std::string message;
+					if (m_ActiveScene->RebuildTerrain(terrainEntity, &message))
 					{
-						Entity terrainEntity = m_ActiveScene->CreateEntity("Terrain");
-						auto& mc = terrainEntity.AddComponent<MeshComponent>();
-						mc.MeshData = mesh;
 						m_SceneHierarchyPanel->SetSelectedEntity(terrainEntity);
 						BLU_CORE_INFO("Terrain generated: {}×{} grid", m_TerrainSpec.GridWidth, m_TerrainSpec.GridHeight);
 					}
@@ -2794,6 +2807,9 @@ namespace Blu
 			}
 			ImGui::End();
 		}
+
+		if (m_MaterialGraphPanel)
+			m_MaterialGraphPanel->OnImGuiRender(&m_ShowMaterialGraph);
 		
 		
 		
