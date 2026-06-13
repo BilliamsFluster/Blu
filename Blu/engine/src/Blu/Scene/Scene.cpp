@@ -2200,6 +2200,7 @@ namespace Blu
 		float dt = (float)deltaTime;
 
 		GpuParticleSystem::Get().OnUpdate(dt); // advance instanced particle sim once per frame
+		Renderer3D::ClearDynamicLights();      // reset transient lights; actor ticks re-add this frame
 
 		// Animate skeletal meshes
 		{

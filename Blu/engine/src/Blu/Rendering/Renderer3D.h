@@ -116,6 +116,14 @@ namespace Blu
                               const std::vector<PointLightData>& pointLights,
                               const std::vector<SpotLightData>&  spotLights);
 
+        // Transient dynamic lights — short-lived point lights (muzzle flashes, bullet
+        // impacts, explosions) that need no ECS entity. Queued per frame; SetLights merges
+        // them into the point-light blob (subject to the kMaxPointLights budget). Call
+        // ClearDynamicLights once at the top of each runtime frame so flashes don't persist.
+        static void AddDynamicLight(const glm::vec3& position, const glm::vec3& color,
+                                    float intensity, float range);
+        static void ClearDynamicLights();
+
         static void SetFog(const FogSettings& fog);
 
         // Toggle IBL and set strength multiplier (uploaded to shaders on next FlushDrawCalls).

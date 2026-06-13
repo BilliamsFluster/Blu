@@ -4,14 +4,14 @@ GameMode: Azure::ZombieGameMode
 RenderSettings:
   UseShadows: true
   UsePostProcess: true
-  UseSkybox: true
+  UseSkybox: false
   UseTimeOfDay: false
   Sky_Turbidity: 3.5
-  Sky_SkyExposure: 0.0199999996
-  Sky_GroundColor: [0.300000012, 0.289999992, 0.270000011]
-  Sky_SunColor: [1, 0.920000017, 0.800000012]
+  Sky_SkyExposure: 0.0120000001
+  Sky_GroundColor: [0.0599999987, 0.0700000003, 0.0900000036]
+  Sky_SunColor: [1, 0.850000024, 0.660000026]
   Sky_SunSize: 0.999499977
-  Sky_SunStrength: 6
+  Sky_SunStrength: 1.5
   Sky_CloudColor: [0.800000012, 0.819999993, 0.870000005]
   Sky_CloudCoverage: 0.550000012
   Sky_CloudDensity: 0.550000012
@@ -41,22 +41,22 @@ RenderSettings:
   ToD_SunNoonTurbidity: 2.20000005
   ToD_SunHazeTurbidity: 4.5
   Fog_Enabled: true
-  Fog_Color: [0.560000002, 0.589999974, 0.649999976]
-  Fog_Density: 0.0260000005
+  Fog_Color: [0.0700000003, 0.0799999982, 0.119999997]
+  Fog_Density: 0.0240000002
   Fog_HeightStart: 0
   Fog_HeightDensity: 0.0500000007
-  Fog_AerialColor: [0.660000026, 0.730000019, 0.850000024]
-  Fog_AerialStrength: 0.550000012
+  Fog_AerialColor: [0.100000001, 0.119999997, 0.180000007]
+  Fog_AerialStrength: 0.400000006
 Entities:
   - Entity: 2000000000000000001
     TagComponent:
       Tag: Sun
     DirectionalLightComponent:
       Direction: [0.150000006, -0.219999999, 0.959999979]
-      Ambient: [0.0700000003, 0.0599999987, 0.0599999987]
-      Diffuse: [1, 0.860000014, 0.660000026]
-      Specular: [0.600000024, 0.600000024, 0.600000024]
-      Intensity: 1.20000005
+      Ambient: [0.0250000004, 0.0280000009, 0.0359999985]
+      Diffuse: [1, 0.720000029, 0.469999999]
+      Specular: [0.400000006, 0.400000006, 0.400000006]
+      Intensity: 0.400000006
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [-0.785398185, 0.52359879, 0]
@@ -318,3 +318,195 @@ Entities:
       DocumentPath: assets/ui/GameplayHUD.bluui
       Visible: true
       Scale: 1
+  - Entity: 2000000000000000040
+    TagComponent:
+      Tag: Lamp_PillarA
+    PointLightComponent:
+      Ambient: [0.02, 0.015, 0.01]
+      Diffuse: [1, 0.55, 0.2]
+      Specular: [1, 0.6, 0.25]
+      Intensity: 8
+      Range: 13
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-6, 3.3, -3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000041
+    TagComponent:
+      Tag: Lamp_PillarB
+    PointLightComponent:
+      Ambient: [0.02, 0.015, 0.01]
+      Diffuse: [1, 0.55, 0.2]
+      Specular: [1, 0.6, 0.25]
+      Intensity: 8
+      Range: 13
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [6, 3.3, -5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000042
+    TagComponent:
+      Tag: Accent_Cyan
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.2, 0.7, 1]
+      Specular: [0.2, 0.7, 1]
+      Intensity: 6
+      Range: 10
+      AttConstant: 1
+      AttLinear: 0.12
+      AttQuadratic: 0.05
+    TransformComponent:
+      Translation: [-3, 0.6, 2]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000043
+    TagComponent:
+      Tag: Accent_Magenta
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.3, 0.8]
+      Specular: [1, 0.3, 0.8]
+      Intensity: 6
+      Range: 10
+      AttConstant: 1
+      AttLinear: 0.12
+      AttQuadratic: 0.05
+    TransformComponent:
+      Translation: [3, 0.6, 1]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000044
+    TagComponent:
+      Tag: Accent_Amber
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.7, 0.3]
+      Specular: [1, 0.7, 0.3]
+      Intensity: 6
+      Range: 11
+      AttConstant: 1
+      AttLinear: 0.1
+      AttQuadratic: 0.04
+    TransformComponent:
+      Translation: [0, 0.7, -1]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000045
+    TagComponent:
+      Tag: Glow_ZombieA
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.3, 1, 0.4]
+      Specular: [0.3, 1, 0.4]
+      Intensity: 4
+      Range: 8
+      AttConstant: 1
+      AttLinear: 0.14
+      AttQuadratic: 0.07
+    TransformComponent:
+      Translation: [-4, 0.9, -8]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000046
+    TagComponent:
+      Tag: Glow_ZombieB
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.3, 1, 0.4]
+      Specular: [0.3, 1, 0.4]
+      Intensity: 4
+      Range: 8
+      AttConstant: 1
+      AttLinear: 0.14
+      AttQuadratic: 0.07
+    TransformComponent:
+      Translation: [4, 0.9, -10]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000047
+    TagComponent:
+      Tag: Glow_ZombieC
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.3, 1, 0.4]
+      Specular: [0.3, 1, 0.4]
+      Intensity: 4
+      Range: 8
+      AttConstant: 1
+      AttLinear: 0.14
+      AttQuadratic: 0.07
+    TransformComponent:
+      Translation: [0, 0.9, -14]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000048
+    TagComponent:
+      Tag: Accent_BlueL
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.25, 0.4, 1]
+      Specular: [0.25, 0.4, 1]
+      Intensity: 6
+      Range: 13
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-9, 1.4, -12]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000049
+    TagComponent:
+      Tag: Accent_RedR
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.3, 0.25]
+      Specular: [1, 0.3, 0.25]
+      Intensity: 6
+      Range: 13
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [9, 1.4, -12]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000050
+    TagComponent:
+      Tag: Beacon_Far
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.6, 0.3]
+      Specular: [1, 0.6, 0.3]
+      Intensity: 8
+      Range: 16
+      AttConstant: 1
+      AttLinear: 0.07
+      AttQuadratic: 0.017
+    TransformComponent:
+      Translation: [0, 2.2, -18]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000051
+    TagComponent:
+      Tag: Fill_BehindPlayer
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.5, 0.6, 0.9]
+      Specular: [0.5, 0.6, 0.9]
+      Intensity: 1.5
+      Range: 9
+      AttConstant: 1
+      AttLinear: 0.1
+      AttQuadratic: 0.04
+    TransformComponent:
+      Translation: [0, 2.5, 6]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]

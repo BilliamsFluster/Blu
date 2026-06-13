@@ -7,6 +7,7 @@
 #include "Blu/Scene/Entity.h"
 #include "Blu/Scene/Scene.h"
 #include "Blu/Rendering/GpuParticleSystem.h"
+#include "Blu/Rendering/Renderer3D.h"
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
@@ -138,6 +139,10 @@ namespace Azure
 		pc.Damage    = m_WeaponDamage;
 		pc.Life      = 2.0f;
 		pc.HitRadius = 0.9f;
+
+		// Muzzle flash: a bright, short-range transient point light at the muzzle. Lasts a
+		// single frame (cleared next runtime tick), so continuous fire reads as a flicker.
+		Blu::Renderer3D::AddDynamicLight(muzzle, glm::vec3(1.0f, 0.78f, 0.40f), 12.0f, 7.0f);
 	}
 
 	void PlayerCharacter::UpdateWeapon(float dt)
@@ -208,8 +213,9 @@ namespace Azure
 				{
 					zh.Health -= proj.Damage;
 					hit = true;
-					// Impact spark burst at the hit point.
+					// Impact spark burst + a brief warm flash light at the hit point.
 					Blu::GpuParticleSystem::Get().Emit(t.Translation, 16, glm::vec3(0.0f, 1.5f, 0.0f), 4.0f, 0.5f, 0.09f, 0.0f);
+					Blu::Renderer3D::AddDynamicLight(t.Translation, glm::vec3(1.0f, 0.65f, 0.25f), 6.0f, 4.5f);
 					break;
 				}
 			}

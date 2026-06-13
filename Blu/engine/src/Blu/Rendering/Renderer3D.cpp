@@ -110,6 +110,32 @@ namespace Blu
             uploadFog(*s_Data3D->InstancedMeshShader);
     }
 
+    // Transient point lights queued this frame (muzzle flashes, impacts). Merged into the
+    // light blob by PassLights, cleared each runtime frame by ClearDynamicLights.
+    static std::vector<PointLightData> s_DynamicLights;
+
+    void Renderer3D::AddDynamicLight(const glm::vec3& position, const glm::vec3& color,
+                                     float intensity, float range)
+    {
+        PointLightData p;
+        p.Position     = position;
+        p.Ambient      = glm::vec3(0.0f);       // transient flashes contribute no ambient
+        p.Diffuse      = color;
+        p.Specular     = color;
+        p.Intensity    = intensity;
+        p.Range        = range;
+        // Tighter quadratic falloff than the scene default so flashes stay local.
+        p.AttConstant  = 1.0f;
+        p.AttLinear    = 0.7f;
+        p.AttQuadratic = 1.8f;
+        s_DynamicLights.push_back(p);
+    }
+
+    void Renderer3D::ClearDynamicLights()
+    {
+        s_DynamicLights.clear();
+    }
+
     // -------------------------------------------------------------------------
     // PassLights — upload all lights as a single cbuffer blob (no string allocs).
     // -------------------------------------------------------------------------
@@ -119,7 +145,20 @@ namespace Blu
         const std::vector<SpotLightData>&  spotLights)
     {
         auto& sh = *s_Data3D->MeshShader;
-        const LightDataGPU gpu = BuildLightDataGPU(dirLights, pointLights, spotLights);
+
+        // Merge transient dynamic lights into the point-light set. BuildLightDataGPU caps the
+        // total at kMaxPointLights, so an overflowing merge is clamped (not an overrun).
+        const std::vector<PointLightData>* points = &pointLights;
+        std::vector<PointLightData> merged;
+        if (!s_DynamicLights.empty())
+        {
+            merged.reserve(pointLights.size() + s_DynamicLights.size());
+            merged.insert(merged.end(), pointLights.begin(), pointLights.end());
+            merged.insert(merged.end(), s_DynamicLights.begin(), s_DynamicLights.end());
+            points = &merged;
+        }
+
+        const LightDataGPU gpu = BuildLightDataGPU(dirLights, *points, spotLights);
         s_Data3D->Lights = gpu;
 
         // Single bulk upload — no string allocations, one memcpy into cbuffer shadow.

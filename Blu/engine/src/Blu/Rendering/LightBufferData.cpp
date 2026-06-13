@@ -11,7 +11,7 @@ namespace Blu
 		const std::vector<SpotLightData>& spotLights)
 	{
 		const int dirCount = std::min(static_cast<int>(dirLights.size()), 4);
-		const int pointCount = std::min(static_cast<int>(pointLights.size()), 8);
+		const int pointCount = std::min(static_cast<int>(pointLights.size()), kMaxPointLights);
 		const int spotCount = std::min(static_cast<int>(spotLights.size()), 4);
 
 		LightDataGPU gpu = {};

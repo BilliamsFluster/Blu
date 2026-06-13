@@ -38,7 +38,7 @@ struct SpotLight
 cbuffer LightData : register(b3)
 {
     DirectionalLight u_DirLights[4];
-    PointLight u_PointLights[8];
+    PointLight u_PointLights[32];
     SpotLight u_SpotLights[4];
     int u_NumDirLights;
     int u_NumPointLights;
