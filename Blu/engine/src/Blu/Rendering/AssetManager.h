@@ -28,6 +28,11 @@ namespace Blu
 		void SetRegistryPath(std::string registryPath);
 
 		AssetHandle Import(const std::string& filepath);
+		// Re-reads the source for an already-imported asset, refreshing its .meta
+		// (mtime/size) while PRESERVING the AssetHandle, and reloads it if currently
+		// loaded. Returns false for a stale/unknown handle. Foundation for the editor's
+		// reimport action (Phase 7).
+		bool Reimport(AssetHandle handle);
 		Shared<Asset> Load(AssetHandle handle);
 		bool Save(AssetHandle handle);
 		void Release(AssetHandle handle);

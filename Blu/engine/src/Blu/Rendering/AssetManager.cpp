@@ -1,5 +1,6 @@
 #include "Blupch.h"
 #include "AssetManager.h"
+#include "AssetMeta.h"
 #include "Blu/Core/Log.h"
 #include "Blu/Utils/FileSystemService.h"
 #include "yaml-cpp/yaml.h"
@@ -67,14 +68,56 @@ namespace Blu
 		if (existing != m_PathIndex.end())
 			return existing->second;
 
+		// Consult a .meta sidecar first so the handle is STABLE across a lost/rebuilt
+		// registry, a moved project, or sharing across machines. If absent (or invalid),
+		// mint a fresh UUID and write the sidecar so future imports recover it.
+		AssetMeta meta;
+		const bool hasMeta = AssetMetaIO::Read(normalizedPath, meta);
+
 		AssetMetadata metadata;
-		metadata.Handle = AssetHandle();
+		metadata.Handle = (hasMeta && meta.IsValid()) ? meta.Handle : AssetHandle();
 		metadata.Type = InferAssetType(normalizedPath);
 		metadata.VirtualPath = normalizedPath;
 		metadata.SourcePath = normalizedPath;
+
+		meta.Handle = metadata.Handle;
+		meta.Type = metadata.Type;
+		meta.SourcePath = normalizedPath;
+		AssetMetaIO::StampSourceInfo(normalizedPath, meta);
+		AssetMetaIO::Write(normalizedPath, meta); // best-effort; tolerated if unwritable
+
 		m_PathIndex[normalizedPath] = metadata.Handle;
 		m_Metadata[metadata.Handle] = metadata;
 		return metadata.Handle;
+	}
+
+	bool AssetManager::Reimport(AssetHandle handle)
+	{
+		if (!m_Initialized)
+			Initialize();
+
+		const AssetMetadata* metadata = FindMetadata(handle);
+		if (!metadata)
+		{
+			AddDiagnostic("AssetManager: cannot reimport stale asset handle " + std::to_string((uint64_t)handle));
+			return false;
+		}
+
+		// Refresh the sidecar's source stamp while preserving the handle, so callers can
+		// detect a changed source and the UUID survives.
+		AssetMeta meta;
+		AssetMetaIO::Read(metadata->SourcePath, meta);
+		meta.Handle = metadata->Handle;
+		meta.Type = metadata->Type;
+		meta.SourcePath = metadata->SourcePath;
+		AssetMetaIO::StampSourceInfo(metadata->SourcePath, meta);
+		AssetMetaIO::Write(metadata->SourcePath, meta);
+
+		// If the asset is resident, reload its contents in place (handle/refs unchanged).
+		auto loaded = m_Assets.find(handle);
+		if (loaded != m_Assets.end() && loaded->second)
+			loaded->second->Reload();
+		return true;
 	}
 
 	Shared<Asset> AssetManager::Load(AssetHandle handle)

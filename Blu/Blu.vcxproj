@@ -648,6 +648,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\Animator.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Asset.h" />
     <ClInclude Include="engine\src\Blu\Rendering\AssetManager.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\AssetMeta.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\CascadedShadowMap.h" />
@@ -765,6 +766,7 @@
     <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Asset.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\AssetManager.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\AssetMeta.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\DeferredRenderer.cpp" />

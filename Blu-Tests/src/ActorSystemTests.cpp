@@ -240,6 +240,43 @@ namespace
 		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
+	void TestAssetMetaStableHandles()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsAssetMeta-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/box.obj", "OBJ"), "mesh source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		const Blu::AssetHandle first = assets.Import("project://assets/box.obj");
+		Require((uint64_t)first != 0, "asset import returned an invalid handle");
+		Require(fileSystem.Exists("project://assets/box.obj.meta"), "import did not write a .meta sidecar");
+
+		// Simulate a fresh session with NO registry persisted: the handle must be
+		// recovered from the .meta sidecar, not re-minted.
+		assets.Reset();
+		assets.Initialize();
+		const Blu::AssetHandle recovered = assets.Import("project://assets/box.obj");
+		Require((uint64_t)recovered == (uint64_t)first,
+			"import did not recover the stable UUID from the .meta sidecar after registry loss");
+
+		// Reimport preserves the handle and rejects stale handles.
+		Require(assets.Reimport(first), "reimport of a known asset failed");
+		Require(!assets.Reimport(Blu::AssetHandle(123456)), "reimport of a stale handle was not rejected");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestLifetimeUtilities()
 	{
 		struct TestSlot;
@@ -514,6 +551,7 @@ int main()
 		TestGameModeRegistration();
 		TestLegacySceneMigrationWritesActorComponent();
 		TestMountedFilesystemAndAssetRegistry();
+		TestAssetMetaStableHandles();
 		TestLifetimeUtilities();
 		TestMaterialResolver();
 		TestMaterialGraphCompiler();
