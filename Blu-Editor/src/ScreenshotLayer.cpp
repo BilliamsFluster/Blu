@@ -12,6 +12,7 @@
 #include "Blu/Rendering/Renderer3D.h"
 #include "Blu/Core/Application.h"
 #include "Blu/Platform/DirectX11/D3D11FrameBuffer.h"
+#include "AzureGameModule.h" // register Azure gameplay classes for --play captures
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h" // GLFW/deps (added to Blu-Editor include dirs)
@@ -21,11 +22,15 @@
 
 namespace Blu
 {
-    ScreenshotLayer::ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height, bool enableFog)
+    ScreenshotLayer::ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height,
+                                     bool enableFog, bool playMode)
         : Layer("ScreenshotLayer"),
           m_ScenePath(std::move(scenePath)), m_OutputPath(std::move(outputPath)),
-          m_Width(width ? width : 1280), m_Height(height ? height : 720), m_EnableFog(enableFog)
+          m_Width(width ? width : 1280), m_Height(height ? height : 720),
+          m_EnableFog(enableFog), m_PlayMode(playMode)
     {
+        if (m_PlayMode)
+            m_WarmupFrames = 40; // let physics settle, actors spawn, the FP camera/HUD come up
     }
 
     void ScreenshotLayer::OnAttach()
@@ -59,11 +64,24 @@ namespace Blu
             fog.AerialStrength = 0.85f;
         }
 
-        // Frame the scene from a sensible default viewpoint.
-        m_Camera = EditorCamera(45.0f, (float)m_Width / (float)m_Height, 0.1f, 1000.0f);
-        m_Camera.SetViewportSize((float)m_Width, (float)m_Height);
-        m_Camera.SetFocalPoint({ 0.0f, 1.0f, 0.0f });
-        m_Camera.SetDistance(18.0f);
+        if (m_PlayMode)
+        {
+            // Runtime capture: start the game so actors spawn, the player drives the
+            // first-person camera, and the runtime HUD renders. Frames are stepped in
+            // OnUpdate; the FP view + HUD are what we capture.
+            Azure::RegisterAzureGameModule(); // so Azure::PlayerCharacter / ZombieTestActor spawn
+            m_Scene->OnViewportResize((float)m_Width, (float)m_Height);
+            m_Scene->SetPlayerInputEnabled(true);
+            m_Scene->OnRuntimeStart();
+        }
+        else
+        {
+            // Editor capture: frame the scene from a sensible default viewpoint.
+            m_Camera = EditorCamera(45.0f, (float)m_Width / (float)m_Height, 0.1f, 1000.0f);
+            m_Camera.SetViewportSize((float)m_Width, (float)m_Height);
+            m_Camera.SetFocalPoint({ 0.0f, 1.0f, 0.0f });
+            m_Camera.SetDistance(18.0f);
+        }
     }
 
     void ScreenshotLayer::OnUpdate(Blu::Timestep deltaTime)
@@ -80,8 +98,16 @@ namespace Blu
         RenderCommand::SetClearColor({ 0.10f, 0.11f, 0.13f, 1.0f });
         RenderCommand::Clear();
         m_Scene->OnViewportResize((float)m_Width, (float)m_Height);
-        m_Camera.SetViewportSize((float)m_Width, (float)m_Height);
-        m_Scene->OnUpdateEditor(deltaTime, m_Camera);
+        const float fixedDt = 1.0f / 60.0f; // deterministic step for warmup/physics
+        if (m_PlayMode)
+        {
+            m_Scene->OnUpdateRuntime(fixedDt);
+        }
+        else
+        {
+            m_Camera.SetViewportSize((float)m_Width, (float)m_Height);
+            m_Scene->OnUpdateEditor(deltaTime, m_Camera);
+        }
         m_FrameBuffer->UnBind();
 
         if (--m_WarmupFrames > 0)

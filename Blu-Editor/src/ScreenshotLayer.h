@@ -19,7 +19,8 @@ namespace Blu
     class ScreenshotLayer : public Blu::Layers::Layer
     {
     public:
-        ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height, bool enableFog = false);
+        ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height,
+                        bool enableFog = false, bool playMode = false);
 
         void OnAttach() override;
         void OnUpdate(Blu::Timestep deltaTime) override;
@@ -30,6 +31,7 @@ namespace Blu
         uint32_t    m_Width;
         uint32_t    m_Height;
         bool        m_EnableFog;
+        bool        m_PlayMode;   // run the runtime (actors/HUD/FP camera) instead of the editor camera
 
         Shared<Scene>       m_Scene;
         Shared<FrameBuffer> m_FrameBuffer;

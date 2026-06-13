@@ -22,8 +22,12 @@ namespace Blu
 			// changes from the command line. Falls through to the normal editor otherwise.
 			const auto& args = Application::GetCommandLineArgs();
 			bool enableFog = false;
+			bool playMode = false;
 			for (const auto& a : args)
-				if (a == "--fog") enableFog = true;
+			{
+				if (a == "--fog")  enableFog = true;
+				if (a == "--play") playMode = true; // capture the running game (FP camera + HUD), not the editor view
+			}
 			for (size_t i = 0; i < args.size(); ++i)
 			{
 				if (args[i] == "--screenshot" && i + 2 < args.size())
@@ -34,7 +38,7 @@ namespace Blu
 						try { w = (uint32_t)std::stoul(args[i + 3]); h = (uint32_t)std::stoul(args[i + 4]); }
 						catch (...) {}
 					}
-					PushLayer(std::make_shared<ScreenshotLayer>(args[i + 1], args[i + 2], w, h, enableFog));
+					PushLayer(std::make_shared<ScreenshotLayer>(args[i + 1], args[i + 2], w, h, enableFog, playMode));
 					return;
 				}
 			}
