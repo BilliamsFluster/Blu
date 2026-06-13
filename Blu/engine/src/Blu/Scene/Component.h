@@ -588,6 +588,33 @@ namespace Blu
 		{}
 	};
 
+	// ── Health ───────────────────────────────────────────────────────────────
+	// Damageable entities (zombies, destructibles). Runtime gameplay state — added
+	// at BeginPlay by enemy actors, not serialized into scenes.
+	struct HealthComponent
+	{
+		float Health    = 100.0f;
+		float MaxHealth  = 100.0f;
+
+		HealthComponent() = default;
+		HealthComponent(const HealthComponent&) = default;
+		explicit HealthComponent(float hp) : Health(hp), MaxHealth(hp) {}
+	};
+
+	// ── Projectile ───────────────────────────────────────────────────────────
+	// A bullet/pellet in flight. Spawned by the weapon, stepped each frame, removed
+	// on impact or when its life expires. Runtime gameplay state — not serialized.
+	struct ProjectileComponent
+	{
+		glm::vec3 Velocity  = { 0.0f, 0.0f, 0.0f }; // world units / second
+		float     Damage    = 34.0f;
+		float     Life      = 2.0f;                 // seconds before despawn
+		float     HitRadius = 0.9f;                 // proximity radius for a hit
+
+		ProjectileComponent() = default;
+		ProjectileComponent(const ProjectileComponent&) = default;
+	};
+
 	template<typename... Component>
 	struct Components
 	{

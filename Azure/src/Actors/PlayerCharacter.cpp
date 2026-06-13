@@ -2,6 +2,7 @@
 #include "Blu/Core/Log.h"
 #include "Blu/Core/Input.h"
 #include "Blu/Core/KeyCodes.h"
+#include "Blu/Core/MouseCodes.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Entity.h"
 #include "Blu/Scene/Scene.h"
@@ -61,6 +62,8 @@ namespace Azure
 		input.AddAction("Jump",   BLU_KEY_SPACE);
 		input.AddAction("Sprint", BLU_KEY_LEFT_SHIFT);
 		input.AddAction("Interact", BLU_KEY_E);
+		input.AddAction("Reload", BLU_KEY_R);
+		input.AddMouseAction("Fire", BLU_MOUSE_BUTTON_LEFT);
 	}
 
 	void PlayerCharacter::ResetMouseLookState()
@@ -69,6 +72,17 @@ namespace Azure
 		m_PrevMouseX = mouseX;
 		m_PrevMouseY = mouseY;
 		m_FirstMouse = true;
+	}
+
+	glm::vec3 PlayerCharacter::LookForward() const
+	{
+		// Forward matching the engine convention (yaw 0 looks down world -Z).
+		const float yawRad   = glm::radians(m_Yaw);
+		const float pitchRad = glm::radians(m_Pitch);
+		return glm::normalize(glm::vec3(
+			std::cos(pitchRad) * std::sin(yawRad),
+			std::sin(pitchRad),
+			-std::cos(pitchRad) * std::cos(yawRad)));
 	}
 
 	void PlayerCharacter::UpdateFirstPersonCamera()
@@ -86,18 +100,123 @@ namespace Azure
 		if (!cam || !cam.HasComponent<Blu::TransformComponent>())
 			return;
 
-		const float yawRad   = glm::radians(m_Yaw);
-		const float pitchRad = glm::radians(m_Pitch);
-		// Forward matching the engine convention (yaw 0 looks down world -Z).
-		glm::vec3 forward = glm::normalize(glm::vec3(
-			std::cos(pitchRad) * std::sin(yawRad),
-			std::sin(pitchRad),
-			-std::cos(pitchRad) * std::cos(yawRad)));
+		glm::vec3 forward = LookForward();
 		glm::vec3 up = (std::abs(forward.y) > 0.98f) ? glm::vec3(0.0f, 0.0f, -1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
 
 		auto& camXform = cam.GetComponent<Blu::TransformComponent>();
 		camXform.Translation = GetTransform().Translation + glm::vec3(0.0f, m_EyeHeight, 0.0f);
 		camXform.Rotation = glm::eulerAngles(glm::quatLookAtRH(forward, up));
+	}
+
+	void PlayerCharacter::FireWeapon()
+	{
+		Blu::Scene* scene = GetScene();
+		if (!scene)
+			return;
+
+		const glm::vec3 forward = LookForward();
+		const glm::vec3 muzzle = GetTransform().Translation + glm::vec3(0.0f, m_EyeHeight, 0.0f) + forward * 0.6f;
+
+		Blu::Entity proj = scene->CreateEntity("Projectile");
+		auto& t = proj.HasComponent<Blu::TransformComponent>()
+			? proj.GetComponent<Blu::TransformComponent>()
+			: proj.AddComponent<Blu::TransformComponent>();
+		t.Translation = muzzle;
+		t.Scale = glm::vec3(0.12f);
+
+		auto& mc = proj.AddComponent<Blu::MeshComponent>();
+		mc.MeshData = Blu::Mesh::CreateCube();
+		mc.Primitive = Blu::MeshComponent::PrimitiveType::Cube;
+		mc.MaterialInstance = Blu::Material::Create();
+		mc.MaterialInstance->AlbedoColor = glm::vec4(1.0f, 0.85f, 0.30f, 1.0f);
+		mc.MaterialInstance->EmissiveColor = glm::vec3(1.0f, 0.75f, 0.20f);
+		mc.MaterialInstance->EmissiveStrength = 4.0f;
+
+		auto& pc = proj.AddComponent<Blu::ProjectileComponent>();
+		pc.Velocity  = forward * m_ProjectileSpeed;
+		pc.Damage    = m_WeaponDamage;
+		pc.Life      = 2.0f;
+		pc.HitRadius = 0.9f;
+	}
+
+	void PlayerCharacter::UpdateWeapon(float dt)
+	{
+		auto& input = Blu::InputMap::Get();
+		if (m_FireCooldown > 0.0f)
+			m_FireCooldown -= dt;
+
+		if (m_Reloading)
+		{
+			m_ReloadTimer -= dt;
+			if (m_ReloadTimer <= 0.0f)
+			{
+				const int need = m_MagSize - m_AmmoInMag;
+				const int take = std::min(need, m_AmmoReserve);
+				m_AmmoInMag   += take;
+				m_AmmoReserve -= take;
+				m_Reloading = false;
+			}
+			return;
+		}
+
+		if (input.IsActionJustPressed("Reload") && m_AmmoInMag < m_MagSize && m_AmmoReserve > 0)
+		{
+			m_Reloading   = true;
+			m_ReloadTimer = m_ReloadDuration;
+			return;
+		}
+
+		if (input.IsActionPressed("Fire") && m_FireCooldown <= 0.0f)
+		{
+			if (m_AmmoInMag > 0)
+			{
+				FireWeapon();
+				--m_AmmoInMag;
+				m_FireCooldown = m_FireInterval;
+			}
+			else if (m_AmmoReserve > 0)
+			{
+				m_Reloading   = true;
+				m_ReloadTimer = m_ReloadDuration;
+			}
+		}
+	}
+
+	void PlayerCharacter::UpdateProjectiles(float dt)
+	{
+		Blu::Scene* scene = GetScene();
+		if (!scene)
+			return;
+
+		std::vector<Blu::Entity> toDestroy;
+		auto projectiles = scene->GetAllEntitiesWith<Blu::TransformComponent, Blu::ProjectileComponent>();
+		for (auto e : projectiles)
+		{
+			auto&& [t, proj] = projectiles.get<Blu::TransformComponent, Blu::ProjectileComponent>(e);
+			t.Translation += proj.Velocity * dt;
+			proj.Life -= dt;
+
+			bool hit = false;
+			auto targets = scene->GetAllEntitiesWith<Blu::TransformComponent, Blu::HealthComponent>();
+			for (auto z : targets)
+			{
+				auto&& [zt, zh] = targets.get<Blu::TransformComponent, Blu::HealthComponent>(z);
+				if (zh.Health <= 0.0f)
+					continue;
+				if (glm::length2(zt.Translation - t.Translation) <= proj.HitRadius * proj.HitRadius)
+				{
+					zh.Health -= proj.Damage;
+					hit = true;
+					break;
+				}
+			}
+
+			if (hit || proj.Life <= 0.0f)
+				toDestroy.push_back(Blu::Entity{ e, scene });
+		}
+
+		for (auto& e : toDestroy)
+			scene->DestroyEntity(e);
 	}
 
 	void PlayerCharacter::UpdateStats(float dt, bool wantsSprint, bool isMoving, float& outSpeedScale)
@@ -290,6 +409,10 @@ namespace Azure
 
 		// Drive the first-person camera after movement so it tracks this frame's position.
 		UpdateFirstPersonCamera();
+
+		// Weapon: fire/reload, then advance live projectiles and resolve hits.
+		UpdateWeapon(dt);
+		UpdateProjectiles(dt);
 
 		TryPickupOverlap();
 		if (Blu::InputMap::Get().IsActionJustPressed("Interact"))
