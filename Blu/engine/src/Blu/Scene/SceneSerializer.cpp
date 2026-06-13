@@ -766,6 +766,9 @@ namespace Blu
 
 		YAML::Emitter out;
 		out << YAML::BeginMap;
+		// Scene format version. Absent key ⇒ version 0 (legacy, path-based asset refs).
+		// Bumped as the format evolves so loaders can migrate older scenes on read.
+		out << YAML::Key << "SceneVersion" << YAML::Value << kCurrentSceneVersion;
 		out << YAML::Key << "Scene" << YAML::Value << AssetPath::ToProjectRelative(filepath);
 		if (!m_Scene->GetGameModeClassID().empty())
 			out << YAML::Key << "GameMode" << YAML::Value << m_Scene->GetGameModeClassID();
@@ -969,7 +972,10 @@ namespace Blu
 		YAML::Node data = YAML::Load(strStream.str());
 		if (!data["Scene"])
 			return false;
-		
+
+		// Format version: absent ⇒ 0 (legacy). Later phases branch migration on this.
+		m_SceneVersion = data["SceneVersion"] ? data["SceneVersion"].as<int>() : 0;
+
 		std::string sceneName = data["Scene"].as<std::string>();
 		if (data["GameMode"])
 			m_Scene->SetGameModeClassID(data["GameMode"].as<std::string>());

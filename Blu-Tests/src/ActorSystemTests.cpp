@@ -415,6 +415,69 @@ namespace
 		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
+	void TestSceneVersioningAndRoundTrip()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsSceneRoundTrip-" + std::to_string((uint64_t)Blu::UUID()));
+		const std::filesystem::path scenePath = testDirectory / "RoundTrip.blu";
+		std::filesystem::create_directories(testDirectory);
+
+		auto readFile = [](const std::filesystem::path& path)
+		{
+			std::ifstream file(path);
+			std::stringstream buffer;
+			buffer << file.rdbuf();
+			return buffer.str();
+		};
+
+		// Build a small, deterministic single-entity scene (stable serialization order).
+		auto scene = std::make_shared<Blu::Scene>();
+		Blu::Entity entity = scene->CreateEntity("RoundTripEntity");
+		if (entity.HasComponent<Blu::TransformComponent>())
+		{
+			auto& transform = entity.GetComponent<Blu::TransformComponent>();
+			transform.Translation = { 1.0f, 2.0f, 3.0f };
+			transform.Scale = { 2.0f, 2.0f, 2.0f };
+		}
+		auto& animator = entity.AddComponent<Blu::AnimatorComponent>();
+		animator.CurrentClipIndex = 2;
+		animator.CurrentTime = 5.0f;
+		animator.Playing = false;
+		animator.Loop = true;
+		animator.SpeedScale = 1.5f;
+
+		Blu::SceneSerializer serializer(scene);
+		serializer.Serialize(scenePath.string());
+		const std::string firstPass = readFile(scenePath);
+		Require(firstPass.find("SceneVersion: 1") != std::string::npos,
+			"serialized scene did not record the current SceneVersion");
+
+		// Round trip: deserialize then re-serialize to the same path; bytes must match
+		// (re-using the path keeps the embedded "Scene:" value identical across passes).
+		auto reloaded = std::make_shared<Blu::Scene>();
+		Blu::SceneSerializer reloadedSerializer(reloaded);
+		Require(reloadedSerializer.Deserialize(scenePath.string()), "round-trip scene did not deserialize");
+		Require(reloadedSerializer.GetLoadedSceneVersion() == Blu::SceneSerializer::kCurrentSceneVersion,
+			"versioned scene did not report the current version on load");
+		reloadedSerializer.Serialize(scenePath.string());
+		const std::string secondPass = readFile(scenePath);
+		Require(firstPass == secondPass, "scene serialization was not stable across a round trip");
+
+		// Legacy scenes (no SceneVersion key) must be treated as version 0.
+		const std::filesystem::path legacyPath = testDirectory / "Legacy.blu";
+		{
+			std::ofstream legacy(legacyPath);
+			legacy << "Scene: Legacy\nEntities:\n  - Entity: 7\n    TagComponent:\n      Tag: Old\n";
+		}
+		auto legacyScene = std::make_shared<Blu::Scene>();
+		Blu::SceneSerializer legacySerializer(legacyScene);
+		Require(legacySerializer.Deserialize(legacyPath.string()), "legacy scene did not deserialize");
+		Require(legacySerializer.GetLoadedSceneVersion() == 0, "legacy scene was not treated as version 0");
+
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestAudioBackendIsCompiled()
 	{
 		Require(Blu::AudioEngine::Get().IsBackendCompiled(), "miniaudio backend was not compiled into Blu");
@@ -457,6 +520,7 @@ int main()
 		TestSceneRenderPipelinePlan();
 		TestSharedLightBufferPacking();
 		TestWorldAuthoringContracts();
+		TestSceneVersioningAndRoundTrip();
 		TestAudioBackendIsCompiled();
 		TestAuthoredGameplaySliceAssets();
 		TestJoltConfigurationCompatibility();

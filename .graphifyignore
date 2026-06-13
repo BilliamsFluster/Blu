@@ -1,0 +1,22 @@
+# .graphifyignore — what the graphify knowledge graph should NOT scan.
+# gitignore syntax. graphify already auto-skips graphify-out/, .git/, build/, dist/,
+# node_modules/, .venv/, etc. This file adds the engine-specific exclusions.
+
+# Vendored third-party code (git submodules) — not part of the engine graph
+ExternalDependencies/
+GlobalExternalDependencies/
+
+# Build output, caches, IDE state
+bin/
+bin-int/
+Intermediates/
+.vs/
+.cache/
+.claude/
+
+# Binary assets (models, textures, audio)
+assets/
+
+# Loose compiled objects / profiler snapshots at the repo root
+*.obj
+BluProfile-*.json
