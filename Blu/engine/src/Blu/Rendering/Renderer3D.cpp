@@ -235,6 +235,11 @@ namespace Blu
         }
     }
 
+    const glm::mat4& Renderer3D::GetViewProjectionMatrix()
+    {
+        return s_Data3D->ViewProjectionMatrix;
+    }
+
     void Renderer3D::DrawMesh(const glm::mat4& transform, MeshComponent& mc, int entityID)
     {
         if (!mc.MeshData && !mc.ModelAsset) return;

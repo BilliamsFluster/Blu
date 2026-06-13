@@ -537,6 +537,12 @@ namespace Blu
             m_CompositeShader->SetUniformFloat("u_InvW",          1.0f / fw);
             m_CompositeShader->SetUniformFloat("u_InvH",          1.0f / fh);
             m_CompositeShader->SetUniformFloat("u_SSAOStrength",  (useSSAO && aoSRV) ? SSAOStrength : 0.0f);
+            // God rays — radial light shafts from the sun's screen position (Scene-supplied).
+            const bool useGodRays = EnableGodRays && GodRaySunVisible;
+            m_CompositeShader->SetUniformFloat("u_GodRayIntensity", useGodRays ? GodRayIntensity : 0.0f);
+            m_CompositeShader->SetUniformFloat("u_GodRayVisible",   useGodRays ? 1.0f : 0.0f);
+            m_CompositeShader->SetUniformFloat("u_SunU",            GodRaySunUV.x);
+            m_CompositeShader->SetUniformFloat("u_SunV",            GodRaySunUV.y);
             m_CompositeShader->Flush();
             dc->PSSetShaderResources(0, 1, &sceneSRV);
             dc->PSSetShaderResources(1, 1, &bloomSRV);

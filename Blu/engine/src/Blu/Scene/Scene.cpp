@@ -1810,6 +1810,23 @@ namespace Blu
 		Renderer3D::BeginScene(camera);
 		Renderer3D::SetLights(dirLights, pointLights, spotLights);
 		Renderer3D::SetFog(m_Fog);
+
+		// God rays: project the sun (directional light) to screen for the post-process pass.
+		if (m_PostProcess && !dirLights.empty())
+		{
+			glm::vec3 toSun = -glm::normalize(dirLights[0].Direction);
+			glm::vec4 clip = Renderer3D::GetViewProjectionMatrix() * glm::vec4(toSun * 100000.0f, 1.0f);
+			bool vis = clip.w > 0.0001f;
+			glm::vec2 uv(0.5f);
+			if (vis)
+			{
+				uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
+				uv.y = 1.0f - uv.y;
+				vis = uv.x > -0.25f && uv.x < 1.25f && uv.y > -0.25f && uv.y < 1.25f;
+			}
+			m_PostProcess->GodRaySunUV = uv;
+			m_PostProcess->GodRaySunVisible = vis;
+		}
 		{
 			glm::vec3 camPos = camera.GetPosition();
 			auto view = m_Registry.view<TransformComponent, MeshComponent>();
@@ -1880,6 +1897,23 @@ namespace Blu
 		Renderer3D::BeginScene(camera, cameraTransform);
 		Renderer3D::SetLights(dirLights, pointLights, spotLights);
 		Renderer3D::SetFog(m_Fog);
+
+		// God rays: project the sun (directional light) to screen for the post-process pass.
+		if (m_PostProcess && !dirLights.empty())
+		{
+			glm::vec3 toSun = -glm::normalize(dirLights[0].Direction);
+			glm::vec4 clip = Renderer3D::GetViewProjectionMatrix() * glm::vec4(toSun * 100000.0f, 1.0f);
+			bool vis = clip.w > 0.0001f;
+			glm::vec2 uv(0.5f);
+			if (vis)
+			{
+				uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
+				uv.y = 1.0f - uv.y;
+				vis = uv.x > -0.25f && uv.x < 1.25f && uv.y > -0.25f && uv.y < 1.25f;
+			}
+			m_PostProcess->GodRaySunUV = uv;
+			m_PostProcess->GodRaySunVisible = vis;
+		}
 		{
 			glm::vec3 camPos = glm::vec3(cameraTransform[3]);
 			auto view = m_Registry.view<TransformComponent, MeshComponent>();

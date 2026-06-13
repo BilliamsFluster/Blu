@@ -133,6 +133,10 @@ namespace Blu
 
         static Shared<CascadedShadowMap> GetCSM() { return s_Data3D->CSMInstance; }
 
+        // The exact view-projection used for the current scene (set by BeginScene). Used by
+        // post-process effects (god rays) to project world positions to screen reliably.
+        static const glm::mat4& GetViewProjectionMatrix();
+
     private:
         static void PassLights(const std::vector<DirLightData>&   dirLights,
                                const std::vector<PointLightData>& pointLights,
