@@ -45,6 +45,13 @@ namespace Blu
         // Convenience for DX11-aware code that wants the raw SRV
         ID3D11ShaderResourceView* GetColorAttachmentSRV(uint32_t index = 0) const;
         ID3D11RenderTargetView* GetColorAttachmentRTV(uint32_t index = 0) const;
+
+        // Reads an entire RGBA8 colour attachment back to CPU as tightly-packed RGBA8
+        // (strips the GPU row pitch). Allocates a transient full-size staging texture, so
+        // it is meant for one-off captures (screenshots), not per-frame use. Returns false
+        // for an out-of-range index or a non-RGBA8 attachment.
+        bool ReadColorAttachmentRGBA8(uint32_t attachmentIndex, std::vector<uint8_t>& outPixels,
+                                      uint32_t& outWidth, uint32_t& outHeight) const;
         // SRV over the depth texture (R24_UNORM_X8_TYPELESS view) — null if no depth attachment
         ID3D11ShaderResourceView* GetDepthSRV() const { return m_DepthSRV.Get(); }
         ID3D11DepthStencilView* GetDepthStencilView() const { return m_DSV.Get(); }

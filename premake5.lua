@@ -388,6 +388,7 @@ project "Blu-Editor"
 		"$(SolutionDir)Azure/src",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/imgui",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/deps",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml}",

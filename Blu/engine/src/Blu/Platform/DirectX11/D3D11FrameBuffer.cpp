@@ -226,6 +226,53 @@ namespace Blu
         return value;
     }
 
+    bool D3D11FrameBuffer::ReadColorAttachmentRGBA8(uint32_t attachmentIndex, std::vector<uint8_t>& outPixels,
+                                                    uint32_t& outWidth, uint32_t& outHeight) const
+    {
+        if (attachmentIndex >= m_ColorAttachments.size())
+            return false;
+        auto* dev = D3D11Context::Get()->GetDevice();
+        auto* dc  = D3D11Context::Get()->GetDeviceContext();
+        const auto& att = m_ColorAttachments[attachmentIndex];
+        if (!att.texture)
+            return false;
+
+        D3D11_TEXTURE2D_DESC td = {};
+        att.texture->GetDesc(&td);
+        if (td.Format != DXGI_FORMAT_R8G8B8A8_UNORM) // screenshot attachment is RGBA8
+            return false;
+
+        D3D11_TEXTURE2D_DESC sd = td;
+        sd.Usage          = D3D11_USAGE_STAGING;
+        sd.BindFlags      = 0;
+        sd.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        sd.MiscFlags      = 0;
+        sd.MipLevels      = 1;
+        sd.ArraySize      = 1;
+        sd.SampleDesc     = { 1, 0 };
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> staging;
+        if (FAILED(dev->CreateTexture2D(&sd, nullptr, staging.GetAddressOf())))
+            return false;
+
+        dc->CopyResource(staging.Get(), att.texture.Get());
+
+        D3D11_MAPPED_SUBRESOURCE mapped = {};
+        if (FAILED(dc->Map(staging.Get(), 0, D3D11_MAP_READ, 0, &mapped)) || !mapped.pData)
+            return false;
+
+        outWidth  = td.Width;
+        outHeight = td.Height;
+        outPixels.resize((size_t)td.Width * td.Height * 4);
+        const uint8_t* src = static_cast<const uint8_t*>(mapped.pData);
+        for (uint32_t row = 0; row < td.Height; ++row)
+            std::memcpy(outPixels.data() + (size_t)row * td.Width * 4,
+                        src + (size_t)row * mapped.RowPitch,
+                        (size_t)td.Width * 4);
+
+        dc->Unmap(staging.Get(), 0);
+        return true;
+    }
+
     float D3D11FrameBuffer::ReadDepth(uint32_t /*attachmentIndex*/, int x, int y)
     {
         if (!m_DepthTexture) return 1.0f;
