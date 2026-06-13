@@ -1,6 +1,9 @@
 #include "Blupch.h"
 #include "AssetManager.h"
 #include "AssetMeta.h"
+#include "StaticMeshAsset.h"
+#include "Mesh.h"
+#include "ModelLoader.h"
 #include "Blu/Core/Log.h"
 #include "Blu/Utils/FileSystemService.h"
 #include "yaml-cpp/yaml.h"
@@ -148,12 +151,45 @@ namespace Blu
 			return nullptr;
 		}
 
-		auto asset = std::make_shared<Asset>(metadata->Type, metadata->VirtualPath);
+		// Construct the concrete asset for the metadata's type. StaticMesh geometry is
+		// loaded lazily (see LoadModel) so handle resolution stays GPU-free; other types
+		// use the base Asset record for now (typed texture/material loaders come later).
+		Shared<Asset> asset;
+		switch (metadata->Type)
+		{
+		case AssetType::StaticMesh:
+			asset = std::make_shared<StaticMeshAsset>(metadata->VirtualPath);
+			break;
+		default:
+			asset = std::make_shared<Asset>(metadata->Type, metadata->VirtualPath);
+			break;
+		}
 		asset->Handle = metadata->Handle;
 		asset->IsLoaded = true;
 		asset->ReferenceCount = 1;
 		m_Assets[handle] = asset;
 		return asset;
+	}
+
+	Shared<Model> AssetManager::LoadModel(AssetHandle handle)
+	{
+		auto staticMesh = std::dynamic_pointer_cast<StaticMeshAsset>(Load(handle));
+		if (!staticMesh)
+			return nullptr;
+
+		if (!staticMesh->LoadedModel)
+		{
+			const std::filesystem::path resolved = FileSystemService::Get().IsVirtualPath(staticMesh->FilePath)
+				? FileSystemService::Get().Resolve(staticMesh->FilePath)
+				: std::filesystem::path(staticMesh->FilePath);
+			if (resolved.empty() || !std::filesystem::exists(resolved))
+			{
+				AddDiagnostic("AssetManager: static mesh source missing '" + staticMesh->FilePath + "'");
+				return nullptr;
+			}
+			staticMesh->LoadedModel = ModelLoader::Load(resolved.string());
+		}
+		return staticMesh->LoadedModel;
 	}
 
 	bool AssetManager::Save(AssetHandle handle)

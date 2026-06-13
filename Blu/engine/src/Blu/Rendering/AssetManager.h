@@ -8,6 +8,8 @@
 
 namespace Blu
 {
+	struct Model;
+
 	struct AssetMetadata
 	{
 		AssetHandle Handle = AssetHandle(0);
@@ -34,6 +36,12 @@ namespace Blu
 		// reimport action (Phase 7).
 		bool Reimport(AssetHandle handle);
 		Shared<Asset> Load(AssetHandle handle);
+
+		// Resolves a StaticMesh handle to its geometry, performing the (GPU-touching)
+		// ModelLoader import on first use and caching it on the asset. Returns nullptr
+		// for a non-mesh/stale handle or when the source is missing. Runtime-only —
+		// requires a live graphics device.
+		Shared<Model> LoadModel(AssetHandle handle);
 		bool Save(AssetHandle handle);
 		void Release(AssetHandle handle);
 		const AssetMetadata* FindMetadata(AssetHandle handle) const;

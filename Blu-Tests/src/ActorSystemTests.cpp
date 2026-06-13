@@ -9,6 +9,7 @@
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Rendering/AssetManager.h"
+#include "Blu/Rendering/StaticMeshAsset.h"
 #include "Blu/Rendering/MaterialSystem.h"
 #include "Blu/Rendering/MaterialGraph.h"
 #include "Blu/Rendering/LightBufferData.h"
@@ -270,6 +271,40 @@ namespace
 		// Reimport preserves the handle and rejects stale handles.
 		Require(assets.Reimport(first), "reimport of a known asset failed");
 		Require(!assets.Reimport(Blu::AssetHandle(123456)), "reimport of a stale handle was not rejected");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
+	void TestStaticMeshAssetTyping()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsMeshAsset-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/box.obj", "o box\n"), "mesh source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		const Blu::AssetHandle handle = assets.Import("project://assets/box.obj");
+		const Blu::AssetMetadata* metadata = assets.FindMetadata(handle);
+		Require(metadata != nullptr && metadata->Type == Blu::AssetType::StaticMesh,
+			"OBJ source was not classified as a StaticMesh asset");
+
+		// Resolving the handle yields a StaticMeshAsset, but the geometry is loaded
+		// lazily (ModelLoader needs a GPU device, absent in tests) — so LoadedModel
+		// must still be null here.
+		auto asset = assets.Load(handle);
+		auto mesh = std::dynamic_pointer_cast<Blu::StaticMeshAsset>(asset);
+		Require(mesh != nullptr, "static mesh handle did not resolve to a StaticMeshAsset");
+		Require(mesh->LoadedModel == nullptr, "static mesh geometry should load lazily, not on handle resolve");
 
 		assets.Reset();
 		fileSystem.Reset();
@@ -552,6 +587,7 @@ int main()
 		TestLegacySceneMigrationWritesActorComponent();
 		TestMountedFilesystemAndAssetRegistry();
 		TestAssetMetaStableHandles();
+		TestStaticMeshAssetTyping();
 		TestLifetimeUtilities();
 		TestMaterialResolver();
 		TestMaterialGraphCompiler();

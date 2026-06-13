@@ -679,6 +679,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ShadowMap.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Skybox.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\StaticMeshAsset.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Terrain.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h" />
     <ClInclude Include="engine\src\Blu\Rendering\TextureAsset.h" />
@@ -792,6 +793,7 @@
     <ClCompile Include="engine\src\Blu\Rendering\SceneRenderPipeline.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\StaticMeshAsset.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\TextureAsset.cpp" />
