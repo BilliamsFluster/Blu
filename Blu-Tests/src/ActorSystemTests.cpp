@@ -357,6 +357,57 @@ namespace
 		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
+	void TestAssetHandleMigrationAcrossComponents()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsHandlesAll-" + std::to_string((uint64_t)Blu::UUID()));
+		const std::filesystem::path scenePath = testDirectory / "Handles.blu";
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/grass.obj", "o grass\n"), "foliage source write failed");
+		Require(fileSystem.Write("project://assets/lod0.obj", "o lod\n"), "lod source write failed");
+		Require(fileSystem.Write("project://assets/shot.wav", "RIFF"), "audio source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		auto scene = std::make_shared<Blu::Scene>();
+		Blu::Entity entity = scene->CreateEntity("AssetRefs");
+		auto& foliage = entity.AddComponent<Blu::FoliageComponent>();
+		foliage.FilePath = "project://assets/grass.obj";
+		auto& audio = entity.AddComponent<Blu::AudioSourceComponent>();
+		audio.FilePath = "project://assets/shot.wav";
+		auto& lod = entity.AddComponent<Blu::MeshLODComponent>();
+		Blu::LODEntry level;
+		level.FilePath = "project://assets/lod0.obj";
+		level.MaxDistance = 50.0f;
+		lod.Levels.push_back(level);
+
+		Blu::SceneSerializer serializer(scene);
+		serializer.Serialize(scenePath.string());
+
+		std::ifstream serialized(scenePath);
+		std::stringstream text;
+		text << serialized.rdbuf();
+		const std::string yaml = text.str();
+		Require(yaml.find("AudioHandle:") != std::string::npos, "audio source did not persist an AssetHandle");
+		Require(yaml.find("ModelHandle:") != std::string::npos, "foliage/LOD did not persist an AssetHandle");
+
+		Require((uint64_t)entity.GetComponent<Blu::FoliageComponent>().ModelHandle != 0, "foliage handle not minted");
+		Require((uint64_t)entity.GetComponent<Blu::AudioSourceComponent>().AudioHandle != 0, "audio handle not minted");
+		const auto& lodAfter = entity.GetComponent<Blu::MeshLODComponent>();
+		Require(!lodAfter.Levels.empty() && (uint64_t)lodAfter.Levels[0].ModelHandle != 0, "LOD level handle not minted");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestLifetimeUtilities()
 	{
 		struct TestSlot;
@@ -634,6 +685,7 @@ int main()
 		TestAssetMetaStableHandles();
 		TestStaticMeshAssetTyping();
 		TestMeshComponentModelHandleMigration();
+		TestAssetHandleMigrationAcrossComponents();
 		TestLifetimeUtilities();
 		TestMaterialResolver();
 		TestMaterialGraphCompiler();

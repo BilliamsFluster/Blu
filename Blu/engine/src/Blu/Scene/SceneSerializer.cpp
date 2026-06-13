@@ -521,10 +521,14 @@ namespace Blu
 			out << YAML::Key << "MeshLODComponent" << YAML::BeginMap;
 			out << YAML::Key << "Active" << YAML::Value << lod.Active;
 			out << YAML::Key << "Levels" << YAML::Value << YAML::BeginSeq;
-			for (const auto& level : lod.Levels)
+			for (auto& level : lod.Levels)
 			{
 				out << YAML::BeginMap;
 				out << YAML::Key << "FilePath" << YAML::Value << SerializeAssetPath(level.FilePath);
+				if ((uint64_t)level.ModelHandle == 0 && !level.FilePath.empty())
+					level.ModelHandle = AssetManager::Get().Import(level.FilePath);
+				if ((uint64_t)level.ModelHandle != 0)
+					out << YAML::Key << "ModelHandle" << YAML::Value << (uint64_t)level.ModelHandle;
 				out << YAML::Key << "MaxDistance" << YAML::Value << level.MaxDistance;
 				out << YAML::EndMap;
 			}
@@ -536,6 +540,10 @@ namespace Blu
 			auto& foliage = entity.GetComponent<FoliageComponent>();
 			out << YAML::Key << "FoliageComponent" << YAML::BeginMap;
 			out << YAML::Key << "FilePath" << YAML::Value << SerializeAssetPath(foliage.FilePath);
+			if ((uint64_t)foliage.ModelHandle == 0 && !foliage.FilePath.empty())
+				foliage.ModelHandle = AssetManager::Get().Import(foliage.FilePath);
+			if ((uint64_t)foliage.ModelHandle != 0)
+				out << YAML::Key << "ModelHandle" << YAML::Value << (uint64_t)foliage.ModelHandle;
 			out << YAML::Key << "WindEnabled" << YAML::Value << foliage.WindEnabled;
 			out << YAML::Key << "WindStrength" << YAML::Value << foliage.WindStrength;
 			out << YAML::Key << "WindFrequency" << YAML::Value << foliage.WindFrequency;
@@ -562,6 +570,10 @@ namespace Blu
 			auto& audio = entity.GetComponent<AudioSourceComponent>();
 			out << YAML::Key << "AudioSourceComponent" << YAML::BeginMap;
 			out << YAML::Key << "FilePath" << YAML::Value << SerializeAssetPath(audio.FilePath);
+			if ((uint64_t)audio.AudioHandle == 0 && !audio.FilePath.empty())
+				audio.AudioHandle = AssetManager::Get().Import(audio.FilePath);
+			if ((uint64_t)audio.AudioHandle != 0)
+				out << YAML::Key << "AudioHandle" << YAML::Value << (uint64_t)audio.AudioHandle;
 			out << YAML::Key << "Volume" << YAML::Value << audio.Volume;
 			out << YAML::Key << "Pitch" << YAML::Value << audio.Pitch;
 			out << YAML::Key << "Loop" << YAML::Value << audio.Loop;
@@ -1452,8 +1464,13 @@ namespace Blu
 								std::string rawPath = levelNode["FilePath"].as<std::string>();
 								level.FilePath = NormalizeLoadedAssetPath(rawPath, sceneFilePath, "MeshLODComponent.FilePath");
 								if (!level.FilePath.empty())
+								{
+									level.ModelHandle = AssetManager::Get().Import(level.FilePath);
 									level.ModelAsset = ModelLoader::Load(ResolveAssetPathForLoad(level.FilePath, sceneFilePath, "MeshLODComponent.FilePath").string());
+								}
 							}
+							if ((uint64_t)level.ModelHandle == 0 && levelNode["ModelHandle"])
+								level.ModelHandle = AssetHandle(levelNode["ModelHandle"].as<uint64_t>(0));
 							if (levelNode["MaxDistance"])
 								level.MaxDistance = levelNode["MaxDistance"].as<float>();
 							lod.Levels.push_back(level);
@@ -1470,8 +1487,13 @@ namespace Blu
 						std::string rawPath = foliageComponent["FilePath"].as<std::string>();
 						foliage.FilePath = NormalizeLoadedAssetPath(rawPath, sceneFilePath, "FoliageComponent.FilePath");
 						if (!foliage.FilePath.empty())
+						{
+							foliage.ModelHandle = AssetManager::Get().Import(foliage.FilePath);
 							foliage.ModelAsset = ModelLoader::Load(ResolveAssetPathForLoad(foliage.FilePath, sceneFilePath, "FoliageComponent.FilePath").string());
+						}
 					}
+					if ((uint64_t)foliage.ModelHandle == 0 && foliageComponent["ModelHandle"])
+						foliage.ModelHandle = AssetHandle(foliageComponent["ModelHandle"].as<uint64_t>(0));
 					if (foliageComponent["WindEnabled"])   foliage.WindEnabled   = foliageComponent["WindEnabled"].as<bool>();
 					if (foliageComponent["WindStrength"])  foliage.WindStrength  = foliageComponent["WindStrength"].as<float>();
 					if (foliageComponent["WindFrequency"]) foliage.WindFrequency = foliageComponent["WindFrequency"].as<float>();
@@ -1489,6 +1511,10 @@ namespace Blu
 					auto& audio = deserializedEntity.AddComponent<AudioSourceComponent>();
 					if (audioSourceComponent["FilePath"])
 						audio.FilePath = NormalizeLoadedAssetPath(audioSourceComponent["FilePath"].as<std::string>(), sceneFilePath, "AudioSourceComponent.FilePath");
+					if (!audio.FilePath.empty())
+						audio.AudioHandle = AssetManager::Get().Import(audio.FilePath);
+					if ((uint64_t)audio.AudioHandle == 0 && audioSourceComponent["AudioHandle"])
+						audio.AudioHandle = AssetHandle(audioSourceComponent["AudioHandle"].as<uint64_t>(0));
 					if (audioSourceComponent["Volume"])      audio.Volume      = audioSourceComponent["Volume"].as<float>();
 					if (audioSourceComponent["Pitch"])       audio.Pitch       = audioSourceComponent["Pitch"].as<float>();
 					if (audioSourceComponent["Loop"])        audio.Loop        = audioSourceComponent["Loop"].as<bool>();

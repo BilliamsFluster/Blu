@@ -169,9 +169,10 @@ namespace Blu
 	// model is used for any distance beyond it (the "lowest quality" fallback).
 	struct LODEntry
 	{
-		Shared<Model> ModelAsset;
+		Shared<Model> ModelAsset;                  // resolved runtime cache (rendered)
+		AssetHandle   ModelHandle = AssetHandle(0); // stable source reference
 		float         MaxDistance = 100.0f;
-		std::string   FilePath;
+		std::string   FilePath;                    // deprecated fallback
 	};
 
 	struct MeshLODComponent
@@ -544,8 +545,9 @@ namespace Blu
 	// or add them manually.
 	struct FoliageComponent
 	{
-		Shared<Model>              ModelAsset;
-		std::string                FilePath;
+		Shared<Model>              ModelAsset;     // resolved runtime cache (rendered)
+		AssetHandle                ModelHandle = AssetHandle(0); // stable source reference
+		std::string                FilePath;       // deprecated fallback
 		std::vector<glm::mat4>     Transforms;     // world-space per-instance transforms
 
 		// Wind animation parameters (applied in the vertex shader)
@@ -563,7 +565,8 @@ namespace Blu
 	// runtime handle on OnRuntimeStart and stops/frees it on OnRuntimeStop.
 	struct AudioSourceComponent
 	{
-		std::string FilePath;           // Path to .wav / .mp3 / .ogg / .flac
+		std::string FilePath;           // Path to .wav / .mp3 / .ogg / .flac (deprecated fallback)
+		AssetHandle AudioHandle = AssetHandle(0); // stable source reference
 		float       Volume      = 1.0f; // [0, 1]
 		float       Pitch       = 1.0f; // 1.0 = normal speed
 		bool        Loop        = false;
@@ -578,7 +581,7 @@ namespace Blu
 
 		AudioSourceComponent() = default;
 		AudioSourceComponent(const AudioSourceComponent& o)
-			: FilePath(o.FilePath), Volume(o.Volume), Pitch(o.Pitch),
+			: FilePath(o.FilePath), AudioHandle(o.AudioHandle), Volume(o.Volume), Pitch(o.Pitch),
 			  Loop(o.Loop), PlayOnStart(o.PlayOnStart),
 			  Spatial(o.Spatial), MinDistance(o.MinDistance), MaxDistance(o.MaxDistance),
 			  _RuntimeHandle(kInvalidSound) // never copy runtime handle
