@@ -6,6 +6,7 @@
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Entity.h"
 #include "Blu/Scene/Scene.h"
+#include "Blu/Rendering/GpuParticleSystem.h"
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
@@ -207,6 +208,8 @@ namespace Azure
 				{
 					zh.Health -= proj.Damage;
 					hit = true;
+					// Impact spark burst at the hit point.
+					Blu::GpuParticleSystem::Get().Emit(t.Translation, 16, glm::vec3(0.0f, 1.5f, 0.0f), 4.0f, 0.5f, 0.09f, 0.0f);
 					break;
 				}
 			}
@@ -409,6 +412,13 @@ namespace Azure
 
 		// Drive the first-person camera after movement so it tracks this frame's position.
 		UpdateFirstPersonCamera();
+
+		// Ambient embers drifting ahead of the player — atmosphere + a live particle source.
+		{
+			glm::vec3 fwd = LookForward();
+			glm::vec3 base = GetTransform().Translation + glm::vec3(0.0f, 1.0f, 0.0f) + fwd * 4.0f;
+			Blu::GpuParticleSystem::Get().Emit(base, 2, glm::vec3(0.0f, 0.4f, 0.0f), 1.2f, 2.5f, 0.06f, 0.0f);
+		}
 
 		// Weapon: fire/reload, then advance live projectiles and resolve hits.
 		UpdateWeapon(dt);

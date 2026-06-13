@@ -656,6 +656,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Frustum.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\GpuParticleSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\LightBufferData.h" />
@@ -773,6 +774,7 @@
     <ClCompile Include="engine\src\Blu\Rendering\DeferredRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\GpuParticleSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\LightBufferData.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />

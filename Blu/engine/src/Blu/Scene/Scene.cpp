@@ -3,6 +3,7 @@
 #include "Blu/Physics/Physics3D.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Rendering/Renderer3D.h"
+#include "Blu/Rendering/GpuParticleSystem.h"
 #include "Blu/Rendering/Material.h"
 #include "Blu/Rendering/CascadedShadowMap.h"
 #include "Blu/Rendering/PostProcess.h"
@@ -1878,6 +1879,7 @@ namespace Blu
 			m_Skybox->Render(camera.GetViewMatrix(), camera.GetProjectionMatrix(), sunDir, m_ElapsedTime);
 		}
 
+		GpuParticleSystem::Get().Render();
 		Renderer3D::EndScene();
 	}
 
@@ -1964,6 +1966,7 @@ namespace Blu
 			m_Skybox->Render(camView, camera.GetProjectionMatrix(), sunDir, m_ElapsedTime);
 		}
 
+		GpuParticleSystem::Get().Render();
 		Renderer3D::EndScene();
 	}
 
@@ -2195,6 +2198,8 @@ namespace Blu
 	{
 		m_ElapsedTime += (float)deltaTime;
 		float dt = (float)deltaTime;
+
+		GpuParticleSystem::Get().OnUpdate(dt); // advance instanced particle sim once per frame
 
 		// Animate skeletal meshes
 		{
