@@ -1,6 +1,7 @@
 #pragma once
 #include "Blu/GameFramework/ACharacter.h"
 #include "Blu/Core/InputMap.h"
+#include "Blu/Core/UUID.h"
 
 namespace Blu { class Entity; }
 
@@ -19,19 +20,18 @@ namespace Azure
 
 	private:
 		void ResetMouseLookState();
-		void FaceMovementDirection(const glm::vec3& moveDir, float dt);
 		void UpdateStats(float dt, bool wantsSprint, bool isMoving, float& outSpeedScale);
+		void UpdateFirstPersonCamera();   // drives the primary camera from yaw/pitch at eye height
 		void TryInteract();
 		bool TryPickupOverlap();
 		bool ApplyPickup(Blu::Entity pickupEntity);
 
-		float m_Yaw       = 0.0f;
-		float m_Pitch     = 0.0f;
+		float m_Yaw        = 0.0f;   // degrees, look yaw (body follows)
+		float m_Pitch      = 0.0f;   // degrees, look pitch (camera only)
+		float m_EyeHeight  = 1.6f;   // metres above the pawn origin
+		Blu::UUID m_CameraUUID = Blu::UUID(0); // primary camera the pawn drives
 		float m_PrevMouseX = 0.0f;
 		float m_PrevMouseY = 0.0f;
 		bool  m_FirstMouse = true;
-		bool  m_InteractHeld = false;
-		float m_TickAccum  = 0.0f;
-		float m_TotalTime  = 0.0f;
 	};
 }

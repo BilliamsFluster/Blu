@@ -6,7 +6,9 @@
 #include "Blu/Scene/Entity.h"
 #include "Blu/Scene/Scene.h"
 #include <glm/gtc/constants.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -18,27 +20,32 @@ namespace Azure
 		ACharacter::BeginPlay();  // auto-adds CharacterControllerComponent
 		if (!HasComponent<Blu::PlayerStatsComponent>())
 			AddComponent<Blu::PlayerStatsComponent>();
-		if (HasComponent<Blu::SpringArmComponent>())
-			GetComponent<Blu::SpringArmComponent>().InheritYaw = false;
 		SetPlayerControlled(true);
 		SetupPlayerInput(Blu::InputMap::Get());
+
+		// Drop any third-person spring arm so Scene::UpdateSpringArmCameras doesn't fight
+		// the first-person camera we drive below.
+		if (HasComponent<Blu::SpringArmComponent>())
+			RemoveComponent<Blu::SpringArmComponent>();
+
+		// First-person camera: take ownership of the scene's primary camera and drive it
+		// from the pawn each frame (eye height + yaw/pitch). No third-person spring arm.
+		m_Yaw   = glm::degrees(GetTransform().Rotation.y);
+		m_Pitch = 0.0f;
+		if (Blu::Scene* scene = GetScene())
+		{
+			Blu::Entity cam = scene->EnsurePrimaryCamera();
+			if (cam)
+				m_CameraUUID = cam.GetUUID();
+		}
 		ResetMouseLookState();
-		BLU_CORE_INFO("PlayerCharacter::BeginPlay — actor live, input wired");
+		BLU_CORE_INFO("PlayerCharacter::BeginPlay — first-person, input wired");
 	}
 
 	void PlayerCharacter::OnPossessed()
 	{
-		if (HasComponent<Blu::SpringArmComponent>())
-		{
-			auto& arm = GetComponent<Blu::SpringArmComponent>();
-			m_Yaw = arm.Yaw;
-			m_Pitch = arm.Pitch;
-		}
-		else
-		{
-			m_Yaw = glm::degrees(GetTransform().Rotation.y);
-			m_Pitch = glm::degrees(GetTransform().Rotation.x);
-		}
+		m_Yaw = glm::degrees(GetTransform().Rotation.y);
+		m_Pitch = 0.0f;
 		ResetMouseLookState();
 	}
 
@@ -64,17 +71,33 @@ namespace Azure
 		m_FirstMouse = true;
 	}
 
-	void PlayerCharacter::FaceMovementDirection(const glm::vec3& moveDir, float dt)
+	void PlayerCharacter::UpdateFirstPersonCamera()
 	{
-		if (glm::length(moveDir) <= 0.001f)
+		Blu::Scene* scene = GetScene();
+		if (!scene)
 			return;
 
-		auto& transform = GetTransform();
-		float targetYaw = std::atan2(moveDir.x, -moveDir.z);
-		float currentYaw = transform.Rotation.y;
-		float yawDelta = std::remainder(targetYaw - currentYaw, glm::two_pi<float>());
-		float alpha = dt > 0.0f ? 1.0f - std::exp(-12.0f * dt) : 1.0f;
-		transform.Rotation.y = std::remainder(currentYaw + yawDelta * alpha, glm::two_pi<float>());
+		Blu::Entity cam = (Blu::UUID)m_CameraUUID != 0 ? scene->GetEntityByUUID(m_CameraUUID) : Blu::Entity{};
+		if (!cam)
+		{
+			cam = scene->EnsurePrimaryCamera();
+			if (cam) m_CameraUUID = cam.GetUUID();
+		}
+		if (!cam || !cam.HasComponent<Blu::TransformComponent>())
+			return;
+
+		const float yawRad   = glm::radians(m_Yaw);
+		const float pitchRad = glm::radians(m_Pitch);
+		// Forward matching the engine convention (yaw 0 looks down world -Z).
+		glm::vec3 forward = glm::normalize(glm::vec3(
+			std::cos(pitchRad) * std::sin(yawRad),
+			std::sin(pitchRad),
+			-std::cos(pitchRad) * std::cos(yawRad)));
+		glm::vec3 up = (std::abs(forward.y) > 0.98f) ? glm::vec3(0.0f, 0.0f, -1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+
+		auto& camXform = cam.GetComponent<Blu::TransformComponent>();
+		camXform.Translation = GetTransform().Translation + glm::vec3(0.0f, m_EyeHeight, 0.0f);
+		camXform.Rotation = glm::eulerAngles(glm::quatLookAtRH(forward, up));
 	}
 
 	void PlayerCharacter::UpdateStats(float dt, bool wantsSprint, bool isMoving, float& outSpeedScale)
@@ -210,40 +233,27 @@ namespace Azure
 			return;
 		}
 
-		// ── Mouse look ────────────────────────────────────────────────────────
-		const float kSens = 0.15f;
+		// ── Mouse look (first-person) ─────────────────────────────────────────
+		const float kSens = 0.12f;
 		auto [mouseX, mouseY] = Blu::Input::GetMousePosition();
-
 		if (m_FirstMouse)
 		{
 			m_PrevMouseX = mouseX;
 			m_PrevMouseY = mouseY;
 			m_FirstMouse = false;
 		}
-
 		float dx = mouseX - m_PrevMouseX;
 		float dy = mouseY - m_PrevMouseY;
 		m_PrevMouseX = mouseX;
 		m_PrevMouseY = mouseY;
 
-		if (HasComponent<Blu::SpringArmComponent>())
-		{
-			auto& arm = GetComponent<Blu::SpringArmComponent>();
-			m_Yaw = arm.Yaw;
-			m_Pitch = arm.Pitch;
-		}
+		m_Yaw  += dx * kSens;
+		m_Pitch = glm::clamp(m_Pitch - dy * kSens, -89.0f, 89.0f);
 
-		m_Yaw   += dx * kSens;
-		m_Pitch  = glm::clamp(m_Pitch - dy * kSens, -80.0f, 20.0f);
+		// Body yaw follows the look direction; pitch tilts only the camera.
+		GetTransform().Rotation.y = glm::radians(m_Yaw);
 
-		if (HasComponent<Blu::SpringArmComponent>())
-		{
-			auto& arm  = GetComponent<Blu::SpringArmComponent>();
-			arm.Yaw   = m_Yaw;
-			arm.Pitch = m_Pitch;
-		}
-
-		// ── WASD movement (camera-relative) ───────────────────────────────────
+		// ── WASD movement (view-relative) ─────────────────────────────────────
 		float fwd   = Blu::InputMap::Get().GetAxis("MoveForward");
 		float right = Blu::InputMap::Get().GetAxis("MoveRight");
 		const bool isMoving = std::abs(fwd) > 0.001f || std::abs(right) > 0.001f;
@@ -252,28 +262,17 @@ namespace Azure
 
 		if (isMoving)
 		{
-			float controlYaw = m_Yaw;
-			if (HasComponent<Blu::SpringArmComponent>())
-			{
-				auto& arm = GetComponent<Blu::SpringArmComponent>();
-				if (arm.InheritYaw)
-					controlYaw += glm::degrees(GetTransform().Rotation.y);
-			}
-
-			// Match the engine camera convention: yaw 0 looks down world -Z.
-			float yawRad  = glm::radians(controlYaw);
+			const float yawRad = glm::radians(m_Yaw);
 			glm::vec3 camFwd   = { std::sin(yawRad), 0.0f, -std::cos(yawRad) };
 			glm::vec3 camRight = { std::cos(yawRad), 0.0f,  std::sin(yawRad) };
-
 			glm::vec3 moveDir = camFwd * fwd + camRight * right;
 			if (glm::length(moveDir) > 0.001f)
 			{
 				moveDir = glm::normalize(moveDir);
-
 				if (speedScale != 1.0f && HasComponent<Blu::CharacterControllerComponent>())
 				{
 					auto& ccc = GetComponent<Blu::CharacterControllerComponent>();
-					float saved  = ccc.MoveSpeed;
+					float saved = ccc.MoveSpeed;
 					ccc.MoveSpeed *= speedScale;
 					Move(moveDir);
 					ccc.MoveSpeed = saved;
@@ -282,8 +281,6 @@ namespace Azure
 				{
 					Move(moveDir);
 				}
-
-				FaceMovementDirection(moveDir, dt);
 			}
 		}
 
@@ -291,12 +288,11 @@ namespace Azure
 		if (Blu::InputMap::Get().IsActionJustPressed("Jump"))
 			Jump();
 
-		TryPickupOverlap();
+		// Drive the first-person camera after movement so it tracks this frame's position.
+		UpdateFirstPersonCamera();
 
-		const bool interactPressed = Blu::InputMap::Get().IsActionJustPressed("Interact")
-			|| (Blu::Input::IsKeyPressed(BLU_KEY_E) && !m_InteractHeld);
-		m_InteractHeld = Blu::Input::IsKeyPressed(BLU_KEY_E);
-		if (interactPressed)
+		TryPickupOverlap();
+		if (Blu::InputMap::Get().IsActionJustPressed("Interact"))
 			TryInteract();
 	}
 }

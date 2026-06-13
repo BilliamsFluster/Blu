@@ -1,0 +1,320 @@
+SceneVersion: 1
+Scene: assets/scenes/ZombieDemo.blu
+GameMode: Azure::ZombieGameMode
+RenderSettings:
+  UseShadows: true
+  UsePostProcess: true
+  UseSkybox: true
+  UseTimeOfDay: false
+  Sky_Turbidity: 3.5
+  Sky_SkyExposure: 0.0199999996
+  Sky_GroundColor: [0.300000012, 0.290000004, 0.270000011]
+  Sky_SunColor: [1, 0.920000017, 0.800000012]
+  Sky_SunSize: 0.999499977
+  Sky_SunStrength: 6
+  Sky_CloudColor: [0.800000012, 0.819999993, 0.870000005]
+  Sky_CloudCoverage: 0.550000012
+  Sky_CloudDensity: 0.550000012
+  Sky_CloudSoftness: 0.600000024
+  Sky_CloudHeight: 600
+  Sky_CloudScale: 900
+  Sky_CloudWindDirection: [1, 0.349999994]
+  Sky_CloudScrollSpeed: 0.0199999996
+  Sky_CloudShadowing: 0.5
+  Sky_CloudHorizonFade: 0.219999999
+  PP_EnableBloom: true
+  PP_BloomThreshold: 1
+  PP_BloomStrength: 0.0500000007
+  PP_EnableFXAA: true
+  PP_PreviewMode: 0
+  PP_EnableSSAO: true
+  PP_SSAORadius: 0.5
+  PP_SSAOBias: 0.0250000004
+  PP_SSAOPower: 1.5
+  PP_SSAOSamples: 16
+  PP_SSAOStrength: 1
+  ToD_NormalizedTime: 0.5
+  ToD_AutoAdvance: false
+  ToD_DayDuration: 120
+  ToD_SunAzimuth: 45
+  ToD_SunMaxStrength: 10
+  ToD_SunNoonTurbidity: 2.20000005
+  ToD_SunHazeTurbidity: 4.5
+  Fog_Enabled: true
+  Fog_Color: [0.560000002, 0.589999974, 0.649999976]
+  Fog_Density: 0.0260000002
+  Fog_HeightStart: 0
+  Fog_HeightDensity: 0.0500000007
+  Fog_AerialColor: [0.660000026, 0.730000019, 0.850000024]
+  Fog_AerialStrength: 0.550000012
+Entities:
+  - Entity: 2000000000000000010
+    TagComponent:
+      Tag: GameplayHUD
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    UIRootComponent:
+      DocumentPath: assets/ui/GameplayHUD.bluui
+      Visible: true
+      Scale: 1
+  - Entity: 2000000000000000004
+    TagComponent:
+      Tag: PlayerCamera
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 70
+      Primary: true
+      FixedAspectRatio: false
+    TransformComponent:
+      Translation: [0, 2.5, 8]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000003
+    TagComponent:
+      Tag: PlayerCharacter
+    ActorComponent:
+      ClassID: Azure::PlayerCharacter
+    TransformComponent:
+      Translation: [0, 1, 8]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.550000012
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 5
+      JumpImpulse: 7
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+    PlayerStatsComponent:
+      Health: 100
+      MaxHealth: 100
+      Stamina: 100
+      MaxStamina: 100
+      StaminaRegenRate: 20
+      SprintStaminaDrain: 25
+  - Entity: 2000000000000000020
+    TagComponent:
+      Tag: Zombie_A
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [-4, 1, -8]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.850000024, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 1.70000005, 0.600000024]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.349999994, 0.560000002, 0.300000012]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.699999988
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.0500000007, 0.150000006, 0.0500000007]
+      PBR_EmissiveStrength: 0.150000006
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.550000012
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4000001
+      JumpImpulse: 0
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+  - Entity: 2000000000000000021
+    TagComponent:
+      Tag: Zombie_B
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [4, 1, -10]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.850000024, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 1.70000005, 0.600000024]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.349999994, 0.560000002, 0.300000012]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.699999988
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.0500000007, 0.150000006, 0.0500000007]
+      PBR_EmissiveStrength: 0.150000006
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.550000012
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4000001
+      JumpImpulse: 0
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+  - Entity: 2000000000000000022
+    TagComponent:
+      Tag: Zombie_C
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [0, 1, -14]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.850000024, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.600000024, 1.70000005, 0.600000024]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.349999994, 0.560000002, 0.300000012]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.699999988
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.0500000007, 0.150000006, 0.0500000007]
+      PBR_EmissiveStrength: 0.150000006
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.550000012
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4000001
+      JumpImpulse: 0
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+  - Entity: 2000000000000000030
+    TagComponent:
+      Tag: Pillar_A
+    TransformComponent:
+      Translation: [-6, 1.5, -3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 3, 1]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.400000006, 0.400000006, 0.430000007]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.100000001
+      PBR_Roughness: 0.800000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+  - Entity: 2000000000000000031
+    TagComponent:
+      Tag: Pillar_B
+    TransformComponent:
+      Translation: [6, 1.5, -5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 3, 1]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.400000006, 0.400000006, 0.430000007]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.100000001
+      PBR_Roughness: 0.800000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+  - Entity: 2000000000000000002
+    TagComponent:
+      Tag: Ground
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 0
+      PBR_AlbedoColor: [0.379999995, 0.359999985, 0.330000013]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.899999976
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TerrainComponent:
+      GridWidth: 40
+      GridHeight: 40
+      CellSize: 1
+      HeightScale: 0
+      HeightmapPath: ""
+    Rigidbody3DComponent:
+      BodyType: 0
+      GravityScale: 1
+      LinearDamping: 0.0500000007
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [20, 0.5, 20]
+      Offset: [0, -0.5, 0]
+      Friction: 0.800000012
+      Restitution: 0
+      Density: 1000
+  - Entity: 2000000000000000001
+    TagComponent:
+      Tag: Sun
+    DirectionalLightComponent:
+      Direction: [0.259160548, -0.863868415, 0.431934208]
+      Ambient: [0.0599999987, 0.0700000003, 0.0900000036]
+      Diffuse: [1, 0.939999998, 0.829999983]
+      Specular: [0.600000024, 0.600000024, 0.600000024]
+      Intensity: 1.10000002
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [-0.785398185, 0.52359879, 0]
+      Scale: [1, 1, 1]
