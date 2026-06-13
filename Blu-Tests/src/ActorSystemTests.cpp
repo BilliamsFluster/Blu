@@ -10,6 +10,7 @@
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Rendering/AssetManager.h"
 #include "Blu/Rendering/StaticMeshAsset.h"
+#include "Blu/Rendering/MaterialAsset.h"
 #include "Blu/Rendering/MaterialSystem.h"
 #include "Blu/Rendering/MaterialGraph.h"
 #include "Blu/Rendering/LightBufferData.h"
@@ -431,6 +432,52 @@ namespace
 		Require(arena.GetBytesUsed() == 0 && arena.GetHighWaterMark() >= sizeof(TestValue), "frame arena reset diagnostics failed");
 	}
 
+	void TestMaterialAssetPersistence()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsMaterialAsset-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		// Author a material and persist it as .blumat.
+		Blu::MaterialAsset material("project://assets/rusty.blumat");
+		material.GetProperties().Metallic = 0.9f;
+		material.GetProperties().Roughness = 0.2f;
+		material.GetProperties().AlbedoColor = glm::vec4(0.8f, 0.1f, 0.1f, 1.0f);
+		material.SetNormalTexture(Blu::AssetHandle(4242));
+		Require(material.SaveToFile("project://assets/rusty.blumat"), "material asset save failed");
+		Require(fileSystem.Exists("project://assets/rusty.blumat"), ".blumat file was not written");
+
+		// Round-trip through a fresh asset.
+		Blu::MaterialAsset reloaded;
+		Require(reloaded.LoadFromFile("project://assets/rusty.blumat"), "material asset load failed");
+		Require(std::abs(reloaded.GetProperties().Metallic - 0.9f) < 0.001f, "metallic did not round-trip");
+		Require(std::abs(reloaded.GetProperties().Roughness - 0.2f) < 0.001f, "roughness did not round-trip");
+		Require(std::abs(reloaded.GetProperties().AlbedoColor.r - 0.8f) < 0.001f, "albedo did not round-trip");
+		Require((uint64_t)reloaded.GetNormalTexture() == 4242, "normal texture handle did not round-trip");
+
+		// AssetManager classifies and loads .blumat as a MaterialAsset.
+		const Blu::AssetHandle handle = assets.Import("project://assets/rusty.blumat");
+		const Blu::AssetMetadata* metadata = assets.FindMetadata(handle);
+		Require(metadata != nullptr && metadata->Type == Blu::AssetType::Material, ".blumat was not classified as a Material asset");
+		auto loaded = assets.LoadMaterial(handle);
+		Require(loaded != nullptr, "AssetManager::LoadMaterial returned null for a .blumat handle");
+		Require(std::abs(loaded->GetProperties().Metallic - 0.9f) < 0.001f, "AssetManager-loaded material lost its properties");
+		Require((uint64_t)loaded->GetNormalTexture() == 4242, "AssetManager-loaded material lost its texture handle");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestMaterialResolver()
 	{
 		auto& resolver = Blu::MaterialResolver::Get();
@@ -688,6 +735,7 @@ int main()
 		TestAssetHandleMigrationAcrossComponents();
 		TestLifetimeUtilities();
 		TestMaterialResolver();
+		TestMaterialAssetPersistence();
 		TestMaterialGraphCompiler();
 		TestSceneRenderPipelinePlan();
 		TestSharedLightBufferPacking();

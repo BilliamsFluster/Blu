@@ -9,6 +9,7 @@
 namespace Blu
 {
 	struct Model;
+	class MaterialAsset;
 
 	struct AssetMetadata
 	{
@@ -42,6 +43,11 @@ namespace Blu
 		// for a non-mesh/stale handle or when the source is missing. Runtime-only —
 		// requires a live graphics device.
 		Shared<Model> LoadModel(AssetHandle handle);
+
+		// Resolves a Material handle to a loaded MaterialAsset (reads the .blumat).
+		// Pure data — no graphics device required. Returns nullptr for a non-material
+		// or stale handle.
+		Shared<MaterialAsset> LoadMaterial(AssetHandle handle);
 		bool Save(AssetHandle handle);
 		void Release(AssetHandle handle);
 		const AssetMetadata* FindMetadata(AssetHandle handle) const;

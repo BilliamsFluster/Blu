@@ -2,6 +2,7 @@
 #include "AssetManager.h"
 #include "AssetMeta.h"
 #include "StaticMeshAsset.h"
+#include "MaterialAsset.h"
 #include "Mesh.h"
 #include "ModelLoader.h"
 #include "Blu/Core/Log.h"
@@ -168,6 +169,13 @@ namespace Blu
 		case AssetType::StaticMesh:
 			asset = std::make_shared<StaticMeshAsset>(metadata->VirtualPath);
 			break;
+		case AssetType::Material:
+		{
+			auto materialAsset = std::make_shared<MaterialAsset>(metadata->VirtualPath);
+			materialAsset->LoadFromFile(metadata->VirtualPath); // .blumat is pure data (no GPU)
+			asset = materialAsset;
+			break;
+		}
 		default:
 			asset = std::make_shared<Asset>(metadata->Type, metadata->VirtualPath);
 			break;
@@ -198,6 +206,11 @@ namespace Blu
 			staticMesh->LoadedModel = ModelLoader::Load(resolved.string());
 		}
 		return staticMesh->LoadedModel;
+	}
+
+	Shared<MaterialAsset> AssetManager::LoadMaterial(AssetHandle handle)
+	{
+		return std::dynamic_pointer_cast<MaterialAsset>(Load(handle));
 	}
 
 	bool AssetManager::Save(AssetHandle handle)
