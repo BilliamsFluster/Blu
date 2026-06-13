@@ -9,6 +9,7 @@
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Rendering/FrameBuffer.h"
 #include "Blu/Rendering/RenderCommand.h"
+#include "Blu/Rendering/Renderer3D.h"
 #include "Blu/Core/Application.h"
 #include "Blu/Platform/DirectX11/D3D11FrameBuffer.h"
 
@@ -20,10 +21,10 @@
 
 namespace Blu
 {
-    ScreenshotLayer::ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height)
+    ScreenshotLayer::ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height, bool enableFog)
         : Layer("ScreenshotLayer"),
           m_ScenePath(std::move(scenePath)), m_OutputPath(std::move(outputPath)),
-          m_Width(width ? width : 1280), m_Height(height ? height : 720)
+          m_Width(width ? width : 1280), m_Height(height ? height : 720), m_EnableFog(enableFog)
     {
     }
 
@@ -42,6 +43,20 @@ namespace Blu
             std::cerr << "[screenshot] failed to load scene: " << m_ScenePath << std::endl;
             m_Scene = nullptr;
             return;
+        }
+
+        // Optional atmospheric fog preset for verifying the fog path (scenes ship with
+        // fog disabled). Tuned for a S.T.A.L.K.E.R.-ish hazy distance.
+        if (m_EnableFog)
+        {
+            FogSettings& fog = m_Scene->GetFog();
+            fog.Enabled       = true;
+            fog.Color         = { 0.62f, 0.66f, 0.72f };
+            fog.Density       = 0.035f;
+            fog.HeightStart   = 0.0f;
+            fog.HeightDensity = 0.06f;
+            fog.AerialColor   = { 0.70f, 0.80f, 0.92f };
+            fog.AerialStrength = 0.85f;
         }
 
         // Frame the scene from a sensible default viewpoint.

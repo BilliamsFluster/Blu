@@ -21,6 +21,9 @@ namespace Blu
 			// renders one frame of a scene to a PNG and exits — used to verify rendering
 			// changes from the command line. Falls through to the normal editor otherwise.
 			const auto& args = Application::GetCommandLineArgs();
+			bool enableFog = false;
+			for (const auto& a : args)
+				if (a == "--fog") enableFog = true;
 			for (size_t i = 0; i < args.size(); ++i)
 			{
 				if (args[i] == "--screenshot" && i + 2 < args.size())
@@ -31,7 +34,7 @@ namespace Blu
 						try { w = (uint32_t)std::stoul(args[i + 3]); h = (uint32_t)std::stoul(args[i + 4]); }
 						catch (...) {}
 					}
-					PushLayer(std::make_shared<ScreenshotLayer>(args[i + 1], args[i + 2], w, h));
+					PushLayer(std::make_shared<ScreenshotLayer>(args[i + 1], args[i + 2], w, h, enableFog));
 					return;
 				}
 			}

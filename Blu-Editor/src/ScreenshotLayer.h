@@ -19,7 +19,7 @@ namespace Blu
     class ScreenshotLayer : public Blu::Layers::Layer
     {
     public:
-        ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height);
+        ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height, bool enableFog = false);
 
         void OnAttach() override;
         void OnUpdate(Blu::Timestep deltaTime) override;
@@ -29,6 +29,7 @@ namespace Blu
         std::string m_OutputPath;
         uint32_t    m_Width;
         uint32_t    m_Height;
+        bool        m_EnableFog;
 
         Shared<Scene>       m_Scene;
         Shared<FrameBuffer> m_FrameBuffer;
