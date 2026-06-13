@@ -7,6 +7,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "Blu/Rendering/ParticleSystem.h"
 #include "Blu/Core/UUID.h"
+#include "Blu/Rendering/Asset.h"
 #include "Blu/Rendering/Material.h"
 #include "Blu/Rendering/Mesh.h"
 #include "Blu/Audio/AudioEngine.h"
@@ -127,8 +128,9 @@ namespace Blu
 
 		Shared<class Mesh> MeshData;
 		Shared<class Material> MaterialInstance;
-		Shared<Model> ModelAsset;
-		std::string FilePath;
+		Shared<Model> ModelAsset;       // resolved runtime cache (rendered)
+		AssetHandle ModelHandle = AssetHandle(0); // stable source reference; resolves ModelAsset
+		std::string FilePath;           // deprecated fallback / human-readable source path
 		PrimitiveType Primitive = PrimitiveType::None;
 
 		MeshComponent() = default;

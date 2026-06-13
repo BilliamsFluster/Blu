@@ -76,18 +76,26 @@ namespace Blu
 		// mint a fresh UUID and write the sidecar so future imports recover it.
 		AssetMeta meta;
 		const bool hasMeta = AssetMetaIO::Read(normalizedPath, meta);
+		const bool minted = !(hasMeta && meta.IsValid());
 
 		AssetMetadata metadata;
-		metadata.Handle = (hasMeta && meta.IsValid()) ? meta.Handle : AssetHandle();
+		metadata.Handle = minted ? AssetHandle() : meta.Handle;
 		metadata.Type = InferAssetType(normalizedPath);
 		metadata.VirtualPath = normalizedPath;
 		metadata.SourcePath = normalizedPath;
 
-		meta.Handle = metadata.Handle;
-		meta.Type = metadata.Type;
-		meta.SourcePath = normalizedPath;
-		AssetMetaIO::StampSourceInfo(normalizedPath, meta);
-		AssetMetaIO::Write(normalizedPath, meta); // best-effort; tolerated if unwritable
+		// Only (re)write the sidecar when minting a fresh handle, so an existing .meta —
+		// including user-tuned import settings — is preserved across ordinary imports
+		// (e.g. when a scene load registers the assets it references).
+		if (minted)
+		{
+			meta = AssetMeta{};
+			meta.Handle = metadata.Handle;
+			meta.Type = metadata.Type;
+			meta.SourcePath = normalizedPath;
+			AssetMetaIO::StampSourceInfo(normalizedPath, meta);
+			AssetMetaIO::Write(normalizedPath, meta); // best-effort; tolerated if unwritable
+		}
 
 		m_PathIndex[normalizedPath] = metadata.Handle;
 		m_Metadata[metadata.Handle] = metadata;

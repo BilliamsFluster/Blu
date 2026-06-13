@@ -312,6 +312,51 @@ namespace
 		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
+	void TestMeshComponentModelHandleMigration()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsMeshHandle-" + std::to_string((uint64_t)Blu::UUID()));
+		const std::filesystem::path scenePath = testDirectory / "MeshHandle.blu";
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/box.obj", "o box\n"), "mesh source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		// A mesh entity referencing a source by path, with NO loaded geometry (headless:
+		// serialization must not require a GPU). The serializer should mint + persist a
+		// stable ModelHandle.
+		auto scene = std::make_shared<Blu::Scene>();
+		Blu::Entity entity = scene->CreateEntity("MeshEntity");
+		auto& mesh = entity.AddComponent<Blu::MeshComponent>();
+		mesh.FilePath = "project://assets/box.obj";
+
+		Blu::SceneSerializer serializer(scene);
+		serializer.Serialize(scenePath.string());
+
+		std::ifstream serialized(scenePath);
+		std::stringstream text;
+		text << serialized.rdbuf();
+		const std::string yaml = text.str();
+		Require(yaml.find("ModelHandle:") != std::string::npos, "mesh component did not persist a ModelHandle");
+		Require(yaml.find("box.obj") != std::string::npos, "mesh component did not persist its source path");
+
+		const auto& meshAfter = entity.GetComponent<Blu::MeshComponent>();
+		Require((uint64_t)meshAfter.ModelHandle != 0, "serializer did not mint a model handle");
+		Require((uint64_t)meshAfter.ModelHandle == (uint64_t)assets.Import("project://assets/box.obj"),
+			"persisted mesh handle is not the stable asset handle for its source");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestLifetimeUtilities()
 	{
 		struct TestSlot;
@@ -588,6 +633,7 @@ int main()
 		TestMountedFilesystemAndAssetRegistry();
 		TestAssetMetaStableHandles();
 		TestStaticMeshAssetTyping();
+		TestMeshComponentModelHandleMigration();
 		TestLifetimeUtilities();
 		TestMaterialResolver();
 		TestMaterialGraphCompiler();

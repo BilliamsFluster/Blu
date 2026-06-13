@@ -8,6 +8,7 @@
 #include "yaml-cpp/yaml.h"
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Rendering/ModelLoader.h"
+#include "Blu/Rendering/AssetManager.h"
 #include "Blu/Rendering/Skybox.h"
 #include "Blu/Rendering/TimeOfDay.h"
 #include "Blu/Rendering/Renderer3D.h"
@@ -468,6 +469,12 @@ namespace Blu
 
 			auto& mc = entity.GetComponent<MeshComponent>();
 			out << YAML::Key << "FilePath" << YAML::Value << SerializeAssetPath(mc.FilePath);
+			// Stable asset handle: recover/mint a UUID for the source so the scene carries a
+			// handle reference (.meta keeps it stable). Render path still uses ModelAsset.
+			if ((uint64_t)mc.ModelHandle == 0 && !mc.FilePath.empty())
+				mc.ModelHandle = AssetManager::Get().Import(mc.FilePath);
+			if ((uint64_t)mc.ModelHandle != 0)
+				out << YAML::Key << "ModelHandle" << YAML::Value << (uint64_t)mc.ModelHandle;
 			out << YAML::Key << "PrimitiveType" << YAML::Value << static_cast<int>(mc.Primitive);
 
 			if (mc.MaterialInstance)
@@ -1358,8 +1365,16 @@ namespace Blu
 						std::string rawPath = meshComponent["FilePath"].as<std::string>();
 						mc.FilePath = NormalizeLoadedAssetPath(rawPath, sceneFilePath, "MeshComponent.FilePath");
 						if (!mc.FilePath.empty())
+						{
+							// Register/recover the stable handle for this source (reads .meta),
+							// then load geometry via the existing path (render path unchanged).
+							mc.ModelHandle = AssetManager::Get().Import(mc.FilePath);
 							mc.ModelAsset = ModelLoader::Load(ResolveAssetPathForLoad(mc.FilePath, sceneFilePath, "MeshComponent.FilePath").string());
+						}
 					}
+					// Forward-compat: honor a stored handle even if the source path was absent.
+					if ((uint64_t)mc.ModelHandle == 0 && meshComponent["ModelHandle"])
+						mc.ModelHandle = AssetHandle(meshComponent["ModelHandle"].as<uint64_t>(0));
 					if (meshComponent["PrimitiveType"])
 						mc.Primitive = static_cast<MeshComponent::PrimitiveType>(meshComponent["PrimitiveType"].as<int>());
 
