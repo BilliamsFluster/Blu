@@ -544,6 +544,13 @@ namespace Blu
 		{
 			m_PendingEntityPick = false;
 
+			// Skip the pick when the click landed on the transform gizmo. A gizmo handle
+			// extends past the object (often over empty space or another entity), so using
+			// or even hovering it must NOT deselect/reselect. ImGuizmo's IsOver/IsUsing
+			// reflect the prior frame's draw — i.e. the gizmo's position at click time
+			// (this consume runs in OnUpdate, before OnGuiDraw redraws the gizmo).
+			const bool gizmoActive = ImGuizmo::IsOver() || ImGuizmo::IsUsing();
+
 			auto [rawX, rawY] = Input::GetMousePosition();
 			float pickX = rawX - m_ViewportBounds[0].x;
 			float pickY = rawY - m_ViewportBounds[0].y;
@@ -551,7 +558,8 @@ namespace Blu
 			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
 				pickY = (m_ViewportBounds[1].y - m_ViewportBounds[0].y) - pickY;
 
-			if (pickX >= 0.f && pickY >= 0.f &&
+			if (!gizmoActive &&
+				pickX >= 0.f && pickY >= 0.f &&
 				pickX < m_ViewportSize.x && pickY < m_ViewportSize.y)
 			{
 				int entityID = m_FrameBuffer->ReadPixel(1, (int)pickX, (int)pickY);
@@ -3401,6 +3409,7 @@ namespace Blu
 					OnSceneStop();
 				}
 			}
+			break; // was falling through into BLU_KEY_D (duplicate)
 		}
 		case BLU_KEY_D:
 		{
