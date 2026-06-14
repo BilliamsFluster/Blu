@@ -2148,13 +2148,11 @@ namespace Blu
 		float height = 5.0f;
 		UIDrawTitlebar(height);
 
-		// Host the dockspace each frame so editor panels dock (Unreal-style) instead of
-		// free-floating. DrawDockspace() builds the fullscreen "Blu Dockspace" window +
-		// ImGui::DockSpace; panels' subsequent ImGui::Begin calls snap into it (positions
-		// restored from imgui.ini, or from ResetEditorLayout below on first run/reset).
-		if (auto imguiLayer = Blu::Application::Get().GetImGuiLayer())
-			imguiLayer->DrawDockspace();
-
+		// NOTE: the dockspace host window ("Blu Dockspace" + ImGui::DockSpace) is created
+		// once per frame in Application::Run() (before every layer's OnGuiDraw). Do NOT call
+		// DrawDockspace() again here — a second DockSpace() with the same ID in one frame
+		// trips an ImGui assertion. Panels' ImGui::Begin calls snap into that dockspace;
+		// the default docked layout is built by ResetEditorLayout() below.
 		if (m_ResetEditorLayout)
 		{
 			ResetEditorLayout();
