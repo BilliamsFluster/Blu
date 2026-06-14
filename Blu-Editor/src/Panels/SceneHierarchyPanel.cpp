@@ -399,7 +399,12 @@ namespace Blu
 			std::string selectedEntityName = std::format("Delete {}", m_SelectedEntity.GetComponent<TagComponent>().Tag.c_str());
 			if (ImGui::MenuItem(selectedEntityName.c_str()))
 			{
-				entityDeleted = true;
+				// Prefer the host's confirmation modal; fall back to immediate delete
+				// if no callback is wired (e.g. panel used standalone).
+				if (m_RequestDeleteCallback)
+					m_RequestDeleteCallback(entity);
+				else
+					entityDeleted = true;
 			}
 			ImGui::EndPopup();
 		}

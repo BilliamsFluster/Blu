@@ -64,6 +64,8 @@ namespace Blu
 		void QueueStaticCollisionPrompt(Entity entity);
 		void DrawStaticCollisionImportPrompt();
 		void ProcessPendingSceneLoad(); // honour SceneManager scene transitions during Play/Eject
+		void QueueEntityDeleteConfirmation(Entity entity); // ask before destroying (Delete/Backspace + panel)
+		void DrawDeleteEntityConfirmation();
 
 		Blu::OrthographicCameraController m_CameraController;
 		Blu::EditorCamera m_EditorCamera;
@@ -113,7 +115,12 @@ namespace Blu
 		bool m_ShowCameraDebug = true;
 		Entity m_PendingStaticCollisionEntity;
 		std::string m_PendingStaticCollisionModelName;
-		
+
+		// Delete-entity confirmation modal (Delete/Backspace key + hierarchy context menu)
+		bool m_ShowDeleteEntityConfirmation = false;
+		Entity m_PendingDeleteEntity;
+		std::string m_PendingDeleteEntityName;
+
 
 		float translationSnapValue = 0.5f;
 		float rotationSnapValue = 10.0f;

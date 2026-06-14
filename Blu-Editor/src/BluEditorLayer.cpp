@@ -76,6 +76,18 @@ namespace Blu
 		if (!mesh.ModelAsset)
 			BLU_CORE_WARN("BluEditor: failed to import model: {0}", sourcePath.string());
 
+		// Skeletal models would otherwise import as a frozen bind/T-pose: the skinned
+		// draw path needs an AnimatorComponent to produce bone matrices. Auto-attach one
+		// (default ctor: Playing, Loop, clip 0) so rigged characters animate on import.
+		// The Scene also back-fills SkelData on the first tick; set it here for immediacy.
+		if (mesh.ModelAsset && mesh.ModelAsset->HasSkeleton())
+		{
+			auto& anim = modelEntity.AddComponent<AnimatorComponent>();
+			anim.SkelData = mesh.ModelAsset->SkelData;
+			BLU_CORE_INFO("BluEditor: '{0}' is skeletal ({1} clip(s)) — added AnimatorComponent",
+			              sourcePath.stem().string(), mesh.ModelAsset->SkelData->Clips.size());
+		}
+
 		return modelEntity;
 	}
 
@@ -133,6 +145,66 @@ namespace Blu
 				m_ShowStaticCollisionImportPrompt = false;
 				m_PendingStaticCollisionEntity = {};
 				m_PendingStaticCollisionModelName.clear();
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+	}
+
+	void BluEditorLayer::QueueEntityDeleteConfirmation(Entity entity)
+	{
+		if (!entity)
+			return;
+
+		m_PendingDeleteEntity = entity;
+		m_PendingDeleteEntityName = entity.HasComponent<TagComponent>()
+			? entity.GetComponent<TagComponent>().Tag
+			: std::string("Entity");
+		m_ShowDeleteEntityConfirmation = true;
+	}
+
+	void BluEditorLayer::DrawDeleteEntityConfirmation()
+	{
+		if (!m_ShowDeleteEntityConfirmation)
+			return;
+
+		// The pending entity may have been destroyed by another path between queueing
+		// and drawing; bail cleanly if so.
+		if (!m_PendingDeleteEntity)
+		{
+			m_ShowDeleteEntityConfirmation = false;
+			m_PendingDeleteEntityName.clear();
+			return;
+		}
+
+		ImGui::OpenPopup("Delete Entity?");
+		if (ImGui::BeginPopupModal("Delete Entity?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("Delete this entity?");
+			ImGui::TextWrapped("%s", m_PendingDeleteEntityName.c_str());
+			ImGui::Spacing();
+
+			if (ImGui::Button("Delete", ImVec2(110.0f, 0.0f)))
+			{
+				if (m_ActiveScene && m_PendingDeleteEntity)
+				{
+					m_ActiveScene->DestroyEntity(m_PendingDeleteEntity);
+					if (m_SceneHierarchyPanel)
+						m_SceneHierarchyPanel->SetSelectedEntity({});
+				}
+				m_ShowDeleteEntityConfirmation = false;
+				m_PendingDeleteEntity = {};
+				m_PendingDeleteEntityName.clear();
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(90.0f, 0.0f)))
+			{
+				m_ShowDeleteEntityConfirmation = false;
+				m_PendingDeleteEntity = {};
+				m_PendingDeleteEntityName.clear();
 				ImGui::CloseCurrentPopup();
 			}
 
@@ -229,6 +301,12 @@ namespace Blu
 			m_ActorEditorEntity = entity;
 			m_ShowActorEditor = true;
 			m_ResetActorPreviewCamera = true;
+		});
+		// Route the hierarchy panel's "Delete" context-menu item through the same
+		// confirmation modal the Delete/Backspace key uses.
+		m_SceneHierarchyPanel->SetRequestDeleteCallback([this](Entity entity)
+		{
+			QueueEntityDeleteConfirmation(entity);
 		});
 		m_ContentBrowserPanel->SetSaveAllCallback([this]() { SaveCurrentScene(); });
 		m_ContentBrowserPanel->SetImportModelCallback([this](const std::filesystem::path& path)
@@ -2172,6 +2250,7 @@ namespace Blu
 		DrawPlaytestHUD();
 
 		DrawStaticCollisionImportPrompt();
+		DrawDeleteEntityConfirmation();
 
 		// ---- Settings / Preferences ----
 		if (m_ShowSettings)
@@ -3509,16 +3588,17 @@ namespace Blu
 			}
 			break;
 		}
+		case BLU_KEY_BACKSPACE:
 		case BLU_KEY_DELETE:
 		{
-			if (!ImGui::GetIO().WantCaptureKeyboard)
+			// Ask for confirmation instead of deleting immediately. Gate on !typingText
+			// (NOT WantCaptureKeyboard): NavEnableKeyboard makes WantCaptureKeyboard true
+			// whenever the docked Viewport/Outliner is focused, which would block the key.
+			if (!typingText && !m_ShowDeleteEntityConfirmation && m_SceneHierarchyPanel)
 			{
 				Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 				if (selectedEntity)
-				{
-					m_ActiveScene->DestroyEntity(selectedEntity);
-					m_SceneHierarchyPanel->SetSelectedEntity({});
-				}
+					QueueEntityDeleteConfirmation(selectedEntity);
 			}
 			break;
 		}
