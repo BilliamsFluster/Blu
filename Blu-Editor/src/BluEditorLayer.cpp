@@ -3423,6 +3423,13 @@ namespace Blu
 		bool control = Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL) || Input::IsKeyPressed(BLU_KEY_RIGHT_CONTROL);
 		bool shift = Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT) || Input::IsKeyPressed(BLU_KEY_RIGHT_SHIFT);
 		bool escape = Input::IsKeyPressed(BLU_KEY_ESCAPE);
+		// Gizmo hotkeys (Q/W/E/R) must NOT be gated on io.WantCaptureKeyboard: because
+		// ImGuiConfigFlags_NavEnableKeyboard is enabled, WantCaptureKeyboard is true for ANY
+		// focused window — including the docked Viewport the moment it's clicked — which silently
+		// swallowed the gizmo keys. io.WantTextInput is true only while an actual text widget is
+		// being edited (entity rename, numeric field), so it still protects those without blocking
+		// the gizmo shortcuts during normal viewport interaction.
+		const bool typingText = ImGui::GetIO().WantTextInput;
 		switch (event.GetKeyCode())
 		{
 		case BLU_KEY_O:
@@ -3476,16 +3483,16 @@ namespace Blu
 			break;
 		}
 		case BLU_KEY_Q:
-			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = -1;
+			if (!typingText && !ImGuizmo::IsUsing()) m_ImGuizmoType = -1;
 			break;
 		case BLU_KEY_W:
-			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			if (!typingText && !ImGuizmo::IsUsing()) m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
 			break;
 		case BLU_KEY_E:
-			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
+			if (!typingText && !ImGuizmo::IsUsing()) m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
 			break;
 		case BLU_KEY_R:
-			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
+			if (!typingText && !ImGuizmo::IsUsing()) m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
 			break;
 		case BLU_KEY_F:
 		{
