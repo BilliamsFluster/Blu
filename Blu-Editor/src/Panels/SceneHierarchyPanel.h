@@ -28,6 +28,8 @@ namespace Blu
 	private:
 		Shared<Scene> m_Context;
 		Entity m_SelectedEntity;
+		Entity m_RenamingEntity;          // entity being inline-renamed in the Outliner
+		bool   m_RenameRequestFocus = false; // focus the rename field on its first frame
 		std::function<void(Entity)> m_OpenActorEditorCallback;
 		std::function<void(Entity)> m_RequestDeleteCallback;
 		bool m_EntityHovered = false;

@@ -293,6 +293,7 @@ namespace Blu
     void ContentBrowserPanel::OnImGuiRender()
     {
         static std::filesystem::path s_RenamingPath;
+        static std::filesystem::path s_PendingDeletePath; // deferred until the confirm modal
         static char s_Filter[128] = "";
         m_ModelThumbnailsRenderedThisFrame = 0;
         AssetPreviewService::Get().ResetFrameBudget();
@@ -672,9 +673,9 @@ namespace Blu
             }
             if (ImGui::MenuItem("Delete"))
             {
-                if (std::filesystem::exists(s_RightClickedItemPath))
-                    std::filesystem::remove_all(s_RightClickedItemPath);
-                s_RightClickedItemPath.clear();
+                // Defer to a confirmation modal — remove_all on a folder is irreversible.
+                s_PendingDeletePath = s_RightClickedItemPath;
+                ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
         }
@@ -726,6 +727,36 @@ namespace Blu
             if (ImGui::Button("Cancel", { 80.f, 0.f }))
             {
                 s_RenamingPath.clear();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
+        // ---- Delete confirmation (mirrors the rename modal) ----
+        if (!s_PendingDeletePath.empty())
+            ImGui::OpenPopup("##cbDelete");
+        if (ImGui::BeginPopupModal("##cbDelete", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            const bool isDir = std::filesystem::is_directory(s_PendingDeletePath);
+            ImGui::Text("Delete this %s?", isDir ? "folder" : "file");
+            ImGui::TextWrapped("%s", s_PendingDeletePath.filename().string().c_str());
+            if (isDir)
+                ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f),
+                                   "This deletes the folder and ALL its contents.");
+            ImGui::Spacing();
+            if (ImGui::Button("Delete", { 80.f, 0.f }))
+            {
+                std::error_code ec;
+                if (std::filesystem::exists(s_PendingDeletePath))
+                    std::filesystem::remove_all(s_PendingDeletePath, ec);
+                s_PendingDeletePath.clear();
+                s_RightClickedItemPath.clear();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", { 80.f, 0.f }))
+            {
+                s_PendingDeletePath.clear();
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();

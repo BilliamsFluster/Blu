@@ -364,6 +364,31 @@ namespace Blu
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
+
+		// In-place rename (F2-style): replace the tree node with an InputText while this
+		// entity is being renamed from the Outliner context menu.
+		if (m_RenamingEntity == entity)
+		{
+			char buffer[256];
+			strcpy_s(buffer, sizeof(buffer), tag.c_str());
+			if (m_RenameRequestFocus)
+			{
+				ImGui::SetKeyboardFocusHere();
+				m_RenameRequestFocus = false;
+			}
+			ImGui::SetNextItemWidth(-1.0f);
+			const bool committed = ImGui::InputText("##RenameEntity", buffer, sizeof(buffer),
+				ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
+			// Commit on Enter or when focus leaves the field (click away); ignore empty names.
+			if (committed || ImGui::IsItemDeactivated())
+			{
+				if (buffer[0] != '\0')
+					tag = buffer;
+				m_RenamingEntity = {};
+			}
+			return;
+		}
+
 		ImGuiTreeNodeFlags flags = ((m_SelectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0)|ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		std::string label = std::string(EntityIcon(entity)) + " " + tag;
@@ -389,14 +414,21 @@ namespace Blu
 		
 		if (ImGui::BeginPopupContextItem())
 		{
+			// Target the right-clicked entity (not whatever was previously selected) so
+			// Rename/Delete act on the row under the cursor.
+			m_SelectedEntity = entity;
 			if (ImGui::MenuItem("Open Actor Editor"))
 			{
-				m_SelectedEntity = entity;
 				if (m_OpenActorEditorCallback)
 					m_OpenActorEditorCallback(entity);
 			}
+			if (ImGui::MenuItem("Rename"))
+			{
+				m_RenamingEntity = entity;
+				m_RenameRequestFocus = true;
+			}
 			ImGui::Separator();
-			std::string selectedEntityName = std::format("Delete {}", m_SelectedEntity.GetComponent<TagComponent>().Tag.c_str());
+			std::string selectedEntityName = std::format("Delete {}", entity.GetComponent<TagComponent>().Tag.c_str());
 			if (ImGui::MenuItem(selectedEntityName.c_str()))
 			{
 				// Prefer the host's confirmation modal; fall back to immediate delete
