@@ -8,6 +8,8 @@
 #include "Blu/Scene/Scene.h"
 #include "Blu/Rendering/GpuParticleSystem.h"
 #include "Blu/Rendering/Renderer3D.h"
+#include "Blu/Rendering/Mesh.h"
+#include "Blu/Rendering/Material.h"
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
@@ -18,6 +20,8 @@
 
 namespace Azure
 {
+	static Blu::Shared<Blu::Model> BuildViewModelModel(); // defined below; built once in BeginPlay
+
 	void PlayerCharacter::BeginPlay()
 	{
 		ACharacter::BeginPlay();  // auto-adds CharacterControllerComponent
@@ -34,6 +38,24 @@ namespace Azure
 		// HUD-readable mirror of the weapon's ammo counters (synced each Tick).
 		if (!HasComponent<Blu::AmmoComponent>())
 			AddComponent<Blu::AmmoComponent>();
+
+		// First-person view-model (arms + weapon) — spawned once, re-anchored to the camera
+		// every frame in UpdateViewModel().
+		if (Blu::Scene* scene = GetScene())
+		{
+			Blu::Entity vm = scene->CreateEntity("ViewModel");
+			if (!vm.HasComponent<Blu::TransformComponent>())
+				vm.AddComponent<Blu::TransformComponent>();
+			auto& vmc = vm.AddComponent<Blu::MeshComponent>();
+			vmc.ModelAsset       = BuildViewModelModel();
+			vmc.MaterialInstance = Blu::Material::Create();
+			vmc.MaterialInstance->AlbedoColor      = glm::vec4(0.20f, 0.19f, 0.18f, 1.0f);
+			vmc.MaterialInstance->Metallic         = 0.55f;
+			vmc.MaterialInstance->Roughness        = 0.50f;
+			vmc.MaterialInstance->EmissiveColor    = glm::vec3(0.05f, 0.05f, 0.055f);
+			vmc.MaterialInstance->EmissiveStrength = 1.2f;
+			m_ViewModelUUID = vm.GetUUID();
+		}
 
 		// First-person camera: take ownership of the scene's primary camera and drive it
 		// from the pawn each frame (eye height + yaw/pitch). No third-person spring arm.
@@ -80,6 +102,64 @@ namespace Azure
 		m_FirstMouse = true;
 	}
 
+	// Build a chunky procedural first-person view-model: a boxy rifle plus two gloved
+	// forearms, all in local space with -Z pointing "forward" (matching the camera basis,
+	// where the entity's local -Z maps to the look direction). One shared cube VAO drives
+	// every box via its per-submesh LocalTransform.
+	static Blu::Shared<Blu::Model> BuildViewModelModel()
+	{
+		auto cube  = Blu::Mesh::CreateCube();
+		auto model = std::make_shared<Blu::Model>();
+
+		// Two materials: 0 = dark gunmetal, 1 = tactical glove/arm (lighter, matte) so the
+		// arms read distinctly from the weapon. Faint emissive keeps them visible at night.
+		auto gun = Blu::Material::Create();
+		gun->AlbedoColor      = glm::vec4(0.17f, 0.17f, 0.19f, 1.0f);
+		gun->Metallic         = 0.65f;
+		gun->Roughness        = 0.42f;
+		gun->EmissiveColor    = glm::vec3(0.04f, 0.04f, 0.05f);
+		gun->EmissiveStrength = 1.0f;
+		auto glove = Blu::Material::Create();
+		glove->AlbedoColor      = glm::vec4(0.34f, 0.30f, 0.26f, 1.0f);
+		glove->Metallic         = 0.05f;
+		glove->Roughness        = 0.85f;
+		glove->EmissiveColor    = glm::vec3(0.05f, 0.045f, 0.04f);
+		glove->EmissiveStrength = 1.2f;
+		model->Materials = { gun, glove };
+
+		auto addBox = [&](const glm::vec3& pos, const glm::vec3& size, float pitchDeg, int matIdx)
+		{
+			Blu::SubMesh sm;
+			sm.VAO          = cube->GetVertexArray();
+			sm.IndexCount   = cube->GetIndexCount();
+			sm.MaterialIndex = matIdx;
+			glm::mat4 m = glm::translate(glm::mat4(1.0f), pos);
+			if (pitchDeg != 0.0f)
+				m = glm::rotate(m, glm::radians(pitchDeg), glm::vec3(1.0f, 0.0f, 0.0f));
+			m = glm::scale(m, size);
+			sm.LocalTransform  = m;
+			sm.BoundingCenter  = cube->GetBoundingCenter();
+			sm.BoundingRadius  = cube->GetBoundingRadius();
+			model->Meshes.push_back(std::move(sm));
+		};
+
+		// Rifle (−Z = muzzle direction) — material 0
+		addBox({ 0.0f,  0.000f, -0.16f }, { 0.075f, 0.100f, 0.34f }, 0.0f, 0);  // receiver
+		addBox({ 0.0f,  0.020f, -0.44f }, { 0.040f, 0.045f, 0.30f }, 0.0f, 0);  // barrel
+		addBox({ 0.0f, -0.005f, -0.30f }, { 0.060f, 0.060f, 0.18f }, 0.0f, 0);  // handguard
+		addBox({ 0.0f, -0.010f,  0.07f }, { 0.065f, 0.090f, 0.16f }, 0.0f, 0);  // stock
+		addBox({ 0.0f,  0.085f, -0.26f }, { 0.018f, 0.050f, 0.022f }, 0.0f, 0); // front sight
+		addBox({ 0.0f, -0.100f, -0.01f }, { 0.050f, 0.140f, 0.06f }, 10.0f, 0); // pistol grip
+		addBox({ 0.0f, -0.130f, -0.13f }, { 0.045f, 0.150f, 0.05f }, 0.0f, 0);  // magazine
+		// Gloved forearms + fists — material 1
+		addBox({  0.070f, -0.160f,  0.07f }, { 0.055f, 0.055f, 0.26f }, -22.0f, 1); // right forearm
+		addBox({  0.020f, -0.105f, -0.02f }, { 0.075f, 0.085f, 0.085f }, 0.0f, 1);  // right fist (grip)
+		addBox({ -0.070f, -0.155f, -0.18f }, { 0.050f, 0.050f, 0.22f }, -16.0f, 1); // left forearm
+		addBox({ -0.020f, -0.070f, -0.30f }, { 0.075f, 0.075f, 0.075f }, 0.0f, 1);  // left fist (handguard)
+
+		return model;
+	}
+
 	glm::vec3 PlayerCharacter::LookForward() const
 	{
 		// Forward matching the engine convention (yaw 0 looks down world -Z).
@@ -112,6 +192,34 @@ namespace Azure
 		auto& camXform = cam.GetComponent<Blu::TransformComponent>();
 		camXform.Translation = GetTransform().Translation + glm::vec3(0.0f, m_EyeHeight, 0.0f);
 		camXform.Rotation = glm::eulerAngles(glm::quatLookAtRH(forward, up));
+
+		UpdateViewModel();
+	}
+
+	void PlayerCharacter::UpdateViewModel()
+	{
+		Blu::Scene* scene = GetScene();
+		if (!scene || (Blu::UUID)m_ViewModelUUID == 0)
+			return;
+		Blu::Entity vm = scene->GetEntityByUUID(m_ViewModelUUID);
+		if (!vm || !vm.HasComponent<Blu::TransformComponent>())
+			return;
+
+		const glm::vec3 forward = LookForward();
+		const glm::vec3 worldUp = (std::abs(forward.y) > 0.98f) ? glm::vec3(0.0f, 0.0f, -1.0f)
+		                                                        : glm::vec3(0.0f, 1.0f, 0.0f);
+		const glm::quat q     = glm::quatLookAtRH(forward, worldUp);
+		const glm::vec3 right = q * glm::vec3(1.0f, 0.0f, 0.0f);
+		const glm::vec3 vmUp  = q * glm::vec3(0.0f, 1.0f, 0.0f);
+		const glm::vec3 eye   = GetTransform().Translation + glm::vec3(0.0f, m_EyeHeight, 0.0f);
+
+		// Offset the weapon to the lower-right of the view and a little forward.
+		const glm::vec3 pos = eye + right * 0.15f + vmUp * (-0.21f) + forward * 0.32f;
+
+		auto& t       = vm.GetComponent<Blu::TransformComponent>();
+		t.Translation = pos;
+		t.Rotation    = glm::eulerAngles(q);  // same basis as the camera; local -Z → forward
+		t.Scale       = glm::vec3(1.0f);
 	}
 
 	void PlayerCharacter::FireWeapon()

@@ -22,6 +22,7 @@ namespace Azure
 		void ResetMouseLookState();
 		void UpdateStats(float dt, bool wantsSprint, bool isMoving, float& outSpeedScale);
 		void UpdateFirstPersonCamera();   // drives the primary camera from yaw/pitch at eye height
+		void UpdateViewModel();           // positions the FP arms+weapon view-model at the camera
 		glm::vec3 LookForward() const;    // unit view direction from yaw/pitch
 		void UpdateWeapon(float dt);      // fire/reload input + cooldowns
 		void FireWeapon();                // spawn one projectile down the view ray
@@ -32,8 +33,9 @@ namespace Azure
 
 		float m_Yaw        = 0.0f;   // degrees, look yaw (body follows)
 		float m_Pitch      = 0.0f;   // degrees, look pitch (camera only)
-		float m_EyeHeight  = 0.75f;  // metres above the pawn (capsule-centre) origin
-		Blu::UUID m_CameraUUID = Blu::UUID(0); // primary camera the pawn drives
+		float m_EyeHeight  = 1.62f;  // metres above the pawn origin (standing eye height)
+		Blu::UUID m_CameraUUID    = Blu::UUID(0); // primary camera the pawn drives
+		Blu::UUID m_ViewModelUUID = Blu::UUID(0); // FP arms+weapon mesh, re-anchored each frame
 		float m_PrevMouseX = 0.0f;
 		float m_PrevMouseY = 0.0f;
 		bool  m_FirstMouse = true;
