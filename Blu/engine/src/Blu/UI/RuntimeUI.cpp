@@ -256,8 +256,9 @@ namespace Blu
 		}
 
 		// ── Runtime UI input (mouse hit-testing for clickable buttons) ───────────
-		static glm::vec2 s_UIMousePos  = { -1.0f, -1.0f };
-		static bool      s_UIClickEdge = false; // true only on the frame the LMB goes down
+		static glm::vec2 s_UIMousePos            = { -1.0f, -1.0f };
+		static bool      s_UIClickEdge           = false; // true only on the frame the LMB goes down
+		static glm::vec2 s_UIMouseViewportOffset = { 0.0f, 0.0f }; // editor viewport panel origin
 
 		// Dispatch a button's ActionId. "load:<path>" queues a runtime scene transition.
 		static void HandleUIAction(const std::string& actionId)
@@ -394,6 +395,11 @@ namespace Blu
 		}
 	}
 
+	void RuntimeUI::SetMouseViewportOffset(const glm::vec2& offset)
+	{
+		s_UIMouseViewportOffset = offset;
+	}
+
 	RuntimeUIRenderResult RuntimeUI::RenderDocument(const std::string& documentPath, const SceneDiagnostics& diagnostics, float viewportWidth, float viewportHeight, float scale)
 	{
 		RuntimeUIRenderResult result;
@@ -451,7 +457,7 @@ namespace Blu
 			s_UIClickEdge = down && !s_PrevDown;
 			s_PrevDown = down;
 			auto [mx, my] = Input::GetMousePosition();
-			s_UIMousePos = { mx, my };
+			s_UIMousePos = { mx - s_UIMouseViewportOffset.x, my - s_UIMouseViewportOffset.y };
 		}
 
 		OrthographicCamera camera({ 0.0f, viewportWidth, viewportHeight, 0.0f });

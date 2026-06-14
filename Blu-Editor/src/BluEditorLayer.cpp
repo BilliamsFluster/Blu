@@ -28,6 +28,8 @@
 #include "Blu/Rendering/RenderSettings.h"
 #include "Blu/Core/InputMap.h"
 #include "Blu/Audio/AudioEngine.h"
+#include "Blu/Scene/SceneManager.h"
+#include "Blu/UI/RuntimeUI.h"
 #include "FreeFlyCamera.h"
 #include "AssetPreviewService.h"
 #include "AzureGameModule.h"
@@ -536,6 +538,10 @@ namespace Blu
 			}
 		}
 		
+		// Honour any runtime scene transition requested this frame (menu PLAY → level,
+		// level victory → menu). No-op outside Play — only the runtime UI queues loads.
+		ProcessPendingSceneLoad();
+
 		// ---- Deferred entity pick --------------------------------------------------
 		// OnMouseButtonPressed only sets m_PendingEntityPick. We do the actual
 		// ReadPixel here, after the scene has rendered to m_FrameBuffer this frame,
@@ -3166,6 +3172,11 @@ namespace Blu
 		m_ViewportBounds[0] = { minBound.x, minBound.y };
 		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
 
+			// Hit-test runtime-UI clicks (e.g. the main-menu PLAY button) relative to the
+			// viewport panel rather than the OS window, so menu buttons are clickable inside
+			// the docked editor viewport during Play.
+			Blu::RuntimeUI::SetMouseViewportOffset(m_ViewportBounds[0]);
+
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
 		
@@ -3351,6 +3362,30 @@ namespace Blu
 		
 		ImGui::End();
 		
+	}
+
+	void BluEditorLayer::ProcessPendingSceneLoad()
+	{
+		if (!Blu::SceneManager::Get().HasPendingLoad())
+			return;
+		std::string path = Blu::SceneManager::Get().ConsumePendingLoad();
+
+		auto next = std::make_shared<Scene>();
+		SceneSerializer serializer(next);
+		if (!serializer.Deserialize(path))
+		{
+			BLU_CORE_WARN("BluEditorLayer: scene transition failed to load '{0}'", path);
+			return;
+		}
+
+		if (m_ActiveScene)
+			m_ActiveScene->OnRuntimeStop();
+		m_ActiveScene = next;
+		m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+		m_ActiveScene->SetPlayerInputEnabled(true);
+		m_ActiveScene->OnRuntimeStart();
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+		BLU_CORE_INFO("BluEditorLayer: transitioned to scene '{0}'", path);
 	}
 
 	bool BluEditorLayer::OnMouseButtonPressed(Events::MouseButtonPressedEvent& event)

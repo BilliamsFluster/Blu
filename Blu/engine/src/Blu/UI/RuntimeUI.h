@@ -81,6 +81,11 @@ namespace Blu
 		static bool LoadDocument(const std::filesystem::path& path, UIDocument& outDocument);
 		static void Invalidate(const std::string& documentPath);
 
+		// Offset subtracted from the OS mouse position when hit-testing clickable widgets.
+		// 0 for a fullscreen game / headless capture; the editor sets it to its viewport
+		// panel origin so menu buttons are clickable inside the docked viewport.
+		static void SetMouseViewportOffset(const glm::vec2& offset);
+
 	private:
 		static UIDocument CreateFallbackHUD();
 	};

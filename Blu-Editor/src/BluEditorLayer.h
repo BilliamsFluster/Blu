@@ -63,6 +63,7 @@ namespace Blu
 	private:
 		void QueueStaticCollisionPrompt(Entity entity);
 		void DrawStaticCollisionImportPrompt();
+		void ProcessPendingSceneLoad(); // honour SceneManager scene transitions during Play/Eject
 
 		Blu::OrthographicCameraController m_CameraController;
 		Blu::EditorCamera m_EditorCamera;
