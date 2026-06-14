@@ -255,6 +255,10 @@ namespace Azure
 		// Muzzle flash: a bright, short-range transient point light at the muzzle. Lasts a
 		// single frame (cleared next runtime tick), so continuous fire reads as a flicker.
 		Blu::Renderer3D::AddDynamicLight(muzzle, glm::vec3(1.0f, 0.78f, 0.40f), 12.0f, 7.0f);
+
+		// Transient muzzle-flash sparks — a brief forward burst, only when firing (not a
+		// persistent emitter). Short life so it pops and clears with the shot cadence.
+		Blu::GpuParticleSystem::Get().Emit(muzzle, 12, forward * 3.0f, 2.2f, 0.12f, 0.06f, 0.0f);
 	}
 
 	void PlayerCharacter::UpdateWeapon(float dt)
@@ -532,13 +536,6 @@ namespace Azure
 
 		// Drive the first-person camera after movement so it tracks this frame's position.
 		UpdateFirstPersonCamera();
-
-		// Ambient embers drifting ahead of the player — atmosphere + a live particle source.
-		{
-			glm::vec3 fwd = LookForward();
-			glm::vec3 base = GetTransform().Translation + glm::vec3(0.0f, 1.0f, 0.0f) + fwd * 4.0f;
-			Blu::GpuParticleSystem::Get().Emit(base, 2, glm::vec3(0.0f, 0.4f, 0.0f), 1.2f, 2.5f, 0.06f, 0.0f);
-		}
 
 		// Weapon: fire/reload, then advance live projectiles and resolve hits.
 		UpdateWeapon(dt);
