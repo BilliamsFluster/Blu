@@ -29,7 +29,10 @@ namespace Blu
 		HealthText,
 		StaminaText,
 		ZombieCount,
-		InteractPrompt
+		InteractPrompt,
+		AmmoText,      // "<mag> / <reserve>" or "RELOADING"
+		Reticle,       // centered crosshair (drawn, no text)
+		Hitmarker      // centered hit "X", shown while HitmarkerTimer > 0
 	};
 
 	struct UIWidget

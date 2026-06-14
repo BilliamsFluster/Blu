@@ -615,6 +615,22 @@ namespace Blu
 		ProjectileComponent(const ProjectileComponent&) = default;
 	};
 
+	// ── Ammo / weapon HUD state ──────────────────────────────────────────────
+	// Mirror of the possessed pawn's weapon counters so the runtime HUD can read them
+	// without reaching into the actor. Synced by the player actor each frame. HitFlash is
+	// the remaining lifetime (seconds) of the on-screen hitmarker. Runtime state — not serialized.
+	struct AmmoComponent
+	{
+		int   InMag     = 0;
+		int   Reserve   = 0;
+		int   MagSize   = 0;
+		bool  Reloading = false;
+		float HitFlash  = 0.0f;
+
+		AmmoComponent() = default;
+		AmmoComponent(const AmmoComponent&) = default;
+	};
+
 	template<typename... Component>
 	struct Components
 	{

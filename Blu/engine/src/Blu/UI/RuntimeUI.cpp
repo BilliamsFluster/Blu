@@ -70,6 +70,9 @@ namespace Blu
 			if (binding == "staminatext") return UIBinding::StaminaText;
 			if (binding == "zombiecount") return UIBinding::ZombieCount;
 			if (binding == "interactprompt") return UIBinding::InteractPrompt;
+			if (binding == "ammotext") return UIBinding::AmmoText;
+			if (binding == "reticle") return UIBinding::Reticle;
+			if (binding == "hitmarker") return UIBinding::Hitmarker;
 			return UIBinding::None;
 		}
 
@@ -110,6 +113,12 @@ namespace Blu
 				return "Stamina " + std::to_string((int)diagnostics.PossessedPawnStamina) + " / " + std::to_string((int)diagnostics.PossessedPawnMaxStamina);
 			case UIBinding::ZombieCount:
 				return "Zombies: " + std::to_string(diagnostics.ActiveZombieCount);
+			case UIBinding::AmmoText:
+				if (!diagnostics.PossessedPawnHasAmmo)
+					return "";
+				if (diagnostics.PossessedPawnReloading)
+					return "RELOADING";
+				return std::to_string(diagnostics.PossessedPawnAmmoInMag) + " / " + std::to_string(diagnostics.PossessedPawnAmmoReserve);
 			case UIBinding::InteractPrompt:
 				return diagnostics.NearbyInteractableName.empty() ? "" : "E: " + diagnostics.NearbyInteractableName;
 			default:
@@ -242,10 +251,42 @@ namespace Blu
 			}
 		}
 
-		static void DrawWidget(const UIWidget& widget, glm::vec2 parentPosition, const SceneDiagnostics& diagnostics, float scale)
+		static void DrawReticle(glm::vec2 center, const glm::vec4& color, float scale)
+		{
+			const float gap = 5.0f * scale, len = 9.0f * scale, thick = std::max(1.0f, 2.0f * scale);
+			Renderer2D::DrawQuad({ center.x, center.y - gap - len * 0.5f }, { thick, len }, color); // up
+			Renderer2D::DrawQuad({ center.x, center.y + gap + len * 0.5f }, { thick, len }, color); // down
+			Renderer2D::DrawQuad({ center.x - gap - len * 0.5f, center.y }, { len, thick }, color); // left
+			Renderer2D::DrawQuad({ center.x + gap + len * 0.5f, center.y }, { len, thick }, color); // right
+			Renderer2D::DrawQuad(center, { thick, thick }, color);                                  // centre dot
+		}
+
+		static void DrawHitmarker(glm::vec2 center, const glm::vec4& color, float scale)
+		{
+			const float size = 26.0f * scale;
+			const float pixel = std::max(1.0f, size / 9.0f);
+			// "X" glyph is 5px wide x 7px tall in the runtime font; offset to centre it.
+			DrawRuntimeText("X", { center.x - 2.5f * pixel, center.y - 3.5f * pixel }, size, color);
+		}
+
+		static void DrawWidget(const UIWidget& widget, glm::vec2 parentPosition, glm::vec2 viewport, const SceneDiagnostics& diagnostics, float scale)
 		{
 			if (!widget.Visible)
 				return;
+
+			// Crosshair + hitmarker are anchored to the viewport centre, ignoring authored
+			// Position/Size so they stay centred at any resolution.
+			if (widget.Binding == UIBinding::Reticle)
+			{
+				DrawReticle(viewport * 0.5f, widget.ForegroundColor, scale);
+				return;
+			}
+			if (widget.Binding == UIBinding::Hitmarker)
+			{
+				if (diagnostics.HitmarkerTimer > 0.0f)
+					DrawHitmarker(viewport * 0.5f, widget.ForegroundColor, scale);
+				return;
+			}
 
 			glm::vec2 position = parentPosition + widget.Position * scale;
 			glm::vec2 size = widget.Size * scale;
@@ -285,7 +326,7 @@ namespace Blu
 				{
 					UIWidget childWidget = child;
 					childWidget.Position += childCursor - position;
-					DrawWidget(childWidget, position, diagnostics, scale);
+					DrawWidget(childWidget, position, viewport, diagnostics, scale);
 					if (widget.Type == UIWidgetType::Row)
 						childCursor.x += child.Size.x * scale + widget.Gap * scale;
 					else if (widget.Type == UIWidgetType::Column)
@@ -375,7 +416,7 @@ namespace Blu
 		PipelineStateCache::GetNoDepth()->Bind();
 		Renderer2D::BeginScene(camera);
 		for (const auto& widget : document->Widgets)
-			DrawWidget(widget, { 0.0f, 0.0f }, diagnostics, scale);
+			DrawWidget(widget, { 0.0f, 0.0f }, { viewportWidth, viewportHeight }, diagnostics, scale);
 		Renderer2D::EndScene();
 		PipelineStateCache::GetOpaque()->Bind();
 

@@ -757,7 +757,16 @@ namespace Blu
 						diagnostics.PossessedPawnStamina = stats.Stamina;
 						diagnostics.PossessedPawnMaxStamina = stats.MaxStamina;
 					}
-					if (pawnEntity.HasComponent<CharacterControllerComponent>())
+					if (pawnEntity.HasComponent<AmmoComponent>())
+						{
+							auto& ammo = pawnEntity.GetComponent<AmmoComponent>();
+							diagnostics.PossessedPawnHasAmmo     = true;
+							diagnostics.PossessedPawnAmmoInMag   = ammo.InMag;
+							diagnostics.PossessedPawnAmmoReserve = ammo.Reserve;
+							diagnostics.PossessedPawnReloading   = ammo.Reloading;
+							diagnostics.HitmarkerTimer           = ammo.HitFlash;
+						}
+						if (pawnEntity.HasComponent<CharacterControllerComponent>())
 					{
 						auto& ccc = pawnEntity.GetComponent<CharacterControllerComponent>();
 						diagnostics.PossessedPawnGrounded = ccc.IsGrounded;

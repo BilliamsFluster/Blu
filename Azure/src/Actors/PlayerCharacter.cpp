@@ -31,6 +31,10 @@ namespace Azure
 		if (HasComponent<Blu::SpringArmComponent>())
 			RemoveComponent<Blu::SpringArmComponent>();
 
+		// HUD-readable mirror of the weapon's ammo counters (synced each Tick).
+		if (!HasComponent<Blu::AmmoComponent>())
+			AddComponent<Blu::AmmoComponent>();
+
 		// First-person camera: take ownership of the scene's primary camera and drive it
 		// from the pawn each frame (eye height + yaw/pitch). No third-person spring arm.
 		m_Yaw   = glm::degrees(GetTransform().Rotation.y);
@@ -216,6 +220,8 @@ namespace Azure
 					// Impact spark burst + a brief warm flash light at the hit point.
 					Blu::GpuParticleSystem::Get().Emit(t.Translation, 16, glm::vec3(0.0f, 1.5f, 0.0f), 4.0f, 0.5f, 0.09f, 0.0f);
 					Blu::Renderer3D::AddDynamicLight(t.Translation, glm::vec3(1.0f, 0.65f, 0.25f), 6.0f, 4.5f);
+					if (HasComponent<Blu::AmmoComponent>())
+						GetComponent<Blu::AmmoComponent>().HitFlash = 0.15f; // flash the hitmarker
 					break;
 				}
 			}
@@ -429,6 +435,17 @@ namespace Azure
 		// Weapon: fire/reload, then advance live projectiles and resolve hits.
 		UpdateWeapon(dt);
 		UpdateProjectiles(dt);
+
+		// Mirror weapon state into the HUD-readable AmmoComponent + age the hitmarker.
+		if (HasComponent<Blu::AmmoComponent>())
+		{
+			auto& ammo = GetComponent<Blu::AmmoComponent>();
+			ammo.InMag     = m_AmmoInMag;
+			ammo.Reserve   = m_AmmoReserve;
+			ammo.MagSize   = m_MagSize;
+			ammo.Reloading = m_Reloading;
+			ammo.HitFlash  = std::max(0.0f, ammo.HitFlash - dt);
+		}
 
 		TryPickupOverlap();
 		if (Blu::InputMap::Get().IsActionJustPressed("Interact"))
