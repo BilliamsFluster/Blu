@@ -190,6 +190,7 @@ namespace Blu
 				if (m_ActiveScene && m_PendingDeleteEntity)
 				{
 					m_ActiveScene->DestroyEntity(m_PendingDeleteEntity);
+					m_SceneDirty = true;
 					if (m_SceneHierarchyPanel)
 						m_SceneHierarchyPanel->SetSelectedEntity({});
 				}
@@ -308,6 +309,8 @@ namespace Blu
 		{
 			QueueEntityDeleteConfirmation(entity);
 		});
+		// Panel-driven mutations (create/delete/rename/add-component) flag the scene dirty.
+		m_SceneHierarchyPanel->SetSceneModifiedCallback([this]() { m_SceneDirty = true; });
 		m_ContentBrowserPanel->SetSaveAllCallback([this]() { SaveCurrentScene(); });
 		m_ContentBrowserPanel->SetImportModelCallback([this](const std::filesystem::path& path)
 		{
@@ -1157,6 +1160,7 @@ namespace Blu
 		m_ActiveScene = std::make_shared<Scene>();
 		m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+		m_SceneDirty = false;
 	}
 
 	void BluEditorLayer::CreatePhysicsDemoScene()
@@ -1521,6 +1525,7 @@ namespace Blu
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			std::filesystem::path scenePath = path;
 			m_ActiveScene->SetSceneFilePath(scenePath);
+			m_SceneDirty = false; // freshly loaded — nothing unsaved
 			
 
 			
@@ -1538,6 +1543,7 @@ namespace Blu
 			{
 				SceneSerializer serializer(m_ActiveScene);
 				serializer.Serialize(filepath);
+				m_SceneDirty = false;
 
 			}
 		}
@@ -1552,7 +1558,10 @@ namespace Blu
 			{
 				std::string filepath = m_EditorScene->GetSceneFilePath().string();
 				if (!filepath.empty())
+				{
 					serializer.Serialize(filepath);
+					m_SceneDirty = false;
+				}
 			}
 
 		}
@@ -1805,6 +1814,9 @@ namespace Blu
 				if (!p.empty())
 					titleStr = p.stem().string();
 			}
+			// Unsaved-changes marker (Edit mode only — Play doesn't mutate the saved scene).
+			if (m_SceneDirty && m_SceneState == SceneState::Edit)
+				titleStr = "* " + titleStr;
 			const float titleW = ImGui::CalcTextSize(titleStr.c_str()).x;
 			const float ctrlTotal = 45.f * 3.f;
 			const float menuEndX  = ImGui::GetCursorPosX();
@@ -3426,11 +3438,12 @@ namespace Blu
 				{
 					glm::vec3 translation, rotation, scale;
 					Math::DecomposeTransform(transform, translation, rotation, scale);
-				
+
 					glm::vec3 deltaRotation =  rotation - tc.Rotation;
 					tc.Translation = translation;
 					tc.Rotation += deltaRotation;
 					tc.Scale = scale;
+					m_SceneDirty = true; // gizmo moved an entity
 				}
 
 			}
@@ -3536,6 +3549,7 @@ namespace Blu
 			{
 				Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 				m_ActiveScene->DuplicateEntity(selectedEntity);
+				m_SceneDirty = true;
 			}
 			break;
 		}

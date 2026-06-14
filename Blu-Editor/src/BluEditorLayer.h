@@ -121,6 +121,10 @@ namespace Blu
 		Entity m_PendingDeleteEntity;
 		std::string m_PendingDeleteEntityName;
 
+		// Unsaved-changes marker shown as "* " in the title; best-effort (gizmo edits, entity
+		// create/delete/duplicate/rename, add-component). Cleared on New/Open/Save.
+		bool m_SceneDirty = false;
+
 
 		float translationSnapValue = 0.5f;
 		float rotationSnapValue = 10.0f;
