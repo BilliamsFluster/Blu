@@ -1283,6 +1283,7 @@ namespace Blu
 			m_GameMode = NativeClassRegistry::Get().Create<AGameMode>(m_GameModeClassID);
 			if (m_GameMode)
 			{
+				m_GameMode->m_Scene = this; // grant scene access before lifecycle hooks
 				m_GameMode->BeginPlay();
 				m_GameMode->OnGameStart();
 			}
