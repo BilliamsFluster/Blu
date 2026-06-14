@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "BluEditorLayer.h"
 #include "ScreenshotLayer.h"
+#include "Blu/Rendering/RenderSettings.h"
 
 #include <string>
 
@@ -23,11 +24,15 @@ namespace Blu
 			const auto& args = Application::GetCommandLineArgs();
 			bool enableFog = false;
 			bool playMode = false;
+			bool deferred = false;
 			for (const auto& a : args)
 			{
 				if (a == "--fog")  enableFog = true;
 				if (a == "--play") playMode = true; // capture the running game (FP camera + HUD), not the editor view
+				if (a == "--deferred") deferred = true; // force the deferred render path (default is forward)
 			}
+			if (deferred)
+				RenderSettings::SetPath(RenderPath::Deferred);
 			for (size_t i = 0; i < args.size(); ++i)
 			{
 				if (args[i] == "--screenshot" && i + 2 < args.size())

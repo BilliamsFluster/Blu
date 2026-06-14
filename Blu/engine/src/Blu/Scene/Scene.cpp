@@ -2035,7 +2035,11 @@ namespace Blu
 	    }
 
 	    // Use RH_ZO so DX11 sees depth in [0,1] natively
-	    glm::mat4 lightProj = glm::orthoRH_ZO(lsMin.x, lsMax.x, lsMin.y, lsMax.y, lsMin.z, lsMax.z);
+	    // glm::orthoRH_ZO expects POSITIVE near/far DISTANCES. In RH light-view space the cascade
+	    // corners sit in front of the eye at NEGATIVE z, so near = -lsMax.z, far = -lsMin.z. Passing
+	    // raw signed lsMin.z/lsMax.z mapped casters to ndc_z far outside [0,1] → all shadow casters
+	    // were depth-clipped and the shadow map came out empty (no shadows rendered at all).
+	    glm::mat4 lightProj = glm::orthoRH_ZO(lsMin.x, lsMax.x, lsMin.y, lsMax.y, -lsMax.z, -lsMin.z);
 	    return lightProj * lightView;
 	}
 
@@ -2079,6 +2083,11 @@ namespace Blu
 	        lightVPs[c] = FitCascade(nearCorners, farCorners, tNear, tFar, lightDir);
 	        splits[c]   = cascadeFarWorld; // world-space distance threshold
 
+	        // Cull shadow casters against this cascade's light frustum so we don't rasterize
+	        // every submesh of every model into all 3 cascades (the dominant import-FPS cost).
+	        Frustum cascadeFrustum;
+	        cascadeFrustum.ExtractFromVP(lightVPs[c]);
+
 	        Renderer3D::BeginCSMPass(c, lightVPs[c]);
 	        {
 	            auto view = m_Registry.view<TransformComponent, MeshComponent>();
@@ -2087,7 +2096,7 @@ namespace Blu
 	                auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
 	                // Skinned models keep their geometry in SkinnedMeshes (Meshes is empty),
 	                // so DrawMeshShadow draws nothing for them here — they're handled below.
-	                Renderer3D::DrawMeshShadow(GetRenderTransform(m_Registry, entity, transform), mesh);
+	                Renderer3D::DrawMeshShadow(GetRenderTransform(m_Registry, entity, transform), mesh, cascadeFrustum);
 	            }
 
 	            // Skinned (animated) meshes: render bone-deformed depth so characters cast

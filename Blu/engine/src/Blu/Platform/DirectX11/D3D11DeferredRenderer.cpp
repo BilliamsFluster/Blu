@@ -166,6 +166,10 @@ namespace Blu
 		dc->PSSetShaderResources(0, 5, nullGBufferSRVs);
 		ID3D11ShaderResourceView* nullEntityIDSRV = nullptr;
 		dc->PSSetShaderResources(9, 1, &nullEntityIDSRV);
+		// Release the CSM shadow-map SRV (bound at slot 5 by Renderer3D before this pass) so the
+		// depth texture is free to be re-bound as a DSV when the next frame's shadow pass writes it.
+		ID3D11ShaderResourceView* nullShadowSRV = nullptr;
+		dc->PSSetShaderResources(5, 1, &nullShadowSRV);
 		PipelineStateCache::GetOpaque()->Bind();
 
 		for (auto& rtv : m_SavedOutputRTVs)

@@ -132,7 +132,11 @@ namespace Blu
         // Cascaded shadow mapping — one cascade rendered at a time.
         static void BeginCSMPass(int cascadeIndex, const glm::mat4& lightVP);
         static void EndCSMPass();
-        static void DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc);
+        // cullFrustum is the cascade's light frustum (from its lightVP): submeshes whose
+        // world bounding sphere falls outside it are skipped, so we don't rasterize every
+        // submesh of every model into all 3 cascades (the big import-FPS cost).
+        static void DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc,
+                                   const Frustum& cullFrustum);
         // Skinned variant — uploads bone matrices and renders bone-deformed depth so
         // animated characters cast shadows. Call inside a BeginCSMPass/EndCSMPass block.
         static void DrawSkinnedMeshShadow(const glm::mat4& transform, MeshComponent& mc,

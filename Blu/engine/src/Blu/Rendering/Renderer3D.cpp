@@ -401,6 +401,14 @@ namespace Blu
                 lighting.IBLEnabled = iblGPU.IBLEnabled;
                 lighting.IBLStrength = iblGPU.IBLStrength;
                 lighting.IBLMipLevels = iblGPU.IBLMipLevels;
+                // Bind the CSM shadow map for the deferred lighting pass. SubmitLightingPass
+                // binds gBuffer SRVs (0-4), IBL (6-8) and entity-ID (9) but NOT slot 5, so the
+                // deferred lighting shader sampled an unbound u_ShadowMapArray(t5) and produced
+                // no shadows. Bind it here (the CopyDepthToOutput inside SubmitLightingPass only
+                // CopyResources, so slot 5 survives); BindTexture also binds the comparison
+                // sampler at s1. SubmitLightingPass null-clears slot 5 afterwards.
+                if (lighting.HasShadowMap && s_Data3D->CSMInstance)
+                    s_Data3D->CSMInstance->BindTexture(5);
                 s_Data3D->Deferred->SubmitLightingPass(lighting);
                 usedDeferred = true;
             }
@@ -417,6 +425,13 @@ namespace Blu
         sh.Flush();
         if (iblGPU.IBLEnabled)
             IBLSystem::BindIBL(6, 7, 8);
+
+        // Re-bind the CSM shadow map for the forward draws. BindCSM() bound slot 5 + the s1
+        // comparison sampler at the end of ShadowPass, but SetLights()/SetFog() re-bound the
+        // mesh shader in between; bind it here so PBR_Mesh.hlsl's SampleCmp has a live shadow
+        // map + sampler during IssueDrawCall (forward path only — deferred binds in its pass).
+        if (!usedDeferred && s_Data3D->HasShadowMap && s_Data3D->CSMInstance)
+            s_Data3D->CSMInstance->BindTexture(5);
 
         const Material* lastMat = nullptr;
         if (!usedDeferred)
@@ -473,7 +488,8 @@ namespace Blu
         // Do not restore render target yet — caller loops over cascades.
     }
 
-    void Renderer3D::DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc)
+    void Renderer3D::DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc,
+                                    const Frustum& cullFrustum)
     {
         if (!mc.MeshData && !mc.ModelAsset) return;
 
@@ -481,7 +497,19 @@ namespace Blu
         {
             for (auto& submesh : mc.ModelAsset->Meshes)
             {
-                s_Data3D->DepthOnlyShader->SetUniformMat4("u_Model", transform * submesh.LocalTransform);
+                glm::mat4 submeshWorld = transform * submesh.LocalTransform;
+
+                // Cull against the cascade's light frustum (mirrors DrawMesh's view-frustum
+                // cull). A submesh outside this cascade's light frustum casts nothing into it.
+                glm::vec3 worldCenter = glm::vec3(submeshWorld * glm::vec4(submesh.BoundingCenter, 1.0f));
+                float worldRadius = submesh.BoundingRadius * std::max({
+                    glm::length(glm::vec3(submeshWorld[0])),
+                    glm::length(glm::vec3(submeshWorld[1])),
+                    glm::length(glm::vec3(submeshWorld[2]))});
+                if (worldRadius > 0.0f && !cullFrustum.TestSphere(worldCenter, worldRadius))
+                    continue;
+
+                s_Data3D->DepthOnlyShader->SetUniformMat4("u_Model", submeshWorld);
                 s_Data3D->DepthOnlyShader->Flush();
                 submesh.VAO->Bind();
                 RenderCommand::DrawIndexed(submesh.VAO, submesh.IndexCount);
@@ -489,6 +517,14 @@ namespace Blu
         }
         else if (mc.MeshData)
         {
+            glm::vec3 worldCenter = glm::vec3(transform * glm::vec4(mc.MeshData->GetBoundingCenter(), 1.0f));
+            float worldRadius = mc.MeshData->GetBoundingRadius() * std::max({
+                glm::length(glm::vec3(transform[0])),
+                glm::length(glm::vec3(transform[1])),
+                glm::length(glm::vec3(transform[2]))});
+            if (worldRadius > 0.0f && !cullFrustum.TestSphere(worldCenter, worldRadius))
+                return;
+
             s_Data3D->DepthOnlyShader->SetUniformMat4("u_Model", transform);
             s_Data3D->DepthOnlyShader->Flush();
             mc.MeshData->GetVertexArray()->Bind();
