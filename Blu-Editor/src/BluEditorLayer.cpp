@@ -1685,6 +1685,7 @@ namespace Blu
 			ImGui::MenuItem("Input Map",       nullptr, &m_ShowInputMap);
 			ImGui::MenuItem("Material Graph",  nullptr, &m_ShowMaterialGraph);
 			ImGui::Separator();
+			ImGui::MenuItem("Settings",        nullptr, &m_ShowSettings);
 			if (ImGui::MenuItem("Reset Editor Layout"))
 				m_ResetEditorLayout = true;
 			ImGui::EndMenu();
@@ -2132,6 +2133,14 @@ namespace Blu
 	{
 		float height = 5.0f;
 		UIDrawTitlebar(height);
+
+		// Host the dockspace each frame so editor panels dock (Unreal-style) instead of
+		// free-floating. DrawDockspace() builds the fullscreen "Blu Dockspace" window +
+		// ImGui::DockSpace; panels' subsequent ImGui::Begin calls snap into it (positions
+		// restored from imgui.ini, or from ResetEditorLayout below on first run/reset).
+		if (auto imguiLayer = Blu::Application::Get().GetImGuiLayer())
+			imguiLayer->DrawDockspace();
+
 		if (m_ResetEditorLayout)
 		{
 			ResetEditorLayout();
@@ -2151,6 +2160,42 @@ namespace Blu
 		DrawPlaytestHUD();
 
 		DrawStaticCollisionImportPrompt();
+
+		// ---- Settings / Preferences ----
+		if (m_ShowSettings)
+		{
+			if (ImGui::Begin("Settings", &m_ShowSettings))
+			{
+				ImGui::TextDisabled("Editor preferences");
+				ImGui::Spacing();
+				if (ImGui::CollapsingHeader("Gizmo Snapping", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::Checkbox("Snap Translate", &enableTranslationSnap);
+					ImGui::SameLine(); ImGui::SetNextItemWidth(110.0f);
+					ImGui::DragFloat("m##snapT", &translationSnapValue, 0.05f, 0.01f, 10.0f, "%.2f");
+					ImGui::Checkbox("Snap Rotate",    &enableRotationSnap);
+					ImGui::SameLine(); ImGui::SetNextItemWidth(110.0f);
+					ImGui::DragFloat("deg##snapR", &rotationSnapValue, 0.5f, 1.0f, 90.0f, "%.0f");
+					ImGui::Checkbox("Snap Scale",     &enableScaleSnap);
+					ImGui::SameLine(); ImGui::SetNextItemWidth(110.0f);
+					ImGui::DragFloat("x##snapS", &scaleSnapValue, 0.05f, 0.01f, 10.0f, "%.2f");
+				}
+				if (ImGui::CollapsingHeader("Viewport Debug Overlays", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::Checkbox("Collider outlines", &m_ShowSelectedColliderDebug);
+					ImGui::Checkbox("Character capsule", &m_ShowCharacterDebug);
+					ImGui::Checkbox("Mesh collider",     &m_ShowMeshColliderDebug);
+					ImGui::Checkbox("Camera frustum",    &m_ShowCameraDebug);
+				}
+				if (ImGui::CollapsingHeader("Layout"))
+				{
+					if (ImGui::Button("Reset Editor Layout"))
+						m_ResetEditorLayout = true;
+					ImGui::TextDisabled("Re-docks all panels to the default arrangement.");
+				}
+			}
+			ImGui::End();
+		}
 
 		// ---- Output Log ----
 		if (m_ShowOutputLog)

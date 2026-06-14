@@ -180,6 +180,7 @@ namespace Blu
 		bool m_ShowDiagnostics    = true;
 		bool m_ShowInputMap       = false;
 		bool m_ShowMaterialGraph  = false;
+		bool m_ShowSettings       = false;
 
 		// ---- Terrain editor ------------------------------------------------
 		bool        m_ShowTerrainPanel = false;
