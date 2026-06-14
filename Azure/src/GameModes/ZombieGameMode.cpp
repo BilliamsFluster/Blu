@@ -1,6 +1,7 @@
 #include "ZombieGameMode.h"
 #include "Blu/Core/Log.h"
 #include "Blu/Scene/Scene.h"
+#include "Blu/Scene/SceneManager.h"
 #include "Blu/Scene/Entity.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Rendering/Mesh.h"
@@ -32,7 +33,8 @@ namespace Azure
 		if (wave > TotalWaves)
 		{
 			CurrentWave = wave; // > TotalWaves ⇒ IsVictory()
-			BLU_CORE_INFO("ZombieGameMode: all {0} waves cleared — VICTORY", TotalWaves);
+			BLU_CORE_INFO("ZombieGameMode: all {0} waves cleared — VICTORY, returning to menu", TotalWaves);
+			Blu::SceneManager::Get().RequestLoadScene("assets/scenes/MainMenu.blu"); // world traversal: back to menu
 			return;
 		}
 		CurrentWave = wave;

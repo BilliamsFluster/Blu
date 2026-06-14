@@ -41,6 +41,7 @@ namespace Blu
 		std::string Name;
 		std::string Text;
 		std::string ImagePath;
+		std::string ActionId;          // on click: "load:<scene.blu>" loads a scene, else dispatched to the click handler
 		UIBinding Binding = UIBinding::None;
 		glm::vec2 Position = { 0.0f, 0.0f };
 		glm::vec2 Size = { 100.0f, 24.0f };

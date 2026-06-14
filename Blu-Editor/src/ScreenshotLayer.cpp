@@ -7,6 +7,7 @@
 #include <Blu.h>
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/SceneSerializer.h"
+#include "Blu/Scene/SceneManager.h"
 #include "Blu/Rendering/FrameBuffer.h"
 #include "Blu/Rendering/RenderCommand.h"
 #include "Blu/Rendering/Renderer3D.h"
@@ -102,6 +103,27 @@ namespace Blu
         if (m_PlayMode)
         {
             m_Scene->OnUpdateRuntime(fixedDt);
+
+            // Runtime scene transition (menu PLAY → level, level victory → menu). Honour any
+            // load requested this frame by swapping the active scene — the harness doubles as
+            // a minimal game runtime here.
+            if (Blu::SceneManager::Get().HasPendingLoad())
+            {
+                std::string nextPath = Blu::SceneManager::Get().ConsumePendingLoad();
+                auto next = std::make_shared<Blu::Scene>();
+                Blu::SceneSerializer ser(next);
+                if (ser.Deserialize(nextPath))
+                {
+                    m_Scene->OnRuntimeStop();
+                    m_Scene = next;
+                    m_Scene->OnViewportResize((float)m_Width, (float)m_Height);
+                    m_Scene->SetPlayerInputEnabled(true);
+                    m_Scene->OnRuntimeStart();
+                    std::cout << "[scene] transitioned to " << nextPath << std::endl;
+                }
+                else
+                    std::cerr << "[scene] failed to load " << nextPath << std::endl;
+            }
         }
         else
         {

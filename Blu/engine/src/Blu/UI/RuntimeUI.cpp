@@ -5,6 +5,9 @@
 #include "Blu/Rendering/PipelineState.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Scene/Entity.h"
+#include "Blu/Scene/SceneManager.h"
+#include "Blu/Core/Input.h"
+#include "Blu/Core/MouseCodes.h"
 #include "Blu/Utils/AssetPath.h"
 #include "yaml-cpp/yaml.h"
 #include <algorithm>
@@ -84,6 +87,7 @@ namespace Blu
 			if (node["Text"]) widget.Text = node["Text"].as<std::string>();
 			if (node["Image"]) widget.ImagePath = AssetPath::ToProjectRelative(node["Image"].as<std::string>());
 			if (node["Binding"]) widget.Binding = ParseBinding(node["Binding"].as<std::string>());
+			if (node["ActionId"]) widget.ActionId = node["ActionId"].as<std::string>();
 			if (node["Position"]) widget.Position = ReadVec2(node["Position"], widget.Position);
 			if (node["Size"]) widget.Size = ReadVec2(node["Size"], widget.Size);
 			if (node["Padding"]) widget.Padding = ReadVec2(node["Padding"], widget.Padding);
@@ -251,6 +255,24 @@ namespace Blu
 			}
 		}
 
+		// ── Runtime UI input (mouse hit-testing for clickable buttons) ───────────
+		static glm::vec2 s_UIMousePos  = { -1.0f, -1.0f };
+		static bool      s_UIClickEdge = false; // true only on the frame the LMB goes down
+
+		// Dispatch a button's ActionId. "load:<path>" queues a runtime scene transition.
+		static void HandleUIAction(const std::string& actionId)
+		{
+			if (actionId.empty())
+				return;
+			const std::string kLoad = "load:";
+			if (actionId.rfind(kLoad, 0) == 0)
+			{
+				std::string scenePath = actionId.substr(kLoad.size());
+				BLU_CORE_INFO("RuntimeUI: action '{0}' -> load scene '{1}'", actionId, scenePath);
+				SceneManager::Get().RequestLoadScene(scenePath);
+			}
+		}
+
 		static void DrawReticle(glm::vec2 center, const glm::vec4& color, float scale)
 		{
 			const float gap = 5.0f * scale, len = 9.0f * scale, thick = std::max(1.0f, 2.0f * scale);
@@ -291,6 +313,14 @@ namespace Blu
 			glm::vec2 position = parentPosition + widget.Position * scale;
 			glm::vec2 size = widget.Size * scale;
 			glm::vec2 center = position + size * 0.5f;
+
+			// Clickable button: fire its action on a mouse-down inside its rect.
+			if (widget.Type == UIWidgetType::Button && !widget.ActionId.empty() && s_UIClickEdge &&
+			    s_UIMousePos.x >= position.x && s_UIMousePos.x <= position.x + size.x &&
+			    s_UIMousePos.y >= position.y && s_UIMousePos.y <= position.y + size.y)
+			{
+				HandleUIAction(widget.ActionId);
+			}
 
 			if (widget.Type == UIWidgetType::Panel || widget.Type == UIWidgetType::Button ||
 			    widget.Type == UIWidgetType::Column || widget.Type == UIWidgetType::Row)
@@ -411,6 +441,18 @@ namespace Blu
 
 		result.WidgetCount = CountWidgets(*document);
 		result.Rendered = result.WidgetCount > 0;
+
+		// Sample the mouse + compute a click edge once per document. Coords are viewport-
+		// space (correct for a fullscreen game / headless capture; the editor's viewport
+		// panel can offset this — live-clicking in the editor is best-effort).
+		{
+			static bool s_PrevDown = false;
+			bool down = Input::IsMouseButtonPressed(BLU_MOUSE_BUTTON_LEFT);
+			s_UIClickEdge = down && !s_PrevDown;
+			s_PrevDown = down;
+			auto [mx, my] = Input::GetMousePosition();
+			s_UIMousePos = { mx, my };
+		}
 
 		OrthographicCamera camera({ 0.0f, viewportWidth, viewportHeight, 0.0f });
 		PipelineStateCache::GetNoDepth()->Bind();
