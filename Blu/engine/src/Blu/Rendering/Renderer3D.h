@@ -133,6 +133,11 @@ namespace Blu
         static void BeginCSMPass(int cascadeIndex, const glm::mat4& lightVP);
         static void EndCSMPass();
         static void DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc);
+        // Skinned variant — uploads bone matrices and renders bone-deformed depth so
+        // animated characters cast shadows. Call inside a BeginCSMPass/EndCSMPass block.
+        static void DrawSkinnedMeshShadow(const glm::mat4& transform, MeshComponent& mc,
+                                          const std::vector<glm::mat4>& boneMatrices,
+                                          const glm::mat4& lightVP);
 
         // Upload all cascade matrices + splits to the mesh shader, bind the CSM array texture.
         static void BindCSM(const glm::mat4 lightVPs[CascadedShadowMap::NUM_CASCADES],
@@ -159,6 +164,7 @@ namespace Blu
         {
             Shared<class Shader>       MeshShader;
             Shared<class Shader>       DepthOnlyShader;
+            Shared<class Shader>       DepthOnlySkinnedShader;
             Shared<class Shader>       InstancedMeshShader;
             Shared<class Shader>       SkinnedMeshShader;
             Shared<CascadedShadowMap>  CSMInstance;

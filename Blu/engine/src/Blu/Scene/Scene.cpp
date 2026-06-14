@@ -2085,7 +2085,21 @@ namespace Blu
 	            for (auto entity : view)
 	            {
 	                auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
+	                // Skinned models keep their geometry in SkinnedMeshes (Meshes is empty),
+	                // so DrawMeshShadow draws nothing for them here — they're handled below.
 	                Renderer3D::DrawMeshShadow(GetRenderTransform(m_Registry, entity, transform), mesh);
+	            }
+
+	            // Skinned (animated) meshes: render bone-deformed depth so characters cast
+	            // shadows. FinalBoneMatrices were filled by the per-frame animator tick.
+	            auto skinnedView = m_Registry.view<TransformComponent, MeshComponent, AnimatorComponent>();
+	            for (auto entity : skinnedView)
+	            {
+	                auto [transform, mesh, anim] =
+	                    skinnedView.get<TransformComponent, MeshComponent, AnimatorComponent>(entity);
+	                if (mesh.ModelAsset && mesh.ModelAsset->HasSkeleton())
+	                    Renderer3D::DrawSkinnedMeshShadow(GetRenderTransform(m_Registry, entity, transform),
+	                                                      mesh, anim.FinalBoneMatrices, lightVPs[c]);
 	            }
 	        }
 	        Renderer3D::EndCSMPass();
@@ -2165,7 +2179,15 @@ namespace Blu
 				auto [anim, mesh] = animView.get<AnimatorComponent, MeshComponent>(e);
 				if (!anim.SkelData && mesh.ModelAsset)
 					anim.SkelData = mesh.ModelAsset->SkelData;
-				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
+				if (!anim.SkelData || !anim.SkelData->Skel) continue;
+
+				// No clip to play → show the rest/bind pose (not identity, which collapses
+				// the mesh). Covers clip-less rigs and meshes before their clip is assigned.
+				if (anim.SkelData->Clips.empty())
+				{
+					Animator::ComputeBindPose(*anim.SkelData->Skel, anim.FinalBoneMatrices);
+					continue;
+				}
 
 				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
 				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
@@ -2220,7 +2242,15 @@ namespace Blu
 				auto [anim, mesh] = animView.get<AnimatorComponent, MeshComponent>(e);
 				if (!anim.SkelData && mesh.ModelAsset)
 					anim.SkelData = mesh.ModelAsset->SkelData;
-				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
+				if (!anim.SkelData || !anim.SkelData->Skel) continue;
+
+				// No clip to play → show the rest/bind pose (not identity, which collapses
+				// the mesh). Covers clip-less rigs and meshes before their clip is assigned.
+				if (anim.SkelData->Clips.empty())
+				{
+					Animator::ComputeBindPose(*anim.SkelData->Skel, anim.FinalBoneMatrices);
+					continue;
+				}
 
 				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
 				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];

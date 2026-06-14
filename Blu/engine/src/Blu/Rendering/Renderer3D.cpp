@@ -28,6 +28,7 @@ namespace Blu
         {
             Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/PBR_Mesh.hlsl");
             Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/DepthOnly.hlsl");
+            Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/DepthOnlySkinned.hlsl");
             Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Foliage_Instanced.hlsl");
             Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Skinned_Mesh.hlsl");
         }
@@ -37,6 +38,8 @@ namespace Blu
         }
         s_Data3D->MeshShader          = Renderer::GetShaderLibrary()->Get("PBR_Mesh");
         s_Data3D->DepthOnlyShader     = Renderer::GetShaderLibrary()->Get("DepthOnly");
+        if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+            s_Data3D->DepthOnlySkinnedShader = Renderer::GetShaderLibrary()->Get("DepthOnlySkinned");
         s_Data3D->InstancedMeshShader = Renderer::GetShaderLibrary()->Get("Foliage_Instanced");
         s_Data3D->SkinnedMeshShader   = Renderer::GetShaderLibrary()->Get("Skinned_Mesh");
         s_Data3D->CSMInstance         = CascadedShadowMap::Create(2048);
@@ -501,6 +504,41 @@ namespace Blu
         glm::mat4 Bones[128]; // 128 * 64 = 8 192 bytes
     };
     static_assert(sizeof(BoneDataGPU) == 8192, "BoneDataGPU size mismatch");
+
+    void Renderer3D::DrawSkinnedMeshShadow(const glm::mat4& transform, MeshComponent& mc,
+                                           const std::vector<glm::mat4>& boneMatrices,
+                                           const glm::mat4& lightVP)
+    {
+        if (!mc.ModelAsset || !mc.ModelAsset->HasSkeleton()) return;
+        if (!s_Data3D->DepthOnlySkinnedShader) return;
+
+        auto& sh = *s_Data3D->DepthOnlySkinnedShader;
+        sh.Bind();
+        sh.SetUniformMat4("u_LightVP", lightVP);
+        // Match DrawSkinnedMeshForward: bone matrices carry the node hierarchy, so the
+        // object transform alone (no per-submesh LocalTransform) maps to world space —
+        // keeping the shadow geometry identical to the lit geometry.
+        sh.SetUniformMat4("u_Model", transform);
+
+        BoneDataGPU boneGPU = {};
+        int count = std::min((int)boneMatrices.size(), 128);
+        for (int i = 0; i < count; ++i)
+            boneGPU.Bones[i] = boneMatrices[i];
+        sh.SetUniformBuffer("BoneData", &boneGPU, sizeof(boneGPU));
+        sh.Flush();
+
+        for (auto& submesh : mc.ModelAsset->SkinnedMeshes)
+        {
+            if (!submesh.VAO) continue;
+            submesh.VAO->Bind();
+            RenderCommand::DrawIndexed(submesh.VAO, submesh.IndexCount);
+        }
+
+        // Restore the static depth shader so EndCSMPass's UnBind (and any later static
+        // draws) stay consistent. The shadow-map pipeline state from BeginCSMPass holds.
+        sh.UnBind();
+        s_Data3D->DepthOnlyShader->Bind();
+    }
 
     void Renderer3D::DrawSkinnedMesh(const glm::mat4& transform, MeshComponent& mc,
                                      const std::vector<glm::mat4>& boneMatrices,

@@ -20,6 +20,12 @@ namespace Blu
                            const Skeleton& skeleton,
                            std::vector<glm::mat4>& finalBoneMatrices);
 
+        // Compute the rest/bind pose (no animation). Use when a skinned mesh has no
+        // clip to play — leaving the matrices identity collapses the mesh because its
+        // vertices are authored in bone space and need globalBind * inverseBind applied.
+        static void ComputeBindPose(const Skeleton& skeleton,
+                                    std::vector<glm::mat4>& finalBoneMatrices);
+
     private:
         static void ComputeNodeTransforms(const BoneNode& node,
                                           const glm::mat4& parentTransform,
