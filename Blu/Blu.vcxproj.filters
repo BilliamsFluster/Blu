@@ -1737,6 +1737,9 @@
     <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h">
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\SceneManager.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h">
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
