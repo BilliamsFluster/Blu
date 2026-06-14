@@ -513,6 +513,9 @@ namespace Blu
 			out << YAML::Key << "CellSize" << YAML::Value << spec.CellSize;
 			out << YAML::Key << "HeightScale" << YAML::Value << spec.HeightScale;
 			out << YAML::Key << "HeightmapPath" << YAML::Value << SerializeAssetPath(spec.HeightmapPath);
+			out << YAML::Key << "ProceduralAmplitude" << YAML::Value << spec.ProceduralAmplitude;
+			out << YAML::Key << "ProceduralFrequency" << YAML::Value << spec.ProceduralFrequency;
+			out << YAML::Key << "ProceduralFlatRadius" << YAML::Value << spec.ProceduralFlatRadius;
 			out << YAML::EndMap;
 		}
 		if (entity.HasComponent<MeshLODComponent>())
@@ -1444,6 +1447,9 @@ namespace Blu
 					if (terrainComponent["HeightmapPath"])
 						terrain.Spec.HeightmapPath = NormalizeLoadedAssetPath(
 							terrainComponent["HeightmapPath"].as<std::string>(), sceneFilePath, "TerrainComponent.HeightmapPath");
+					if (terrainComponent["ProceduralAmplitude"])  terrain.Spec.ProceduralAmplitude  = terrainComponent["ProceduralAmplitude"].as<float>();
+					if (terrainComponent["ProceduralFrequency"])  terrain.Spec.ProceduralFrequency  = terrainComponent["ProceduralFrequency"].as<float>();
+					if (terrainComponent["ProceduralFlatRadius"]) terrain.Spec.ProceduralFlatRadius = terrainComponent["ProceduralFlatRadius"].as<float>();
 					terrain.Spec = SanitizeTerrainSpec(terrain.Spec);
 					m_Scene->RebuildTerrain(deserializedEntity);
 				}

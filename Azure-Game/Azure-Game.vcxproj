@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Azure\src\Actors\EnvironmentActor.h" />
     <ClInclude Include="..\Azure\src\Actors\PlayerCharacter.h" />
     <ClInclude Include="..\Azure\src\Actors\ZombieCharacter.h" />
     <ClInclude Include="..\Azure\src\Actors\ZombieTestActor.h" />
@@ -140,6 +141,7 @@
     <ClInclude Include="..\Azure\src\GameModes\ZombieGameMode.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Azure\src\Actors\EnvironmentActor.cpp" />
     <ClCompile Include="..\Azure\src\Actors\PlayerCharacter.cpp" />
     <ClCompile Include="..\Azure\src\Actors\ZombieCharacter.cpp" />
     <ClCompile Include="..\Azure\src\Actors\ZombieTestActor.cpp" />

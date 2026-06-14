@@ -4,6 +4,7 @@
 #include <glm/gtc/constants.hpp>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 // stb_image is compiled as part of the engine's ExternalDependencies.
 extern "C"
@@ -38,6 +39,25 @@ namespace Blu
             glm::mix(sample(x0, y0), sample(x1, y0), fx),
             glm::mix(sample(x0, y1), sample(x1, y1), fx),
             fy);
+    }
+
+    float TerrainProceduralHeight(float x, float z, const TerrainSpec& spec)
+    {
+        if (spec.ProceduralAmplitude <= 0.0f)
+            return 0.0f;
+
+        const float f = spec.ProceduralFrequency;
+        // Three octaves of smooth, deterministic rolling hills (no RNG).
+        float h = std::sin(x * f) * std::cos(z * f);
+        h += 0.5f  * std::sin(x * f * 2.13f + 1.7f) * std::cos(z * f * 1.87f + 0.4f);
+        h += 0.25f * std::sin(x * f * 4.07f + 3.1f) * std::cos(z * f * 3.71f + 2.2f);
+        h = glm::clamp((h + 1.75f) / 3.5f, 0.0f, 1.0f); // → roughly [0,1]
+
+        // Flat central play area, hills ramp in over a 10 m band beyond ProceduralFlatRadius.
+        const float r       = std::sqrt(x * x + z * z);
+        const float falloff = glm::smoothstep(spec.ProceduralFlatRadius,
+                                              spec.ProceduralFlatRadius + 10.0f, r);
+        return h * spec.ProceduralAmplitude * falloff;
     }
 
     TerrainSpec SanitizeTerrainSpec(const TerrainSpec& spec)
@@ -79,12 +99,17 @@ namespace Blu
                 float u = (float)col / spec.GridWidth;
                 float v = (float)row / spec.GridHeight;
 
+                const float worldX = col * spec.CellSize - halfW;
+                const float worldZ = row * spec.CellSize - halfH;
+
                 float height = 0.0f;
                 if (imgData)
                     height = SampleHeight(imgData, imgW, imgH, u, v) * spec.HeightScale;
+                else
+                    height = TerrainProceduralHeight(worldX, worldZ, spec); // 0 unless amplitude set
 
                 auto& vert    = vertices[row * numCols + col];
-                vert.Position = { col * spec.CellSize - halfW, height, row * spec.CellSize - halfH };
+                vert.Position = { worldX, height, worldZ };
                 vert.Normal   = { 0.0f, 1.0f, 0.0f }; // recalculated below
                 vert.TexCoord = { u, v };
                 vert.Tangent  = { 1.0f, 0.0f, 0.0f }; // recalculated below

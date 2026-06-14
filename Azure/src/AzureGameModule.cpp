@@ -2,6 +2,7 @@
 #include "Actors/PlayerCharacter.h"
 #include "Actors/ZombieCharacter.h"
 #include "Actors/ZombieTestActor.h"
+#include "Actors/EnvironmentActor.h"
 #include "GameModes/ZombieGameMode.h"
 #include "Blu/GameFramework/NativeClassRegistry.h"
 
@@ -33,6 +34,8 @@ namespace Azure
 				Blu::MakeNativeProperty<ZombieTestActor>("AttackDamage", &ZombieTestActor::AttackDamage),
 				Blu::MakeNativeProperty<ZombieTestActor>("AttackCooldownSeconds", &ZombieTestActor::AttackCooldownSeconds)
 			});
+		registry.RegisterActor<EnvironmentActor>(
+			"Azure::EnvironmentActor", "Environment Actor", "Azure", { "EnvironmentActor" });
 		registry.RegisterGameMode<ZombieGameMode>(
 			"Azure::ZombieGameMode", "Zombie Game Mode", "Azure", { "ZombieGameMode" });
 	}
