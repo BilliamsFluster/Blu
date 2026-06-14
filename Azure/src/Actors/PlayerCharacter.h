@@ -2,6 +2,7 @@
 #include "Blu/GameFramework/ACharacter.h"
 #include "Blu/Core/InputMap.h"
 #include "Blu/Core/UUID.h"
+#include "Blu/Audio/AudioEngine.h"
 
 namespace Blu { class Entity; }
 
@@ -51,5 +52,11 @@ namespace Azure
 		bool  m_Reloading      = false;
 		float m_ProjectileSpeed = 60.0f;
 		float m_WeaponDamage    = 34.0f;
+
+		// Weapon SFX — loaded lazily on the first weapon update (the AudioEngine isn't
+		// initialized yet during BeginPlay), then played per shot / per impact.
+		Blu::SoundHandle m_GunshotSound = Blu::kInvalidSound;
+		Blu::SoundHandle m_ImpactSound  = Blu::kInvalidSound;
+		bool             m_TriedAudio   = false;
 	};
 }

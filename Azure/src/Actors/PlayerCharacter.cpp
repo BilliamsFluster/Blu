@@ -10,6 +10,8 @@
 #include "Blu/Rendering/Renderer3D.h"
 #include "Blu/Rendering/Mesh.h"
 #include "Blu/Rendering/Material.h"
+#include "Blu/Audio/AudioEngine.h"
+#include "Blu/Utils/AssetPath.h"
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
@@ -38,6 +40,7 @@ namespace Azure
 		// HUD-readable mirror of the weapon's ammo counters (synced each Tick).
 		if (!HasComponent<Blu::AmmoComponent>())
 			AddComponent<Blu::AmmoComponent>();
+
 
 		// First-person view-model (arms + weapon) — spawned once, re-anchored to the camera
 		// every frame in UpdateViewModel().
@@ -259,10 +262,31 @@ namespace Azure
 		// Transient muzzle-flash sparks — a brief forward burst, only when firing (not a
 		// persistent emitter). Short life so it pops and clears with the shot cadence.
 		Blu::GpuParticleSystem::Get().Emit(muzzle, 12, forward * 3.0f, 2.2f, 0.12f, 0.06f, 0.0f);
+
+		// Gunshot SFX (one handle re-triggered per shot — Play seeks to frame 0).
+		if (m_GunshotSound != Blu::kInvalidSound)
+		{
+			Blu::AudioEngine::Get().SetVolume(m_GunshotSound, 0.85f);
+			Blu::AudioEngine::Get().Play(m_GunshotSound);
+		}
 	}
 
 	void PlayerCharacter::UpdateWeapon(float dt)
 	{
+		// Lazy-load weapon SFX once — the AudioEngine isn't initialized during BeginPlay,
+		// but it is by the first runtime tick. (Audio isn't captured headlessly; the log
+		// confirms the load succeeded, i.e. handles != 0.)
+		if (!m_TriedAudio)
+		{
+			m_TriedAudio   = true;
+			m_GunshotSound = Blu::AudioEngine::Get().LoadSound(
+				Blu::AssetPath::ResolvePath("assets/audio/gunshot.wav").string());
+			m_ImpactSound  = Blu::AudioEngine::Get().LoadSound(
+				Blu::AssetPath::ResolvePath("assets/audio/impact.wav").string());
+			BLU_CORE_INFO("PlayerCharacter: weapon SFX loaded (gunshot={0}, impact={1})",
+			              m_GunshotSound, m_ImpactSound);
+		}
+
 		auto& input = Blu::InputMap::Get();
 		if (m_FireCooldown > 0.0f)
 			m_FireCooldown -= dt;
@@ -334,6 +358,8 @@ namespace Azure
 					Blu::Renderer3D::AddDynamicLight(t.Translation, glm::vec3(1.0f, 0.65f, 0.25f), 6.0f, 4.5f);
 					if (HasComponent<Blu::AmmoComponent>())
 						GetComponent<Blu::AmmoComponent>().HitFlash = 0.15f; // flash the hitmarker
+					if (m_ImpactSound != Blu::kInvalidSound)
+						Blu::AudioEngine::Get().Play(m_ImpactSound);
 					break;
 				}
 			}
