@@ -132,6 +132,8 @@ namespace Blu
 
 				// Advance JustPressed state for next frame
 				InputMap::Get().OnFrameEnd();
+
+				BLU_FRAME_MARK(); // delimit the frame for the profiler (no-op unless BLU_USE_TRACY)
 			}
 
 		}

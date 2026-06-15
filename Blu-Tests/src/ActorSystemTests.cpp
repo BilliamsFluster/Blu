@@ -19,6 +19,7 @@
 #include "Blu/UI/RuntimeUI.h"
 #include "Blu/Utils/FileSystemService.h"
 #include "Blu/Project/Project.h"
+#include "Blu/Debug/PerfStats.h"
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -795,6 +796,15 @@ namespace
 		}
 	}
 
+	// The process-memory query backing the editor's live memory readout must return real numbers.
+	void TestPerfStatsMemory()
+	{
+		Blu::Perf::MemoryInfo mem = Blu::Perf::QueryProcessMemory();
+		Require(mem.WorkingSetBytes > 0, "process working set should be > 0");
+		Require(mem.PrivateBytes > 0, "process private bytes should be > 0");
+		Require(mem.PeakWorkingSetBytes >= mem.WorkingSetBytes, "peak working set should be >= current");
+	}
+
 	// Validates Animator::BlendClips crossfade math (Phase 10a): per-bone matrix lerp at the
 	// transition endpoints and midpoint, with clamping. The Scene tick drives this during a PlayClip().
 	void TestAnimatorBlend()
@@ -916,6 +926,7 @@ int main()
 		TestProjectManagerLoadAndMounts();
 		TestFogVolumeRayMath();
 		TestAnimatorBlend();
+		TestPerfStatsMemory();
 	}
 	catch (const std::exception& error)
 	{

@@ -1452,6 +1452,9 @@
     <ClInclude Include="engine\src\Blu\Debug\Instrumentor.h">
       <Filter>src\Blu\Debug</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Debug\PerfStats.h">
+      <Filter>src\Blu\Debug</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Events\Event.h">
       <Filter>src\Blu\Events</Filter>
     </ClInclude>
@@ -1807,6 +1810,9 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\UUID.cpp">
       <Filter>src\Blu\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Debug\PerfStats.cpp">
+      <Filter>src\Blu\Debug</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp">
       <Filter>src\Blu\Events</Filter>

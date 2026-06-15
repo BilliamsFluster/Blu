@@ -31,6 +31,7 @@
 #include "Blu/Scene/SceneManager.h"
 #include "Blu/UI/RuntimeUI.h"
 #include "Blu/Project/Project.h"
+#include "Blu/Debug/PerfStats.h"
 #include "FreeFlyCamera.h"
 #include "AssetPreviewService.h"
 #include "AzureGameModule.h"
@@ -2656,6 +2657,11 @@ namespace Blu
 				ImGui::Text("GPU Time    %.2f ms", m_GpuTimeMs);
 			else
 				ImGui::TextDisabled("GPU Time    --");
+
+			Blu::Perf::MemoryInfo mem = Blu::Perf::QueryProcessMemory();
+			ImGui::Text("Memory      %.1f MB (peak %.1f)",
+			            Blu::Perf::BytesToMiB(mem.WorkingSetBytes), Blu::Perf::BytesToMiB(mem.PeakWorkingSetBytes));
+			ImGui::Text("Private     %.1f MB", Blu::Perf::BytesToMiB(mem.PrivateBytes));
 
 			ImGui::Spacing();
 
