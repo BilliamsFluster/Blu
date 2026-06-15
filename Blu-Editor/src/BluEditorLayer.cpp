@@ -478,7 +478,27 @@ namespace Blu
 			if (!startupScene.empty() && std::filesystem::exists(startupScene))
 			{
 				BLU_CORE_INFO("Editor: opening project startup scene '{0}'", startupScene.generic_string());
-				OpenScene(startupScene);
+				// OpenScene -> SceneSerializer::Deserialize -> YAML::Load, which throws on a
+				// corrupt scene file. At startup an unhandled throw would crash the editor before
+				// it ever opens, leaving no way to recover — so fall back to a clean empty scene
+				// (the same state as launching with no project) and let the user fix it from there.
+				try
+				{
+					OpenScene(startupScene);
+				}
+				catch (const std::exception& e)
+				{
+					BLU_CORE_ERROR("Editor: failed to open project startup scene '{0}': {1}",
+						startupScene.generic_string(), e.what());
+					m_ActiveScene = std::make_shared<Scene>();
+					m_EditorScene = m_ActiveScene;
+					m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
+					m_CameraEntity.AddComponent<CameraComponent>();
+					m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
+					m_CameraEntity.AddComponent<ActorComponent>().ClassID = "Blu::CameraController";
+					m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+					m_SceneDirty = false;
+				}
 			}
 			else if (!startupScene.empty())
 			{

@@ -80,7 +80,14 @@ namespace Blu
 
 		loaded.Root = std::filesystem::weakly_canonical(manifest.parent_path(), ec);
 		if (ec || loaded.Root.empty())
-			loaded.Root = manifest.parent_path();
+		{
+			// weakly_canonical can fail on exotic paths; still hand callers an absolute Root so
+			// GetAssetsPath()/GetStartupScenePath() don't silently become CWD-relative.
+			std::error_code absEc;
+			loaded.Root = std::filesystem::absolute(manifest.parent_path(), absEc);
+			if (absEc || loaded.Root.empty())
+				loaded.Root = manifest.parent_path();
+		}
 		if (loaded.Name.empty())
 			loaded.Name = manifest.stem().string();
 		if (loaded.AssetsDirectory.empty())
