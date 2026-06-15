@@ -41,7 +41,12 @@ float3 ReconstructWorldPos(float2 uv, float depth)
 // Length of the ray (origin ro, unit dir rd, clamped to [0, segLen]) inside an axis-aligned box.
 float BoxOverlap(float3 ro, float3 rd, float segLen, float3 center, float3 halfExt)
 {
-    float3 inv  = 1.0 / rd;            // rd is unit; zero components -> +/-inf, slab test still valid
+    // Nudge exactly-axis-parallel components off zero: 1/0 = inf and (0)*inf = NaN on a slab
+    // face, which would otherwise leak a thin band of fog where a ray is parallel to a face.
+    float3 safeRd = float3(abs(rd.x) < 1e-6 ? 1e-6 : rd.x,
+                           abs(rd.y) < 1e-6 ? 1e-6 : rd.y,
+                           abs(rd.z) < 1e-6 ? 1e-6 : rd.z);
+    float3 inv  = 1.0 / safeRd;        // finite, so the slab min/max never sees 0*inf
     float3 t0   = (center - halfExt - ro) * inv;
     float3 t1   = (center + halfExt - ro) * inv;
     float3 tlo  = min(t0, t1);

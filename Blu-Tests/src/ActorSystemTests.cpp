@@ -724,7 +724,11 @@ namespace
 	// geometric cases right is the high-confidence check that localized fog accumulates correctly.
 	static float FogBoxOverlap(glm::vec3 ro, glm::vec3 rd, float segLen, glm::vec3 center, glm::vec3 halfExt)
 	{
-		glm::vec3 inv = 1.0f / rd;
+		// Mirror the shader's axis-parallel guard (avoids 0*inf = NaN on a slab face).
+		glm::vec3 safeRd(std::fabs(rd.x) < 1e-6f ? 1e-6f : rd.x,
+		                 std::fabs(rd.y) < 1e-6f ? 1e-6f : rd.y,
+		                 std::fabs(rd.z) < 1e-6f ? 1e-6f : rd.z);
+		glm::vec3 inv = 1.0f / safeRd;
 		glm::vec3 t0  = (center - halfExt - ro) * inv;
 		glm::vec3 t1  = (center + halfExt - ro) * inv;
 		glm::vec3 tlo = glm::min(t0, t1);
@@ -766,6 +770,15 @@ namespace
 		Require(approx(FogSphereOverlap(ro, rd, 10.0f, glm::vec3(10, 0, 0), 3.0f), 3.0f), "sphere partial overlap should be 3");
 		// Ray offset in Y beyond the radius → miss → overlap 0.
 		Require(approx(FogSphereOverlap(glm::vec3(0, 10, 0), rd, 100.0f, glm::vec3(10, 0, 0), 3.0f), 0.0f), "sphere miss should be 0");
+
+		// Axis-parallel ray (zero rd components) straight through a box must not NaN; full chord = 4.
+		Require(approx(FogBoxOverlap(glm::vec3(0, 0, -10), glm::vec3(0, 0, 1), 100.0f, glm::vec3(0), glm::vec3(2)), 4.0f),
+			"axis-parallel ray through box should be 4");
+		// Ray grazing exactly along a box face (the degenerate 0*inf case) must stay finite.
+		{
+			float g = FogBoxOverlap(glm::vec3(2, 0, -10), glm::vec3(0, 0, 1), 100.0f, glm::vec3(0), glm::vec3(2));
+			Require(g == g && g >= 0.0f && g <= 4.0f, "grazing-face ray must be finite (no NaN)");
+		}
 	}
 
 	// Verifies the project layer that backs the editor's "--project" launch: a .bluproj round-trips,
