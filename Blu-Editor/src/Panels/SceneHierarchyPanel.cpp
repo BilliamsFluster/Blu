@@ -219,22 +219,6 @@ namespace Blu
 			// ---- Search bar ----
 			ImGui::SetNextItemWidth(-1.0f);
 			ImGui::InputTextWithHint("##search", "Search...", m_SearchBuffer, sizeof(m_SearchBuffer));
-			ImGui::Spacing();
-			if (ImGui::SmallButton("All"))
-			{
-				m_FilterCameras = m_FilterLights = m_FilterMeshes = m_FilterPhysics = true;
-				m_FilterScripts = m_FilterCharacters = m_FilterOther = true;
-			}
-			ImGui::SameLine();
-			ImGui::Checkbox("Cam", &m_FilterCameras);
-			ImGui::SameLine();
-			ImGui::Checkbox("Light", &m_FilterLights);
-			ImGui::SameLine();
-			ImGui::Checkbox("Mesh", &m_FilterMeshes);
-			ImGui::SameLine();
-			ImGui::Checkbox("Phys", &m_FilterPhysics);
-			ImGui::SameLine();
-			ImGui::Checkbox("Script", &m_FilterScripts);
 			ImGui::Separator();
 
 			uint32_t actorCount = 0;

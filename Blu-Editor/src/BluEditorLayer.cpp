@@ -2663,15 +2663,17 @@ namespace Blu
 			if (ImGui::Checkbox("Time of Day", &useTod))
 				m_ActiveScene->SetUseTimeOfDay(useTod);
 			ImGui::SameLine();
-			if (ImGui::Button("Morning")) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.30f; tod.AutoAdvance = false; }
+			const ImVec2 todBtn(96.0f, 0.0f);
+			if (ImGui::Button("Morning", todBtn)) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.30f; tod.AutoAdvance = false; }
 			ImGui::SameLine();
-			if (ImGui::Button("Noon")) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.50f; tod.AutoAdvance = false; }
+			if (ImGui::Button("Noon", todBtn)) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.50f; tod.AutoAdvance = false; }
 			ImGui::SameLine();
-			if (ImGui::Button("Golden Hour")) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.72f; tod.AutoAdvance = false; }
+			if (ImGui::Button("Golden Hour", todBtn)) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.72f; tod.AutoAdvance = false; }
 			ImGui::SameLine();
-			if (ImGui::Button("Night")) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.00f; tod.AutoAdvance = false; }
+			if (ImGui::Button("Night", todBtn)) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.00f; tod.AutoAdvance = false; }
 
 			auto& tod = m_ActiveScene->GetTimeOfDay();
+			ImGui::PushItemWidth(190.0f); // keep slider fields compact instead of stretching the panel
 			ImGui::SliderFloat("Time##Lighting", &tod.NormalizedTime, 0.0f, 1.0f, "%.3f");
 			ImGui::DragFloat("Sun Azimuth##Lighting", &tod.SunAzimuthDeg, 1.0f, 0.0f, 360.0f, "%.1f deg");
 			ImGui::DragFloat("ToD Sun Intensity", &tod.SunMaxStrength, 0.25f, 0.0f, 100.0f);
@@ -2691,6 +2693,7 @@ namespace Blu
 			float shadowStrength = useShadows ? 1.0f : 0.0f;
 			ImGui::SliderFloat("Shadow Strength", &shadowStrength, 0.0f, 1.0f, "%.2f");
 			ImGui::EndDisabled();
+			ImGui::PopItemWidth();
 
 			auto out = tod.Evaluate(tod.NormalizedTime);
 			ImGui::TextDisabled("Elevation %.1f deg | Exposure %.3f | Ambient %.3f",

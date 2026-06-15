@@ -276,6 +276,12 @@ namespace Blu
         return ext == ".cs" || ext == ".lua" || ext == ".py";
     }
 
+    // Internal sidecar/data files the user shouldn't see in the browser.
+    static bool IsHiddenExtension(const std::string& ext)
+    {
+        return ext == ".meta" || ext == ".yaml" || ext == ".yml";
+    }
+
     // Type-filter dropdown order: 0=All, then the categories below. Folders always pass
     // (kept visible for navigation); only files are filtered.
     static const char* const s_TypeFilterItems[] = {
@@ -694,7 +700,12 @@ namespace Blu
             else
             {
                 for (auto& entry : std::filesystem::directory_iterator(m_CurrentDirectory))
+                {
+                    std::string ex = entry.path().extension().string();
+                    for (char& ch : ex) ch = (char)std::tolower((unsigned char)ch);
+                    if (!entry.is_directory() && IsHiddenExtension(ex)) continue; // hide .meta/.yaml
                     entries.push_back(entry);
+                }
             }
         }
         SortEntries(entries, m_SortMode);
