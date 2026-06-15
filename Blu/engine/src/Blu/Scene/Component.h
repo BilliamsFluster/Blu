@@ -191,7 +191,7 @@ namespace Blu
 		}
 	};
 
-	struct TagComponent 
+	struct TagComponent
 	{
 		std::string Tag;
 		TagComponent() = default;
@@ -199,6 +199,17 @@ namespace Blu
 		TagComponent(const std::string& tag)
 			:Tag(tag) {}
 
+	};
+
+	// Editor-only organisational grouping for the Outliner. Path is a folder label
+	// (e.g. "Lights"); empty / no component = the entity sits at the Outliner root.
+	// Purely a display grouping — no transform parenting.
+	struct FolderComponent
+	{
+		std::string Path;
+		FolderComponent() = default;
+		FolderComponent(const FolderComponent&) = default;
+		FolderComponent(const std::string& path) : Path(path) {}
 	};
 
 	struct CameraComponent 
@@ -644,7 +655,7 @@ namespace Blu
 		TerrainComponent, SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
 		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent,
 		MeshCollider3DComponent, CharacterControllerComponent,
-		InteractableComponent, PickupComponent, PlayerStatsComponent>;
+		InteractableComponent, PickupComponent, PlayerStatsComponent, FolderComponent>;
 
 
 

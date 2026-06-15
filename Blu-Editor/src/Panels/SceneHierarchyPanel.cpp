@@ -198,6 +198,7 @@ namespace Blu
 		m_Context = scene;
 		m_SelectedEntity = {};
 		m_LastEntityCount = (size_t)-1; // re-baseline so a scene swap doesn't read as a dirty edit
+		m_OutlinerFolders.clear();      // folders are per-scene; render repopulates from FolderComponents
 	}
 	void SceneHierarchyPanel::SetSelectedEntity(Entity entity)
 	{
@@ -261,7 +262,9 @@ namespace Blu
 			}
 			ImGui::Separator();
 
-			// ---- Entity list ----
+			// ---- Entity list (grouped into Outliner folders) ----
+			std::map<std::string, std::vector<Entity>> outlinerFoldered;
+			std::vector<Entity> outlinerRoots;
 			m_Context->m_Registry.each([&](auto entityID)
 			{
 				Entity entity{ entityID, m_Context.get() };
@@ -272,7 +275,6 @@ namespace Blu
 				if (m_SearchBuffer[0] != '\0')
 				{
 					const auto& tag = entity.GetComponent<TagComponent>().Tag;
-					// Simple case-insensitive search using std::search + tolower lambda.
 					auto it = std::search(
 						tag.begin(), tag.end(),
 						m_SearchBuffer, m_SearchBuffer + strlen(m_SearchBuffer),
@@ -281,13 +283,102 @@ namespace Blu
 						return; // skip non-matching entities
 				}
 
-				DrawEntityNode(entity);
+				std::string folder;
+				if (entity.HasComponent<FolderComponent>())
+					folder = entity.GetComponent<FolderComponent>().Path;
+				if (folder.empty())
+					outlinerRoots.push_back(entity);
+				else
+				{
+					outlinerFoldered[folder].push_back(entity);
+					m_OutlinerFolders.insert(folder);
+				}
 			});
+
+			// Re-file a dropped entity into a folder ("" = move to the Outliner root).
+			auto acceptEntityDrop = [&](const std::string& folder)
+			{
+				if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("OUTLINER_ENTITY"))
+				{
+					UUID id = *static_cast<const UUID*>(p->Data);
+					Entity dropped = m_Context->GetEntityByUUID(id);
+					if (dropped)
+					{
+						if (folder.empty())
+						{
+							if (dropped.HasComponent<FolderComponent>())
+								dropped.RemoveComponent<FolderComponent>();
+						}
+						else
+						{
+							if (!dropped.HasComponent<FolderComponent>())
+								dropped.AddComponent<FolderComponent>();
+							dropped.GetComponent<FolderComponent>().Path = folder;
+						}
+						NotifySceneModified();
+					}
+				}
+			};
+
+			// Folder nodes (alphabetical) — collapsible, drag-drop targets, gold-tinted.
+			std::string folderToDelete;
+			for (const auto& folderName : m_OutlinerFolders)
+			{
+				ImGui::PushID(folderName.c_str());
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.82f, 0.35f, 1.0f));
+				const bool folderOpen = ImGui::TreeNodeEx(folderName.c_str(),
+					ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen,
+					"%s/", folderName.c_str());
+				ImGui::PopStyleColor();
+				if (ImGui::BeginDragDropTarget()) { acceptEntityDrop(folderName); ImGui::EndDragDropTarget(); }
+				if (ImGui::BeginPopupContextItem("##folderctx"))
+				{
+					if (ImGui::MenuItem("Delete Folder (move entities to root)")) folderToDelete = folderName;
+					ImGui::EndPopup();
+				}
+				if (folderOpen)
+				{
+					auto it = outlinerFoldered.find(folderName);
+					if (it != outlinerFoldered.end())
+						for (auto& e : it->second) DrawEntityNode(e);
+					ImGui::TreePop();
+				}
+				ImGui::PopID();
+			}
+
+			// Root-level entities.
+			for (auto& e : outlinerRoots)
+				DrawEntityNode(e);
+
+			// Drop-to-root zone: the empty space below accepts entity drops to un-folder them.
+			{
+				const float remaining = ImGui::GetContentRegionAvail().y;
+				ImGui::Dummy(ImVec2(-1.0f, remaining > 12.0f ? remaining : 12.0f));
+				if (ImGui::BeginDragDropTarget()) { acceptEntityDrop(""); ImGui::EndDragDropTarget(); }
+			}
+
+			if (!folderToDelete.empty())
+			{
+				auto it = outlinerFoldered.find(folderToDelete);
+				if (it != outlinerFoldered.end())
+					for (auto& e : it->second)
+						if (e.HasComponent<FolderComponent>()) e.RemoveComponent<FolderComponent>();
+				m_OutlinerFolders.erase(folderToDelete);
+				NotifySceneModified();
+			}
 
 			if (!m_EntityHovered)
 			{
 				if (ImGui::BeginPopupContextWindow())
 				{
+					if (ImGui::MenuItem("New Folder"))
+					{
+						std::string name = "Folder";
+						for (int n = 1; m_OutlinerFolders.count(name); ++n)
+							name = "Folder" + std::to_string(n);
+						m_OutlinerFolders.insert(name);
+					}
+					ImGui::Separator();
 					if (ImGui::BeginMenu("Create Entity"))
 					{
 						if (ImGui::MenuItem("Camera Entity"))
@@ -403,6 +494,13 @@ namespace Blu
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		std::string label = std::string(EntityIcon(entity)) + " " + tag;
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, "%s", label.c_str());
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+		{
+			UUID dragId = entity.GetUUID();
+			ImGui::SetDragDropPayload("OUTLINER_ENTITY", &dragId, sizeof(UUID));
+			ImGui::TextUnformatted(tag.c_str());
+			ImGui::EndDragDropSource();
+		}
 		if (ImGui::IsItemClicked())
 		{
 			m_SelectedEntity = entity;

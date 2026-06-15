@@ -3,6 +3,8 @@
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/Entity.h"
 #include <functional>
+#include <set>
+#include <string>
 
 namespace Blu
 {
@@ -34,6 +36,7 @@ namespace Blu
 		Entity m_SelectedEntity;
 		Entity m_RenamingEntity;          // entity being inline-renamed in the Outliner
 		bool   m_RenameRequestFocus = false; // focus the rename field on its first frame
+		std::set<std::string> m_OutlinerFolders; // organisational folders (incl. empty ones this session)
 		std::function<void(Entity)> m_OpenActorEditorCallback;
 		std::function<void(Entity)> m_RequestDeleteCallback;
 		std::function<void()>       m_SceneModifiedCallback;

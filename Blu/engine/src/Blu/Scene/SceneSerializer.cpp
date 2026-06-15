@@ -319,6 +319,12 @@ namespace Blu
 			out << YAML::EndMap;
 
 		}
+		if (entity.HasComponent<FolderComponent>())
+		{
+			out << YAML::Key << "FolderComponent" << YAML::BeginMap;
+			out << YAML::Key << "Path" << YAML::Value << entity.GetComponent<FolderComponent>().Path;
+			out << YAML::EndMap;
+		}
 		if (entity.HasComponent<ActorComponent>())
 		{
 			auto& actorComponent = entity.GetComponent<ActorComponent>();
@@ -1101,7 +1107,11 @@ namespace Blu
 				}
 
 				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
-				
+
+				if (auto folderComponent = entity["FolderComponent"])
+					deserializedEntity.AddComponent<FolderComponent>(
+						folderComponent["Path"] ? folderComponent["Path"].as<std::string>() : std::string());
+
 
 				auto transformComponent = entity["TransformComponent"];
 
