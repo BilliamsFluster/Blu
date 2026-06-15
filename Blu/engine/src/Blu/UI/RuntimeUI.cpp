@@ -76,6 +76,9 @@ namespace Blu
 			if (binding == "ammotext") return UIBinding::AmmoText;
 			if (binding == "reticle") return UIBinding::Reticle;
 			if (binding == "hitmarker") return UIBinding::Hitmarker;
+			if (binding == "wave") return UIBinding::Wave;
+			if (binding == "score") return UIBinding::Score;
+			if (binding == "lives") return UIBinding::Lives;
 			return UIBinding::None;
 		}
 
@@ -125,6 +128,12 @@ namespace Blu
 				return std::to_string(diagnostics.PossessedPawnAmmoInMag) + " / " + std::to_string(diagnostics.PossessedPawnAmmoReserve);
 			case UIBinding::InteractPrompt:
 				return diagnostics.NearbyInteractableName.empty() ? "" : "E: " + diagnostics.NearbyInteractableName;
+			case UIBinding::Wave:
+				return diagnostics.HasWaveHUD ? "Wave " + std::to_string(diagnostics.CurrentWave) + " / " + std::to_string(diagnostics.TotalWaves) : "";
+			case UIBinding::Score:
+				return diagnostics.HasWaveHUD ? "Score: " + std::to_string(diagnostics.ZombiesKilled) : "";
+			case UIBinding::Lives:
+				return diagnostics.HasWaveHUD ? "Lives: " + std::to_string(diagnostics.PlayerLives) : "";
 			default:
 				return {};
 			}

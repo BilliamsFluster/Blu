@@ -699,11 +699,25 @@ namespace
 		Require(Blu::AudioEngine::Get().IsBackendCompiled(), "miniaudio backend was not compiled into Blu");
 	}
 
+	static bool HUDHasBinding(const std::vector<Blu::UIWidget>& widgets, Blu::UIBinding binding)
+	{
+		for (const auto& w : widgets)
+		{
+			if (w.Binding == binding) return true;
+			if (HUDHasBinding(w.Children, binding)) return true;
+		}
+		return false;
+	}
+
 	void TestAuthoredGameplaySliceAssets()
 	{
 		Blu::UIDocument hud;
 		Require(Blu::RuntimeUI::LoadDocument("assets/ui/GameplayHUD.bluui", hud), "authored gameplay HUD did not load");
 		Require(!hud.Widgets.empty(), "authored gameplay HUD has no widgets");
+		// Wave/Score/Lives bindings must author + parse (Phase 13 HUD additions).
+		Require(HUDHasBinding(hud.Widgets, Blu::UIBinding::Wave),  "gameplay HUD missing Wave binding");
+		Require(HUDHasBinding(hud.Widgets, Blu::UIBinding::Score), "gameplay HUD missing Score binding");
+		Require(HUDHasBinding(hud.Widgets, Blu::UIBinding::Lives), "gameplay HUD missing Lives binding");
 
 		std::ifstream scene("Blu-Editor/assets/scenes/GameplayCoreTest.blu");
 		std::stringstream sceneText;

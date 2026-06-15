@@ -81,6 +81,12 @@ namespace Blu
 		int   PossessedPawnAmmoReserve = 0;
 		bool  PossessedPawnReloading   = false;
 		float HitmarkerTimer           = 0.0f; // >0 while the hitmarker should show
+		// Game-mode HUD stats (filled by AGameMode::PopulateHUD; HasWaveHUD gates display)
+		bool  HasWaveHUD               = false;
+		int   CurrentWave              = 0;
+		int   TotalWaves               = 0;
+		int   ZombiesKilled            = 0;
+		int   PlayerLives              = 0;
 	};
 
 	struct AssetDependency

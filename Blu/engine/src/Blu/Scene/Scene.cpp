@@ -617,6 +617,9 @@ namespace Blu
 	{
 		SceneDiagnostics diagnostics;
 		diagnostics.PlayerInputEnabled = m_PlayerInputEnabled;
+		// Let the active game mode surface its HUD stats (wave/score/lives) — engine stays generic.
+		if (m_GameMode)
+			m_GameMode->PopulateHUD(diagnostics);
 		diagnostics.EjectCameraActive = m_EjectCamera != nullptr;
 		diagnostics.UIRootCount = m_LastRuntimeUIRootCount;
 		diagnostics.RuntimeUIWidgetCount = m_LastRuntimeUIWidgetCount;

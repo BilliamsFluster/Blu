@@ -113,6 +113,15 @@ namespace Azure
 		--PlayerLives;
 	}
 
+	void ZombieGameMode::PopulateHUD(Blu::SceneDiagnostics& diagnostics) const
+	{
+		diagnostics.HasWaveHUD    = true;
+		diagnostics.CurrentWave   = CurrentWave;
+		diagnostics.TotalWaves    = TotalWaves;
+		diagnostics.ZombiesKilled = ZombiesKilled;
+		diagnostics.PlayerLives   = PlayerLives;
+	}
+
 	void ZombieGameMode::Tick(float dt)
 	{
 		if (IsGameOver() || IsVictory())
