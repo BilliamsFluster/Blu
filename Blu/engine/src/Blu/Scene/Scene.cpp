@@ -2246,10 +2246,30 @@ namespace Blu
 					continue;
 				}
 
-				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
-				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
-				Animator::Update(anim.Playing ? dt : 0.0f, anim.CurrentTime, anim.Loop, anim.SpeedScale,
-				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+				const int clipCount = (int)anim.SkelData->Clips.size();
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, clipCount - 1);
+				const float animDt = anim.Playing ? dt : 0.0f;
+				if (anim.NewClipIndex >= 0 && anim.NewClipIndex < clipCount)
+				{
+					// Crossfading: blend CurrentClipIndex (PrevClipTime) → NewClipIndex (CurrentTime).
+					bool done = Animator::UpdateWithBlending(animDt, anim.PrevClipTime, anim.CurrentTime,
+					                 anim.BlendElapsed, anim.BlendDuration, anim.Loop, anim.SpeedScale,
+					                 anim.SkelData->Clips[anim.CurrentClipIndex],
+					                 anim.SkelData->Clips[anim.NewClipIndex],
+					                 *anim.SkelData->Skel, anim.FinalBoneMatrices);
+					if (done)
+					{
+						anim.CurrentClipIndex = anim.NewClipIndex;
+						anim.NewClipIndex     = -1;
+						anim.BlendElapsed     = 0.0f;
+					}
+				}
+				else
+				{
+					const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
+					Animator::Update(animDt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+					                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+				}
 			}
 		}
 
@@ -2309,10 +2329,30 @@ namespace Blu
 					continue;
 				}
 
-				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
-				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
-				Animator::Update(anim.Playing ? dt : 0.0f, anim.CurrentTime, anim.Loop, anim.SpeedScale,
-				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+				const int clipCount = (int)anim.SkelData->Clips.size();
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, clipCount - 1);
+				const float animDt = anim.Playing ? dt : 0.0f;
+				if (anim.NewClipIndex >= 0 && anim.NewClipIndex < clipCount)
+				{
+					// Crossfading: blend CurrentClipIndex (PrevClipTime) → NewClipIndex (CurrentTime).
+					bool done = Animator::UpdateWithBlending(animDt, anim.PrevClipTime, anim.CurrentTime,
+					                 anim.BlendElapsed, anim.BlendDuration, anim.Loop, anim.SpeedScale,
+					                 anim.SkelData->Clips[anim.CurrentClipIndex],
+					                 anim.SkelData->Clips[anim.NewClipIndex],
+					                 *anim.SkelData->Skel, anim.FinalBoneMatrices);
+					if (done)
+					{
+						anim.CurrentClipIndex = anim.NewClipIndex;
+						anim.NewClipIndex     = -1;
+						anim.BlendElapsed     = 0.0f;
+					}
+				}
+				else
+				{
+					const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
+					Animator::Update(animDt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+					                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+				}
 			}
 		}
 

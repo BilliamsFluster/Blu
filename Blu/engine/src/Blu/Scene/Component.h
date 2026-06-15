@@ -549,6 +549,14 @@ namespace Blu
 		bool                       Loop             = true;
 		float                      SpeedScale       = 1.0f;
 
+		// Crossfade state (Phase 10a). When NewClipIndex >= 0 the animator blends from
+		// CurrentClipIndex (advanced via PrevClipTime) to NewClipIndex (advanced via CurrentTime)
+		// over BlendDuration seconds, then makes NewClipIndex the active clip. Use PlayClip().
+		int                        NewClipIndex     = -1;     // -1 = not transitioning
+		float                      PrevClipTime     = 0.0f;   // ticks, the outgoing clip
+		float                      BlendDuration    = 0.2f;   // seconds (also a per-animator default)
+		float                      BlendElapsed     = 0.0f;   // seconds into the current blend
+
 		// Output: filled each frame by Animator::Update — uploaded to BoneData cbuffer
 		std::vector<glm::mat4>     FinalBoneMatrices;
 
@@ -557,6 +565,26 @@ namespace Blu
 			FinalBoneMatrices.assign(Animator::kMaxBones, glm::mat4(1.0f));
 		}
 		AnimatorComponent(const AnimatorComponent&) = default;
+
+		// Start a crossfade to clip `index` over `blend` seconds. No-op if already playing or
+		// transitioning to it; snaps instantly when blend <= 0. Call from gameplay on state changes.
+		void PlayClip(int index, float blend = 0.2f)
+		{
+			if (index < 0) return;
+			if ((NewClipIndex < 0 && index == CurrentClipIndex) || index == NewClipIndex)
+				return;
+			if (blend <= 0.0f)
+			{
+				CurrentClipIndex = index; CurrentTime = 0.0f;
+				NewClipIndex = -1; BlendElapsed = 0.0f;
+				return;
+			}
+			PrevClipTime  = CurrentTime; // outgoing clip continues from here
+			CurrentTime   = 0.0f;        // incoming clip starts at 0
+			NewClipIndex  = index;
+			BlendDuration = blend;
+			BlendElapsed  = 0.0f;
+		}
 
 		const std::string& CurrentClipName() const
 		{

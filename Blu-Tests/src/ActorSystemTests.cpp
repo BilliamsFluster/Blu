@@ -781,6 +781,28 @@ namespace
 		}
 	}
 
+	// Validates Animator::BlendClips crossfade math (Phase 10a): per-bone matrix lerp at the
+	// transition endpoints and midpoint, with clamping. The Scene tick drives this during a PlayClip().
+	void TestAnimatorBlend()
+	{
+		auto approx = [](float a, float b) { return std::fabs(a - b) < 1e-4f; };
+		std::vector<glm::mat4> a(8, glm::mat4(1.0f)); // identity (diagonal 1)
+		std::vector<glm::mat4> b(8, glm::mat4(3.0f)); // diagonal 3
+		std::vector<glm::mat4> out;
+
+		Blu::Animator::BlendClips(0.0f, a, b, out);
+		Require(out.size() == 8, "BlendClips output size mismatch");
+		Require(approx(out[0][0][0], 1.0f), "t=0 should equal clip A");
+		Blu::Animator::BlendClips(1.0f, a, b, out);
+		Require(approx(out[0][0][0], 3.0f), "t=1 should equal clip B");
+		Blu::Animator::BlendClips(0.5f, a, b, out);
+		Require(approx(out[0][0][0], 2.0f), "t=0.5 should be the midpoint");
+		Blu::Animator::BlendClips(2.0f, a, b, out);
+		Require(approx(out[0][0][0], 3.0f), "t>1 should clamp to clip B");
+		Blu::Animator::BlendClips(-1.0f, a, b, out);
+		Require(approx(out[0][0][0], 1.0f), "t<0 should clamp to clip A");
+	}
+
 	// Verifies the project layer that backs the editor's "--project" launch: a .bluproj round-trips,
 	// loading it re-points the project:// and cache:// virtual mounts at the project (so assets and
 	// the asset registry become project-scoped), derived paths resolve, and a failed load is inert.
@@ -879,6 +901,7 @@ int main()
 		TestJoltConfigurationCompatibility();
 		TestProjectManagerLoadAndMounts();
 		TestFogVolumeRayMath();
+		TestAnimatorBlend();
 	}
 	catch (const std::exception& error)
 	{

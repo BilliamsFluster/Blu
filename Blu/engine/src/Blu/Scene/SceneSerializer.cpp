@@ -585,6 +585,7 @@ namespace Blu
 			out << YAML::Key << "Playing" << YAML::Value << animator.Playing;
 			out << YAML::Key << "Loop" << YAML::Value << animator.Loop;
 			out << YAML::Key << "SpeedScale" << YAML::Value << animator.SpeedScale;
+			out << YAML::Key << "BlendDuration" << YAML::Value << animator.BlendDuration;
 			out << YAML::EndMap;
 		}
 		if (entity.HasComponent<AudioSourceComponent>())
@@ -1586,6 +1587,7 @@ namespace Blu
 					if (animatorComponent["Playing"])          animator.Playing          = animatorComponent["Playing"].as<bool>();
 					if (animatorComponent["Loop"])             animator.Loop             = animatorComponent["Loop"].as<bool>();
 					if (animatorComponent["SpeedScale"])       animator.SpeedScale       = animatorComponent["SpeedScale"].as<float>();
+					if (animatorComponent["BlendDuration"])    animator.BlendDuration    = animatorComponent["BlendDuration"].as<float>();
 				}
 
 				auto spotLightComponent = entity["SpotLightComponent"];
