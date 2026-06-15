@@ -18,6 +18,7 @@
 #include "Blu/Rendering/Terrain.h"
 #include "Blu/UI/RuntimeUI.h"
 #include "Blu/Utils/FileSystemService.h"
+#include "Blu/Project/Project.h"
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -717,6 +718,76 @@ namespace
 	{
 		Require(Blu::IsJoltConfigurationCompatible(), "Blu and Jolt were compiled with incompatible configuration defines");
 	}
+
+	// Verifies the project layer that backs the editor's "--project" launch: a .bluproj round-trips,
+	// loading it re-points the project:// and cache:// virtual mounts at the project (so assets and
+	// the asset registry become project-scoped), derived paths resolve, and a failed load is inert.
+	void TestProjectManagerLoadAndMounts()
+	{
+		namespace fs = std::filesystem;
+		auto& fileSystem = Blu::FileSystemService::Get();
+
+		// Capture the current default project root (from the mount table, which stores the clean
+		// canonicalized path) so we can restore the default mounts when we're done.
+		const fs::path originalProjectRoot = []
+		{
+			const auto& mounts = Blu::FileSystemService::Get().GetMounts();
+			auto it = mounts.find("project");
+			return it != mounts.end() ? it->second : fs::path{};
+		}();
+
+		std::error_code ec;
+		const fs::path projectRoot = fs::temp_directory_path() / "BluProjectManagerTest";
+		fs::remove_all(projectRoot, ec);
+		fs::create_directories(projectRoot / "assets" / "scenes", ec);
+
+		// Author a minimal startup scene and a .bluproj that points at it.
+		{
+			std::ofstream scene(projectRoot / "assets" / "scenes" / "Sample.blu");
+			scene << "Scene: Sample\nSceneVersion: 1\nEntities:\n  []\n";
+		}
+		Blu::Project authored;
+		authored.Name = "SampleProject";
+		authored.AssetsDirectory = "assets";
+		authored.StartupScene = "assets/scenes/Sample.blu";
+		const fs::path manifest = projectRoot / "SampleProject.bluproj";
+		Require(Blu::ProjectManager::SaveProject(authored, manifest), "SaveProject failed to write the manifest");
+		Require(fs::exists(manifest), "manifest was not written to disk");
+
+		// Load from the directory (exercises single-manifest discovery) and confirm activation.
+		auto& projects = Blu::ProjectManager::Get();
+		Require(projects.LoadProject(projectRoot), "LoadProject failed for a valid project directory");
+		Require(projects.HasActiveProject(), "project did not become active after a successful load");
+		Require(projects.GetActiveProject().Name == "SampleProject", "project name did not round-trip through the manifest");
+
+		// project:// and cache:// must now point under the project root. Inspect the mount table
+		// directly (its stored paths are clean — Resolve("x://") appends an empty component that can
+		// leave a trailing separator, which would confuse filename()/parent_path()).
+		const auto& mounts = fileSystem.GetMounts();
+		auto projectMount = mounts.find("project");
+		auto cacheMount = mounts.find("cache");
+		Require(projectMount != mounts.end(), "project mount is missing after load");
+		Require(cacheMount != mounts.end(), "cache mount is missing after load");
+		Require(fs::equivalent(projectMount->second, projectRoot, ec) && !ec, "project:// was not re-pointed to the project root");
+		Require(cacheMount->second.filename() == ".cache", "cache:// did not resolve to <project>/.cache");
+		Require(fs::equivalent(cacheMount->second.parent_path(), projectRoot, ec) && !ec, "cache:// was not re-pointed under the project root");
+
+		// Derived paths.
+		Require(fs::equivalent(projects.GetAssetsPath(), projectRoot / "assets", ec) && !ec, "GetAssetsPath did not resolve to <root>/assets");
+		Require(fs::exists(projects.GetStartupScenePath()), "GetStartupScenePath did not resolve to an existing scene file");
+
+		// A failed load must leave the previously active project untouched.
+		Require(!projects.LoadProject(projectRoot / "DoesNotExist.bluproj"), "LoadProject should fail for a missing manifest");
+		Require(projects.HasActiveProject() && projects.GetActiveProject().Name == "SampleProject",
+			"a failed load must not clobber the active project");
+
+		// Restore global state so we don't disturb any later tests.
+		projects.Clear();
+		fileSystem.Reset();
+		if (!originalProjectRoot.empty())
+			fileSystem.MountDefaults(originalProjectRoot);
+		fs::remove_all(projectRoot, ec);
+	}
 }
 
 int main()
@@ -744,6 +815,7 @@ int main()
 		TestAudioBackendIsCompiled();
 		TestAuthoredGameplaySliceAssets();
 		TestJoltConfigurationCompatibility();
+		TestProjectManagerLoadAndMounts();
 	}
 	catch (const std::exception& error)
 	{

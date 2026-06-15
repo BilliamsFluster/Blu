@@ -30,6 +30,7 @@
 #include "Blu/Audio/AudioEngine.h"
 #include "Blu/Scene/SceneManager.h"
 #include "Blu/UI/RuntimeUI.h"
+#include "Blu/Project/Project.h"
 #include "FreeFlyCamera.h"
 #include "AssetPreviewService.h"
 #include "AzureGameModule.h"
@@ -466,6 +467,24 @@ namespace Blu
 		LoadEditorSettings();
 		// Intentionally not auto-loading the last scene to avoid startup crashes from corrupted scene files.
 		// Use File > Open or drag a .blu file to load a scene.
+		//
+		// Exception: when launched with "--project <path>", open that project's StartupScene so the
+		// editor lands directly in the project (Unreal-hub style). The project:// / cache:// mounts
+		// were already re-pointed in CreateApplication() before the AssetManager initialized, so the
+		// scene's asset handles resolve against the project.
+		if (ProjectManager::Get().HasActiveProject())
+		{
+			const std::filesystem::path startupScene = ProjectManager::Get().GetStartupScenePath();
+			if (!startupScene.empty() && std::filesystem::exists(startupScene))
+			{
+				BLU_CORE_INFO("Editor: opening project startup scene '{0}'", startupScene.generic_string());
+				OpenScene(startupScene);
+			}
+			else if (!startupScene.empty())
+			{
+				BLU_CORE_WARN("Editor: project startup scene '{0}' not found.", startupScene.generic_string());
+			}
+		}
 
 		// ---- GPU timer setup ----
 		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)

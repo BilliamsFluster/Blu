@@ -648,6 +648,7 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="engine\src\Blu\Project\Project.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Animation.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Animator.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Asset.h" />
@@ -769,6 +770,7 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsPlatformUtils.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="engine\src\Blu\Project\ProjectManager.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Animation.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Asset.cpp" />

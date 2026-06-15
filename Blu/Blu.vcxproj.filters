@@ -85,6 +85,9 @@
     <Filter Include="src\Blu\Platform\Windows">
       <UniqueIdentifier>{0D537411-F977-C391-22C3-A8210E47C2AF}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Blu\Project">
+      <UniqueIdentifier>{E539C9D6-51C5-369B-5AD6-B98FC6E0929B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Blu\Rendering">
       <UniqueIdentifier>{AC42AF3C-1859-ADD2-61D0-38F4CD257E5A}</UniqueIdentifier>
     </Filter>
@@ -1593,6 +1596,9 @@
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h">
       <Filter>src\Blu\Platform\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Project\Project.h">
+      <Filter>src\Blu\Project</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Animation.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
@@ -1924,6 +1930,9 @@
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Blu\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Project\ProjectManager.cpp">
+      <Filter>src\Blu\Project</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Animation.cpp">
       <Filter>src\Blu\Rendering</Filter>

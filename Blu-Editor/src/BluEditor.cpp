@@ -6,6 +6,8 @@
 #include "BluEditorLayer.h"
 #include "ScreenshotLayer.h"
 #include "Blu/Rendering/RenderSettings.h"
+#include "Blu/Project/Project.h"
+#include "Blu/Core/Log.h"
 
 #include <string>
 
@@ -60,6 +62,23 @@ namespace Blu
 
 	Blu::Application* Blu::CreateApplication()
 	{
+		// `Blu-Editor.exe --project <path>` activates a Blu project (a .bluproj file, or a folder
+		// containing one) BEFORE the Application is constructed. This matters: the base Application
+		// constructor initializes the AssetManager, which reads its registry from "cache://". By
+		// re-pointing project:// / cache:// here first, the editor opens fully scoped to the project.
+		// With no --project, nothing is activated and the editor behaves exactly as before.
+		const auto& args = Application::GetCommandLineArgs();
+		for (size_t i = 0; i + 1 < args.size(); ++i)
+		{
+			if (args[i] == "--project")
+			{
+				if (ProjectManager::Get().LoadProject(args[i + 1]))
+					BLU_CORE_INFO("Editor: launching project '{0}'", ProjectManager::Get().GetActiveProject().Name);
+				else
+					BLU_CORE_WARN("Editor: could not load project '{0}' — starting with no active project.", args[i + 1]);
+				break;
+			}
+		}
 
 		return new BluEditor();
 	}
