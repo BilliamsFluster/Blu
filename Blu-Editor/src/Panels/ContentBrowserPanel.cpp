@@ -271,6 +271,33 @@ namespace Blu
                           IM_COL32(246, 206, 122, 255), 4.f);      // front flap (lighter)
     }
 
+    static bool IsScriptExtension(const std::string& ext)
+    {
+        return ext == ".cs" || ext == ".lua" || ext == ".py";
+    }
+
+    // Type-filter dropdown order: 0=All, then the categories below. Folders always pass
+    // (kept visible for navigation); only files are filtered.
+    static const char* const s_TypeFilterItems[] = {
+        "All Types", "Images", "Models", "Audio", "Shaders", "Scripts", "Scenes", "Prefabs", "Fonts"
+    };
+    static bool MatchesTypeFilter(int filter, const std::string& ext, bool isDir)
+    {
+        if (filter == 0 || isDir) return true;
+        switch (filter)
+        {
+            case 1: return IsImageExtension(ext);
+            case 2: return IsModelExtension(ext);
+            case 3: return IsAudioExtension(ext);
+            case 4: return IsShaderExtension(ext);
+            case 5: return IsScriptExtension(ext);
+            case 6: return IsSceneExtension(ext);
+            case 7: return IsPrefabExtension(ext);
+            case 8: return IsFontExtension(ext);
+        }
+        return true;
+    }
+
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(s_AssetsDirectory)
     {
@@ -280,6 +307,40 @@ namespace Blu
             ? Blu::Texture2D::Create("assets/textures/Folder.png")
             : m_FolderOpenIcon;
         m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
+        LoadFavorites();
+    }
+
+    void ContentBrowserPanel::LoadFavorites()
+    {
+        m_FavoritePaths.clear();
+        std::ifstream f("config/cb_favorites.txt");
+        if (!f.is_open()) return;
+        std::string line;
+        while (std::getline(f, line))
+            if (!line.empty() && std::filesystem::exists(line))
+                m_FavoritePaths.emplace_back(line);
+    }
+    void ContentBrowserPanel::SaveFavorites() const
+    {
+        std::error_code ec;
+        std::filesystem::create_directories("config", ec);
+        std::ofstream f("config/cb_favorites.txt", std::ios::trunc);
+        if (!f.is_open()) return;
+        for (const auto& p : m_FavoritePaths)
+            f << p.generic_string() << "\n";
+    }
+    bool ContentBrowserPanel::IsFavorite(const std::filesystem::path& p) const
+    {
+        for (const auto& f : m_FavoritePaths)
+            if (f == p) return true;
+        return false;
+    }
+    void ContentBrowserPanel::ToggleFavorite(const std::filesystem::path& p)
+    {
+        for (auto it = m_FavoritePaths.begin(); it != m_FavoritePaths.end(); ++it)
+            if (*it == p) { m_FavoritePaths.erase(it); SaveFavorites(); return; }
+        m_FavoritePaths.push_back(p);
+        SaveFavorites();
     }
 
     void ContentBrowserPanel::SetBrowserDirectory(const std::filesystem::path& directory)
@@ -446,6 +507,29 @@ namespace Blu
             m_CurrentDirectory = s_AssetsDirectory;
             m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
         }
+        // Pinned folders (right-click a folder in the grid → Add to Favorites).
+        std::filesystem::path favToRemove;
+        for (size_t i = 0; i < m_FavoritePaths.size(); ++i)
+        {
+            const auto& fav = m_FavoritePaths[i];
+            ImGui::PushID((int)i);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.82f, 0.30f, 1.0f));
+            const std::string label = "* " + fav.filename().string();
+            const bool sel = ImGui::Selectable(label.c_str(), m_CurrentDirectory == fav);
+            ImGui::PopStyleColor();
+            if (sel)
+            {
+                m_CurrentDirectory  = fav;
+                m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
+            }
+            if (ImGui::BeginPopupContextItem("##favctx"))
+            {
+                if (ImGui::MenuItem("Remove from Favorites")) favToRemove = fav;
+                ImGui::EndPopup();
+            }
+            ImGui::PopID();
+        }
+        if (!favToRemove.empty()) ToggleFavorite(favToRemove);
         ImGui::Separator();
 
         if (ImGui::Button("+ New"))
@@ -559,6 +643,9 @@ namespace Blu
                 ImGui::EndPopup();
             }
             ImGui::SameLine();
+            ImGui::SetNextItemWidth(110.f);
+            ImGui::Combo("##cbType", &m_TypeFilter, s_TypeFilterItems, IM_ARRAYSIZE(s_TypeFilterItems));
+            ImGui::SameLine();
 
             // Thumbnail size slider (right-aligned)
             float sliderW = 90.f;
@@ -611,6 +698,9 @@ namespace Blu
                 for (char& c : nameLower) c = (char)std::tolower((unsigned char)c);
                 if (nameLower.find(s_Filter) == std::string::npos) { ImGui::NextColumn(); continue; }
             }
+
+            // Type filter (folders always pass for navigation)
+            if (!MatchesTypeFilter(m_TypeFilter, extLower, entry.is_directory())) { ImGui::NextColumn(); continue; }
 
             bool isSelected = (m_SelectedFilename == filenameStr);
             ImGui::PushID(path.string().c_str());
@@ -821,6 +911,17 @@ namespace Blu
                 {
                     if (m_GenerateStaticCollisionCallback)
                         m_GenerateStaticCollisionCallback(s_RightClickedItemPath);
+                }
+                ImGui::Separator();
+            }
+
+            if (std::filesystem::is_directory(s_RightClickedItemPath))
+            {
+                const bool fav = IsFavorite(s_RightClickedItemPath);
+                if (ImGui::MenuItem(fav ? "Remove from Favorites" : "Add to Favorites"))
+                {
+                    ToggleFavorite(s_RightClickedItemPath);
+                    ImGui::CloseCurrentPopup();
                 }
                 ImGui::Separator();
             }

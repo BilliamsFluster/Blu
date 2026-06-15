@@ -80,7 +80,13 @@ namespace Blu
 
 		bool m_ObjectClicked = false;
 		int m_SortMode = 0;
+		int m_TypeFilter = 0; // index into s_TypeFilterItems (0 = All)
+		std::vector<std::filesystem::path> m_FavoritePaths; // pinned folders (persisted)
 		std::string m_SelectedFilename;
+		void LoadFavorites();
+		void SaveFavorites() const;
+		bool IsFavorite(const std::filesystem::path& p) const;
+		void ToggleFavorite(const std::filesystem::path& p);
 		std::function<void()> m_SaveAllCallback;
 		std::function<void(const std::filesystem::path&)> m_ImportModelCallback;
 		std::function<void(const std::filesystem::path&)> m_GenerateStaticCollisionCallback;
