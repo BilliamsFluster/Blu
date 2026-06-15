@@ -30,6 +30,19 @@ namespace Blu
                               currentTime, clip, skeleton, finalBoneMatrices);
     }
 
+    void Animator::ComputeBindPose(const Skeleton& skeleton,
+                                   std::vector<glm::mat4>& finalBoneMatrices)
+    {
+        finalBoneMatrices.assign(kMaxBones, glm::mat4(1.0f));
+        if (skeleton.NumBones == 0) return;
+
+        // An empty clip has no channels, so ComputeNodeTransforms falls back to each
+        // node's LocalTransform at every bone — exactly the rest/bind pose.
+        static const AnimationClip kEmptyClip{};
+        ComputeNodeTransforms(skeleton.RootNode, skeleton.GlobalInverseTransform,
+                              0.0f, kEmptyClip, skeleton, finalBoneMatrices);
+    }
+
     void Animator::ComputeNodeTransforms(const BoneNode& node,
                                          const glm::mat4& parentTransform,
                                          float animTimeTicks,

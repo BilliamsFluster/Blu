@@ -8,6 +8,15 @@ workspace "Blu"
 		"Release",
 		"Dist"
 	}
+
+	-- Parallel compilation (/MP) for every project in the workspace — the biggest build-time
+	-- win for the from-source vendored deps (assimp + Jolt, ~400 files each were single-threaded).
+	-- /FS lets multiple cl.exe instances share a PDB in Debug (avoids C1041 PDB-contention errors).
+	flags { "MultiProcessorCompile" }
+	filter "configurations:Debug"
+		buildoptions { "/FS" }
+	filter {}
+
 	outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 	--Include directories relative to root folder(solution dir)
 	IncludeDir = {}
@@ -388,6 +397,7 @@ project "Blu-Editor"
 		"$(SolutionDir)Azure/src",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/imgui",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/include",
+		"$(SolutionDir)Blu/engine/ExternalDependencies/GLFW/deps",
 		"$(SolutionDir)Blu/engine/ExternalDependencies/Glad/include",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml}",

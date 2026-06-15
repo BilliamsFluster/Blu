@@ -2,6 +2,8 @@
 #include "MaterialAsset.h"
 #include "AssetManager.h"
 #include "Blu/Core/Log.h"
+#include "Blu/Utils/FileSystemService.h"
+#include "yaml-cpp/yaml.h"
 
 namespace Blu
 {
@@ -56,11 +58,80 @@ namespace Blu
         bindTexture(m_EmissiveTexture,        4, "u_EmissiveTexture",        "u_HasEmissiveMap");
     }
 
+    bool MaterialAsset::SaveToFile(const std::string& virtualPath) const
+    {
+        if (virtualPath.empty())
+            return false;
+
+        YAML::Emitter out;
+        out << YAML::BeginMap;
+        out << YAML::Key << "MaterialAsset" << YAML::Value << YAML::BeginMap;
+        out << YAML::Key << "AlbedoColor" << YAML::Value << YAML::Flow << YAML::BeginSeq
+            << m_Properties.AlbedoColor.r << m_Properties.AlbedoColor.g
+            << m_Properties.AlbedoColor.b << m_Properties.AlbedoColor.a << YAML::EndSeq;
+        out << YAML::Key << "Metallic" << YAML::Value << m_Properties.Metallic;
+        out << YAML::Key << "Roughness" << YAML::Value << m_Properties.Roughness;
+        out << YAML::Key << "AO" << YAML::Value << m_Properties.AO;
+        out << YAML::Key << "EmissiveColor" << YAML::Value << YAML::Flow << YAML::BeginSeq
+            << m_Properties.EmissiveColor.r << m_Properties.EmissiveColor.g
+            << m_Properties.EmissiveColor.b << YAML::EndSeq;
+        out << YAML::Key << "EmissiveStrength" << YAML::Value << m_Properties.EmissiveStrength;
+        out << YAML::Key << "AlbedoTexture" << YAML::Value << (uint64_t)m_AlbedoTexture;
+        out << YAML::Key << "NormalTexture" << YAML::Value << (uint64_t)m_NormalTexture;
+        out << YAML::Key << "MetallicRoughnessTexture" << YAML::Value << (uint64_t)m_MetallicRoughnessTexture;
+        out << YAML::Key << "AOTexture" << YAML::Value << (uint64_t)m_AOTexture;
+        out << YAML::Key << "EmissiveTexture" << YAML::Value << (uint64_t)m_EmissiveTexture;
+        out << YAML::EndMap; // MaterialAsset
+        out << YAML::EndMap;
+
+        return FileSystemService::Get().Write(virtualPath, out.c_str());
+    }
+
+    bool MaterialAsset::LoadFromFile(const std::string& virtualPath)
+    {
+        if (virtualPath.empty())
+            return false;
+
+        std::string contents;
+        if (!FileSystemService::Get().Read(virtualPath, contents) || contents.empty())
+            return false;
+
+        try
+        {
+            const YAML::Node root = YAML::Load(contents);
+            const YAML::Node node = root["MaterialAsset"];
+            if (!node)
+                return false;
+
+            auto readVec = [](const YAML::Node& n, int count, float* out)
+            {
+                if (n && n.IsSequence() && (int)n.size() >= count)
+                    for (int i = 0; i < count; ++i) out[i] = n[i].as<float>(out[i]);
+            };
+            readVec(node["AlbedoColor"], 4, &m_Properties.AlbedoColor.x);
+            readVec(node["EmissiveColor"], 3, &m_Properties.EmissiveColor.x);
+            m_Properties.Metallic = node["Metallic"].as<float>(m_Properties.Metallic);
+            m_Properties.Roughness = node["Roughness"].as<float>(m_Properties.Roughness);
+            m_Properties.AO = node["AO"].as<float>(m_Properties.AO);
+            m_Properties.EmissiveStrength = node["EmissiveStrength"].as<float>(m_Properties.EmissiveStrength);
+            m_AlbedoTexture = AssetHandle(node["AlbedoTexture"].as<uint64_t>(0));
+            m_NormalTexture = AssetHandle(node["NormalTexture"].as<uint64_t>(0));
+            m_MetallicRoughnessTexture = AssetHandle(node["MetallicRoughnessTexture"].as<uint64_t>(0));
+            m_AOTexture = AssetHandle(node["AOTexture"].as<uint64_t>(0));
+            m_EmissiveTexture = AssetHandle(node["EmissiveTexture"].as<uint64_t>(0));
+            FilePath = virtualPath;
+            IsLoaded = true;
+            return true;
+        }
+        catch (const std::exception&)
+        {
+            return false;
+        }
+    }
+
     bool MaterialAsset::Reload()
     {
-        // Re-import from source file (re-parse assimp material, etc.)
-        BLU_CORE_INFO("MaterialAsset::Reload not fully implemented");
-        IsLoaded = true;
-        return true;
+        // Reload PBR properties + texture handles from the .blumat source.
+        return LoadFromFile(FilePath);
     }
 }

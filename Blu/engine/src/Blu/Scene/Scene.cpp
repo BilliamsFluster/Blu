@@ -3,6 +3,7 @@
 #include "Blu/Physics/Physics3D.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Rendering/Renderer3D.h"
+#include "Blu/Rendering/GpuParticleSystem.h"
 #include "Blu/Rendering/Material.h"
 #include "Blu/Rendering/CascadedShadowMap.h"
 #include "Blu/Rendering/PostProcess.h"
@@ -756,7 +757,16 @@ namespace Blu
 						diagnostics.PossessedPawnStamina = stats.Stamina;
 						diagnostics.PossessedPawnMaxStamina = stats.MaxStamina;
 					}
-					if (pawnEntity.HasComponent<CharacterControllerComponent>())
+					if (pawnEntity.HasComponent<AmmoComponent>())
+						{
+							auto& ammo = pawnEntity.GetComponent<AmmoComponent>();
+							diagnostics.PossessedPawnHasAmmo     = true;
+							diagnostics.PossessedPawnAmmoInMag   = ammo.InMag;
+							diagnostics.PossessedPawnAmmoReserve = ammo.Reserve;
+							diagnostics.PossessedPawnReloading   = ammo.Reloading;
+							diagnostics.HitmarkerTimer           = ammo.HitFlash;
+						}
+						if (pawnEntity.HasComponent<CharacterControllerComponent>())
 					{
 						auto& ccc = pawnEntity.GetComponent<CharacterControllerComponent>();
 						diagnostics.PossessedPawnGrounded = ccc.IsGrounded;
@@ -1273,6 +1283,7 @@ namespace Blu
 			m_GameMode = NativeClassRegistry::Get().Create<AGameMode>(m_GameModeClassID);
 			if (m_GameMode)
 			{
+				m_GameMode->m_Scene = this; // grant scene access before lifecycle hooks
 				m_GameMode->BeginPlay();
 				m_GameMode->OnGameStart();
 			}
@@ -1810,6 +1821,23 @@ namespace Blu
 		Renderer3D::BeginScene(camera);
 		Renderer3D::SetLights(dirLights, pointLights, spotLights);
 		Renderer3D::SetFog(m_Fog);
+
+		// God rays: project the sun (directional light) to screen for the post-process pass.
+		if (m_PostProcess && !dirLights.empty())
+		{
+			glm::vec3 toSun = -glm::normalize(dirLights[0].Direction);
+			glm::vec4 clip = Renderer3D::GetViewProjectionMatrix() * glm::vec4(toSun * 100000.0f, 1.0f);
+			bool vis = clip.w > 0.0001f;
+			glm::vec2 uv(0.5f);
+			if (vis)
+			{
+				uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
+				uv.y = 1.0f - uv.y;
+				vis = uv.x > -0.25f && uv.x < 1.25f && uv.y > -0.25f && uv.y < 1.25f;
+			}
+			m_PostProcess->GodRaySunUV = uv;
+			m_PostProcess->GodRaySunVisible = vis;
+		}
 		{
 			glm::vec3 camPos = camera.GetPosition();
 			auto view = m_Registry.view<TransformComponent, MeshComponent>();
@@ -1861,6 +1889,7 @@ namespace Blu
 			m_Skybox->Render(camera.GetViewMatrix(), camera.GetProjectionMatrix(), sunDir, m_ElapsedTime);
 		}
 
+		GpuParticleSystem::Get().Render();
 		Renderer3D::EndScene();
 	}
 
@@ -1880,6 +1909,23 @@ namespace Blu
 		Renderer3D::BeginScene(camera, cameraTransform);
 		Renderer3D::SetLights(dirLights, pointLights, spotLights);
 		Renderer3D::SetFog(m_Fog);
+
+		// God rays: project the sun (directional light) to screen for the post-process pass.
+		if (m_PostProcess && !dirLights.empty())
+		{
+			glm::vec3 toSun = -glm::normalize(dirLights[0].Direction);
+			glm::vec4 clip = Renderer3D::GetViewProjectionMatrix() * glm::vec4(toSun * 100000.0f, 1.0f);
+			bool vis = clip.w > 0.0001f;
+			glm::vec2 uv(0.5f);
+			if (vis)
+			{
+				uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
+				uv.y = 1.0f - uv.y;
+				vis = uv.x > -0.25f && uv.x < 1.25f && uv.y > -0.25f && uv.y < 1.25f;
+			}
+			m_PostProcess->GodRaySunUV = uv;
+			m_PostProcess->GodRaySunVisible = vis;
+		}
 		{
 			glm::vec3 camPos = glm::vec3(cameraTransform[3]);
 			auto view = m_Registry.view<TransformComponent, MeshComponent>();
@@ -1930,6 +1976,7 @@ namespace Blu
 			m_Skybox->Render(camView, camera.GetProjectionMatrix(), sunDir, m_ElapsedTime);
 		}
 
+		GpuParticleSystem::Get().Render();
 		Renderer3D::EndScene();
 	}
 
@@ -1988,7 +2035,11 @@ namespace Blu
 	    }
 
 	    // Use RH_ZO so DX11 sees depth in [0,1] natively
-	    glm::mat4 lightProj = glm::orthoRH_ZO(lsMin.x, lsMax.x, lsMin.y, lsMax.y, lsMin.z, lsMax.z);
+	    // glm::orthoRH_ZO expects POSITIVE near/far DISTANCES. In RH light-view space the cascade
+	    // corners sit in front of the eye at NEGATIVE z, so near = -lsMax.z, far = -lsMin.z. Passing
+	    // raw signed lsMin.z/lsMax.z mapped casters to ndc_z far outside [0,1] → all shadow casters
+	    // were depth-clipped and the shadow map came out empty (no shadows rendered at all).
+	    glm::mat4 lightProj = glm::orthoRH_ZO(lsMin.x, lsMax.x, lsMin.y, lsMax.y, -lsMax.z, -lsMin.z);
 	    return lightProj * lightView;
 	}
 
@@ -2032,13 +2083,32 @@ namespace Blu
 	        lightVPs[c] = FitCascade(nearCorners, farCorners, tNear, tFar, lightDir);
 	        splits[c]   = cascadeFarWorld; // world-space distance threshold
 
+	        // Cull shadow casters against this cascade's light frustum so we don't rasterize
+	        // every submesh of every model into all 3 cascades (the dominant import-FPS cost).
+	        Frustum cascadeFrustum;
+	        cascadeFrustum.ExtractFromVP(lightVPs[c]);
+
 	        Renderer3D::BeginCSMPass(c, lightVPs[c]);
 	        {
 	            auto view = m_Registry.view<TransformComponent, MeshComponent>();
 	            for (auto entity : view)
 	            {
 	                auto [transform, mesh] = view.get<TransformComponent, MeshComponent>(entity);
-	                Renderer3D::DrawMeshShadow(GetRenderTransform(m_Registry, entity, transform), mesh);
+	                // Skinned models keep their geometry in SkinnedMeshes (Meshes is empty),
+	                // so DrawMeshShadow draws nothing for them here — they're handled below.
+	                Renderer3D::DrawMeshShadow(GetRenderTransform(m_Registry, entity, transform), mesh, cascadeFrustum);
+	            }
+
+	            // Skinned (animated) meshes: render bone-deformed depth so characters cast
+	            // shadows. FinalBoneMatrices were filled by the per-frame animator tick.
+	            auto skinnedView = m_Registry.view<TransformComponent, MeshComponent, AnimatorComponent>();
+	            for (auto entity : skinnedView)
+	            {
+	                auto [transform, mesh, anim] =
+	                    skinnedView.get<TransformComponent, MeshComponent, AnimatorComponent>(entity);
+	                if (mesh.ModelAsset && mesh.ModelAsset->HasSkeleton())
+	                    Renderer3D::DrawSkinnedMeshShadow(GetRenderTransform(m_Registry, entity, transform),
+	                                                      mesh, anim.FinalBoneMatrices, lightVPs[c]);
 	            }
 	        }
 	        Renderer3D::EndCSMPass();
@@ -2118,7 +2188,15 @@ namespace Blu
 				auto [anim, mesh] = animView.get<AnimatorComponent, MeshComponent>(e);
 				if (!anim.SkelData && mesh.ModelAsset)
 					anim.SkelData = mesh.ModelAsset->SkelData;
-				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
+				if (!anim.SkelData || !anim.SkelData->Skel) continue;
+
+				// No clip to play → show the rest/bind pose (not identity, which collapses
+				// the mesh). Covers clip-less rigs and meshes before their clip is assigned.
+				if (anim.SkelData->Clips.empty())
+				{
+					Animator::ComputeBindPose(*anim.SkelData->Skel, anim.FinalBoneMatrices);
+					continue;
+				}
 
 				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
 				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
@@ -2162,6 +2240,9 @@ namespace Blu
 		m_ElapsedTime += (float)deltaTime;
 		float dt = (float)deltaTime;
 
+		GpuParticleSystem::Get().OnUpdate(dt); // advance instanced particle sim once per frame
+		Renderer3D::ClearDynamicLights();      // reset transient lights; actor ticks re-add this frame
+
 		// Animate skeletal meshes
 		{
 			auto animView = m_Registry.view<AnimatorComponent, MeshComponent>();
@@ -2170,7 +2251,15 @@ namespace Blu
 				auto [anim, mesh] = animView.get<AnimatorComponent, MeshComponent>(e);
 				if (!anim.SkelData && mesh.ModelAsset)
 					anim.SkelData = mesh.ModelAsset->SkelData;
-				if (!anim.SkelData || anim.SkelData->Clips.empty()) continue;
+				if (!anim.SkelData || !anim.SkelData->Skel) continue;
+
+				// No clip to play → show the rest/bind pose (not identity, which collapses
+				// the mesh). Covers clip-less rigs and meshes before their clip is assigned.
+				if (anim.SkelData->Clips.empty())
+				{
+					Animator::ComputeBindPose(*anim.SkelData->Skel, anim.FinalBoneMatrices);
+					continue;
+				}
 
 				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
 				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];

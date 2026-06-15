@@ -8,6 +8,7 @@
 #include "yaml-cpp/yaml.h"
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Rendering/ModelLoader.h"
+#include "Blu/Rendering/AssetManager.h"
 #include "Blu/Rendering/Skybox.h"
 #include "Blu/Rendering/TimeOfDay.h"
 #include "Blu/Rendering/Renderer3D.h"
@@ -468,6 +469,12 @@ namespace Blu
 
 			auto& mc = entity.GetComponent<MeshComponent>();
 			out << YAML::Key << "FilePath" << YAML::Value << SerializeAssetPath(mc.FilePath);
+			// Stable asset handle: recover/mint a UUID for the source so the scene carries a
+			// handle reference (.meta keeps it stable). Render path still uses ModelAsset.
+			if ((uint64_t)mc.ModelHandle == 0 && !mc.FilePath.empty())
+				mc.ModelHandle = AssetManager::Get().Import(mc.FilePath);
+			if ((uint64_t)mc.ModelHandle != 0)
+				out << YAML::Key << "ModelHandle" << YAML::Value << (uint64_t)mc.ModelHandle;
 			out << YAML::Key << "PrimitiveType" << YAML::Value << static_cast<int>(mc.Primitive);
 
 			if (mc.MaterialInstance)
@@ -506,6 +513,9 @@ namespace Blu
 			out << YAML::Key << "CellSize" << YAML::Value << spec.CellSize;
 			out << YAML::Key << "HeightScale" << YAML::Value << spec.HeightScale;
 			out << YAML::Key << "HeightmapPath" << YAML::Value << SerializeAssetPath(spec.HeightmapPath);
+			out << YAML::Key << "ProceduralAmplitude" << YAML::Value << spec.ProceduralAmplitude;
+			out << YAML::Key << "ProceduralFrequency" << YAML::Value << spec.ProceduralFrequency;
+			out << YAML::Key << "ProceduralFlatRadius" << YAML::Value << spec.ProceduralFlatRadius;
 			out << YAML::EndMap;
 		}
 		if (entity.HasComponent<MeshLODComponent>())
@@ -514,10 +524,14 @@ namespace Blu
 			out << YAML::Key << "MeshLODComponent" << YAML::BeginMap;
 			out << YAML::Key << "Active" << YAML::Value << lod.Active;
 			out << YAML::Key << "Levels" << YAML::Value << YAML::BeginSeq;
-			for (const auto& level : lod.Levels)
+			for (auto& level : lod.Levels)
 			{
 				out << YAML::BeginMap;
 				out << YAML::Key << "FilePath" << YAML::Value << SerializeAssetPath(level.FilePath);
+				if ((uint64_t)level.ModelHandle == 0 && !level.FilePath.empty())
+					level.ModelHandle = AssetManager::Get().Import(level.FilePath);
+				if ((uint64_t)level.ModelHandle != 0)
+					out << YAML::Key << "ModelHandle" << YAML::Value << (uint64_t)level.ModelHandle;
 				out << YAML::Key << "MaxDistance" << YAML::Value << level.MaxDistance;
 				out << YAML::EndMap;
 			}
@@ -529,6 +543,10 @@ namespace Blu
 			auto& foliage = entity.GetComponent<FoliageComponent>();
 			out << YAML::Key << "FoliageComponent" << YAML::BeginMap;
 			out << YAML::Key << "FilePath" << YAML::Value << SerializeAssetPath(foliage.FilePath);
+			if ((uint64_t)foliage.ModelHandle == 0 && !foliage.FilePath.empty())
+				foliage.ModelHandle = AssetManager::Get().Import(foliage.FilePath);
+			if ((uint64_t)foliage.ModelHandle != 0)
+				out << YAML::Key << "ModelHandle" << YAML::Value << (uint64_t)foliage.ModelHandle;
 			out << YAML::Key << "WindEnabled" << YAML::Value << foliage.WindEnabled;
 			out << YAML::Key << "WindStrength" << YAML::Value << foliage.WindStrength;
 			out << YAML::Key << "WindFrequency" << YAML::Value << foliage.WindFrequency;
@@ -555,6 +573,10 @@ namespace Blu
 			auto& audio = entity.GetComponent<AudioSourceComponent>();
 			out << YAML::Key << "AudioSourceComponent" << YAML::BeginMap;
 			out << YAML::Key << "FilePath" << YAML::Value << SerializeAssetPath(audio.FilePath);
+			if ((uint64_t)audio.AudioHandle == 0 && !audio.FilePath.empty())
+				audio.AudioHandle = AssetManager::Get().Import(audio.FilePath);
+			if ((uint64_t)audio.AudioHandle != 0)
+				out << YAML::Key << "AudioHandle" << YAML::Value << (uint64_t)audio.AudioHandle;
 			out << YAML::Key << "Volume" << YAML::Value << audio.Volume;
 			out << YAML::Key << "Pitch" << YAML::Value << audio.Pitch;
 			out << YAML::Key << "Loop" << YAML::Value << audio.Loop;
@@ -766,6 +788,9 @@ namespace Blu
 
 		YAML::Emitter out;
 		out << YAML::BeginMap;
+		// Scene format version. Absent key ⇒ version 0 (legacy, path-based asset refs).
+		// Bumped as the format evolves so loaders can migrate older scenes on read.
+		out << YAML::Key << "SceneVersion" << YAML::Value << kCurrentSceneVersion;
 		out << YAML::Key << "Scene" << YAML::Value << AssetPath::ToProjectRelative(filepath);
 		if (!m_Scene->GetGameModeClassID().empty())
 			out << YAML::Key << "GameMode" << YAML::Value << m_Scene->GetGameModeClassID();
@@ -969,7 +994,10 @@ namespace Blu
 		YAML::Node data = YAML::Load(strStream.str());
 		if (!data["Scene"])
 			return false;
-		
+
+		// Format version: absent ⇒ 0 (legacy). Later phases branch migration on this.
+		m_SceneVersion = data["SceneVersion"] ? data["SceneVersion"].as<int>() : 0;
+
 		std::string sceneName = data["Scene"].as<std::string>();
 		if (data["GameMode"])
 			m_Scene->SetGameModeClassID(data["GameMode"].as<std::string>());
@@ -1352,8 +1380,16 @@ namespace Blu
 						std::string rawPath = meshComponent["FilePath"].as<std::string>();
 						mc.FilePath = NormalizeLoadedAssetPath(rawPath, sceneFilePath, "MeshComponent.FilePath");
 						if (!mc.FilePath.empty())
+						{
+							// Register/recover the stable handle for this source (reads .meta),
+							// then load geometry via the existing path (render path unchanged).
+							mc.ModelHandle = AssetManager::Get().Import(mc.FilePath);
 							mc.ModelAsset = ModelLoader::Load(ResolveAssetPathForLoad(mc.FilePath, sceneFilePath, "MeshComponent.FilePath").string());
+						}
 					}
+					// Forward-compat: honor a stored handle even if the source path was absent.
+					if ((uint64_t)mc.ModelHandle == 0 && meshComponent["ModelHandle"])
+						mc.ModelHandle = AssetHandle(meshComponent["ModelHandle"].as<uint64_t>(0));
 					if (meshComponent["PrimitiveType"])
 						mc.Primitive = static_cast<MeshComponent::PrimitiveType>(meshComponent["PrimitiveType"].as<int>());
 
@@ -1411,6 +1447,9 @@ namespace Blu
 					if (terrainComponent["HeightmapPath"])
 						terrain.Spec.HeightmapPath = NormalizeLoadedAssetPath(
 							terrainComponent["HeightmapPath"].as<std::string>(), sceneFilePath, "TerrainComponent.HeightmapPath");
+					if (terrainComponent["ProceduralAmplitude"])  terrain.Spec.ProceduralAmplitude  = terrainComponent["ProceduralAmplitude"].as<float>();
+					if (terrainComponent["ProceduralFrequency"])  terrain.Spec.ProceduralFrequency  = terrainComponent["ProceduralFrequency"].as<float>();
+					if (terrainComponent["ProceduralFlatRadius"]) terrain.Spec.ProceduralFlatRadius = terrainComponent["ProceduralFlatRadius"].as<float>();
 					terrain.Spec = SanitizeTerrainSpec(terrain.Spec);
 					m_Scene->RebuildTerrain(deserializedEntity);
 				}
@@ -1431,8 +1470,13 @@ namespace Blu
 								std::string rawPath = levelNode["FilePath"].as<std::string>();
 								level.FilePath = NormalizeLoadedAssetPath(rawPath, sceneFilePath, "MeshLODComponent.FilePath");
 								if (!level.FilePath.empty())
+								{
+									level.ModelHandle = AssetManager::Get().Import(level.FilePath);
 									level.ModelAsset = ModelLoader::Load(ResolveAssetPathForLoad(level.FilePath, sceneFilePath, "MeshLODComponent.FilePath").string());
+								}
 							}
+							if ((uint64_t)level.ModelHandle == 0 && levelNode["ModelHandle"])
+								level.ModelHandle = AssetHandle(levelNode["ModelHandle"].as<uint64_t>(0));
 							if (levelNode["MaxDistance"])
 								level.MaxDistance = levelNode["MaxDistance"].as<float>();
 							lod.Levels.push_back(level);
@@ -1449,8 +1493,13 @@ namespace Blu
 						std::string rawPath = foliageComponent["FilePath"].as<std::string>();
 						foliage.FilePath = NormalizeLoadedAssetPath(rawPath, sceneFilePath, "FoliageComponent.FilePath");
 						if (!foliage.FilePath.empty())
+						{
+							foliage.ModelHandle = AssetManager::Get().Import(foliage.FilePath);
 							foliage.ModelAsset = ModelLoader::Load(ResolveAssetPathForLoad(foliage.FilePath, sceneFilePath, "FoliageComponent.FilePath").string());
+						}
 					}
+					if ((uint64_t)foliage.ModelHandle == 0 && foliageComponent["ModelHandle"])
+						foliage.ModelHandle = AssetHandle(foliageComponent["ModelHandle"].as<uint64_t>(0));
 					if (foliageComponent["WindEnabled"])   foliage.WindEnabled   = foliageComponent["WindEnabled"].as<bool>();
 					if (foliageComponent["WindStrength"])  foliage.WindStrength  = foliageComponent["WindStrength"].as<float>();
 					if (foliageComponent["WindFrequency"]) foliage.WindFrequency = foliageComponent["WindFrequency"].as<float>();
@@ -1468,6 +1517,10 @@ namespace Blu
 					auto& audio = deserializedEntity.AddComponent<AudioSourceComponent>();
 					if (audioSourceComponent["FilePath"])
 						audio.FilePath = NormalizeLoadedAssetPath(audioSourceComponent["FilePath"].as<std::string>(), sceneFilePath, "AudioSourceComponent.FilePath");
+					if (!audio.FilePath.empty())
+						audio.AudioHandle = AssetManager::Get().Import(audio.FilePath);
+					if ((uint64_t)audio.AudioHandle == 0 && audioSourceComponent["AudioHandle"])
+						audio.AudioHandle = AssetHandle(audioSourceComponent["AudioHandle"].as<uint64_t>(0));
 					if (audioSourceComponent["Volume"])      audio.Volume      = audioSourceComponent["Volume"].as<float>();
 					if (audioSourceComponent["Pitch"])       audio.Pitch       = audioSourceComponent["Pitch"].as<float>();
 					if (audioSourceComponent["Loop"])        audio.Loop        = audioSourceComponent["Loop"].as<bool>();

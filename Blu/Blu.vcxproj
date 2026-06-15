@@ -80,8 +80,10 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\Blu\engine\ExternalDependencies\spdlog\include;$(SolutionDir)Blu\engine\src;$(SolutionDir)\Blu\engine\ExternalDependencies\GLFW\include;$(SolutionDir)\Blu\engine\ExternalDependencies\Glad\include;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui;$(SolutionDir)\Blu\engine\ExternalDependencies\imgui\backends;$(SolutionDir)\Blu\engine\ExternalDependencies\glm;$(SolutionDir)\Blu\engine\ExternalDependencies\stb_image;$(SolutionDir)\Blu\engine\ExternalDependencies\entt\include;$(SolutionDir)\Blu\engine\ExternalDependencies\yaml\include;$(SolutionDir)\Blu\engine\ExternalDependencies\ImGuizmo;$(SolutionDir)\Blu\engine\ExternalDependencies\box2d\include;$(SolutionDir)\Blu\engine\ExternalDependencies\assimp\include;$(SolutionDir)\Blu\engine\ExternalDependencies\jolt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
+      <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalOptions>/MTd %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/FS /MTd %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -106,6 +108,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/MT %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -132,6 +135,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/MT %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -648,6 +652,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\Animator.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Asset.h" />
     <ClInclude Include="engine\src\Blu\Rendering\AssetManager.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\AssetMeta.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Camera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\CascadedShadowMap.h" />
@@ -655,6 +660,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\EditorCamera.h" />
     <ClInclude Include="engine\src\Blu\Rendering\FrameBuffer.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Frustum.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\GpuParticleSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h" />
     <ClInclude Include="engine\src\Blu\Rendering\IBLSystem.h" />
     <ClInclude Include="engine\src\Blu\Rendering\LightBufferData.h" />
@@ -678,6 +684,7 @@
     <ClInclude Include="engine\src\Blu\Rendering\Shader.h" />
     <ClInclude Include="engine\src\Blu\Rendering\ShadowMap.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Skybox.h" />
+    <ClInclude Include="engine\src\Blu\Rendering\StaticMeshAsset.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Terrain.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Texture.h" />
     <ClInclude Include="engine\src\Blu\Rendering\TextureAsset.h" />
@@ -689,6 +696,7 @@
     <ClInclude Include="engine\src\Blu\Scene\Entity.h" />
     <ClInclude Include="engine\src\Blu\Scene\Scene.h" />
     <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h" />
+    <ClInclude Include="engine\src\Blu\Scene\SceneManager.h" />
     <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h" />
     <ClInclude Include="engine\src\Blu\UI\RuntimeUI.h" />
     <ClInclude Include="engine\src\Blu\Utils\AssetPath.h" />
@@ -765,11 +773,13 @@
     <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Asset.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\AssetManager.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\AssetMeta.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Camera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\DeferredRenderer.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\EditorCamera.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\GpuParticleSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\LightBufferData.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Material.cpp" />
@@ -790,6 +800,7 @@
     <ClCompile Include="engine\src\Blu\Rendering\SceneRenderPipeline.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Shader.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp" />
+    <ClCompile Include="engine\src\Blu\Rendering\StaticMeshAsset.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Texture.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\TextureAsset.cpp" />

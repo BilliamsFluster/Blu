@@ -63,6 +63,9 @@ namespace Blu
 	private:
 		void QueueStaticCollisionPrompt(Entity entity);
 		void DrawStaticCollisionImportPrompt();
+		void ProcessPendingSceneLoad(); // honour SceneManager scene transitions during Play/Eject
+		void QueueEntityDeleteConfirmation(Entity entity); // ask before destroying (Delete/Backspace + panel)
+		void DrawDeleteEntityConfirmation();
 
 		Blu::OrthographicCameraController m_CameraController;
 		Blu::EditorCamera m_EditorCamera;
@@ -112,7 +115,16 @@ namespace Blu
 		bool m_ShowCameraDebug = true;
 		Entity m_PendingStaticCollisionEntity;
 		std::string m_PendingStaticCollisionModelName;
-		
+
+		// Delete-entity confirmation modal (Delete/Backspace key + hierarchy context menu)
+		bool m_ShowDeleteEntityConfirmation = false;
+		Entity m_PendingDeleteEntity;
+		std::string m_PendingDeleteEntityName;
+
+		// Unsaved-changes marker shown as "* " in the title; best-effort (gizmo edits, entity
+		// create/delete/duplicate/rename, add-component). Cleared on New/Open/Save.
+		bool m_SceneDirty = false;
+
 
 		float translationSnapValue = 0.5f;
 		float rotationSnapValue = 10.0f;
@@ -180,6 +192,7 @@ namespace Blu
 		bool m_ShowDiagnostics    = true;
 		bool m_ShowInputMap       = false;
 		bool m_ShowMaterialGraph  = false;
+		bool m_ShowSettings       = false;
 
 		// ---- Terrain editor ------------------------------------------------
 		bool        m_ShowTerrainPanel = false;

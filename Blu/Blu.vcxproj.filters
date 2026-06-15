@@ -1605,6 +1605,9 @@
     <ClInclude Include="engine\src\Blu\Rendering\AssetManager.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\AssetMeta.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Buffer.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
@@ -1624,6 +1627,9 @@
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Frustum.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\GpuParticleSystem.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\GraphicsContext.h">
@@ -1695,6 +1701,9 @@
     <ClInclude Include="engine\src\Blu\Rendering\Skybox.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Rendering\StaticMeshAsset.h">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Rendering\Terrain.h">
       <Filter>src\Blu\Rendering</Filter>
     </ClInclude>
@@ -1726,6 +1735,9 @@
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Scene\SceneCamera.h">
+      <Filter>src\Blu\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\src\Blu\Scene\SceneManager.h">
       <Filter>src\Blu\Scene</Filter>
     </ClInclude>
     <ClInclude Include="engine\src\Blu\Scene\SceneSerializer.h">
@@ -1925,6 +1937,9 @@
     <ClCompile Include="engine\src\Blu\Rendering\AssetManager.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\AssetMeta.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Buffer.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
@@ -1938,6 +1953,9 @@
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\FrameBuffer.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\GpuParticleSystem.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\IBLSystem.cpp">
@@ -1998,6 +2016,9 @@
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Skybox.cpp">
+      <Filter>src\Blu\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Rendering\StaticMeshAsset.cpp">
       <Filter>src\Blu\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Rendering\Terrain.cpp">

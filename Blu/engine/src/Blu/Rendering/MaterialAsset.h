@@ -42,6 +42,12 @@ namespace Blu
         void UploadUniforms(const Shared<Shader>& shader) const;
         void BindTextures(const Shared<Shader>& shader) const;
 
+        // .blumat persistence: PBR properties + texture asset handles as YAML, written
+        // and read through the FileSystemService (honors project:// mounts). Pure data —
+        // no GPU device required.
+        bool SaveToFile(const std::string& virtualPath) const;
+        bool LoadFromFile(const std::string& virtualPath);
+
         bool Reload() override;
 
     private:

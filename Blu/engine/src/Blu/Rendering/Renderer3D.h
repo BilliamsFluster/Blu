@@ -116,6 +116,14 @@ namespace Blu
                               const std::vector<PointLightData>& pointLights,
                               const std::vector<SpotLightData>&  spotLights);
 
+        // Transient dynamic lights — short-lived point lights (muzzle flashes, bullet
+        // impacts, explosions) that need no ECS entity. Queued per frame; SetLights merges
+        // them into the point-light blob (subject to the kMaxPointLights budget). Call
+        // ClearDynamicLights once at the top of each runtime frame so flashes don't persist.
+        static void AddDynamicLight(const glm::vec3& position, const glm::vec3& color,
+                                    float intensity, float range);
+        static void ClearDynamicLights();
+
         static void SetFog(const FogSettings& fog);
 
         // Toggle IBL and set strength multiplier (uploaded to shaders on next FlushDrawCalls).
@@ -124,7 +132,16 @@ namespace Blu
         // Cascaded shadow mapping — one cascade rendered at a time.
         static void BeginCSMPass(int cascadeIndex, const glm::mat4& lightVP);
         static void EndCSMPass();
-        static void DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc);
+        // cullFrustum is the cascade's light frustum (from its lightVP): submeshes whose
+        // world bounding sphere falls outside it are skipped, so we don't rasterize every
+        // submesh of every model into all 3 cascades (the big import-FPS cost).
+        static void DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc,
+                                   const Frustum& cullFrustum);
+        // Skinned variant — uploads bone matrices and renders bone-deformed depth so
+        // animated characters cast shadows. Call inside a BeginCSMPass/EndCSMPass block.
+        static void DrawSkinnedMeshShadow(const glm::mat4& transform, MeshComponent& mc,
+                                          const std::vector<glm::mat4>& boneMatrices,
+                                          const glm::mat4& lightVP);
 
         // Upload all cascade matrices + splits to the mesh shader, bind the CSM array texture.
         static void BindCSM(const glm::mat4 lightVPs[CascadedShadowMap::NUM_CASCADES],
@@ -132,6 +149,10 @@ namespace Blu
         static void SetShadowsEnabled(bool enabled);
 
         static Shared<CascadedShadowMap> GetCSM() { return s_Data3D->CSMInstance; }
+
+        // The exact view-projection used for the current scene (set by BeginScene). Used by
+        // post-process effects (god rays) to project world positions to screen reliably.
+        static const glm::mat4& GetViewProjectionMatrix();
 
     private:
         static void PassLights(const std::vector<DirLightData>&   dirLights,
@@ -147,6 +168,7 @@ namespace Blu
         {
             Shared<class Shader>       MeshShader;
             Shared<class Shader>       DepthOnlyShader;
+            Shared<class Shader>       DepthOnlySkinnedShader;
             Shared<class Shader>       InstancedMeshShader;
             Shared<class Shader>       SkinnedMeshShader;
             Shared<CascadedShadowMap>  CSMInstance;

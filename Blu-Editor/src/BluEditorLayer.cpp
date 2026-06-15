@@ -28,6 +28,8 @@
 #include "Blu/Rendering/RenderSettings.h"
 #include "Blu/Core/InputMap.h"
 #include "Blu/Audio/AudioEngine.h"
+#include "Blu/Scene/SceneManager.h"
+#include "Blu/UI/RuntimeUI.h"
 #include "FreeFlyCamera.h"
 #include "AssetPreviewService.h"
 #include "AzureGameModule.h"
@@ -73,6 +75,18 @@ namespace Blu
 
 		if (!mesh.ModelAsset)
 			BLU_CORE_WARN("BluEditor: failed to import model: {0}", sourcePath.string());
+
+		// Skeletal models would otherwise import as a frozen bind/T-pose: the skinned
+		// draw path needs an AnimatorComponent to produce bone matrices. Auto-attach one
+		// (default ctor: Playing, Loop, clip 0) so rigged characters animate on import.
+		// The Scene also back-fills SkelData on the first tick; set it here for immediacy.
+		if (mesh.ModelAsset && mesh.ModelAsset->HasSkeleton())
+		{
+			auto& anim = modelEntity.AddComponent<AnimatorComponent>();
+			anim.SkelData = mesh.ModelAsset->SkelData;
+			BLU_CORE_INFO("BluEditor: '{0}' is skeletal ({1} clip(s)) — added AnimatorComponent",
+			              sourcePath.stem().string(), mesh.ModelAsset->SkelData->Clips.size());
+		}
 
 		return modelEntity;
 	}
@@ -131,6 +145,67 @@ namespace Blu
 				m_ShowStaticCollisionImportPrompt = false;
 				m_PendingStaticCollisionEntity = {};
 				m_PendingStaticCollisionModelName.clear();
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+	}
+
+	void BluEditorLayer::QueueEntityDeleteConfirmation(Entity entity)
+	{
+		if (!entity)
+			return;
+
+		m_PendingDeleteEntity = entity;
+		m_PendingDeleteEntityName = entity.HasComponent<TagComponent>()
+			? entity.GetComponent<TagComponent>().Tag
+			: std::string("Entity");
+		m_ShowDeleteEntityConfirmation = true;
+	}
+
+	void BluEditorLayer::DrawDeleteEntityConfirmation()
+	{
+		if (!m_ShowDeleteEntityConfirmation)
+			return;
+
+		// The pending entity may have been destroyed by another path between queueing
+		// and drawing; bail cleanly if so.
+		if (!m_PendingDeleteEntity)
+		{
+			m_ShowDeleteEntityConfirmation = false;
+			m_PendingDeleteEntityName.clear();
+			return;
+		}
+
+		ImGui::OpenPopup("Delete Entity?");
+		if (ImGui::BeginPopupModal("Delete Entity?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("Delete this entity?");
+			ImGui::TextWrapped("%s", m_PendingDeleteEntityName.c_str());
+			ImGui::Spacing();
+
+			if (ImGui::Button("Delete", ImVec2(110.0f, 0.0f)))
+			{
+				if (m_ActiveScene && m_PendingDeleteEntity)
+				{
+					m_ActiveScene->DestroyEntity(m_PendingDeleteEntity);
+					m_SceneDirty = true;
+					if (m_SceneHierarchyPanel)
+						m_SceneHierarchyPanel->SetSelectedEntity({});
+				}
+				m_ShowDeleteEntityConfirmation = false;
+				m_PendingDeleteEntity = {};
+				m_PendingDeleteEntityName.clear();
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(90.0f, 0.0f)))
+			{
+				m_ShowDeleteEntityConfirmation = false;
+				m_PendingDeleteEntity = {};
+				m_PendingDeleteEntityName.clear();
 				ImGui::CloseCurrentPopup();
 			}
 
@@ -228,6 +303,14 @@ namespace Blu
 			m_ShowActorEditor = true;
 			m_ResetActorPreviewCamera = true;
 		});
+		// Route the hierarchy panel's "Delete" context-menu item through the same
+		// confirmation modal the Delete/Backspace key uses.
+		m_SceneHierarchyPanel->SetRequestDeleteCallback([this](Entity entity)
+		{
+			QueueEntityDeleteConfirmation(entity);
+		});
+		// Panel-driven mutations (create/delete/rename/add-component) flag the scene dirty.
+		m_SceneHierarchyPanel->SetSceneModifiedCallback([this]() { m_SceneDirty = true; });
 		m_ContentBrowserPanel->SetSaveAllCallback([this]() { SaveCurrentScene(); });
 		m_ContentBrowserPanel->SetImportModelCallback([this](const std::filesystem::path& path)
 		{
@@ -536,6 +619,10 @@ namespace Blu
 			}
 		}
 		
+		// Honour any runtime scene transition requested this frame (menu PLAY → level,
+		// level victory → menu). No-op outside Play — only the runtime UI queues loads.
+		ProcessPendingSceneLoad();
+
 		// ---- Deferred entity pick --------------------------------------------------
 		// OnMouseButtonPressed only sets m_PendingEntityPick. We do the actual
 		// ReadPixel here, after the scene has rendered to m_FrameBuffer this frame,
@@ -544,6 +631,13 @@ namespace Blu
 		{
 			m_PendingEntityPick = false;
 
+			// Skip the pick when the click landed on the transform gizmo. A gizmo handle
+			// extends past the object (often over empty space or another entity), so using
+			// or even hovering it must NOT deselect/reselect. ImGuizmo's IsOver/IsUsing
+			// reflect the prior frame's draw — i.e. the gizmo's position at click time
+			// (this consume runs in OnUpdate, before OnGuiDraw redraws the gizmo).
+			const bool gizmoActive = ImGuizmo::IsOver() || ImGuizmo::IsUsing();
+
 			auto [rawX, rawY] = Input::GetMousePosition();
 			float pickX = rawX - m_ViewportBounds[0].x;
 			float pickY = rawY - m_ViewportBounds[0].y;
@@ -551,7 +645,8 @@ namespace Blu
 			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
 				pickY = (m_ViewportBounds[1].y - m_ViewportBounds[0].y) - pickY;
 
-			if (pickX >= 0.f && pickY >= 0.f &&
+			if (!gizmoActive &&
+				pickX >= 0.f && pickY >= 0.f &&
 				pickX < m_ViewportSize.x && pickY < m_ViewportSize.y)
 			{
 				int entityID = m_FrameBuffer->ReadPixel(1, (int)pickX, (int)pickY);
@@ -1065,6 +1160,7 @@ namespace Blu
 		m_ActiveScene = std::make_shared<Scene>();
 		m_ActiveScene->OnViewportResize((float)m_ViewportSize.x, (float)m_ViewportSize.y);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+		m_SceneDirty = false;
 	}
 
 	void BluEditorLayer::CreatePhysicsDemoScene()
@@ -1429,6 +1525,7 @@ namespace Blu
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 			std::filesystem::path scenePath = path;
 			m_ActiveScene->SetSceneFilePath(scenePath);
+			m_SceneDirty = false; // freshly loaded — nothing unsaved
 			
 
 			
@@ -1446,6 +1543,7 @@ namespace Blu
 			{
 				SceneSerializer serializer(m_ActiveScene);
 				serializer.Serialize(filepath);
+				m_SceneDirty = false;
 
 			}
 		}
@@ -1460,7 +1558,10 @@ namespace Blu
 			{
 				std::string filepath = m_EditorScene->GetSceneFilePath().string();
 				if (!filepath.empty())
+				{
 					serializer.Serialize(filepath);
+					m_SceneDirty = false;
+				}
 			}
 
 		}
@@ -1685,6 +1786,7 @@ namespace Blu
 			ImGui::MenuItem("Input Map",       nullptr, &m_ShowInputMap);
 			ImGui::MenuItem("Material Graph",  nullptr, &m_ShowMaterialGraph);
 			ImGui::Separator();
+			ImGui::MenuItem("Settings",        nullptr, &m_ShowSettings);
 			if (ImGui::MenuItem("Reset Editor Layout"))
 				m_ResetEditorLayout = true;
 			ImGui::EndMenu();
@@ -1712,6 +1814,9 @@ namespace Blu
 				if (!p.empty())
 					titleStr = p.stem().string();
 			}
+			// Unsaved-changes marker (Edit mode only — Play doesn't mutate the saved scene).
+			if (m_SceneDirty && m_SceneState == SceneState::Edit)
+				titleStr = "* " + titleStr;
 			const float titleW = ImGui::CalcTextSize(titleStr.c_str()).x;
 			const float ctrlTotal = 45.f * 3.f;
 			const float menuEndX  = ImGui::GetCursorPosX();
@@ -2132,6 +2237,12 @@ namespace Blu
 	{
 		float height = 5.0f;
 		UIDrawTitlebar(height);
+
+		// NOTE: the dockspace host window ("Blu Dockspace" + ImGui::DockSpace) is created
+		// once per frame in Application::Run() (before every layer's OnGuiDraw). Do NOT call
+		// DrawDockspace() again here — a second DockSpace() with the same ID in one frame
+		// trips an ImGui assertion. Panels' ImGui::Begin calls snap into that dockspace;
+		// the default docked layout is built by ResetEditorLayout() below.
 		if (m_ResetEditorLayout)
 		{
 			ResetEditorLayout();
@@ -2151,6 +2262,43 @@ namespace Blu
 		DrawPlaytestHUD();
 
 		DrawStaticCollisionImportPrompt();
+		DrawDeleteEntityConfirmation();
+
+		// ---- Settings / Preferences ----
+		if (m_ShowSettings)
+		{
+			if (ImGui::Begin("Settings", &m_ShowSettings))
+			{
+				ImGui::TextDisabled("Editor preferences");
+				ImGui::Spacing();
+				if (ImGui::CollapsingHeader("Gizmo Snapping", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::Checkbox("Snap Translate", &enableTranslationSnap);
+					ImGui::SameLine(); ImGui::SetNextItemWidth(110.0f);
+					ImGui::DragFloat("m##snapT", &translationSnapValue, 0.05f, 0.01f, 10.0f, "%.2f");
+					ImGui::Checkbox("Snap Rotate",    &enableRotationSnap);
+					ImGui::SameLine(); ImGui::SetNextItemWidth(110.0f);
+					ImGui::DragFloat("deg##snapR", &rotationSnapValue, 0.5f, 1.0f, 90.0f, "%.0f");
+					ImGui::Checkbox("Snap Scale",     &enableScaleSnap);
+					ImGui::SameLine(); ImGui::SetNextItemWidth(110.0f);
+					ImGui::DragFloat("x##snapS", &scaleSnapValue, 0.05f, 0.01f, 10.0f, "%.2f");
+				}
+				if (ImGui::CollapsingHeader("Viewport Debug Overlays", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::Checkbox("Collider outlines", &m_ShowSelectedColliderDebug);
+					ImGui::Checkbox("Character capsule", &m_ShowCharacterDebug);
+					ImGui::Checkbox("Mesh collider",     &m_ShowMeshColliderDebug);
+					ImGui::Checkbox("Camera frustum",    &m_ShowCameraDebug);
+				}
+				if (ImGui::CollapsingHeader("Layout"))
+				{
+					if (ImGui::Button("Reset Editor Layout"))
+						m_ResetEditorLayout = true;
+					ImGui::TextDisabled("Re-docks all panels to the default arrangement.");
+				}
+			}
+			ImGui::End();
+		}
 
 		// ---- Output Log ----
 		if (m_ShowOutputLog)
@@ -3113,6 +3261,11 @@ namespace Blu
 		m_ViewportBounds[0] = { minBound.x, minBound.y };
 		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
 
+			// Hit-test runtime-UI clicks (e.g. the main-menu PLAY button) relative to the
+			// viewport panel rather than the OS window, so menu buttons are clickable inside
+			// the docked editor viewport during Play.
+			Blu::RuntimeUI::SetMouseViewportOffset(m_ViewportBounds[0]);
+
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
 		
@@ -3285,11 +3438,12 @@ namespace Blu
 				{
 					glm::vec3 translation, rotation, scale;
 					Math::DecomposeTransform(transform, translation, rotation, scale);
-				
+
 					glm::vec3 deltaRotation =  rotation - tc.Rotation;
 					tc.Translation = translation;
 					tc.Rotation += deltaRotation;
 					tc.Scale = scale;
+					m_SceneDirty = true; // gizmo moved an entity
 				}
 
 			}
@@ -3298,6 +3452,30 @@ namespace Blu
 		
 		ImGui::End();
 		
+	}
+
+	void BluEditorLayer::ProcessPendingSceneLoad()
+	{
+		if (!Blu::SceneManager::Get().HasPendingLoad())
+			return;
+		std::string path = Blu::SceneManager::Get().ConsumePendingLoad();
+
+		auto next = std::make_shared<Scene>();
+		SceneSerializer serializer(next);
+		if (!serializer.Deserialize(path))
+		{
+			BLU_CORE_WARN("BluEditorLayer: scene transition failed to load '{0}'", path);
+			return;
+		}
+
+		if (m_ActiveScene)
+			m_ActiveScene->OnRuntimeStop();
+		m_ActiveScene = next;
+		m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+		m_ActiveScene->SetPlayerInputEnabled(true);
+		m_ActiveScene->OnRuntimeStart();
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+		BLU_CORE_INFO("BluEditorLayer: transitioned to scene '{0}'", path);
 	}
 
 	bool BluEditorLayer::OnMouseButtonPressed(Events::MouseButtonPressedEvent& event)
@@ -3337,6 +3515,13 @@ namespace Blu
 		bool control = Input::IsKeyPressed(BLU_KEY_LEFT_CONTROL) || Input::IsKeyPressed(BLU_KEY_RIGHT_CONTROL);
 		bool shift = Input::IsKeyPressed(BLU_KEY_LEFT_SHIFT) || Input::IsKeyPressed(BLU_KEY_RIGHT_SHIFT);
 		bool escape = Input::IsKeyPressed(BLU_KEY_ESCAPE);
+		// Gizmo hotkeys (Q/W/E/R) must NOT be gated on io.WantCaptureKeyboard: because
+		// ImGuiConfigFlags_NavEnableKeyboard is enabled, WantCaptureKeyboard is true for ANY
+		// focused window — including the docked Viewport the moment it's clicked — which silently
+		// swallowed the gizmo keys. io.WantTextInput is true only while an actual text widget is
+		// being edited (entity rename, numeric field), so it still protects those without blocking
+		// the gizmo shortcuts during normal viewport interaction.
+		const bool typingText = ImGui::GetIO().WantTextInput;
 		switch (event.GetKeyCode())
 		{
 		case BLU_KEY_O:
@@ -3356,6 +3541,7 @@ namespace Blu
 					OnSceneStop();
 				}
 			}
+			break; // was falling through into BLU_KEY_D (duplicate)
 		}
 		case BLU_KEY_D:
 		{
@@ -3363,6 +3549,7 @@ namespace Blu
 			{
 				Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 				m_ActiveScene->DuplicateEntity(selectedEntity);
+				m_SceneDirty = true;
 			}
 			break;
 		}
@@ -3389,16 +3576,16 @@ namespace Blu
 			break;
 		}
 		case BLU_KEY_Q:
-			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = -1;
+			if (!typingText && !ImGuizmo::IsUsing()) m_ImGuizmoType = -1;
 			break;
 		case BLU_KEY_W:
-			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			if (!typingText && !ImGuizmo::IsUsing()) m_ImGuizmoType = ImGuizmo::OPERATION::TRANSLATE;
 			break;
 		case BLU_KEY_E:
-			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
+			if (!typingText && !ImGuizmo::IsUsing()) m_ImGuizmoType = ImGuizmo::OPERATION::ROTATE;
 			break;
 		case BLU_KEY_R:
-			if (!ImGui::GetIO().WantCaptureKeyboard) m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
+			if (!typingText && !ImGuizmo::IsUsing()) m_ImGuizmoType = ImGuizmo::OPERATION::SCALE;
 			break;
 		case BLU_KEY_F:
 		{
@@ -3415,16 +3602,17 @@ namespace Blu
 			}
 			break;
 		}
+		case BLU_KEY_BACKSPACE:
 		case BLU_KEY_DELETE:
 		{
-			if (!ImGui::GetIO().WantCaptureKeyboard)
+			// Ask for confirmation instead of deleting immediately. Gate on !typingText
+			// (NOT WantCaptureKeyboard): NavEnableKeyboard makes WantCaptureKeyboard true
+			// whenever the docked Viewport/Outliner is focused, which would block the key.
+			if (!typingText && !m_ShowDeleteEntityConfirmation && m_SceneHierarchyPanel)
 			{
 				Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 				if (selectedEntity)
-				{
-					m_ActiveScene->DestroyEntity(selectedEntity);
-					m_SceneHierarchyPanel->SetSelectedEntity({});
-				}
+					QueueEntityDeleteConfirmation(selectedEntity);
 			}
 			break;
 		}

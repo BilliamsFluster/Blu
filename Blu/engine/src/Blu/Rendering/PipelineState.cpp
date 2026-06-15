@@ -73,6 +73,11 @@ namespace Blu
         PipelineStateDesc desc = MakeOpaque();
         desc.DepthStencilState.DepthEnable = false;
         desc.DepthStencilState.DepthWriteMask = false;
+        // No-depth states drive screen-space overlays (runtime UI/HUD) and fullscreen passes.
+        // The 2D UI ortho ({0,w,h,0}) flips Y, reversing quad winding; with back-face culling
+        // (inherited from MakeOpaque) those quads were silently culled. Disable culling — it is
+        // strictly more permissive, so existing fullscreen quads still render.
+        desc.RasterizerState.CullMode = CullMode::None;
         return desc;
     }
 

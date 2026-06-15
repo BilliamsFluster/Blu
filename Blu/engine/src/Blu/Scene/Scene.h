@@ -75,6 +75,11 @@ namespace Blu
 		std::string PossessedPawnName;
 		std::string NearbyInteractableName;
 		std::string RuntimeUIDocumentPath;
+		bool  PossessedPawnHasAmmo     = false;
+		int   PossessedPawnAmmoInMag   = 0;
+		int   PossessedPawnAmmoReserve = 0;
+		bool  PossessedPawnReloading   = false;
+		float HitmarkerTimer           = 0.0f; // >0 while the hitmarker should show
 	};
 
 	struct AssetDependency

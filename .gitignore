@@ -76,6 +76,12 @@ Blu-Editor/config/
 .claude/worktrees/
 
 # -----------------------------------------------------------------------
+# graphify knowledge graph (regenerated locally by the post-commit hook;
+# .graphify_python/.graphify_root hold machine-specific paths — keep local)
+# -----------------------------------------------------------------------
+graphify-out/
+
+# -----------------------------------------------------------------------
 # OS noise
 # -----------------------------------------------------------------------
 Thumbs.db

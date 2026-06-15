@@ -1,0 +1,59 @@
+SceneVersion: 1
+Scene: assets/scenes/MainMenu.blu
+RenderSettings:
+  UseShadows: false
+  UsePostProcess: false
+  UseSkybox: true
+  UseTimeOfDay: true
+  Sky_Turbidity: 2.5
+  Sky_SkyExposure: 0.025
+  Sky_GroundColor: [0.06, 0.07, 0.09]
+  Sky_SunColor: [1, 0.85, 0.66]
+  Sky_SunSize: 0.9995
+  Sky_SunStrength: 8
+  Sky_CloudColor: [0.8, 0.82, 0.87]
+  Sky_CloudCoverage: 0.55
+  Sky_CloudDensity: 0.55
+  Sky_CloudSoftness: 0.6
+  Sky_CloudHeight: 600
+  Sky_CloudScale: 900
+  Sky_CloudWindDirection: [1, 0.35]
+  Sky_CloudScrollSpeed: 0.02
+  Sky_CloudShadowing: 0.5
+  Sky_CloudHorizonFade: 0.22
+  ToD_NormalizedTime: 0.42
+  ToD_AutoAdvance: false
+  ToD_DayDuration: 120
+  ToD_SunAzimuth: 45
+  ToD_SunMaxStrength: 10
+  Fog_Enabled: false
+Entities:
+  - Entity: 3000000000000000001
+    TagComponent:
+      Tag: MenuCamera
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 60
+      Primary: true
+      FixedAspectRatio: false
+    TransformComponent:
+      Translation: [0, 2, 6]
+      Rotation: [-0.05, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000002
+    TagComponent:
+      Tag: MenuUI
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    UIRootComponent:
+      DocumentPath: assets/ui/MainMenu.bluui
+      Visible: true
+      Scale: 1

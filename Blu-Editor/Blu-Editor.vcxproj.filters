@@ -18,5 +18,6 @@
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp">
       <Filter>Panels</Filter>
     </ClCompile>
+    <ClCompile Include="src\ScreenshotLayer.cpp" />
   </ItemGroup>
 </Project>

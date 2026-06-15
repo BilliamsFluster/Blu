@@ -197,6 +197,7 @@ namespace Blu
 	{
 		m_Context = scene;
 		m_SelectedEntity = {};
+		m_LastEntityCount = (size_t)-1; // re-baseline so a scene swap doesn't read as a dirty edit
 	}
 	void SceneHierarchyPanel::SetSelectedEntity(Entity entity)
 	{
@@ -245,6 +246,12 @@ namespace Blu
 				if (EntityHasAuthoringWarning(entity))
 					warningCount++;
 			});
+			// Entity count changed since last frame (create/delete from any source) → scene dirty.
+			// m_LastEntityCount == -1 means "just (re)baselined" — record without flagging.
+			if (m_LastEntityCount != (size_t)-1 && (size_t)actorCount != m_LastEntityCount)
+				NotifySceneModified();
+			m_LastEntityCount = actorCount;
+
 			ImGui::TextDisabled("%u actors | %u visible | %s", actorCount, visibleCount,
 			                    m_SelectedEntity ? "1 selected" : "0 selected");
 			if (warningCount > 0)
@@ -364,6 +371,34 @@ namespace Blu
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
+
+		// In-place rename (F2-style): replace the tree node with an InputText while this
+		// entity is being renamed from the Outliner context menu.
+		if (m_RenamingEntity == entity)
+		{
+			char buffer[256];
+			strcpy_s(buffer, sizeof(buffer), tag.c_str());
+			if (m_RenameRequestFocus)
+			{
+				ImGui::SetKeyboardFocusHere();
+				m_RenameRequestFocus = false;
+			}
+			ImGui::SetNextItemWidth(-1.0f);
+			const bool committed = ImGui::InputText("##RenameEntity", buffer, sizeof(buffer),
+				ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
+			// Commit on Enter or when focus leaves the field (click away); ignore empty names.
+			if (committed || ImGui::IsItemDeactivated())
+			{
+				if (buffer[0] != '\0' && tag != buffer)
+				{
+					tag = buffer;
+					NotifySceneModified();
+				}
+				m_RenamingEntity = {};
+			}
+			return;
+		}
+
 		ImGuiTreeNodeFlags flags = ((m_SelectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0)|ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		std::string label = std::string(EntityIcon(entity)) + " " + tag;
@@ -389,17 +424,29 @@ namespace Blu
 		
 		if (ImGui::BeginPopupContextItem())
 		{
+			// Target the right-clicked entity (not whatever was previously selected) so
+			// Rename/Delete act on the row under the cursor.
+			m_SelectedEntity = entity;
 			if (ImGui::MenuItem("Open Actor Editor"))
 			{
-				m_SelectedEntity = entity;
 				if (m_OpenActorEditorCallback)
 					m_OpenActorEditorCallback(entity);
 			}
+			if (ImGui::MenuItem("Rename"))
+			{
+				m_RenamingEntity = entity;
+				m_RenameRequestFocus = true;
+			}
 			ImGui::Separator();
-			std::string selectedEntityName = std::format("Delete {}", m_SelectedEntity.GetComponent<TagComponent>().Tag.c_str());
+			std::string selectedEntityName = std::format("Delete {}", entity.GetComponent<TagComponent>().Tag.c_str());
 			if (ImGui::MenuItem(selectedEntityName.c_str()))
 			{
-				entityDeleted = true;
+				// Prefer the host's confirmation modal; fall back to immediate delete
+				// if no callback is wired (e.g. panel used standalone).
+				if (m_RequestDeleteCallback)
+					m_RequestDeleteCallback(entity);
+				else
+					entityDeleted = true;
 			}
 			ImGui::EndPopup();
 		}
@@ -692,17 +739,39 @@ namespace Blu
 	//static std::map<int, ParticleSystemComponent> ParticleSystems;
 	static std::vector<ParticleSystemComponent> ParticleSystems(10);
 
-	template<typename T, typename SetupFn>
+	// Set by AddComponentSearchResult when a component is added; DrawEntityComponents
+	// consumes it to flag the scene dirty (entity count is unchanged on add).
+	static bool s_ComponentMenuModified = false;
+
+	// Colour-code the add-component menu by category so it's faster to scan.
+	static ImVec4 ComponentCategoryColor(const char* category)
+	{
+		std::string c = category ? category : "";
+		if (c.find("Light") != std::string::npos || c.find("Camera") != std::string::npos)
+			return ImVec4(0.95f, 0.80f, 0.30f, 1.0f); // amber  — camera/lighting
+		if (c.find("Render") != std::string::npos || c.find("Mesh") != std::string::npos)
+			return ImVec4(0.40f, 0.75f, 1.00f, 1.0f); // blue   — rendering
+		if (c.find("Phys") != std::string::npos || c.find("Collid") != std::string::npos)
+			return ImVec4(0.45f, 0.85f, 0.45f, 1.0f); // green  — physics
+		if (c.find("Audio") != std::string::npos)
+			return ImVec4(0.85f, 0.55f, 0.95f, 1.0f); // purple — audio
+		if (c.find("Game") != std::string::npos || c.find("Script") != std::string::npos || c.find("Actor") != std::string::npos)
+			return ImVec4(1.00f, 0.55f, 0.45f, 1.0f); // coral  — gameplay
+		return ImVec4(0.60f, 0.60f, 0.60f, 1.0f);     // grey   — other
+	}
+
+	template <typename T, typename SetupFn>
 	static void AddComponentSearchResult(Entity entity, const char* category, const char* label, const char* warning, SetupFn setup)
 	{
 		if (entity.HasComponent<T>() || !FilterMatches(label, s_ComponentSearchBuffer))
 			return;
-		ImGui::TextDisabled("%s", category);
+		ImGui::TextColored(ComponentCategoryColor(category), "%s", category);
 		ImGui::SameLine(115.0f);
 		if (ImGui::Selectable(label))
 		{
 			auto& component = entity.AddComponent<T>();
 			setup(component);
+			s_ComponentMenuModified = true;
 			ImGui::CloseCurrentPopup();
 		}
 		if (warning && warning[0] && ImGui::IsItemHovered())
@@ -993,6 +1062,13 @@ namespace Blu
 				}
 			}
 			ImGui::EndPopup();
+		}
+
+		// A component was added from the palette this frame → flag the scene dirty.
+		if (s_ComponentMenuModified)
+		{
+			s_ComponentMenuModified = false;
+			NotifySceneModified();
 		}
 
 		ImGui::Separator();

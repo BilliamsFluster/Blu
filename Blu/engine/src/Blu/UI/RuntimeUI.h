@@ -29,7 +29,10 @@ namespace Blu
 		HealthText,
 		StaminaText,
 		ZombieCount,
-		InteractPrompt
+		InteractPrompt,
+		AmmoText,      // "<mag> / <reserve>" or "RELOADING"
+		Reticle,       // centered crosshair (drawn, no text)
+		Hitmarker      // centered hit "X", shown while HitmarkerTimer > 0
 	};
 
 	struct UIWidget
@@ -38,6 +41,7 @@ namespace Blu
 		std::string Name;
 		std::string Text;
 		std::string ImagePath;
+		std::string ActionId;          // on click: "load:<scene.blu>" loads a scene, else dispatched to the click handler
 		UIBinding Binding = UIBinding::None;
 		glm::vec2 Position = { 0.0f, 0.0f };
 		glm::vec2 Size = { 100.0f, 24.0f };
@@ -76,6 +80,11 @@ namespace Blu
 		static RuntimeUIRenderResult RenderGameplayHUD(Scene& scene, float viewportWidth, float viewportHeight);
 		static bool LoadDocument(const std::filesystem::path& path, UIDocument& outDocument);
 		static void Invalidate(const std::string& documentPath);
+
+		// Offset subtracted from the OS mouse position when hit-testing clickable widgets.
+		// 0 for a fullscreen game / headless capture; the editor sets it to its viewport
+		// panel origin so menu buttons are clickable inside the docked viewport.
+		static void SetMouseViewportOffset(const glm::vec2& offset);
 
 	private:
 		static UIDocument CreateFallbackHUD();

@@ -9,6 +9,8 @@
 #include "Blu/Scene/Scene.h"
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Rendering/AssetManager.h"
+#include "Blu/Rendering/StaticMeshAsset.h"
+#include "Blu/Rendering/MaterialAsset.h"
 #include "Blu/Rendering/MaterialSystem.h"
 #include "Blu/Rendering/MaterialGraph.h"
 #include "Blu/Rendering/LightBufferData.h"
@@ -240,6 +242,173 @@ namespace
 		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
+	void TestAssetMetaStableHandles()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsAssetMeta-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/box.obj", "OBJ"), "mesh source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		const Blu::AssetHandle first = assets.Import("project://assets/box.obj");
+		Require((uint64_t)first != 0, "asset import returned an invalid handle");
+		Require(fileSystem.Exists("project://assets/box.obj.meta"), "import did not write a .meta sidecar");
+
+		// Simulate a fresh session with NO registry persisted: the handle must be
+		// recovered from the .meta sidecar, not re-minted.
+		assets.Reset();
+		assets.Initialize();
+		const Blu::AssetHandle recovered = assets.Import("project://assets/box.obj");
+		Require((uint64_t)recovered == (uint64_t)first,
+			"import did not recover the stable UUID from the .meta sidecar after registry loss");
+
+		// Reimport preserves the handle and rejects stale handles.
+		Require(assets.Reimport(first), "reimport of a known asset failed");
+		Require(!assets.Reimport(Blu::AssetHandle(123456)), "reimport of a stale handle was not rejected");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
+	void TestStaticMeshAssetTyping()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsMeshAsset-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/box.obj", "o box\n"), "mesh source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		const Blu::AssetHandle handle = assets.Import("project://assets/box.obj");
+		const Blu::AssetMetadata* metadata = assets.FindMetadata(handle);
+		Require(metadata != nullptr && metadata->Type == Blu::AssetType::StaticMesh,
+			"OBJ source was not classified as a StaticMesh asset");
+
+		// Resolving the handle yields a StaticMeshAsset, but the geometry is loaded
+		// lazily (ModelLoader needs a GPU device, absent in tests) — so LoadedModel
+		// must still be null here.
+		auto asset = assets.Load(handle);
+		auto mesh = std::dynamic_pointer_cast<Blu::StaticMeshAsset>(asset);
+		Require(mesh != nullptr, "static mesh handle did not resolve to a StaticMeshAsset");
+		Require(mesh->LoadedModel == nullptr, "static mesh geometry should load lazily, not on handle resolve");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
+	void TestMeshComponentModelHandleMigration()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsMeshHandle-" + std::to_string((uint64_t)Blu::UUID()));
+		const std::filesystem::path scenePath = testDirectory / "MeshHandle.blu";
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/box.obj", "o box\n"), "mesh source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		// A mesh entity referencing a source by path, with NO loaded geometry (headless:
+		// serialization must not require a GPU). The serializer should mint + persist a
+		// stable ModelHandle.
+		auto scene = std::make_shared<Blu::Scene>();
+		Blu::Entity entity = scene->CreateEntity("MeshEntity");
+		auto& mesh = entity.AddComponent<Blu::MeshComponent>();
+		mesh.FilePath = "project://assets/box.obj";
+
+		Blu::SceneSerializer serializer(scene);
+		serializer.Serialize(scenePath.string());
+
+		std::ifstream serialized(scenePath);
+		std::stringstream text;
+		text << serialized.rdbuf();
+		const std::string yaml = text.str();
+		Require(yaml.find("ModelHandle:") != std::string::npos, "mesh component did not persist a ModelHandle");
+		Require(yaml.find("box.obj") != std::string::npos, "mesh component did not persist its source path");
+
+		const auto& meshAfter = entity.GetComponent<Blu::MeshComponent>();
+		Require((uint64_t)meshAfter.ModelHandle != 0, "serializer did not mint a model handle");
+		Require((uint64_t)meshAfter.ModelHandle == (uint64_t)assets.Import("project://assets/box.obj"),
+			"persisted mesh handle is not the stable asset handle for its source");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
+	void TestAssetHandleMigrationAcrossComponents()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsHandlesAll-" + std::to_string((uint64_t)Blu::UUID()));
+		const std::filesystem::path scenePath = testDirectory / "Handles.blu";
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/grass.obj", "o grass\n"), "foliage source write failed");
+		Require(fileSystem.Write("project://assets/lod0.obj", "o lod\n"), "lod source write failed");
+		Require(fileSystem.Write("project://assets/shot.wav", "RIFF"), "audio source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		auto scene = std::make_shared<Blu::Scene>();
+		Blu::Entity entity = scene->CreateEntity("AssetRefs");
+		auto& foliage = entity.AddComponent<Blu::FoliageComponent>();
+		foliage.FilePath = "project://assets/grass.obj";
+		auto& audio = entity.AddComponent<Blu::AudioSourceComponent>();
+		audio.FilePath = "project://assets/shot.wav";
+		auto& lod = entity.AddComponent<Blu::MeshLODComponent>();
+		Blu::LODEntry level;
+		level.FilePath = "project://assets/lod0.obj";
+		level.MaxDistance = 50.0f;
+		lod.Levels.push_back(level);
+
+		Blu::SceneSerializer serializer(scene);
+		serializer.Serialize(scenePath.string());
+
+		std::ifstream serialized(scenePath);
+		std::stringstream text;
+		text << serialized.rdbuf();
+		const std::string yaml = text.str();
+		Require(yaml.find("AudioHandle:") != std::string::npos, "audio source did not persist an AssetHandle");
+		Require(yaml.find("ModelHandle:") != std::string::npos, "foliage/LOD did not persist an AssetHandle");
+
+		Require((uint64_t)entity.GetComponent<Blu::FoliageComponent>().ModelHandle != 0, "foliage handle not minted");
+		Require((uint64_t)entity.GetComponent<Blu::AudioSourceComponent>().AudioHandle != 0, "audio handle not minted");
+		const auto& lodAfter = entity.GetComponent<Blu::MeshLODComponent>();
+		Require(!lodAfter.Levels.empty() && (uint64_t)lodAfter.Levels[0].ModelHandle != 0, "LOD level handle not minted");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestLifetimeUtilities()
 	{
 		struct TestSlot;
@@ -261,6 +430,52 @@ namespace
 		Require(value->Value == 11 && arena.HasOutstandingAllocations(), "frame arena allocation failed");
 		arena.Reset();
 		Require(arena.GetBytesUsed() == 0 && arena.GetHighWaterMark() >= sizeof(TestValue), "frame arena reset diagnostics failed");
+	}
+
+	void TestMaterialAssetPersistence()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsMaterialAsset-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		// Author a material and persist it as .blumat.
+		Blu::MaterialAsset material("project://assets/rusty.blumat");
+		material.GetProperties().Metallic = 0.9f;
+		material.GetProperties().Roughness = 0.2f;
+		material.GetProperties().AlbedoColor = glm::vec4(0.8f, 0.1f, 0.1f, 1.0f);
+		material.SetNormalTexture(Blu::AssetHandle(4242));
+		Require(material.SaveToFile("project://assets/rusty.blumat"), "material asset save failed");
+		Require(fileSystem.Exists("project://assets/rusty.blumat"), ".blumat file was not written");
+
+		// Round-trip through a fresh asset.
+		Blu::MaterialAsset reloaded;
+		Require(reloaded.LoadFromFile("project://assets/rusty.blumat"), "material asset load failed");
+		Require(std::abs(reloaded.GetProperties().Metallic - 0.9f) < 0.001f, "metallic did not round-trip");
+		Require(std::abs(reloaded.GetProperties().Roughness - 0.2f) < 0.001f, "roughness did not round-trip");
+		Require(std::abs(reloaded.GetProperties().AlbedoColor.r - 0.8f) < 0.001f, "albedo did not round-trip");
+		Require((uint64_t)reloaded.GetNormalTexture() == 4242, "normal texture handle did not round-trip");
+
+		// AssetManager classifies and loads .blumat as a MaterialAsset.
+		const Blu::AssetHandle handle = assets.Import("project://assets/rusty.blumat");
+		const Blu::AssetMetadata* metadata = assets.FindMetadata(handle);
+		Require(metadata != nullptr && metadata->Type == Blu::AssetType::Material, ".blumat was not classified as a Material asset");
+		auto loaded = assets.LoadMaterial(handle);
+		Require(loaded != nullptr, "AssetManager::LoadMaterial returned null for a .blumat handle");
+		Require(std::abs(loaded->GetProperties().Metallic - 0.9f) < 0.001f, "AssetManager-loaded material lost its properties");
+		Require((uint64_t)loaded->GetNormalTexture() == 4242, "AssetManager-loaded material lost its texture handle");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
 	void TestMaterialResolver()
@@ -415,6 +630,69 @@ namespace
 		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
+	void TestSceneVersioningAndRoundTrip()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsSceneRoundTrip-" + std::to_string((uint64_t)Blu::UUID()));
+		const std::filesystem::path scenePath = testDirectory / "RoundTrip.blu";
+		std::filesystem::create_directories(testDirectory);
+
+		auto readFile = [](const std::filesystem::path& path)
+		{
+			std::ifstream file(path);
+			std::stringstream buffer;
+			buffer << file.rdbuf();
+			return buffer.str();
+		};
+
+		// Build a small, deterministic single-entity scene (stable serialization order).
+		auto scene = std::make_shared<Blu::Scene>();
+		Blu::Entity entity = scene->CreateEntity("RoundTripEntity");
+		if (entity.HasComponent<Blu::TransformComponent>())
+		{
+			auto& transform = entity.GetComponent<Blu::TransformComponent>();
+			transform.Translation = { 1.0f, 2.0f, 3.0f };
+			transform.Scale = { 2.0f, 2.0f, 2.0f };
+		}
+		auto& animator = entity.AddComponent<Blu::AnimatorComponent>();
+		animator.CurrentClipIndex = 2;
+		animator.CurrentTime = 5.0f;
+		animator.Playing = false;
+		animator.Loop = true;
+		animator.SpeedScale = 1.5f;
+
+		Blu::SceneSerializer serializer(scene);
+		serializer.Serialize(scenePath.string());
+		const std::string firstPass = readFile(scenePath);
+		Require(firstPass.find("SceneVersion: 1") != std::string::npos,
+			"serialized scene did not record the current SceneVersion");
+
+		// Round trip: deserialize then re-serialize to the same path; bytes must match
+		// (re-using the path keeps the embedded "Scene:" value identical across passes).
+		auto reloaded = std::make_shared<Blu::Scene>();
+		Blu::SceneSerializer reloadedSerializer(reloaded);
+		Require(reloadedSerializer.Deserialize(scenePath.string()), "round-trip scene did not deserialize");
+		Require(reloadedSerializer.GetLoadedSceneVersion() == Blu::SceneSerializer::kCurrentSceneVersion,
+			"versioned scene did not report the current version on load");
+		reloadedSerializer.Serialize(scenePath.string());
+		const std::string secondPass = readFile(scenePath);
+		Require(firstPass == secondPass, "scene serialization was not stable across a round trip");
+
+		// Legacy scenes (no SceneVersion key) must be treated as version 0.
+		const std::filesystem::path legacyPath = testDirectory / "Legacy.blu";
+		{
+			std::ofstream legacy(legacyPath);
+			legacy << "Scene: Legacy\nEntities:\n  - Entity: 7\n    TagComponent:\n      Tag: Old\n";
+		}
+		auto legacyScene = std::make_shared<Blu::Scene>();
+		Blu::SceneSerializer legacySerializer(legacyScene);
+		Require(legacySerializer.Deserialize(legacyPath.string()), "legacy scene did not deserialize");
+		Require(legacySerializer.GetLoadedSceneVersion() == 0, "legacy scene was not treated as version 0");
+
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestAudioBackendIsCompiled()
 	{
 		Require(Blu::AudioEngine::Get().IsBackendCompiled(), "miniaudio backend was not compiled into Blu");
@@ -451,12 +729,18 @@ int main()
 		TestGameModeRegistration();
 		TestLegacySceneMigrationWritesActorComponent();
 		TestMountedFilesystemAndAssetRegistry();
+		TestAssetMetaStableHandles();
+		TestStaticMeshAssetTyping();
+		TestMeshComponentModelHandleMigration();
+		TestAssetHandleMigrationAcrossComponents();
 		TestLifetimeUtilities();
 		TestMaterialResolver();
+		TestMaterialAssetPersistence();
 		TestMaterialGraphCompiler();
 		TestSceneRenderPipelinePlan();
 		TestSharedLightBufferPacking();
 		TestWorldAuthoringContracts();
+		TestSceneVersioningAndRoundTrip();
 		TestAudioBackendIsCompiled();
 		TestAuthoredGameplaySliceAssets();
 		TestJoltConfigurationCompatibility();

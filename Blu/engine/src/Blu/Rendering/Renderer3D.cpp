@@ -28,6 +28,7 @@ namespace Blu
         {
             Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/PBR_Mesh.hlsl");
             Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/DepthOnly.hlsl");
+            Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/DepthOnlySkinned.hlsl");
             Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Foliage_Instanced.hlsl");
             Renderer::GetShaderLibrary()->Load("assets/shaders/DX11/Skinned_Mesh.hlsl");
         }
@@ -37,6 +38,8 @@ namespace Blu
         }
         s_Data3D->MeshShader          = Renderer::GetShaderLibrary()->Get("PBR_Mesh");
         s_Data3D->DepthOnlyShader     = Renderer::GetShaderLibrary()->Get("DepthOnly");
+        if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
+            s_Data3D->DepthOnlySkinnedShader = Renderer::GetShaderLibrary()->Get("DepthOnlySkinned");
         s_Data3D->InstancedMeshShader = Renderer::GetShaderLibrary()->Get("Foliage_Instanced");
         s_Data3D->SkinnedMeshShader   = Renderer::GetShaderLibrary()->Get("Skinned_Mesh");
         s_Data3D->CSMInstance         = CascadedShadowMap::Create(2048);
@@ -110,6 +113,32 @@ namespace Blu
             uploadFog(*s_Data3D->InstancedMeshShader);
     }
 
+    // Transient point lights queued this frame (muzzle flashes, impacts). Merged into the
+    // light blob by PassLights, cleared each runtime frame by ClearDynamicLights.
+    static std::vector<PointLightData> s_DynamicLights;
+
+    void Renderer3D::AddDynamicLight(const glm::vec3& position, const glm::vec3& color,
+                                     float intensity, float range)
+    {
+        PointLightData p;
+        p.Position     = position;
+        p.Ambient      = glm::vec3(0.0f);       // transient flashes contribute no ambient
+        p.Diffuse      = color;
+        p.Specular     = color;
+        p.Intensity    = intensity;
+        p.Range        = range;
+        // Tighter quadratic falloff than the scene default so flashes stay local.
+        p.AttConstant  = 1.0f;
+        p.AttLinear    = 0.7f;
+        p.AttQuadratic = 1.8f;
+        s_DynamicLights.push_back(p);
+    }
+
+    void Renderer3D::ClearDynamicLights()
+    {
+        s_DynamicLights.clear();
+    }
+
     // -------------------------------------------------------------------------
     // PassLights — upload all lights as a single cbuffer blob (no string allocs).
     // -------------------------------------------------------------------------
@@ -119,7 +148,20 @@ namespace Blu
         const std::vector<SpotLightData>&  spotLights)
     {
         auto& sh = *s_Data3D->MeshShader;
-        const LightDataGPU gpu = BuildLightDataGPU(dirLights, pointLights, spotLights);
+
+        // Merge transient dynamic lights into the point-light set. BuildLightDataGPU caps the
+        // total at kMaxPointLights, so an overflowing merge is clamped (not an overrun).
+        const std::vector<PointLightData>* points = &pointLights;
+        std::vector<PointLightData> merged;
+        if (!s_DynamicLights.empty())
+        {
+            merged.reserve(pointLights.size() + s_DynamicLights.size());
+            merged.insert(merged.end(), pointLights.begin(), pointLights.end());
+            merged.insert(merged.end(), s_DynamicLights.begin(), s_DynamicLights.end());
+            points = &merged;
+        }
+
+        const LightDataGPU gpu = BuildLightDataGPU(dirLights, *points, spotLights);
         s_Data3D->Lights = gpu;
 
         // Single bulk upload — no string allocations, one memcpy into cbuffer shadow.
@@ -233,6 +275,11 @@ namespace Blu
                 PipelineStateCache::GetOpaque()->Bind();
             break;
         }
+    }
+
+    const glm::mat4& Renderer3D::GetViewProjectionMatrix()
+    {
+        return s_Data3D->ViewProjectionMatrix;
     }
 
     void Renderer3D::DrawMesh(const glm::mat4& transform, MeshComponent& mc, int entityID)
@@ -354,6 +401,14 @@ namespace Blu
                 lighting.IBLEnabled = iblGPU.IBLEnabled;
                 lighting.IBLStrength = iblGPU.IBLStrength;
                 lighting.IBLMipLevels = iblGPU.IBLMipLevels;
+                // Bind the CSM shadow map for the deferred lighting pass. SubmitLightingPass
+                // binds gBuffer SRVs (0-4), IBL (6-8) and entity-ID (9) but NOT slot 5, so the
+                // deferred lighting shader sampled an unbound u_ShadowMapArray(t5) and produced
+                // no shadows. Bind it here (the CopyDepthToOutput inside SubmitLightingPass only
+                // CopyResources, so slot 5 survives); BindTexture also binds the comparison
+                // sampler at s1. SubmitLightingPass null-clears slot 5 afterwards.
+                if (lighting.HasShadowMap && s_Data3D->CSMInstance)
+                    s_Data3D->CSMInstance->BindTexture(5);
                 s_Data3D->Deferred->SubmitLightingPass(lighting);
                 usedDeferred = true;
             }
@@ -370,6 +425,13 @@ namespace Blu
         sh.Flush();
         if (iblGPU.IBLEnabled)
             IBLSystem::BindIBL(6, 7, 8);
+
+        // Re-bind the CSM shadow map for the forward draws. BindCSM() bound slot 5 + the s1
+        // comparison sampler at the end of ShadowPass, but SetLights()/SetFog() re-bound the
+        // mesh shader in between; bind it here so PBR_Mesh.hlsl's SampleCmp has a live shadow
+        // map + sampler during IssueDrawCall (forward path only — deferred binds in its pass).
+        if (!usedDeferred && s_Data3D->HasShadowMap && s_Data3D->CSMInstance)
+            s_Data3D->CSMInstance->BindTexture(5);
 
         const Material* lastMat = nullptr;
         if (!usedDeferred)
@@ -426,7 +488,8 @@ namespace Blu
         // Do not restore render target yet — caller loops over cascades.
     }
 
-    void Renderer3D::DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc)
+    void Renderer3D::DrawMeshShadow(const glm::mat4& transform, MeshComponent& mc,
+                                    const Frustum& cullFrustum)
     {
         if (!mc.MeshData && !mc.ModelAsset) return;
 
@@ -434,7 +497,19 @@ namespace Blu
         {
             for (auto& submesh : mc.ModelAsset->Meshes)
             {
-                s_Data3D->DepthOnlyShader->SetUniformMat4("u_Model", transform * submesh.LocalTransform);
+                glm::mat4 submeshWorld = transform * submesh.LocalTransform;
+
+                // Cull against the cascade's light frustum (mirrors DrawMesh's view-frustum
+                // cull). A submesh outside this cascade's light frustum casts nothing into it.
+                glm::vec3 worldCenter = glm::vec3(submeshWorld * glm::vec4(submesh.BoundingCenter, 1.0f));
+                float worldRadius = submesh.BoundingRadius * std::max({
+                    glm::length(glm::vec3(submeshWorld[0])),
+                    glm::length(glm::vec3(submeshWorld[1])),
+                    glm::length(glm::vec3(submeshWorld[2]))});
+                if (worldRadius > 0.0f && !cullFrustum.TestSphere(worldCenter, worldRadius))
+                    continue;
+
+                s_Data3D->DepthOnlyShader->SetUniformMat4("u_Model", submeshWorld);
                 s_Data3D->DepthOnlyShader->Flush();
                 submesh.VAO->Bind();
                 RenderCommand::DrawIndexed(submesh.VAO, submesh.IndexCount);
@@ -442,6 +517,14 @@ namespace Blu
         }
         else if (mc.MeshData)
         {
+            glm::vec3 worldCenter = glm::vec3(transform * glm::vec4(mc.MeshData->GetBoundingCenter(), 1.0f));
+            float worldRadius = mc.MeshData->GetBoundingRadius() * std::max({
+                glm::length(glm::vec3(transform[0])),
+                glm::length(glm::vec3(transform[1])),
+                glm::length(glm::vec3(transform[2]))});
+            if (worldRadius > 0.0f && !cullFrustum.TestSphere(worldCenter, worldRadius))
+                return;
+
             s_Data3D->DepthOnlyShader->SetUniformMat4("u_Model", transform);
             s_Data3D->DepthOnlyShader->Flush();
             mc.MeshData->GetVertexArray()->Bind();
@@ -457,6 +540,41 @@ namespace Blu
         glm::mat4 Bones[128]; // 128 * 64 = 8 192 bytes
     };
     static_assert(sizeof(BoneDataGPU) == 8192, "BoneDataGPU size mismatch");
+
+    void Renderer3D::DrawSkinnedMeshShadow(const glm::mat4& transform, MeshComponent& mc,
+                                           const std::vector<glm::mat4>& boneMatrices,
+                                           const glm::mat4& lightVP)
+    {
+        if (!mc.ModelAsset || !mc.ModelAsset->HasSkeleton()) return;
+        if (!s_Data3D->DepthOnlySkinnedShader) return;
+
+        auto& sh = *s_Data3D->DepthOnlySkinnedShader;
+        sh.Bind();
+        sh.SetUniformMat4("u_LightVP", lightVP);
+        // Match DrawSkinnedMeshForward: bone matrices carry the node hierarchy, so the
+        // object transform alone (no per-submesh LocalTransform) maps to world space —
+        // keeping the shadow geometry identical to the lit geometry.
+        sh.SetUniformMat4("u_Model", transform);
+
+        BoneDataGPU boneGPU = {};
+        int count = std::min((int)boneMatrices.size(), 128);
+        for (int i = 0; i < count; ++i)
+            boneGPU.Bones[i] = boneMatrices[i];
+        sh.SetUniformBuffer("BoneData", &boneGPU, sizeof(boneGPU));
+        sh.Flush();
+
+        for (auto& submesh : mc.ModelAsset->SkinnedMeshes)
+        {
+            if (!submesh.VAO) continue;
+            submesh.VAO->Bind();
+            RenderCommand::DrawIndexed(submesh.VAO, submesh.IndexCount);
+        }
+
+        // Restore the static depth shader so EndCSMPass's UnBind (and any later static
+        // draws) stay consistent. The shadow-map pipeline state from BeginCSMPass holds.
+        sh.UnBind();
+        s_Data3D->DepthOnlyShader->Bind();
+    }
 
     void Renderer3D::DrawSkinnedMesh(const glm::mat4& transform, MeshComponent& mc,
                                      const std::vector<glm::mat4>& boneMatrices,

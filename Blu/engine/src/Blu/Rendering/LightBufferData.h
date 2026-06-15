@@ -37,17 +37,25 @@ namespace Blu
 		float OuterCutoff;   float pad3[3];
 	};
 
+	// kMaxPointLights: budget for the single-cbuffer light blob shared by the forward
+	// mesh/instanced/skinned shaders and the deferred lighting pass. Raised from 8 to 32 so
+	// scene lights + transient muzzle-flash/impact lights coexist. MUST stay in lockstep with
+	// `u_PointLights[N]` in every HLSL that declares the LightData cbuffer (Deferred_Lighting,
+	// PBR_Mesh, Renderer3D_Mesh, Skinned_Mesh, Foliage_Instanced) and with the static_assert below.
+	static constexpr int kMaxPointLights = 32;
+
 	struct alignas(16) LightDataGPU
 	{
 		DirLightGPU DirLights[4];
-		PointLightGPU PointLights[8];
+		PointLightGPU PointLights[kMaxPointLights];
 		SpotLightGPU SpotLights[4];
 		int NumDirLights;
 		int NumPointLights;
 		int NumSpotLights;
 		float PadL;
 	};
-	static_assert(sizeof(LightDataGPU) == 1360, "LightDataGPU layout must match the shared HLSL cbuffer");
+	// 256 (4 dir) + 2560 (32 point * 80) + 448 (4 spot * 112) + 16 (counts) = 3280.
+	static_assert(sizeof(LightDataGPU) == 3280, "LightDataGPU layout must match the shared HLSL cbuffer");
 
 	struct alignas(16) ShadowDataGPU
 	{

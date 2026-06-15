@@ -7,6 +7,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "Blu/Rendering/ParticleSystem.h"
 #include "Blu/Core/UUID.h"
+#include "Blu/Rendering/Asset.h"
 #include "Blu/Rendering/Material.h"
 #include "Blu/Rendering/Mesh.h"
 #include "Blu/Audio/AudioEngine.h"
@@ -127,8 +128,9 @@ namespace Blu
 
 		Shared<class Mesh> MeshData;
 		Shared<class Material> MaterialInstance;
-		Shared<Model> ModelAsset;
-		std::string FilePath;
+		Shared<Model> ModelAsset;       // resolved runtime cache (rendered)
+		AssetHandle ModelHandle = AssetHandle(0); // stable source reference; resolves ModelAsset
+		std::string FilePath;           // deprecated fallback / human-readable source path
 		PrimitiveType Primitive = PrimitiveType::None;
 
 		MeshComponent() = default;
@@ -167,9 +169,10 @@ namespace Blu
 	// model is used for any distance beyond it (the "lowest quality" fallback).
 	struct LODEntry
 	{
-		Shared<Model> ModelAsset;
+		Shared<Model> ModelAsset;                  // resolved runtime cache (rendered)
+		AssetHandle   ModelHandle = AssetHandle(0); // stable source reference
 		float         MaxDistance = 100.0f;
-		std::string   FilePath;
+		std::string   FilePath;                    // deprecated fallback
 	};
 
 	struct MeshLODComponent
@@ -542,8 +545,9 @@ namespace Blu
 	// or add them manually.
 	struct FoliageComponent
 	{
-		Shared<Model>              ModelAsset;
-		std::string                FilePath;
+		Shared<Model>              ModelAsset;     // resolved runtime cache (rendered)
+		AssetHandle                ModelHandle = AssetHandle(0); // stable source reference
+		std::string                FilePath;       // deprecated fallback
 		std::vector<glm::mat4>     Transforms;     // world-space per-instance transforms
 
 		// Wind animation parameters (applied in the vertex shader)
@@ -561,7 +565,8 @@ namespace Blu
 	// runtime handle on OnRuntimeStart and stops/frees it on OnRuntimeStop.
 	struct AudioSourceComponent
 	{
-		std::string FilePath;           // Path to .wav / .mp3 / .ogg / .flac
+		std::string FilePath;           // Path to .wav / .mp3 / .ogg / .flac (deprecated fallback)
+		AssetHandle AudioHandle = AssetHandle(0); // stable source reference
 		float       Volume      = 1.0f; // [0, 1]
 		float       Pitch       = 1.0f; // 1.0 = normal speed
 		bool        Loop        = false;
@@ -576,11 +581,54 @@ namespace Blu
 
 		AudioSourceComponent() = default;
 		AudioSourceComponent(const AudioSourceComponent& o)
-			: FilePath(o.FilePath), Volume(o.Volume), Pitch(o.Pitch),
+			: FilePath(o.FilePath), AudioHandle(o.AudioHandle), Volume(o.Volume), Pitch(o.Pitch),
 			  Loop(o.Loop), PlayOnStart(o.PlayOnStart),
 			  Spatial(o.Spatial), MinDistance(o.MinDistance), MaxDistance(o.MaxDistance),
 			  _RuntimeHandle(kInvalidSound) // never copy runtime handle
 		{}
+	};
+
+	// ── Health ───────────────────────────────────────────────────────────────
+	// Damageable entities (zombies, destructibles). Runtime gameplay state — added
+	// at BeginPlay by enemy actors, not serialized into scenes.
+	struct HealthComponent
+	{
+		float Health    = 100.0f;
+		float MaxHealth  = 100.0f;
+
+		HealthComponent() = default;
+		HealthComponent(const HealthComponent&) = default;
+		explicit HealthComponent(float hp) : Health(hp), MaxHealth(hp) {}
+	};
+
+	// ── Projectile ───────────────────────────────────────────────────────────
+	// A bullet/pellet in flight. Spawned by the weapon, stepped each frame, removed
+	// on impact or when its life expires. Runtime gameplay state — not serialized.
+	struct ProjectileComponent
+	{
+		glm::vec3 Velocity  = { 0.0f, 0.0f, 0.0f }; // world units / second
+		float     Damage    = 34.0f;
+		float     Life      = 2.0f;                 // seconds before despawn
+		float     HitRadius = 0.9f;                 // proximity radius for a hit
+
+		ProjectileComponent() = default;
+		ProjectileComponent(const ProjectileComponent&) = default;
+	};
+
+	// ── Ammo / weapon HUD state ──────────────────────────────────────────────
+	// Mirror of the possessed pawn's weapon counters so the runtime HUD can read them
+	// without reaching into the actor. Synced by the player actor each frame. HitFlash is
+	// the remaining lifetime (seconds) of the on-screen hitmarker. Runtime state — not serialized.
+	struct AmmoComponent
+	{
+		int   InMag     = 0;
+		int   Reserve   = 0;
+		int   MagSize   = 0;
+		bool  Reloading = false;
+		float HitFlash  = 0.0f;
+
+		AmmoComponent() = default;
+		AmmoComponent(const AmmoComponent&) = default;
 	};
 
 	template<typename... Component>

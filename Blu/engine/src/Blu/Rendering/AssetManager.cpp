@@ -1,5 +1,10 @@
 #include "Blupch.h"
 #include "AssetManager.h"
+#include "AssetMeta.h"
+#include "StaticMeshAsset.h"
+#include "MaterialAsset.h"
+#include "Mesh.h"
+#include "ModelLoader.h"
 #include "Blu/Core/Log.h"
 #include "Blu/Utils/FileSystemService.h"
 #include "yaml-cpp/yaml.h"
@@ -67,14 +72,64 @@ namespace Blu
 		if (existing != m_PathIndex.end())
 			return existing->second;
 
+		// Consult a .meta sidecar first so the handle is STABLE across a lost/rebuilt
+		// registry, a moved project, or sharing across machines. If absent (or invalid),
+		// mint a fresh UUID and write the sidecar so future imports recover it.
+		AssetMeta meta;
+		const bool hasMeta = AssetMetaIO::Read(normalizedPath, meta);
+		const bool minted = !(hasMeta && meta.IsValid());
+
 		AssetMetadata metadata;
-		metadata.Handle = AssetHandle();
+		metadata.Handle = minted ? AssetHandle() : meta.Handle;
 		metadata.Type = InferAssetType(normalizedPath);
 		metadata.VirtualPath = normalizedPath;
 		metadata.SourcePath = normalizedPath;
+
+		// Only (re)write the sidecar when minting a fresh handle, so an existing .meta —
+		// including user-tuned import settings — is preserved across ordinary imports
+		// (e.g. when a scene load registers the assets it references).
+		if (minted)
+		{
+			meta = AssetMeta{};
+			meta.Handle = metadata.Handle;
+			meta.Type = metadata.Type;
+			meta.SourcePath = normalizedPath;
+			AssetMetaIO::StampSourceInfo(normalizedPath, meta);
+			AssetMetaIO::Write(normalizedPath, meta); // best-effort; tolerated if unwritable
+		}
+
 		m_PathIndex[normalizedPath] = metadata.Handle;
 		m_Metadata[metadata.Handle] = metadata;
 		return metadata.Handle;
+	}
+
+	bool AssetManager::Reimport(AssetHandle handle)
+	{
+		if (!m_Initialized)
+			Initialize();
+
+		const AssetMetadata* metadata = FindMetadata(handle);
+		if (!metadata)
+		{
+			AddDiagnostic("AssetManager: cannot reimport stale asset handle " + std::to_string((uint64_t)handle));
+			return false;
+		}
+
+		// Refresh the sidecar's source stamp while preserving the handle, so callers can
+		// detect a changed source and the UUID survives.
+		AssetMeta meta;
+		AssetMetaIO::Read(metadata->SourcePath, meta);
+		meta.Handle = metadata->Handle;
+		meta.Type = metadata->Type;
+		meta.SourcePath = metadata->SourcePath;
+		AssetMetaIO::StampSourceInfo(metadata->SourcePath, meta);
+		AssetMetaIO::Write(metadata->SourcePath, meta);
+
+		// If the asset is resident, reload its contents in place (handle/refs unchanged).
+		auto loaded = m_Assets.find(handle);
+		if (loaded != m_Assets.end() && loaded->second)
+			loaded->second->Reload();
+		return true;
 	}
 
 	Shared<Asset> AssetManager::Load(AssetHandle handle)
@@ -105,12 +160,57 @@ namespace Blu
 			return nullptr;
 		}
 
-		auto asset = std::make_shared<Asset>(metadata->Type, metadata->VirtualPath);
+		// Construct the concrete asset for the metadata's type. StaticMesh geometry is
+		// loaded lazily (see LoadModel) so handle resolution stays GPU-free; other types
+		// use the base Asset record for now (typed texture/material loaders come later).
+		Shared<Asset> asset;
+		switch (metadata->Type)
+		{
+		case AssetType::StaticMesh:
+			asset = std::make_shared<StaticMeshAsset>(metadata->VirtualPath);
+			break;
+		case AssetType::Material:
+		{
+			auto materialAsset = std::make_shared<MaterialAsset>(metadata->VirtualPath);
+			materialAsset->LoadFromFile(metadata->VirtualPath); // .blumat is pure data (no GPU)
+			asset = materialAsset;
+			break;
+		}
+		default:
+			asset = std::make_shared<Asset>(metadata->Type, metadata->VirtualPath);
+			break;
+		}
 		asset->Handle = metadata->Handle;
 		asset->IsLoaded = true;
 		asset->ReferenceCount = 1;
 		m_Assets[handle] = asset;
 		return asset;
+	}
+
+	Shared<Model> AssetManager::LoadModel(AssetHandle handle)
+	{
+		auto staticMesh = std::dynamic_pointer_cast<StaticMeshAsset>(Load(handle));
+		if (!staticMesh)
+			return nullptr;
+
+		if (!staticMesh->LoadedModel)
+		{
+			const std::filesystem::path resolved = FileSystemService::Get().IsVirtualPath(staticMesh->FilePath)
+				? FileSystemService::Get().Resolve(staticMesh->FilePath)
+				: std::filesystem::path(staticMesh->FilePath);
+			if (resolved.empty() || !std::filesystem::exists(resolved))
+			{
+				AddDiagnostic("AssetManager: static mesh source missing '" + staticMesh->FilePath + "'");
+				return nullptr;
+			}
+			staticMesh->LoadedModel = ModelLoader::Load(resolved.string());
+		}
+		return staticMesh->LoadedModel;
+	}
+
+	Shared<MaterialAsset> AssetManager::LoadMaterial(AssetHandle handle)
+	{
+		return std::dynamic_pointer_cast<MaterialAsset>(Load(handle));
 	}
 
 	bool AssetManager::Save(AssetHandle handle)

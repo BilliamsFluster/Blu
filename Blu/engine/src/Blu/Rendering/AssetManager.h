@@ -8,6 +8,9 @@
 
 namespace Blu
 {
+	struct Model;
+	class MaterialAsset;
+
 	struct AssetMetadata
 	{
 		AssetHandle Handle = AssetHandle(0);
@@ -28,7 +31,23 @@ namespace Blu
 		void SetRegistryPath(std::string registryPath);
 
 		AssetHandle Import(const std::string& filepath);
+		// Re-reads the source for an already-imported asset, refreshing its .meta
+		// (mtime/size) while PRESERVING the AssetHandle, and reloads it if currently
+		// loaded. Returns false for a stale/unknown handle. Foundation for the editor's
+		// reimport action (Phase 7).
+		bool Reimport(AssetHandle handle);
 		Shared<Asset> Load(AssetHandle handle);
+
+		// Resolves a StaticMesh handle to its geometry, performing the (GPU-touching)
+		// ModelLoader import on first use and caching it on the asset. Returns nullptr
+		// for a non-mesh/stale handle or when the source is missing. Runtime-only —
+		// requires a live graphics device.
+		Shared<Model> LoadModel(AssetHandle handle);
+
+		// Resolves a Material handle to a loaded MaterialAsset (reads the .blumat).
+		// Pure data — no graphics device required. Returns nullptr for a non-material
+		// or stale handle.
+		Shared<MaterialAsset> LoadMaterial(AssetHandle handle);
 		bool Save(AssetHandle handle);
 		void Release(AssetHandle handle);
 		const AssetMetadata* FindMetadata(AssetHandle handle) const;
