@@ -40,6 +40,8 @@ namespace Blu
 		void SaveSceneAs();
 		void SaveCurrentScene();
 		void UIDrawTitlebar(float& outTitlebarHeight);
+		void DrawStatusBar();   // bottom Unreal-style bar: perf readout + Trace toggle
+		void ToggleTrace();     // start/stop a profiling capture from the status bar
 		void ResetEditorLayout();
 		void LoadEditorSettings();
 		void SaveEditorSettings();
@@ -172,6 +174,10 @@ namespace Blu
 		float m_FrameTimeMs = 0.0f;
 		float m_CpuTimeMs   = 0.0f;
 		float m_GpuTimeMs   = 0.0f;
+
+		// ---- Trace capture (status-bar button) ------------------------
+		bool        m_Tracing = false;
+		std::string m_TraceFilePath;
 
 		static constexpr int kPerfSamples = 128;
 		float m_FrameTimePlot[kPerfSamples]{};

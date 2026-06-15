@@ -288,14 +288,25 @@ namespace Blu
 			ImGuiStyle& style = ImGui::GetStyle();
 			float minWinSizeX = style.WindowMinSize.x;
 			style.WindowMinSize.x = 350.0f;
+			// Reserve a strip at the bottom of the host window for the app's status bar so docked
+			// panels never overlap it (the vendored ImGui has no BeginViewportSideBar).
+			const float statusBarHeight = m_StatusBarCallback ? (ImGui::GetFrameHeight() + 6.0f) : 0.0f;
+
 			ImGuiIO& io = ImGui::GetIO();
 			if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 			{
 				ImGuiID dockspace_id = ImGui::GetID("BluDockspace");
-				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, -statusBarHeight), dockspace_flags);
 			}
 
 			style.WindowMinSize.x = minWinSizeX;
+
+			if (m_StatusBarCallback)
+			{
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 3.0f));
+				m_StatusBarCallback();
+				ImGui::PopStyleVar();
+			}
 
 			ImGui::End();
 		}

@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <chrono>
+#include <ctime>
 #include "Blu/Events/MouseEvent.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -40,6 +41,10 @@
 // D3D11Context.h already pulls in <d3d11.h> — include it last so Windows headers
 // don't stomp on the glad/GLFW type definitions established above.
 #include "Blu/Platform/DirectX11/D3D11Context.h"
+#ifdef _WIN32
+#include <shellapi.h> // ShellExecuteW — reveal the written trace in Explorer
+#pragma comment(lib, "Shell32.lib")
+#endif
 #include "Blu/Platform/Windows/WindowsWindow.h"
 
 // stb_image is compiled into the engine (ExternalDependencies/stb_image/stb_image.cpp).
@@ -465,6 +470,10 @@ namespace Blu
 		m_ActorPreviewCamera = EditorCamera(35.0f, 1.0f, 0.1f, 5000.0f);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 		m_OperationMode = 0; // local operation
+		// Unreal-style bottom status bar (perf readout + Trace toggle). The dockspace reserves
+		// the strip; we just supply the content.
+		if (auto imguiLayer = Application::Get().GetImGuiLayer())
+			imguiLayer->SetStatusBarCallback([this]() { DrawStatusBar(); });
 		LoadEditorSettings();
 		// Intentionally not auto-loading the last scene to avoid startup crashes from corrupted scene files.
 		// Use File > Open or drag a .blu file to load a scene.
@@ -1840,6 +1849,68 @@ namespace Blu
 	ImVec2 operator*(const ImVec2& lhs, const float& rhs)
 	{
 		return ImVec2(lhs.x * rhs, lhs.y * rhs);
+	}
+
+	void BluEditorLayer::DrawStatusBar()
+	{
+		ImGuiIO& io = ImGui::GetIO();
+
+		// Left: live perf readout.
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("FPS %.0f", io.Framerate);
+		ImGui::SameLine(0.0f, 16.0f); ImGui::Text("%.2f ms", io.Framerate > 0.0f ? 1000.0f / io.Framerate : 0.0f);
+		if (m_GpuTimeMs > 0.0f) { ImGui::SameLine(0.0f, 16.0f); ImGui::Text("GPU %.2f ms", m_GpuTimeMs); }
+		Blu::Perf::MemoryInfo mem = Blu::Perf::QueryProcessMemory();
+		ImGui::SameLine(0.0f, 16.0f); ImGui::Text("Mem %.0f MB", Blu::Perf::BytesToMiB(mem.WorkingSetBytes));
+
+		// Right: Unreal-style Trace toggle.
+		const char* label = m_Tracing ? "Stop Trace" : "Start Trace";
+		const float btnW = ImGui::CalcTextSize(label).x + ImGui::GetStyle().FramePadding.x * 2.0f + 8.0f;
+		const float recW = m_Tracing ? ImGui::CalcTextSize("REC ").x + 8.0f : 0.0f;
+		ImGui::SameLine(ImGui::GetWindowWidth() - btnW - recW - 14.0f);
+		if (m_Tracing)
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.30f, 1.0f), "REC");
+			ImGui::SameLine(0.0f, 8.0f);
+			ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.72f, 0.22f, 0.20f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.85f, 0.28f, 0.25f, 1.0f));
+		}
+		const bool clicked = ImGui::Button(label);
+		if (m_Tracing)
+			ImGui::PopStyleColor(2);
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip(m_Tracing
+				? "Stop the capture and reveal the .json (open it in chrome://tracing or ui.perfetto.dev)"
+				: "Start a profiling capture (writes a chrome-tracing .json to Blu-Editor/traces)");
+		if (clicked)
+			ToggleTrace();
+	}
+
+	void BluEditorLayer::ToggleTrace()
+	{
+		if (!m_Tracing)
+		{
+			std::error_code ec;
+			std::filesystem::create_directories("Blu-Editor/traces", ec);
+			m_TraceFilePath = "Blu-Editor/traces/BluTrace-" + std::to_string((long long)std::time(nullptr)) + ".json";
+			::Blu::Instrumentor::Get().BeginSession("BluTrace", m_TraceFilePath); // guarded: closes any live session first
+			m_Tracing = true;
+			BLU_CORE_INFO("Trace: capturing -> {0}", m_TraceFilePath);
+		}
+		else
+		{
+			::Blu::Instrumentor::Get().EndSession();
+			m_Tracing = false;
+			BLU_CORE_INFO("Trace: wrote {0}", m_TraceFilePath);
+#ifdef _WIN32
+			std::error_code ec;
+			if (!m_TraceFilePath.empty() && std::filesystem::exists(m_TraceFilePath, ec))
+			{
+				std::wstring args = L"/select,\"" + std::filesystem::absolute(m_TraceFilePath).wstring() + L"\"";
+				ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
+			}
+#endif
+		}
 	}
 
 	void BluEditorLayer::UIDrawTitlebar(float& outTitlebarHeight)

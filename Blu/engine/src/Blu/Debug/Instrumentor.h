@@ -36,6 +36,10 @@ namespace Blu
 
         void BeginSession(const std::string& name, const std::string& filepath = "results.json")
         {
+            // A UI-driven trace can begin while the ambient session is live; close it first so
+            // the stream isn't already-open (ofstream::open on an open stream silently fails).
+            if (m_CurrentSession)
+                EndSession();
             m_OutputStream.open(filepath);
             WriteHeader();
             m_CurrentSession = new InstrumentationSession{ name };
@@ -43,12 +47,16 @@ namespace Blu
 
         void EndSession()
         {
+            if (!m_CurrentSession)
+                return; // null-safe: tolerate an extra EndSession (e.g. after a UI-stopped trace)
             WriteFooter();
             m_OutputStream.close();
             delete m_CurrentSession;
             m_CurrentSession = nullptr;
             m_ProfileCount = 0;
         }
+
+        bool IsSessionActive() const { return m_CurrentSession != nullptr; }
 
         void WriteProfile(const ProfileResult& result)
         {
