@@ -2223,26 +2223,38 @@ namespace Blu
 				return;
 			}
 
-			// Clip selector
+			// Clip selector — picking a clip CROSSFADES to it over the Blend time via PlayClip
+			// (Phase 10a). The editor update ticks the animator, so the blend plays live in the
+			// viewport. Set Blend to 0 for an instant cut.
 			auto& clips = anim.SkelData->Clips;
 			if (!clips.empty())
 			{
 				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)clips.size() - 1);
-				const char* preview = clips[anim.CurrentClipIndex].Name.c_str();
-				if (ImGui::BeginCombo("Clip", preview))
+				int shownClip = (anim.NewClipIndex >= 0) ? anim.NewClipIndex : anim.CurrentClipIndex;
+				shownClip = std::clamp(shownClip, 0, (int)clips.size() - 1);
+				if (ImGui::BeginCombo("Clip", clips[shownClip].Name.c_str()))
 				{
 					for (int i = 0; i < (int)clips.size(); ++i)
 					{
-						bool selected = (i == anim.CurrentClipIndex);
+						bool selected = (i == shownClip);
 						if (ImGui::Selectable(clips[i].Name.c_str(), selected))
-						{
-							anim.CurrentClipIndex = i;
-							anim.CurrentTime      = 0.0f;
-						}
+							anim.PlayClip(i, anim.BlendDuration); // crossfade (instant if Blend <= 0)
 						if (selected) ImGui::SetItemDefaultFocus();
 					}
 					ImGui::EndCombo();
 				}
+
+				ImGui::DragFloat("Blend (s)", &anim.BlendDuration, 0.01f, 0.0f, 2.0f, "%.2f");
+
+				// Live crossfade indicator while a transition is in flight.
+				if (anim.NewClipIndex >= 0 && anim.NewClipIndex < (int)clips.size())
+				{
+					float t = anim.BlendDuration > 0.0f ? std::clamp(anim.BlendElapsed / anim.BlendDuration, 0.0f, 1.0f) : 1.0f;
+					ImGui::TextColored(ImVec4(0.55f, 0.8f, 1.0f, 1.0f), "Blending %s -> %s",
+						clips[anim.CurrentClipIndex].Name.c_str(), clips[anim.NewClipIndex].Name.c_str());
+					ImGui::ProgressBar(t, ImVec2(-1, 0), "crossfade");
+				}
+
 				const auto& clip = clips[anim.CurrentClipIndex];
 				float durationSec = clip.DurationSeconds();
 				float currentSec  = clip.TicksPerSec > 0.0f ? anim.CurrentTime / clip.TicksPerSec : 0.0f;
