@@ -2,8 +2,8 @@ Version: 1
 Window:
   X: 0
   Y: 0
-  Width: 1936
-  Height: 1119
+  Width: 1920
+  Height: 1032
   Maximized: false
 Panels:
   Outliner: true
@@ -20,4 +20,4 @@ Debug:
   Camera: true
 ContentBrowser:
   Directory: assets
-  ThumbnailSize: 80
+  ThumbnailSize: 89

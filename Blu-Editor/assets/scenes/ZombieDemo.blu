@@ -56,7 +56,7 @@ Entities:
       Ambient: [0.200000003, 0.200000003, 0.200000003]
       Diffuse: [1, 0.720000029, 0.469999999]
       Specular: [0.400000006, 0.400000006, 0.400000006]
-      Intensity: 0.400000006
+      Intensity: 4.9000001
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [-0.785398185, 0.52359879, 0]
@@ -201,7 +201,7 @@ Entities:
     ActorComponent:
       ClassID: Azure::ZombieTestActor
     TransformComponent:
-      Translation: [4, 1, -10]
+      Translation: [4, 1.00953531, -10]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     VisualOffsetComponent:

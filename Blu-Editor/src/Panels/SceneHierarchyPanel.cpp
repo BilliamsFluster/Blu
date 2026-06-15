@@ -484,6 +484,13 @@ namespace Blu
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		std::string label = std::string(EntityIcon(entity)) + " " + tag;
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, "%s", label.c_str());
+		// Stable per-entity popup id, evaluated against the tree-node row right here.
+		// This decouples the right-click trigger from the *last* submitted item: an
+		// authoring WARN badge (drawn below) is ID-less, and BeginPopupContextItem()
+		// with no str_id would fall back to that 0 id and trip IM_ASSERT(id != 0)
+		// (imgui.cpp:11221) — the crash seen when generating mesh collision.
+		std::string entityCtxId = "##entityctx" + std::to_string((uint32_t)entity);
+		ImGui::OpenPopupOnItemClick(entityCtxId.c_str(), ImGuiPopupFlags_MouseButtonRight);
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
 		{
 			UUID dragId = entity.GetUUID();
@@ -508,9 +515,8 @@ namespace Blu
 		}
 
 		bool entityDeleted = false;
-		
-		
-		if (ImGui::BeginPopupContextItem())
+
+		if (ImGui::BeginPopup(entityCtxId.c_str()))
 		{
 			// Target the right-clicked entity (not whatever was previously selected) so
 			// Rename/Delete act on the row under the cursor.

@@ -1,0 +1,14 @@
+AssetMeta:
+  Handle: 16982092437666260877
+  Type: 1
+  Source: project://assets/imports/models/Shaman/Shaman.fbx
+  SourceMTime: 134239834602213693
+  SourceSize: 520892
+  Mesh:
+    Scale: 1
+    GenerateLODs: false
+    LODCount: 3
+    ImportMaterials: true
+  Texture:
+    SRGB: true
+    GenerateMips: true
