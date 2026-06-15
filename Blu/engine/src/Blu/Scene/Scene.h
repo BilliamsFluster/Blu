@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <set>
 
 class b2World;
 namespace Blu
@@ -197,6 +198,7 @@ namespace Blu
 		Physics3DWorld* m_Physics3DWorld = nullptr;
 		Shared<PostProcess> m_PostProcess;
 		Shared<Skybox>      m_Skybox;
+		std::set<std::string> m_EditorFolders; // Outliner organisational folders (incl. empty)
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;

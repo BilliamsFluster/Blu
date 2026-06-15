@@ -198,7 +198,9 @@ namespace Blu
 		m_Context = scene;
 		m_SelectedEntity = {};
 		m_LastEntityCount = (size_t)-1; // re-baseline so a scene swap doesn't read as a dirty edit
-		m_OutlinerFolders.clear();      // folders are per-scene; render repopulates from FolderComponents
+		m_OutlinerFolders.clear();      // per-scene; seed from the scene's saved folders (incl. empty ones)
+		if (scene)
+			m_OutlinerFolders = scene->m_EditorFolders;
 	}
 	void SceneHierarchyPanel::SetSelectedEntity(Entity entity)
 	{
@@ -366,6 +368,10 @@ namespace Blu
 				m_OutlinerFolders.erase(folderToDelete);
 				NotifySceneModified();
 			}
+
+			// Mirror the folder set onto the scene so it persists (incl. empty folders).
+			if (m_Context)
+				m_Context->m_EditorFolders = m_OutlinerFolders;
 
 			if (!m_EntityHovered)
 			{

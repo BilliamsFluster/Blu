@@ -675,8 +675,27 @@ namespace Blu
         std::vector<std::filesystem::directory_entry> entries;
         if (std::filesystem::exists(m_CurrentDirectory))
         {
-            for (auto& entry : std::filesystem::directory_iterator(m_CurrentDirectory))
-                entries.push_back(entry);
+            if (m_TypeFilter != 0)
+            {
+                // A type filter is active: gather ALL matching files under this folder
+                // recursively (Unreal-style), so assets in sub-folders are still shown.
+                std::error_code ec;
+                for (std::filesystem::recursive_directory_iterator it(m_CurrentDirectory, ec), end;
+                     it != end; it.increment(ec))
+                {
+                    if (ec) break;
+                    if (it->is_directory()) continue;
+                    std::string e = it->path().extension().string();
+                    for (char& ch : e) ch = (char)std::tolower((unsigned char)ch);
+                    if (MatchesTypeFilter(m_TypeFilter, e, false))
+                        entries.push_back(*it);
+                }
+            }
+            else
+            {
+                for (auto& entry : std::filesystem::directory_iterator(m_CurrentDirectory))
+                    entries.push_back(entry);
+            }
         }
         SortEntries(entries, m_SortMode);
 
@@ -699,8 +718,6 @@ namespace Blu
                 if (nameLower.find(s_Filter) == std::string::npos) { ImGui::NextColumn(); continue; }
             }
 
-            // Type filter (folders always pass for navigation)
-            if (!MatchesTypeFilter(m_TypeFilter, extLower, entry.is_directory())) { ImGui::NextColumn(); continue; }
 
             bool isSelected = (m_SelectedFilename == filenameStr);
             ImGui::PushID(path.string().c_str());
@@ -1059,15 +1076,9 @@ namespace Blu
         auto it      = m_DirectoryExpandedState.find(directoryPath.string());
         bool expanded = (it != m_DirectoryExpandedState.end()) ? it->second : false;
 
-        const bool isDX11 = RendererAPI::GetAPI() == RendererAPI::API::Direct3D;
-        ImVec2 uv0 = isDX11 ? ImVec2(0, 0) : ImVec2(0, 1);
-        ImVec2 uv1 = isDX11 ? ImVec2(1, 1) : ImVec2(1, 0);
-
-        void* iconID = expanded
-            ? reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderOpenIcon->GetImTextureID()))
-            : reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetImTextureID()));
-
-        ImGui::Image(iconID, { 14.f, 14.f }, uv0, uv1);
+        // Procedural folder icon (matches the grid; replaces the flat folder PNG).
+        ImGui::Dummy(ImVec2(14.f, 14.f));
+        DrawFolderThumbnail(ImGui::GetWindowDrawList(), ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
         ImGui::SameLine(0, 4);
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
