@@ -319,6 +319,12 @@ namespace Blu
 			out << YAML::EndMap;
 
 		}
+		if (entity.HasComponent<FolderComponent>())
+		{
+			out << YAML::Key << "FolderComponent" << YAML::BeginMap;
+			out << YAML::Key << "Path" << YAML::Value << entity.GetComponent<FolderComponent>().Path;
+			out << YAML::EndMap;
+		}
 		if (entity.HasComponent<ActorComponent>())
 		{
 			auto& actorComponent = entity.GetComponent<ActorComponent>();
@@ -795,6 +801,15 @@ namespace Blu
 		if (!m_Scene->GetGameModeClassID().empty())
 			out << YAML::Key << "GameMode" << YAML::Value << m_Scene->GetGameModeClassID();
 
+		// Outliner organisational folders (so empty folders survive a reload).
+		if (!m_Scene->m_EditorFolders.empty())
+		{
+			out << YAML::Key << "EditorFolders" << YAML::Value << YAML::BeginSeq;
+			for (const auto& f : m_Scene->m_EditorFolders)
+				out << f;
+			out << YAML::EndSeq;
+		}
+
 		// ── Scene rendering settings ────────────────────────────────────────
 		out << YAML::Key << "RenderSettings" << YAML::Value << YAML::BeginMap;
 		out << YAML::Key << "UseShadows"   << YAML::Value << m_Scene->GetUseShadows();
@@ -1002,6 +1017,10 @@ namespace Blu
 		if (data["GameMode"])
 			m_Scene->SetGameModeClassID(data["GameMode"].as<std::string>());
 
+		if (auto folders = data["EditorFolders"])
+			for (auto f : folders)
+				m_Scene->m_EditorFolders.insert(f.as<std::string>());
+
 		// ── Scene rendering settings ─────────────────────────────────────────
 		auto rs = data["RenderSettings"];
 		if (rs)
@@ -1101,7 +1120,11 @@ namespace Blu
 				}
 
 				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
-				
+
+				if (auto folderComponent = entity["FolderComponent"])
+					deserializedEntity.AddComponent<FolderComponent>(
+						folderComponent["Path"] ? folderComponent["Path"].as<std::string>() : std::string());
+
 
 				auto transformComponent = entity["TransformComponent"];
 

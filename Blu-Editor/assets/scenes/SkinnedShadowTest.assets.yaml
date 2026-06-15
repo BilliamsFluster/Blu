@@ -1,0 +1,16 @@
+Scene: assets/scenes/SkinnedShadowTest.blu
+Summary:
+  Referenced: 1
+  Missing: 0
+  External: 0
+  Imported: 1
+Assets:
+  - Type: Model
+    Path: assets/imports/models/Shaman/Shaman.fbx
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/imports/models/Shaman/Shaman.fbx
+    SourceEntity: 2000000000000000002
+    SourceTag: ShamanSkinned
+    SourceComponent: MeshComponent
+    Exists: true
+    External: false
+    Imported: true

@@ -1,0 +1,14 @@
+AssetMeta:
+  Handle: 8338919992260752374
+  Type: 1
+  Source: project://assets/BMW M3.fbx
+  SourceMTime: 0
+  SourceSize: 0
+  Mesh:
+    Scale: 1
+    GenerateLODs: false
+    LODCount: 3
+    ImportMaterials: true
+  Texture:
+    SRGB: true
+    GenerateMips: true

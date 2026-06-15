@@ -213,6 +213,84 @@ namespace Blu
 		}
 	}
 
+	void BluEditorLayer::OpenSoundPreview(const std::filesystem::path& path)
+	{
+		// Release any previously-previewed sound.
+		if (m_SoundPreviewHandle != 0)
+		{
+			AudioEngine::Get().Stop(m_SoundPreviewHandle);
+			AudioEngine::Get().UnloadSound(m_SoundPreviewHandle);
+			m_SoundPreviewHandle = 0;
+		}
+		m_SoundPreviewPath = path;
+		m_ShowSoundPreview = true;
+		AudioEngine::Get().Initialize(); // idempotent — safe to call in Edit mode
+		m_SoundPreviewHandle = AudioEngine::Get().LoadSound(path.string());
+		if (m_SoundPreviewHandle != 0)
+		{
+			AudioEngine::Get().SetVolume(m_SoundPreviewHandle, m_SoundPreviewVolume);
+			AudioEngine::Get().SetPitch(m_SoundPreviewHandle, m_SoundPreviewPitch);
+			AudioEngine::Get().SetLooping(m_SoundPreviewHandle, m_SoundPreviewLoop);
+		}
+	}
+
+	void BluEditorLayer::DrawSoundPreview()
+	{
+		if (!m_ShowSoundPreview)
+			return;
+
+		ImGui::SetNextWindowSize(ImVec2(340.0f, 0.0f), ImGuiCond_FirstUseEver);
+		if (ImGui::Begin("Sound Preview", &m_ShowSoundPreview))
+		{
+			ImGui::TextWrapped("%s", m_SoundPreviewPath.filename().string().c_str());
+			ImGui::Separator();
+
+			auto& audio = AudioEngine::Get();
+			if (!audio.IsBackendCompiled())
+			{
+				ImGui::TextColored(ImVec4(1.0f, 0.65f, 0.2f, 1.0f),
+					"Audio backend not compiled (BLU_HAS_MINIAUDIO).");
+			}
+			else if (m_SoundPreviewHandle == 0)
+			{
+				ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Failed to load sound.");
+				if (ImGui::Button("Retry"))
+					OpenSoundPreview(m_SoundPreviewPath);
+			}
+			else
+			{
+				const float btnW = 70.0f;
+				if (ImGui::Button("Play",  ImVec2(btnW, 0))) audio.Play(m_SoundPreviewHandle);
+				ImGui::SameLine();
+				if (ImGui::Button("Pause", ImVec2(btnW, 0))) audio.Pause(m_SoundPreviewHandle);
+				ImGui::SameLine();
+				if (ImGui::Button("Stop",  ImVec2(btnW, 0))) audio.Stop(m_SoundPreviewHandle);
+
+				const char* status = audio.IsPlaying(m_SoundPreviewHandle) ? "Playing"
+				                   : audio.IsPaused(m_SoundPreviewHandle)  ? "Paused"
+				                   : "Stopped";
+				ImGui::TextDisabled("Status: %s", status);
+				ImGui::Spacing();
+
+				if (ImGui::SliderFloat("Volume", &m_SoundPreviewVolume, 0.0f, 1.0f, "%.2f"))
+					audio.SetVolume(m_SoundPreviewHandle, m_SoundPreviewVolume);
+				if (ImGui::SliderFloat("Pitch", &m_SoundPreviewPitch, 0.25f, 3.0f, "%.2fx"))
+					audio.SetPitch(m_SoundPreviewHandle, m_SoundPreviewPitch);
+				if (ImGui::Checkbox("Loop", &m_SoundPreviewLoop))
+					audio.SetLooping(m_SoundPreviewHandle, m_SoundPreviewLoop);
+			}
+		}
+		ImGui::End();
+
+		// Closed via the title-bar X → stop and free the sound.
+		if (!m_ShowSoundPreview && m_SoundPreviewHandle != 0)
+		{
+			AudioEngine::Get().Stop(m_SoundPreviewHandle);
+			AudioEngine::Get().UnloadSound(m_SoundPreviewHandle);
+			m_SoundPreviewHandle = 0;
+		}
+	}
+
 	void BluEditorLayer::SaveSelectedAsPrefab()
 	{
 		if (!m_ActiveScene || !m_SceneHierarchyPanel)
@@ -312,6 +390,7 @@ namespace Blu
 		// Panel-driven mutations (create/delete/rename/add-component) flag the scene dirty.
 		m_SceneHierarchyPanel->SetSceneModifiedCallback([this]() { m_SceneDirty = true; });
 		m_ContentBrowserPanel->SetSaveAllCallback([this]() { SaveCurrentScene(); });
+		m_ContentBrowserPanel->SetOpenSoundEditorCallback([this](const std::filesystem::path& path) { OpenSoundPreview(path); });
 		m_ContentBrowserPanel->SetImportModelCallback([this](const std::filesystem::path& path)
 		{
 			QueueStaticCollisionPrompt(ImportModelEntity(m_ActiveScene, path));
@@ -2263,6 +2342,7 @@ namespace Blu
 
 		DrawStaticCollisionImportPrompt();
 		DrawDeleteEntityConfirmation();
+		DrawSoundPreview();
 
 		// ---- Settings / Preferences ----
 		if (m_ShowSettings)
@@ -2322,11 +2402,27 @@ namespace Blu
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.35f, 0.35f, 1.0f));
 				ImGui::Checkbox("Error", &m_LogShowError);
 				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				ImGui::Checkbox("Auto Scroll", &m_LogAutoScroll);
+
+				// Search box (case-insensitive substring filter)
+				ImGui::SetNextItemWidth(-1.0f);
+				ImGui::InputTextWithHint("##logsearch", "Search log...", m_LogSearchBuffer, IM_ARRAYSIZE(m_LogSearchBuffer));
 
 				ImGui::Separator();
 
 				ImGui::BeginChild("##log_scroll", ImVec2(0, 0), false,
 				                  ImGuiWindowFlags_HorizontalScrollbar);
+
+				auto matchesSearch = [&](const std::string& text) -> bool {
+					if (m_LogSearchBuffer[0] == '\0') return true;
+					std::string needle = m_LogSearchBuffer, hay = text;
+					std::transform(needle.begin(), needle.end(), needle.begin(),
+					               [](unsigned char c){ return (char)std::tolower(c); });
+					std::transform(hay.begin(), hay.end(), hay.begin(),
+					               [](unsigned char c){ return (char)std::tolower(c); });
+					return hay.find(needle) != std::string::npos;
+				};
 
 				const auto& messages = EditorLog::Get().GetMessages();
 				for (const auto& entry : messages)
@@ -2337,6 +2433,7 @@ namespace Blu
 					if (entry.Level == EditorLogLevel::Warn  && m_LogShowWarn)  show = true;
 					if (entry.Level == EditorLogLevel::Error && m_LogShowError) show = true;
 					if (!show) continue;
+					if (!matchesSearch(entry.Text)) continue;
 
 					ImVec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 					if      (entry.Level == EditorLogLevel::Trace) color = { 0.55f, 0.55f, 0.55f, 1.0f };
@@ -2348,7 +2445,8 @@ namespace Blu
 					ImGui::PopStyleColor();
 				}
 
-				if (EditorLog::Get().ConsumeScrollToBottom())
+				const bool wantScroll = EditorLog::Get().ConsumeScrollToBottom();
+				if (m_LogAutoScroll && wantScroll)
 					ImGui::SetScrollHereY(1.0f);
 
 				ImGui::EndChild();
@@ -2565,15 +2663,17 @@ namespace Blu
 			if (ImGui::Checkbox("Time of Day", &useTod))
 				m_ActiveScene->SetUseTimeOfDay(useTod);
 			ImGui::SameLine();
-			if (ImGui::Button("Morning")) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.30f; tod.AutoAdvance = false; }
+			const ImVec2 todBtn(96.0f, 0.0f);
+			if (ImGui::Button("Morning", todBtn)) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.30f; tod.AutoAdvance = false; }
 			ImGui::SameLine();
-			if (ImGui::Button("Noon")) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.50f; tod.AutoAdvance = false; }
+			if (ImGui::Button("Noon", todBtn)) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.50f; tod.AutoAdvance = false; }
 			ImGui::SameLine();
-			if (ImGui::Button("Golden Hour")) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.72f; tod.AutoAdvance = false; }
+			if (ImGui::Button("Golden Hour", todBtn)) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.72f; tod.AutoAdvance = false; }
 			ImGui::SameLine();
-			if (ImGui::Button("Night")) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.00f; tod.AutoAdvance = false; }
+			if (ImGui::Button("Night", todBtn)) { auto& tod = m_ActiveScene->GetTimeOfDay(); tod.NormalizedTime = 0.00f; tod.AutoAdvance = false; }
 
 			auto& tod = m_ActiveScene->GetTimeOfDay();
+			ImGui::PushItemWidth(190.0f); // keep slider fields compact instead of stretching the panel
 			ImGui::SliderFloat("Time##Lighting", &tod.NormalizedTime, 0.0f, 1.0f, "%.3f");
 			ImGui::DragFloat("Sun Azimuth##Lighting", &tod.SunAzimuthDeg, 1.0f, 0.0f, 360.0f, "%.1f deg");
 			ImGui::DragFloat("ToD Sun Intensity", &tod.SunMaxStrength, 0.25f, 0.0f, 100.0f);
@@ -2593,6 +2693,7 @@ namespace Blu
 			float shadowStrength = useShadows ? 1.0f : 0.0f;
 			ImGui::SliderFloat("Shadow Strength", &shadowStrength, 0.0f, 1.0f, "%.2f");
 			ImGui::EndDisabled();
+			ImGui::PopItemWidth();
 
 			auto out = tod.Evaluate(tod.NormalizedTime);
 			ImGui::TextDisabled("Elevation %.1f deg | Exposure %.3f | Ambient %.3f",

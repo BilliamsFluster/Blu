@@ -26,6 +26,7 @@ namespace Blu
 		void SetGenerateStaticCollisionCallback(std::function<void(const std::filesystem::path&)> callback) { m_GenerateStaticCollisionCallback = std::move(callback); }
 		void SetInstantiatePrefabCallback(std::function<void(const std::filesystem::path&)> callback) { m_InstantiatePrefabCallback = std::move(callback); }
 		void SetSaveSelectedAsPrefabCallback(std::function<void()> callback) { m_SaveSelectedAsPrefabCallback = std::move(callback); }
+		void SetOpenSoundEditorCallback(std::function<void(const std::filesystem::path&)> callback) { m_OpenSoundEditorCallback = std::move(callback); }
 		void SetBrowserDirectory(const std::filesystem::path& directory);
 		const std::filesystem::path& GetCurrentDirectory() const { return m_CurrentDirectory; }
 		void SetThumbnailSize(float size) { m_ThumbnailSize = size; }
@@ -79,12 +80,19 @@ namespace Blu
 
 		bool m_ObjectClicked = false;
 		int m_SortMode = 0;
+		int m_TypeFilter = 0; // index into s_TypeFilterItems (0 = All)
+		std::vector<std::filesystem::path> m_FavoritePaths; // pinned folders (persisted)
 		std::string m_SelectedFilename;
+		void LoadFavorites();
+		void SaveFavorites() const;
+		bool IsFavorite(const std::filesystem::path& p) const;
+		void ToggleFavorite(const std::filesystem::path& p);
 		std::function<void()> m_SaveAllCallback;
 		std::function<void(const std::filesystem::path&)> m_ImportModelCallback;
 		std::function<void(const std::filesystem::path&)> m_GenerateStaticCollisionCallback;
 		std::function<void(const std::filesystem::path&)> m_InstantiatePrefabCallback;
 		std::function<void()> m_SaveSelectedAsPrefabCallback;
+		std::function<void(const std::filesystem::path&)> m_OpenSoundEditorCallback;
 
 
 

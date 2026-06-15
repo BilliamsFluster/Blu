@@ -250,16 +250,18 @@ namespace Blu
         return { RenderSettings::GetPath(), skinned, foliage };
     }
 
-    static bool IsTransparentMaterial(const Material& mat, const MaterialRenderContext& context = GetMaterialRenderContext())
+    // Blend/TwoSided come straight off the Material (ResolveLegacy just passes them through),
+    // so read them directly. This used to call MaterialResolver::ResolveLegacy here, which runs
+    // per-submesh per-frame (IsTransparentMaterial) and does a FindMetadata lookup per texture
+    // slot — a large CPU cost for multi-material imported models. Direct field reads are free.
+    static bool IsTransparentMaterial(const Material& mat, const MaterialRenderContext& = GetMaterialRenderContext())
     {
-        const ResolvedMaterial resolved = MaterialResolver::Get().ResolveLegacy(mat, context);
-        return resolved.Blend == BlendMode::Transparent || resolved.Blend == BlendMode::Additive;
+        return mat.IsTransparent();
     }
 
-    static void BindPipelineForMaterial(const Material& mat, const MaterialRenderContext& context = GetMaterialRenderContext())
+    static void BindPipelineForMaterial(const Material& mat, const MaterialRenderContext& = GetMaterialRenderContext())
     {
-        const ResolvedMaterial resolved = MaterialResolver::Get().ResolveLegacy(mat, context);
-        switch (resolved.Blend)
+        switch (mat.Blend)
         {
         case BlendMode::Transparent:
             PipelineStateCache::GetTransparent()->Bind();
@@ -269,7 +271,7 @@ namespace Blu
             break;
         default:
             // Opaque or Masked — use CullNone for TwoSided, Back-cull otherwise
-            if (resolved.TwoSided)
+            if (mat.TwoSided)
                 PipelineStateCache::GetCullNone()->Bind();
             else
                 PipelineStateCache::GetOpaque()->Bind();

@@ -138,6 +138,172 @@ namespace Blu
         dl->AddText(textPos, IM_COL32(255, 255, 255, 255), info.Badge);
     }
 
+    static bool IsAudioExtension(const std::string& ext)
+    {
+        return ext == ".wav" || ext == ".mp3" || ext == ".ogg" || ext == ".flac";
+    }
+    static bool IsShaderExtension(const std::string& ext)
+    {
+        return ext == ".hlsl" || ext == ".glsl" || ext == ".vert" ||
+               ext == ".frag" || ext == ".comp" || ext == ".vs" || ext == ".fs";
+    }
+    static bool IsFontExtension(const std::string& ext)
+    {
+        return ext == ".ttf" || ext == ".otf" || ext == ".ttc";
+    }
+
+    // ── Procedural thumbnails (ImDrawList vector art — no PNG assets needed) ──────
+    // Audio: a red waveform on a dark plate, the way Unreal/Unity show sound assets.
+    static void DrawSoundThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(30, 24, 26, 255), 6.f);
+        const float w = mx.x - mn.x, h = mx.y - mn.y;
+        const float cy = (mn.y + mx.y) * 0.5f;
+        const ImU32 col = IM_COL32(255, 95, 95, 255);
+        static const float amp[] = { 0.15f,0.42f,0.7f,0.55f,0.88f,0.5f,0.96f,0.62f,
+                                     0.78f,0.34f,0.6f,0.26f,0.5f,0.32f,0.18f };
+        const int n = (int)(sizeof(amp) / sizeof(amp[0]));
+        const float pad = w * 0.12f;
+        const float usableW = w - pad * 2.f;
+        const float step = usableW / n;
+        const float barW = step * 0.55f;
+        for (int i = 0; i < n; ++i)
+        {
+            const float x = mn.x + pad + step * (i + 0.5f);
+            const float a = amp[i] * (h * 0.40f);
+            dl->AddRectFilled(ImVec2(x - barW * 0.5f, cy - a),
+                              ImVec2(x + barW * 0.5f, cy + a), col, barW * 0.5f);
+        }
+    }
+    // Shader: a purple "material ball" with a specular highlight.
+    static void DrawShaderThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(24, 20, 32, 255), 6.f);
+        const ImVec2 c = { (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f };
+        const float side = (mx.x - mn.x) < (mx.y - mn.y) ? (mx.x - mn.x) : (mx.y - mn.y);
+        const float r = side * 0.30f;
+        dl->AddCircleFilled({ c.x, c.y + r * 0.18f }, r, IM_COL32(95, 55, 150, 255), 40);     // shaded base
+        dl->AddCircleFilled({ c.x, c.y - r * 0.05f }, r * 0.92f, IM_COL32(155, 95, 225, 255), 40); // lit body
+        dl->AddCircleFilled({ c.x - r * 0.34f, c.y - r * 0.36f }, r * 0.24f, IM_COL32(240, 225, 255, 235), 24); // highlight
+    }
+    // Font: a large "Aa" specimen on a neutral plate.
+    static void DrawFontThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(32, 32, 36, 255), 6.f);
+        const char* txt = "Aa";
+        ImFont* font = ImGui::GetFont();
+        const float fontSz = (mx.y - mn.y) * 0.5f;
+        const ImVec2 ts = font->CalcTextSizeA(fontSz, FLT_MAX, 0.f, txt);
+        const ImVec2 pos = { (mn.x + mx.x) * 0.5f - ts.x * 0.5f, (mn.y + mx.y) * 0.5f - ts.y * 0.5f };
+        dl->AddText(font, fontSz, pos, IM_COL32(232, 232, 238, 255), txt);
+    }
+
+    static bool IsSceneExtension(const std::string& ext)
+    {
+        return ext == ".blu" || ext == ".scene" || ext == ".bluui";
+    }
+    static bool IsPrefabExtension(const std::string& ext)
+    {
+        return ext == ".bluprefab";
+    }
+
+    // Generic document: a page with a folded corner and a few text lines tinted by the
+    // file's category accent. Used for text/yaml/script/config and any unknown type, so
+    // nothing falls back to the flat "page" PNG.
+    static void DrawDocThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx, ImU32 accent)
+    {
+        const float w = mx.x - mn.x, h = mx.y - mn.y;
+        const float pad = w * 0.24f;
+        const ImVec2 a = { mn.x + pad, mn.y + h * 0.12f };
+        const ImVec2 b = { mx.x - pad, mx.y - h * 0.12f };
+        const float fold = (b.x - a.x) * 0.34f;
+        dl->AddRectFilled(a, ImVec2(b.x, b.y), IM_COL32(236, 237, 242, 255), 3.f);
+        dl->AddTriangleFilled(ImVec2(b.x - fold, a.y), ImVec2(b.x, a.y + fold),
+                              ImVec2(b.x, a.y), IM_COL32(198, 201, 210, 255)); // folded corner
+        const float lx0 = a.x + (b.x - a.x) * 0.16f, lx1 = b.x - (b.x - a.x) * 0.16f;
+        const float ly = a.y + h * 0.34f, dy = h * 0.13f;
+        for (int i = 0; i < 4; ++i)
+        {
+            const float yy = ly + dy * i;
+            const float ex = (i == 3) ? lx0 + (lx1 - lx0) * 0.55f : lx1;
+            dl->AddLine(ImVec2(lx0, yy), ImVec2(ex, yy), accent, 2.0f);
+        }
+    }
+    // Scene/level: sky + ground + a little object — reads as a "level".
+    static void DrawSceneThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(28, 34, 48, 255), 6.f);
+        const float w = mx.x - mn.x, h = mx.y - mn.y;
+        const float gy = mn.y + h * 0.64f;
+        dl->AddRectFilled(ImVec2(mn.x, gy), ImVec2(mx.x, mx.y), IM_COL32(52, 80, 112, 255), 0.f);
+        dl->AddCircleFilled(ImVec2(mn.x + w * 0.74f, mn.y + h * 0.30f), w * 0.10f, IM_COL32(125, 175, 235, 255), 20);
+        const float cs = w * 0.18f, cx = mn.x + w * 0.34f;
+        dl->AddRectFilled(ImVec2(cx - cs * 0.5f, gy - cs), ImVec2(cx + cs * 0.5f, gy), IM_COL32(95, 135, 185, 255), 2.f);
+    }
+    // Prefab: a cyan "blueprint" wireframe cube.
+    static void DrawPrefabThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(20, 34, 40, 255), 6.f);
+        const ImVec2 c = { (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f };
+        const float s = ((mx.x - mn.x) < (mx.y - mn.y) ? (mx.x - mn.x) : (mx.y - mn.y)) * 0.28f;
+        const ImU32 col = IM_COL32(85, 205, 235, 255);
+        const ImVec2 top = { c.x, c.y - s }, right = { c.x + s, c.y - s * 0.4f },
+                     bot = { c.x, c.y + s * 0.2f }, left = { c.x - s, c.y - s * 0.4f };
+        dl->AddQuad(top, right, bot, left, col, 2.0f);                       // top face
+        dl->AddLine(left, ImVec2(left.x, left.y + s), col, 2.0f);
+        dl->AddLine(right, ImVec2(right.x, right.y + s), col, 2.0f);
+        dl->AddLine(bot, ImVec2(bot.x, bot.y + s), col, 2.0f);
+        dl->AddLine(ImVec2(left.x, left.y + s), ImVec2(bot.x, bot.y + s), col, 2.0f);
+        dl->AddLine(ImVec2(right.x, right.y + s), ImVec2(bot.x, bot.y + s), col, 2.0f);
+    }
+    // Polished manila folder (tab + back panel + lighter front flap).
+    static void DrawFolderThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        const float w = mx.x - mn.x, h = mx.y - mn.y;
+        const float pad = w * 0.12f;
+        const ImVec2 a = { mn.x + pad, mn.y + h * 0.32f };
+        const ImVec2 b = { mx.x - pad, mx.y - h * 0.16f };
+        const float tabW = (b.x - a.x) * 0.44f;
+        dl->AddRectFilled(ImVec2(a.x, a.y - h * 0.12f), ImVec2(a.x + tabW, a.y + h * 0.05f),
+                          IM_COL32(206, 162, 78, 255), 3.f);       // tab
+        dl->AddRectFilled(a, b, IM_COL32(222, 178, 92, 255), 4.f); // back panel
+        dl->AddRectFilled(ImVec2(a.x + w * 0.03f, a.y + h * 0.12f), b,
+                          IM_COL32(246, 206, 122, 255), 4.f);      // front flap (lighter)
+    }
+
+    static bool IsScriptExtension(const std::string& ext)
+    {
+        return ext == ".cs" || ext == ".lua" || ext == ".py";
+    }
+
+    // Internal sidecar/data files the user shouldn't see in the browser.
+    static bool IsHiddenExtension(const std::string& ext)
+    {
+        return ext == ".meta" || ext == ".yaml" || ext == ".yml";
+    }
+
+    // Type-filter dropdown order: 0=All, then the categories below. Folders always pass
+    // (kept visible for navigation); only files are filtered.
+    static const char* const s_TypeFilterItems[] = {
+        "All Types", "Images", "Models", "Audio", "Shaders", "Scripts", "Scenes", "Prefabs", "Fonts"
+    };
+    static bool MatchesTypeFilter(int filter, const std::string& ext, bool isDir)
+    {
+        if (filter == 0 || isDir) return true;
+        switch (filter)
+        {
+            case 1: return IsImageExtension(ext);
+            case 2: return IsModelExtension(ext);
+            case 3: return IsAudioExtension(ext);
+            case 4: return IsShaderExtension(ext);
+            case 5: return IsScriptExtension(ext);
+            case 6: return IsSceneExtension(ext);
+            case 7: return IsPrefabExtension(ext);
+            case 8: return IsFontExtension(ext);
+        }
+        return true;
+    }
+
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(s_AssetsDirectory)
     {
@@ -147,6 +313,40 @@ namespace Blu
             ? Blu::Texture2D::Create("assets/textures/Folder.png")
             : m_FolderOpenIcon;
         m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
+        LoadFavorites();
+    }
+
+    void ContentBrowserPanel::LoadFavorites()
+    {
+        m_FavoritePaths.clear();
+        std::ifstream f("config/cb_favorites.txt");
+        if (!f.is_open()) return;
+        std::string line;
+        while (std::getline(f, line))
+            if (!line.empty() && std::filesystem::exists(line))
+                m_FavoritePaths.emplace_back(line);
+    }
+    void ContentBrowserPanel::SaveFavorites() const
+    {
+        std::error_code ec;
+        std::filesystem::create_directories("config", ec);
+        std::ofstream f("config/cb_favorites.txt", std::ios::trunc);
+        if (!f.is_open()) return;
+        for (const auto& p : m_FavoritePaths)
+            f << p.generic_string() << "\n";
+    }
+    bool ContentBrowserPanel::IsFavorite(const std::filesystem::path& p) const
+    {
+        for (const auto& f : m_FavoritePaths)
+            if (f == p) return true;
+        return false;
+    }
+    void ContentBrowserPanel::ToggleFavorite(const std::filesystem::path& p)
+    {
+        for (auto it = m_FavoritePaths.begin(); it != m_FavoritePaths.end(); ++it)
+            if (*it == p) { m_FavoritePaths.erase(it); SaveFavorites(); return; }
+        m_FavoritePaths.push_back(p);
+        SaveFavorites();
     }
 
     void ContentBrowserPanel::SetBrowserDirectory(const std::filesystem::path& directory)
@@ -313,6 +513,29 @@ namespace Blu
             m_CurrentDirectory = s_AssetsDirectory;
             m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
         }
+        // Pinned folders (right-click a folder in the grid → Add to Favorites).
+        std::filesystem::path favToRemove;
+        for (size_t i = 0; i < m_FavoritePaths.size(); ++i)
+        {
+            const auto& fav = m_FavoritePaths[i];
+            ImGui::PushID((int)i);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.82f, 0.30f, 1.0f));
+            const std::string label = "* " + fav.filename().string();
+            const bool sel = ImGui::Selectable(label.c_str(), m_CurrentDirectory == fav);
+            ImGui::PopStyleColor();
+            if (sel)
+            {
+                m_CurrentDirectory  = fav;
+                m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
+            }
+            if (ImGui::BeginPopupContextItem("##favctx"))
+            {
+                if (ImGui::MenuItem("Remove from Favorites")) favToRemove = fav;
+                ImGui::EndPopup();
+            }
+            ImGui::PopID();
+        }
+        if (!favToRemove.empty()) ToggleFavorite(favToRemove);
         ImGui::Separator();
 
         if (ImGui::Button("+ New"))
@@ -426,6 +649,9 @@ namespace Blu
                 ImGui::EndPopup();
             }
             ImGui::SameLine();
+            ImGui::SetNextItemWidth(110.f);
+            ImGui::Combo("##cbType", &m_TypeFilter, s_TypeFilterItems, IM_ARRAYSIZE(s_TypeFilterItems));
+            ImGui::SameLine();
 
             // Thumbnail size slider (right-aligned)
             float sliderW = 90.f;
@@ -455,8 +681,32 @@ namespace Blu
         std::vector<std::filesystem::directory_entry> entries;
         if (std::filesystem::exists(m_CurrentDirectory))
         {
-            for (auto& entry : std::filesystem::directory_iterator(m_CurrentDirectory))
-                entries.push_back(entry);
+            if (m_TypeFilter != 0)
+            {
+                // A type filter is active: gather ALL matching files under this folder
+                // recursively (Unreal-style), so assets in sub-folders are still shown.
+                std::error_code ec;
+                for (std::filesystem::recursive_directory_iterator it(m_CurrentDirectory, ec), end;
+                     it != end; it.increment(ec))
+                {
+                    if (ec) break;
+                    if (it->is_directory()) continue;
+                    std::string e = it->path().extension().string();
+                    for (char& ch : e) ch = (char)std::tolower((unsigned char)ch);
+                    if (MatchesTypeFilter(m_TypeFilter, e, false))
+                        entries.push_back(*it);
+                }
+            }
+            else
+            {
+                for (auto& entry : std::filesystem::directory_iterator(m_CurrentDirectory))
+                {
+                    std::string ex = entry.path().extension().string();
+                    for (char& ch : ex) ch = (char)std::tolower((unsigned char)ch);
+                    if (!entry.is_directory() && IsHiddenExtension(ex)) continue; // hide .meta/.yaml
+                    entries.push_back(entry);
+                }
+            }
         }
         SortEntries(entries, m_SortMode);
 
@@ -479,6 +729,7 @@ namespace Blu
                 if (nameLower.find(s_Filter) == std::string::npos) { ImGui::NextColumn(); continue; }
             }
 
+
             bool isSelected = (m_SelectedFilename == filenameStr);
             ImGui::PushID(path.string().c_str());
             ImGui::BeginGroup();
@@ -488,20 +739,21 @@ namespace Blu
             ImVec4 tint = { 1.f, 1.f, 1.f, 1.f };
             ExtInfo extInfo = { {1,1,1,1}, "" };
             bool drawBadge = false;
+            int  procIcon  = 0; // 0=none, 1=sound, 2=shader, 3=font (drawn with ImDrawList)
 
+            iconID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FileIcons[".png"]->GetImTextureID()));
             if (entry.is_directory())
             {
-                iconID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetImTextureID()));
+                procIcon = 7; // polished procedural folder (replaces the folder PNG)
             }
             else
             {
-                iconID  = reinterpret_cast<void*>(static_cast<intptr_t>(m_FileIcons[".png"]->GetImTextureID()));
                 extInfo = GetExtensionInfo(extLower);
                 tint    = extInfo.Tint;
-                drawBadge = true;
 
                 if (IsImageExtension(extLower))
                 {
+                    drawBadge = true;
                     if (auto thumbnail = AssetPreviewService::Get().GetImageThumbnail(path))
                     {
                         iconID = reinterpret_cast<void*>(static_cast<intptr_t>(thumbnail->GetImTextureID()));
@@ -511,6 +763,7 @@ namespace Blu
                 }
                 else if (IsModelExtension(extLower))
                 {
+                    drawBadge = true;
                     bool thumbnailFailed = false;
                     uint64_t thumbnailID = AssetPreviewService::Get().GetAssetThumbnail(path, thumbnailFailed);
                     if (thumbnailID != 0)
@@ -523,18 +776,36 @@ namespace Blu
                     {
                         extInfo = { ImVec4(1.00f, 0.45f, 0.25f, 1.f), "MISS" };
                         tint = extInfo.Tint;
-                        drawBadge = true;
                     }
                 }
+                else if (IsAudioExtension(extLower))  { procIcon = 1; }
+                else if (IsShaderExtension(extLower)) { procIcon = 2; }
+                else if (IsFontExtension(extLower))   { procIcon = 3; }
+                else if (IsSceneExtension(extLower))  { procIcon = 5; }
+                else if (IsPrefabExtension(extLower)) { procIcon = 6; }
+                else { procIcon = 4; drawBadge = true; } // generic document for any other type
             }
 
-            ImGui::Image(iconID, iconSize, uv0, uv1, tint);
+            // Reserve the cell with a Dummy for procedural icons (so the hit-rect is set),
+            // otherwise draw the icon/preview texture.
+            if (procIcon != 0)
+                ImGui::Dummy(iconSize);
+            else
+                ImGui::Image(iconID, iconSize, uv0, uv1, tint);
             ImVec2 iconMin = ImGui::GetItemRectMin();
             ImVec2 iconMax = ImGui::GetItemRectMax();
+            ImDrawList* cellDL = ImGui::GetWindowDrawList();
+            if      (procIcon == 1) DrawSoundThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 2) DrawShaderThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 3) DrawFontThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 4) DrawDocThumbnail(cellDL, iconMin, iconMax, ImGui::ColorConvertFloat4ToU32(extInfo.Tint));
+            else if (procIcon == 5) DrawSceneThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 6) DrawPrefabThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 7) DrawFolderThumbnail(cellDL, iconMin, iconMax);
 
             // Badge overlay for files
             if (drawBadge)
-                DrawExtensionBadge(ImGui::GetWindowDrawList(), iconMin, iconMax, extInfo);
+                DrawExtensionBadge(cellDL, iconMin, iconMax, extInfo);
 
             // Selection highlight / invisible button overlay
             ImGui::SetCursorPos({ ImGui::GetCursorPos().x, ImGui::GetCursorPos().y - iconSize.y });
@@ -556,6 +827,12 @@ namespace Blu
                     m_CurrentDirectory    = path;
                     m_NavigationHistory   = GetDirectoryPath(m_CurrentDirectory);
                     m_SelectedFilename    = "";
+                }
+                else if (!entry.is_directory() && ImGui::IsMouseDoubleClicked(0))
+                {
+                    // Double-click a sound file → open the Sound Preview window.
+                    if (IsAudioExtension(extLower) && m_OpenSoundEditorCallback)
+                        m_OpenSoundEditorCallback(path);
                 }
                 if (ImGui::IsMouseClicked(1))
                 {
@@ -632,6 +909,20 @@ namespace Blu
         {
             if (ImGui::MenuItem("Reveal in Explorer"))
                 RevealInExplorer(s_RightClickedItemPath);
+            if (ImGui::MenuItem("Go to Folder"))
+            {
+                // Navigate the browser to the folder this asset lives in and select it
+                // (useful from the recursive type-filter view). Clearing the filter shows
+                // the item in its folder context.
+                std::filesystem::path parent = s_RightClickedItemPath.parent_path();
+                if (!parent.empty() && std::filesystem::exists(parent))
+                {
+                    m_CurrentDirectory  = parent;
+                    m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
+                    m_SelectedFilename  = s_RightClickedItemPath.filename().string();
+                    m_TypeFilter        = 0;
+                }
+            }
             if (ImGui::MenuItem("Copy Project Relative Path"))
                 ImGui::SetClipboardText(ToProjectRelative(s_RightClickedItemPath).c_str());
             ImGui::Separator();
@@ -662,6 +953,17 @@ namespace Blu
                 {
                     if (m_GenerateStaticCollisionCallback)
                         m_GenerateStaticCollisionCallback(s_RightClickedItemPath);
+                }
+                ImGui::Separator();
+            }
+
+            if (std::filesystem::is_directory(s_RightClickedItemPath))
+            {
+                const bool fav = IsFavorite(s_RightClickedItemPath);
+                if (ImGui::MenuItem(fav ? "Remove from Favorites" : "Add to Favorites"))
+                {
+                    ToggleFavorite(s_RightClickedItemPath);
+                    ImGui::CloseCurrentPopup();
                 }
                 ImGui::Separator();
             }
@@ -799,15 +1101,9 @@ namespace Blu
         auto it      = m_DirectoryExpandedState.find(directoryPath.string());
         bool expanded = (it != m_DirectoryExpandedState.end()) ? it->second : false;
 
-        const bool isDX11 = RendererAPI::GetAPI() == RendererAPI::API::Direct3D;
-        ImVec2 uv0 = isDX11 ? ImVec2(0, 0) : ImVec2(0, 1);
-        ImVec2 uv1 = isDX11 ? ImVec2(1, 1) : ImVec2(1, 0);
-
-        void* iconID = expanded
-            ? reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderOpenIcon->GetImTextureID()))
-            : reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetImTextureID()));
-
-        ImGui::Image(iconID, { 14.f, 14.f }, uv0, uv1);
+        // Procedural folder icon (matches the grid; replaces the flat folder PNG).
+        ImGui::Dummy(ImVec2(14.f, 14.f));
+        DrawFolderThumbnail(ImGui::GetWindowDrawList(), ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
         ImGui::SameLine(0, 4);
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;

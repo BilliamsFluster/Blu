@@ -115,42 +115,82 @@ namespace Blu
 
 		void ImGuiLayer::SetDarkColors()
 		{
-			auto& colors = ImGui::GetStyle().Colors;
-			colors[ImGuiCol_WindowBg] =				ImVec4{0.05f, 0.055f, 0.05f, 1.0f};
-			
-			/* Header */
-			colors[ImGuiCol_Header] =				ImVec4{ 0.2f, 0.2f, 0.2f, 1.0f };
-			colors[ImGuiCol_HeaderHovered] =		ImVec4{ 0.3f, 0.3f, 0.3f, 1.0f };
-			colors[ImGuiCol_HeaderActive] =			ImVec4{ 0.25f, 0.25f, 0.25f, 1.0f };
-			
-			/* Button */
-			colors[ImGuiCol_Button] =				ImVec4{0.15f, 0.15f, 0.15f, 1.0f};
-			colors[ImGuiCol_ButtonHovered] =		ImVec4{0.25f, 0.25f, 0.25f, 1.0f};
-			colors[ImGuiCol_ButtonActive] =			ImVec4{0.2f, 0.2f, 0.2f, 1.0f};
-			
-			/* Frame */
-			colors[ImGuiCol_FrameBg] =				ImVec4{ 0.1f, 0.1f, 0.1f, 1.0f };
-			colors[ImGuiCol_FrameBgHovered] =		ImVec4{ 0.2f, 0.2f, 0.2f, 1.0f };
-			colors[ImGuiCol_FrameBgActive] =		ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-			
-			/* Tab */
-			colors[ImGuiCol_Tab] =					ImVec4{0.06f, 0.066f, 0.06f, 1.0f};
-			colors[ImGuiCol_TabHovered] =			ImVec4{0.07f, 0.077f, 0.07f, 1.0f};
-			colors[ImGuiCol_TabActive] =			ImVec4{ 0.1f, 0.1f, 0.1f, 1.0f };
-			colors[ImGuiCol_TabUnfocused] =			ImVec4{0.068f, 0.068f, 0.068f, 1.0f};
-			colors[ImGuiCol_TabUnfocusedActive] =	ImVec4{0.078f, 0.078f, 0.078f, 1.0f};
-			
-			/* Title */
-			colors[ImGuiCol_TitleBg] =				ImVec4{ 0.1f, 0.1f, 0.1f, 1.0f };
-			colors[ImGuiCol_TitleBgActive] =		ImVec4{ 0.2f, 0.2f, 0.2f, 1.0f };
-			colors[ImGuiCol_TitleBgCollapsed] =		ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-						
-			/* Text */
-			colors[ImGuiCol_Text] =					ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f }; 
-			colors[ImGuiCol_Border] =				ImVec4{0.14f, 0.16f, 0.15f, 0.88f};
-			colors[ImGuiCol_ScrollbarBg] =			ImVec4{0.02f, 0.02f, 0.02f, 0.8f};
-														  
-		}												  
+			ImGuiStyle& style = ImGui::GetStyle();
+
+			// ── Geometry: rounded + breathable so panels read less "geometric" ──────
+			style.WindowRounding        = 6.0f;
+			style.ChildRounding         = 6.0f;
+			style.FrameRounding         = 4.0f;
+			style.PopupRounding         = 5.0f;
+			style.GrabRounding          = 4.0f;
+			style.TabRounding           = 5.0f;
+			style.ScrollbarRounding     = 9.0f;
+			style.WindowBorderSize      = 1.0f;
+			style.ChildBorderSize       = 1.0f;
+			style.FrameBorderSize       = 0.0f;
+			style.PopupBorderSize       = 1.0f;
+			style.WindowPadding         = ImVec2(10.0f, 10.0f);
+			style.FramePadding          = ImVec2(8.0f, 5.0f);
+			style.CellPadding           = ImVec2(6.0f, 4.0f);
+			style.ItemSpacing           = ImVec2(8.0f, 6.0f);
+			style.ItemInnerSpacing      = ImVec2(6.0f, 6.0f);
+			style.IndentSpacing         = 18.0f;
+			style.ScrollbarSize         = 13.0f;
+			style.GrabMinSize           = 9.0f;
+			style.WindowTitleAlign      = ImVec2(0.0f, 0.5f);
+
+			// ── Palette: neutral dark with a single blue accent (selection/active) ──
+			const ImVec4 accent    = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+			const ImVec4 accentDim = ImVec4(0.26f, 0.59f, 0.98f, 0.55f);
+			auto& c = style.Colors;
+			c[ImGuiCol_Text]                 = ImVec4(0.92f, 0.93f, 0.94f, 1.00f);
+			c[ImGuiCol_TextDisabled]         = ImVec4(0.50f, 0.52f, 0.55f, 1.00f);
+			c[ImGuiCol_WindowBg]             = ImVec4(0.090f, 0.094f, 0.102f, 1.00f);
+			c[ImGuiCol_ChildBg]              = ImVec4(0.107f, 0.112f, 0.122f, 1.00f);
+			c[ImGuiCol_PopupBg]              = ImVec4(0.118f, 0.124f, 0.135f, 0.98f);
+			c[ImGuiCol_Border]               = ImVec4(0.000f, 0.000f, 0.000f, 0.40f);
+			c[ImGuiCol_BorderShadow]         = ImVec4(0.000f, 0.000f, 0.000f, 0.00f);
+			c[ImGuiCol_FrameBg]              = ImVec4(0.16f, 0.17f, 0.19f, 1.00f);
+			c[ImGuiCol_FrameBgHovered]       = ImVec4(0.22f, 0.24f, 0.27f, 1.00f);
+			c[ImGuiCol_FrameBgActive]        = ImVec4(0.26f, 0.28f, 0.31f, 1.00f);
+			c[ImGuiCol_TitleBg]              = ImVec4(0.070f, 0.075f, 0.085f, 1.00f);
+			c[ImGuiCol_TitleBgActive]        = ImVec4(0.100f, 0.105f, 0.118f, 1.00f);
+			c[ImGuiCol_TitleBgCollapsed]     = ImVec4(0.070f, 0.075f, 0.085f, 1.00f);
+			c[ImGuiCol_MenuBarBg]            = ImVec4(0.085f, 0.090f, 0.098f, 1.00f);
+			c[ImGuiCol_ScrollbarBg]          = ImVec4(0.040f, 0.040f, 0.045f, 0.60f);
+			c[ImGuiCol_ScrollbarGrab]        = ImVec4(0.28f, 0.30f, 0.33f, 1.00f);
+			c[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.36f, 0.38f, 0.42f, 1.00f);
+			c[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.42f, 0.44f, 0.48f, 1.00f);
+			c[ImGuiCol_CheckMark]            = accent;
+			c[ImGuiCol_SliderGrab]           = accent;
+			c[ImGuiCol_SliderGrabActive]     = ImVec4(0.40f, 0.69f, 1.00f, 1.00f);
+			c[ImGuiCol_Button]               = ImVec4(0.20f, 0.22f, 0.25f, 1.00f);
+			c[ImGuiCol_ButtonHovered]        = ImVec4(0.28f, 0.31f, 0.35f, 1.00f);
+			c[ImGuiCol_ButtonActive]         = ImVec4(0.24f, 0.27f, 0.31f, 1.00f);
+			c[ImGuiCol_Header]               = ImVec4(0.20f, 0.22f, 0.26f, 1.00f);
+			c[ImGuiCol_HeaderHovered]        = ImVec4(0.26f, 0.30f, 0.36f, 1.00f);
+			c[ImGuiCol_HeaderActive]         = accentDim;
+			c[ImGuiCol_Separator]            = ImVec4(0.00f, 0.00f, 0.00f, 0.50f);
+			c[ImGuiCol_SeparatorHovered]     = accentDim;
+			c[ImGuiCol_SeparatorActive]      = accent;
+			c[ImGuiCol_ResizeGrip]           = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
+			c[ImGuiCol_ResizeGripHovered]    = accentDim;
+			c[ImGuiCol_ResizeGripActive]     = accent;
+			c[ImGuiCol_Tab]                  = ImVec4(0.100f, 0.105f, 0.118f, 1.00f);
+			c[ImGuiCol_TabHovered]           = ImVec4(0.22f, 0.24f, 0.28f, 1.00f);
+			c[ImGuiCol_TabActive]            = ImVec4(0.16f, 0.18f, 0.22f, 1.00f);
+			c[ImGuiCol_TabUnfocused]         = ImVec4(0.085f, 0.090f, 0.100f, 1.00f);
+			c[ImGuiCol_TabUnfocusedActive]   = ImVec4(0.130f, 0.140f, 0.160f, 1.00f);
+			c[ImGuiCol_DockingPreview]       = accentDim;
+			c[ImGuiCol_DockingEmptyBg]       = ImVec4(0.090f, 0.094f, 0.100f, 1.00f);
+			c[ImGuiCol_TextSelectedBg]       = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+			c[ImGuiCol_NavHighlight]         = accent;
+			c[ImGuiCol_DragDropTarget]       = ImVec4(1.00f, 0.80f, 0.20f, 0.90f);
+			c[ImGuiCol_TableHeaderBg]        = ImVec4(0.14f, 0.15f, 0.17f, 1.00f);
+			c[ImGuiCol_TableBorderStrong]    = ImVec4(0.00f, 0.00f, 0.00f, 0.50f);
+			c[ImGuiCol_TableBorderLight]     = ImVec4(0.00f, 0.00f, 0.00f, 0.30f);
+			c[ImGuiCol_TableRowBgAlt]        = ImVec4(1.00f, 1.00f, 1.00f, 0.03f);
+		}
 
 		
 
