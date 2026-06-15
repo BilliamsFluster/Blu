@@ -198,6 +198,79 @@ namespace Blu
         dl->AddText(font, fontSz, pos, IM_COL32(232, 232, 238, 255), txt);
     }
 
+    static bool IsSceneExtension(const std::string& ext)
+    {
+        return ext == ".blu" || ext == ".scene" || ext == ".bluui";
+    }
+    static bool IsPrefabExtension(const std::string& ext)
+    {
+        return ext == ".bluprefab";
+    }
+
+    // Generic document: a page with a folded corner and a few text lines tinted by the
+    // file's category accent. Used for text/yaml/script/config and any unknown type, so
+    // nothing falls back to the flat "page" PNG.
+    static void DrawDocThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx, ImU32 accent)
+    {
+        const float w = mx.x - mn.x, h = mx.y - mn.y;
+        const float pad = w * 0.24f;
+        const ImVec2 a = { mn.x + pad, mn.y + h * 0.12f };
+        const ImVec2 b = { mx.x - pad, mx.y - h * 0.12f };
+        const float fold = (b.x - a.x) * 0.34f;
+        dl->AddRectFilled(a, ImVec2(b.x, b.y), IM_COL32(236, 237, 242, 255), 3.f);
+        dl->AddTriangleFilled(ImVec2(b.x - fold, a.y), ImVec2(b.x, a.y + fold),
+                              ImVec2(b.x, a.y), IM_COL32(198, 201, 210, 255)); // folded corner
+        const float lx0 = a.x + (b.x - a.x) * 0.16f, lx1 = b.x - (b.x - a.x) * 0.16f;
+        const float ly = a.y + h * 0.34f, dy = h * 0.13f;
+        for (int i = 0; i < 4; ++i)
+        {
+            const float yy = ly + dy * i;
+            const float ex = (i == 3) ? lx0 + (lx1 - lx0) * 0.55f : lx1;
+            dl->AddLine(ImVec2(lx0, yy), ImVec2(ex, yy), accent, 2.0f);
+        }
+    }
+    // Scene/level: sky + ground + a little object — reads as a "level".
+    static void DrawSceneThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(28, 34, 48, 255), 6.f);
+        const float w = mx.x - mn.x, h = mx.y - mn.y;
+        const float gy = mn.y + h * 0.64f;
+        dl->AddRectFilled(ImVec2(mn.x, gy), ImVec2(mx.x, mx.y), IM_COL32(52, 80, 112, 255), 0.f);
+        dl->AddCircleFilled(ImVec2(mn.x + w * 0.74f, mn.y + h * 0.30f), w * 0.10f, IM_COL32(125, 175, 235, 255), 20);
+        const float cs = w * 0.18f, cx = mn.x + w * 0.34f;
+        dl->AddRectFilled(ImVec2(cx - cs * 0.5f, gy - cs), ImVec2(cx + cs * 0.5f, gy), IM_COL32(95, 135, 185, 255), 2.f);
+    }
+    // Prefab: a cyan "blueprint" wireframe cube.
+    static void DrawPrefabThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(20, 34, 40, 255), 6.f);
+        const ImVec2 c = { (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f };
+        const float s = ((mx.x - mn.x) < (mx.y - mn.y) ? (mx.x - mn.x) : (mx.y - mn.y)) * 0.28f;
+        const ImU32 col = IM_COL32(85, 205, 235, 255);
+        const ImVec2 top = { c.x, c.y - s }, right = { c.x + s, c.y - s * 0.4f },
+                     bot = { c.x, c.y + s * 0.2f }, left = { c.x - s, c.y - s * 0.4f };
+        dl->AddQuad(top, right, bot, left, col, 2.0f);                       // top face
+        dl->AddLine(left, ImVec2(left.x, left.y + s), col, 2.0f);
+        dl->AddLine(right, ImVec2(right.x, right.y + s), col, 2.0f);
+        dl->AddLine(bot, ImVec2(bot.x, bot.y + s), col, 2.0f);
+        dl->AddLine(ImVec2(left.x, left.y + s), ImVec2(bot.x, bot.y + s), col, 2.0f);
+        dl->AddLine(ImVec2(right.x, right.y + s), ImVec2(bot.x, bot.y + s), col, 2.0f);
+    }
+    // Polished manila folder (tab + back panel + lighter front flap).
+    static void DrawFolderThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        const float w = mx.x - mn.x, h = mx.y - mn.y;
+        const float pad = w * 0.12f;
+        const ImVec2 a = { mn.x + pad, mn.y + h * 0.32f };
+        const ImVec2 b = { mx.x - pad, mx.y - h * 0.16f };
+        const float tabW = (b.x - a.x) * 0.44f;
+        dl->AddRectFilled(ImVec2(a.x, a.y - h * 0.12f), ImVec2(a.x + tabW, a.y + h * 0.05f),
+                          IM_COL32(206, 162, 78, 255), 3.f);       // tab
+        dl->AddRectFilled(a, b, IM_COL32(222, 178, 92, 255), 4.f); // back panel
+        dl->AddRectFilled(ImVec2(a.x + w * 0.03f, a.y + h * 0.12f), b,
+                          IM_COL32(246, 206, 122, 255), 4.f);      // front flap (lighter)
+    }
+
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(s_AssetsDirectory)
     {
@@ -550,19 +623,19 @@ namespace Blu
             bool drawBadge = false;
             int  procIcon  = 0; // 0=none, 1=sound, 2=shader, 3=font (drawn with ImDrawList)
 
+            iconID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FileIcons[".png"]->GetImTextureID()));
             if (entry.is_directory())
             {
-                iconID = reinterpret_cast<void*>(static_cast<intptr_t>(m_FolderClosedIcon->GetImTextureID()));
+                procIcon = 7; // polished procedural folder (replaces the folder PNG)
             }
             else
             {
-                iconID  = reinterpret_cast<void*>(static_cast<intptr_t>(m_FileIcons[".png"]->GetImTextureID()));
                 extInfo = GetExtensionInfo(extLower);
                 tint    = extInfo.Tint;
-                drawBadge = true;
 
                 if (IsImageExtension(extLower))
                 {
+                    drawBadge = true;
                     if (auto thumbnail = AssetPreviewService::Get().GetImageThumbnail(path))
                     {
                         iconID = reinterpret_cast<void*>(static_cast<intptr_t>(thumbnail->GetImTextureID()));
@@ -572,6 +645,7 @@ namespace Blu
                 }
                 else if (IsModelExtension(extLower))
                 {
+                    drawBadge = true;
                     bool thumbnailFailed = false;
                     uint64_t thumbnailID = AssetPreviewService::Get().GetAssetThumbnail(path, thumbnailFailed);
                     if (thumbnailID != 0)
@@ -584,12 +658,14 @@ namespace Blu
                     {
                         extInfo = { ImVec4(1.00f, 0.45f, 0.25f, 1.f), "MISS" };
                         tint = extInfo.Tint;
-                        drawBadge = true;
                     }
                 }
-                else if (IsAudioExtension(extLower))  { procIcon = 1; drawBadge = false; }
-                else if (IsShaderExtension(extLower)) { procIcon = 2; drawBadge = false; }
-                else if (IsFontExtension(extLower))   { procIcon = 3; drawBadge = false; }
+                else if (IsAudioExtension(extLower))  { procIcon = 1; }
+                else if (IsShaderExtension(extLower)) { procIcon = 2; }
+                else if (IsFontExtension(extLower))   { procIcon = 3; }
+                else if (IsSceneExtension(extLower))  { procIcon = 5; }
+                else if (IsPrefabExtension(extLower)) { procIcon = 6; }
+                else { procIcon = 4; drawBadge = true; } // generic document for any other type
             }
 
             // Reserve the cell with a Dummy for procedural icons (so the hit-rect is set),
@@ -604,6 +680,10 @@ namespace Blu
             if      (procIcon == 1) DrawSoundThumbnail(cellDL, iconMin, iconMax);
             else if (procIcon == 2) DrawShaderThumbnail(cellDL, iconMin, iconMax);
             else if (procIcon == 3) DrawFontThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 4) DrawDocThumbnail(cellDL, iconMin, iconMax, ImGui::ColorConvertFloat4ToU32(extInfo.Tint));
+            else if (procIcon == 5) DrawSceneThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 6) DrawPrefabThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 7) DrawFolderThumbnail(cellDL, iconMin, iconMax);
 
             // Badge overlay for files
             if (drawBadge)

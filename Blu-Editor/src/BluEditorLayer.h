@@ -213,6 +213,8 @@ namespace Blu
 		bool m_LogShowInfo  = true;
 		bool m_LogShowWarn  = true;
 		bool m_LogShowError = true;
+		bool m_LogAutoScroll = true;
+		char m_LogSearchBuffer[128] = {};
 	};
 }
 

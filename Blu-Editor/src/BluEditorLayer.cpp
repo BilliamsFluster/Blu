@@ -2402,11 +2402,27 @@ namespace Blu
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.35f, 0.35f, 1.0f));
 				ImGui::Checkbox("Error", &m_LogShowError);
 				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				ImGui::Checkbox("Auto Scroll", &m_LogAutoScroll);
+
+				// Search box (case-insensitive substring filter)
+				ImGui::SetNextItemWidth(-1.0f);
+				ImGui::InputTextWithHint("##logsearch", "Search log...", m_LogSearchBuffer, IM_ARRAYSIZE(m_LogSearchBuffer));
 
 				ImGui::Separator();
 
 				ImGui::BeginChild("##log_scroll", ImVec2(0, 0), false,
 				                  ImGuiWindowFlags_HorizontalScrollbar);
+
+				auto matchesSearch = [&](const std::string& text) -> bool {
+					if (m_LogSearchBuffer[0] == '\0') return true;
+					std::string needle = m_LogSearchBuffer, hay = text;
+					std::transform(needle.begin(), needle.end(), needle.begin(),
+					               [](unsigned char c){ return (char)std::tolower(c); });
+					std::transform(hay.begin(), hay.end(), hay.begin(),
+					               [](unsigned char c){ return (char)std::tolower(c); });
+					return hay.find(needle) != std::string::npos;
+				};
 
 				const auto& messages = EditorLog::Get().GetMessages();
 				for (const auto& entry : messages)
@@ -2417,6 +2433,7 @@ namespace Blu
 					if (entry.Level == EditorLogLevel::Warn  && m_LogShowWarn)  show = true;
 					if (entry.Level == EditorLogLevel::Error && m_LogShowError) show = true;
 					if (!show) continue;
+					if (!matchesSearch(entry.Text)) continue;
 
 					ImVec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 					if      (entry.Level == EditorLogLevel::Trace) color = { 0.55f, 0.55f, 0.55f, 1.0f };
@@ -2428,7 +2445,8 @@ namespace Blu
 					ImGui::PopStyleColor();
 				}
 
-				if (EditorLog::Get().ConsumeScrollToBottom())
+				const bool wantScroll = EditorLog::Get().ConsumeScrollToBottom();
+				if (m_LogAutoScroll && wantScroll)
 					ImGui::SetScrollHereY(1.0f);
 
 				ImGui::EndChild();
