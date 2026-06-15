@@ -479,6 +479,10 @@ namespace Blu
 		return haystack.find(needle) != std::string::npos;
 	}
 
+	// Set by the inspector property helpers when a value actually changes (before/after
+	// diff). DrawEntityComponents consumes it once per frame to flag the scene dirty.
+	static bool s_InspectorEdited = false;
+
 	template<typename ComponentType, typename UIFunction>
 	static void DrawComponent(const std::string& name, Entity entity, UIFunction function)
 	{
@@ -526,6 +530,7 @@ namespace Blu
 	}
 	static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f)
 	{
+		const glm::vec3 before = values; // dirty-detect: any drag or reset-button change
 		ImGuiIO& io = ImGui::GetIO();
 		auto boldFont = io.Fonts->Fonts[0];
 		ImGui::PushID(label.c_str());
@@ -586,6 +591,7 @@ namespace Blu
 
 		ImGui::PopStyleVar();
 		ImGui::PopID();
+		if (values != before) s_InspectorEdited = true;
 	}
 
 	static void BeginPropertyGrid(const char* id, float labelWidth = 116.0f)
@@ -613,7 +619,7 @@ namespace Blu
 	{
 		ImGui::PushID(label);
 		PropertyLabel(label);
-		ImGui::DragFloat("##value", &value, speed, min, max, fmt);
+		if (ImGui::DragFloat("##value", &value, speed, min, max, fmt)) s_InspectorEdited = true;
 		ImGui::NextColumn();
 		ImGui::PopID();
 	}
@@ -622,10 +628,10 @@ namespace Blu
 	{
 		ImGui::PushID(label);
 		PropertyLabel(label);
-		if (min != max)
-			ImGui::SliderInt("##value", &value, min, max);
-		else
-			ImGui::InputInt("##value", &value);
+		const bool changed = (min != max)
+			? ImGui::SliderInt("##value", &value, min, max)
+			: ImGui::InputInt("##value", &value);
+		if (changed) s_InspectorEdited = true;
 		ImGui::NextColumn();
 		ImGui::PopID();
 	}
@@ -634,7 +640,7 @@ namespace Blu
 	{
 		ImGui::PushID(label);
 		PropertyLabel(label);
-		ImGui::Checkbox("##value", &value);
+		if (ImGui::Checkbox("##value", &value)) s_InspectorEdited = true;
 		ImGui::NextColumn();
 		ImGui::PopID();
 	}
@@ -654,7 +660,7 @@ namespace Blu
 	{
 		ImGui::PushID(label);
 		PropertyLabel(label);
-		ImGui::DragFloat2("##value", glm::value_ptr(value), speed, min, max, "%.3f");
+		if (ImGui::DragFloat2("##value", glm::value_ptr(value), speed, min, max, "%.3f")) s_InspectorEdited = true;
 		ImGui::NextColumn();
 		ImGui::PopID();
 	}
@@ -663,7 +669,7 @@ namespace Blu
 	{
 		ImGui::PushID(label);
 		PropertyLabel(label);
-		ImGui::DragFloat3("##value", glm::value_ptr(value), speed, min, max, "%.3f");
+		if (ImGui::DragFloat3("##value", glm::value_ptr(value), speed, min, max, "%.3f")) s_InspectorEdited = true;
 		ImGui::NextColumn();
 		ImGui::PopID();
 	}
@@ -672,7 +678,7 @@ namespace Blu
 	{
 		ImGui::PushID(label);
 		PropertyLabel(label);
-		ImGui::ColorEdit4("##value", glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
+		if (ImGui::ColorEdit4("##value", glm::value_ptr(value), ImGuiColorEditFlags_NoInputs)) s_InspectorEdited = true;
 		ImGui::NextColumn();
 		ImGui::PopID();
 	}
@@ -765,9 +771,13 @@ namespace Blu
 	{
 		if (entity.HasComponent<T>() || !FilterMatches(label, s_ComponentSearchBuffer))
 			return;
-		ImGui::TextColored(ComponentCategoryColor(category), "%s", category);
-		ImGui::SameLine(115.0f);
-		if (ImGui::Selectable(label))
+		// Rendered under a collapsible category header, so show just an indented label
+		// tinted by category colour (the header names the category).
+		ImGui::Indent(10.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ComponentCategoryColor(category));
+		const bool clicked = ImGui::Selectable(label);
+		ImGui::PopStyleColor();
+		if (clicked)
 		{
 			auto& component = entity.AddComponent<T>();
 			setup(component);
@@ -776,6 +786,7 @@ namespace Blu
 		}
 		if (warning && warning[0] && ImGui::IsItemHovered())
 			ImGui::SetTooltip("%s", warning);
+		ImGui::Unindent(10.0f);
 	}
 
 	void SceneHierarchyPanel::DrawEntityComponents(Entity entity)
@@ -807,29 +818,54 @@ namespace Blu
 		{
 			ImGui::InputTextWithHint("##ComponentSearch", "Search components...", s_ComponentSearchBuffer, IM_ARRAYSIZE(s_ComponentSearchBuffer));
 			ImGui::SeparatorText("Palette");
-			AddComponentSearchResult<CameraComponent>(entity, "Camera/Lighting", "Camera", "", [](auto&) {});
-			AddComponentSearchResult<PointLightComponent>(entity, "Camera/Lighting", "Point Light", "", [](auto&) {});
-			AddComponentSearchResult<DirectionalLightComponent>(entity, "Camera/Lighting", "Directional Light", "", [](auto&) {});
-			AddComponentSearchResult<SpotLightComponent>(entity, "Camera/Lighting", "Spot Light", "", [](auto&) {});
-			AddComponentSearchResult<SpriteRendererComponent>(entity, "Rendering", "Sprite Renderer", "", [](auto&) {});
-			AddComponentSearchResult<CircleRendererComponent>(entity, "Rendering", "Circle Renderer", "", [](auto&) {});
-			AddComponentSearchResult<MeshComponent>(entity, "Rendering", "Mesh Renderer", "", [](auto& mc) { mc.MeshData = Mesh::CreateCube(); mc.Primitive = MeshComponent::PrimitiveType::Cube; mc.MaterialInstance = Material::Create(); });
-			AddComponentSearchResult<TerrainComponent>(entity, "Rendering", "Terrain", "Use Rebuild Terrain after editing the descriptor.", [](auto&) {});
-			AddComponentSearchResult<MeshLODComponent>(entity, "Rendering", "Mesh LOD", "", [](auto&) {});
-			AddComponentSearchResult<Rigidbody3DComponent>(entity, "Physics", "Rigidbody 3D", "Requires a Box/Sphere/Capsule/Mesh collider to create a runtime body.", [](auto&) {});
-			AddComponentSearchResult<BoxCollider3DComponent>(entity, "Physics", "Box Collider 3D", "", [](auto&) {});
-			AddComponentSearchResult<SphereCollider3DComponent>(entity, "Physics", "Sphere Collider 3D", "", [](auto&) {});
-			AddComponentSearchResult<CapsuleCollider3DComponent>(entity, "Physics", "Capsule Collider 3D", "", [](auto&) {});
-			AddComponentSearchResult<MeshCollider3DComponent>(entity, "Physics", "Mesh Collider 3D", "Static Rigidbody 3D only in this milestone.", [](auto&) {});
-			AddComponentSearchResult<CharacterControllerComponent>(entity, "Character", "Character Controller", "Requires Capsule Collider 3D for correct runtime creation.", [](auto&) {});
-			AddComponentSearchResult<PlayerStatsComponent>(entity, "Gameplay", "Player Stats", "", [](auto&) {});
-			AddComponentSearchResult<InteractableComponent>(entity, "Gameplay", "Interactable", "", [](auto&) {});
-			AddComponentSearchResult<PickupComponent>(entity, "Gameplay", "Pickup", "Pickup auto-adds Interactable in the legacy menu path.", [](auto&) {});
-			AddComponentSearchResult<UIRootComponent>(entity, "UI", "UI Root", "", [](auto&) {});
-			AddComponentSearchResult<AudioSourceComponent>(entity, "Audio", "Audio Source", "", [](auto&) {});
-			AddComponentSearchResult<AnimatorComponent>(entity, "Animation", "Animator", "", [](auto&) {});
-			AddComponentSearchResult<FoliageComponent>(entity, "Foliage", "Foliage (GPU Instanced)", "", [](auto&) {});
-			AddComponentSearchResult<ActorComponent>(entity, "Gameplay", "Native Actor", "", [](auto&) {});
+			// When a search filter is active, show matching rows flat (no headers); otherwise
+			// group under collapsible category headers. AddComponentSearchResult self-hides rows
+			// the entity already has or that don't match the filter.
+			const bool cmpFiltering = s_ComponentSearchBuffer[0] != '\0';
+			auto cmpCategory = [&](const char* name) {
+				return cmpFiltering || ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen);
+			};
+			if (cmpCategory("Camera / Lighting"))
+			{
+				AddComponentSearchResult<CameraComponent>(entity, "Camera/Lighting", "Camera", "", [](auto&) {});
+				AddComponentSearchResult<PointLightComponent>(entity, "Camera/Lighting", "Point Light", "", [](auto&) {});
+				AddComponentSearchResult<DirectionalLightComponent>(entity, "Camera/Lighting", "Directional Light", "", [](auto&) {});
+				AddComponentSearchResult<SpotLightComponent>(entity, "Camera/Lighting", "Spot Light", "", [](auto&) {});
+			}
+			if (cmpCategory("Rendering"))
+			{
+				AddComponentSearchResult<SpriteRendererComponent>(entity, "Rendering", "Sprite Renderer", "", [](auto&) {});
+				AddComponentSearchResult<CircleRendererComponent>(entity, "Rendering", "Circle Renderer", "", [](auto&) {});
+				AddComponentSearchResult<MeshComponent>(entity, "Rendering", "Mesh Renderer", "", [](auto& mc) { mc.MeshData = Mesh::CreateCube(); mc.Primitive = MeshComponent::PrimitiveType::Cube; mc.MaterialInstance = Material::Create(); });
+				AddComponentSearchResult<TerrainComponent>(entity, "Rendering", "Terrain", "Use Rebuild Terrain after editing the descriptor.", [](auto&) {});
+				AddComponentSearchResult<MeshLODComponent>(entity, "Rendering", "Mesh LOD", "", [](auto&) {});
+			}
+			if (cmpCategory("Physics"))
+			{
+				AddComponentSearchResult<Rigidbody3DComponent>(entity, "Physics", "Rigidbody 3D", "Requires a Box/Sphere/Capsule/Mesh collider to create a runtime body.", [](auto&) {});
+				AddComponentSearchResult<BoxCollider3DComponent>(entity, "Physics", "Box Collider 3D", "", [](auto&) {});
+				AddComponentSearchResult<SphereCollider3DComponent>(entity, "Physics", "Sphere Collider 3D", "", [](auto&) {});
+				AddComponentSearchResult<CapsuleCollider3DComponent>(entity, "Physics", "Capsule Collider 3D", "", [](auto&) {});
+				AddComponentSearchResult<MeshCollider3DComponent>(entity, "Physics", "Mesh Collider 3D", "Static Rigidbody 3D only in this milestone.", [](auto&) {});
+			}
+			if (cmpCategory("Character / Gameplay"))
+			{
+				AddComponentSearchResult<CharacterControllerComponent>(entity, "Character", "Character Controller", "Requires Capsule Collider 3D for correct runtime creation.", [](auto&) {});
+				AddComponentSearchResult<PlayerStatsComponent>(entity, "Gameplay", "Player Stats", "", [](auto&) {});
+				AddComponentSearchResult<InteractableComponent>(entity, "Gameplay", "Interactable", "", [](auto&) {});
+				AddComponentSearchResult<PickupComponent>(entity, "Gameplay", "Pickup", "Pickup auto-adds Interactable in the legacy menu path.", [](auto&) {});
+				AddComponentSearchResult<ActorComponent>(entity, "Gameplay", "Native Actor", "", [](auto&) {});
+			}
+			if (cmpCategory("Audio / Animation / FX"))
+			{
+				AddComponentSearchResult<AudioSourceComponent>(entity, "Audio", "Audio Source", "", [](auto&) {});
+				AddComponentSearchResult<AnimatorComponent>(entity, "Animation", "Animator", "", [](auto&) {});
+				AddComponentSearchResult<FoliageComponent>(entity, "Foliage", "Foliage (GPU Instanced)", "", [](auto&) {});
+			}
+			if (cmpCategory("UI"))
+			{
+				AddComponentSearchResult<UIRootComponent>(entity, "UI", "UI Root", "", [](auto&) {});
+			}
 			ImGui::SeparatorText("Legacy List");
 			if (!m_SelectedEntity.HasComponent<CameraComponent>())
 			{
@@ -1064,10 +1100,13 @@ namespace Blu
 			ImGui::EndPopup();
 		}
 
-		// A component was added from the palette this frame → flag the scene dirty.
-		if (s_ComponentMenuModified)
+		// A component was added from the palette, or an inspector property was edited
+		// (set by the Draw*Property/DrawVec3Control helpers) → flag the scene dirty.
+		// One-frame lag is fine for an unsaved-changes marker.
+		if (s_ComponentMenuModified || s_InspectorEdited)
 		{
 			s_ComponentMenuModified = false;
+			s_InspectorEdited = false;
 			NotifySceneModified();
 		}
 
