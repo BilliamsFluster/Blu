@@ -898,6 +898,20 @@ namespace Blu
         {
             if (ImGui::MenuItem("Reveal in Explorer"))
                 RevealInExplorer(s_RightClickedItemPath);
+            if (ImGui::MenuItem("Go to Folder"))
+            {
+                // Navigate the browser to the folder this asset lives in and select it
+                // (useful from the recursive type-filter view). Clearing the filter shows
+                // the item in its folder context.
+                std::filesystem::path parent = s_RightClickedItemPath.parent_path();
+                if (!parent.empty() && std::filesystem::exists(parent))
+                {
+                    m_CurrentDirectory  = parent;
+                    m_NavigationHistory = GetDirectoryPath(m_CurrentDirectory);
+                    m_SelectedFilename  = s_RightClickedItemPath.filename().string();
+                    m_TypeFilter        = 0;
+                }
+            }
             if (ImGui::MenuItem("Copy Project Relative Path"))
                 ImGui::SetClipboardText(ToProjectRelative(s_RightClickedItemPath).c_str());
             ImGui::Separator();
