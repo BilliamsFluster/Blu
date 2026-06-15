@@ -720,7 +720,17 @@ namespace
 		Require(HUDHasBinding(hud.Widgets, Blu::UIBinding::Score), "gameplay HUD missing Score binding");
 		Require(HUDHasBinding(hud.Widgets, Blu::UIBinding::Lives), "gameplay HUD missing Lives binding");
 
-		std::ifstream scene("Blu-Editor/assets/scenes/GameplayCoreTest.blu");
+		// Find the repo root (dir containing Blu.sln) by walking up from CWD, so this passes
+		// regardless of the working directory (Visual Studio launches from the project/bin
+		// folder, not the repo root) and independent of any virtual mounts other tests re-point.
+		std::filesystem::path repoRoot = std::filesystem::current_path();
+		for (std::filesystem::path p = repoRoot; !p.empty(); p = p.parent_path())
+		{
+			std::error_code ec;
+			if (std::filesystem::exists(p / "Blu.sln", ec)) { repoRoot = p; break; }
+			if (p == p.root_path()) break;
+		}
+		std::ifstream scene(repoRoot / "Blu-Editor" / "assets" / "scenes" / "GameplayCoreTest.blu");
 		std::stringstream sceneText;
 		sceneText << scene.rdbuf();
 		const std::string yaml = sceneText.str();
