@@ -66,6 +66,8 @@ namespace Blu
 		void ProcessPendingSceneLoad(); // honour SceneManager scene transitions during Play/Eject
 		void QueueEntityDeleteConfirmation(Entity entity); // ask before destroying (Delete/Backspace + panel)
 		void DrawDeleteEntityConfirmation();
+		void OpenSoundPreview(const std::filesystem::path& path); // double-click a sound in the Content Browser
+		void DrawSoundPreview();
 
 		Blu::OrthographicCameraController m_CameraController;
 		Blu::EditorCamera m_EditorCamera;
@@ -124,6 +126,14 @@ namespace Blu
 		// Unsaved-changes marker shown as "* " in the title; best-effort (gizmo edits, entity
 		// create/delete/duplicate/rename, add-component). Cleared on New/Open/Save.
 		bool m_SceneDirty = false;
+
+		// Sound preview window (opened by double-clicking a sound asset)
+		bool m_ShowSoundPreview = false;
+		std::filesystem::path m_SoundPreviewPath;
+		uint32_t m_SoundPreviewHandle = 0;   // Blu::SoundHandle; 0 = none/failed
+		float m_SoundPreviewVolume = 1.0f;
+		float m_SoundPreviewPitch  = 1.0f;
+		bool  m_SoundPreviewLoop   = false;
 
 
 		float translationSnapValue = 0.5f;

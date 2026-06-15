@@ -26,6 +26,7 @@ namespace Blu
 		void SetGenerateStaticCollisionCallback(std::function<void(const std::filesystem::path&)> callback) { m_GenerateStaticCollisionCallback = std::move(callback); }
 		void SetInstantiatePrefabCallback(std::function<void(const std::filesystem::path&)> callback) { m_InstantiatePrefabCallback = std::move(callback); }
 		void SetSaveSelectedAsPrefabCallback(std::function<void()> callback) { m_SaveSelectedAsPrefabCallback = std::move(callback); }
+		void SetOpenSoundEditorCallback(std::function<void(const std::filesystem::path&)> callback) { m_OpenSoundEditorCallback = std::move(callback); }
 		void SetBrowserDirectory(const std::filesystem::path& directory);
 		const std::filesystem::path& GetCurrentDirectory() const { return m_CurrentDirectory; }
 		void SetThumbnailSize(float size) { m_ThumbnailSize = size; }
@@ -85,6 +86,7 @@ namespace Blu
 		std::function<void(const std::filesystem::path&)> m_GenerateStaticCollisionCallback;
 		std::function<void(const std::filesystem::path&)> m_InstantiatePrefabCallback;
 		std::function<void()> m_SaveSelectedAsPrefabCallback;
+		std::function<void(const std::filesystem::path&)> m_OpenSoundEditorCallback;
 
 
 

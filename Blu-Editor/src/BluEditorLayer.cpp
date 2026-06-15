@@ -213,6 +213,84 @@ namespace Blu
 		}
 	}
 
+	void BluEditorLayer::OpenSoundPreview(const std::filesystem::path& path)
+	{
+		// Release any previously-previewed sound.
+		if (m_SoundPreviewHandle != 0)
+		{
+			AudioEngine::Get().Stop(m_SoundPreviewHandle);
+			AudioEngine::Get().UnloadSound(m_SoundPreviewHandle);
+			m_SoundPreviewHandle = 0;
+		}
+		m_SoundPreviewPath = path;
+		m_ShowSoundPreview = true;
+		AudioEngine::Get().Initialize(); // idempotent — safe to call in Edit mode
+		m_SoundPreviewHandle = AudioEngine::Get().LoadSound(path.string());
+		if (m_SoundPreviewHandle != 0)
+		{
+			AudioEngine::Get().SetVolume(m_SoundPreviewHandle, m_SoundPreviewVolume);
+			AudioEngine::Get().SetPitch(m_SoundPreviewHandle, m_SoundPreviewPitch);
+			AudioEngine::Get().SetLooping(m_SoundPreviewHandle, m_SoundPreviewLoop);
+		}
+	}
+
+	void BluEditorLayer::DrawSoundPreview()
+	{
+		if (!m_ShowSoundPreview)
+			return;
+
+		ImGui::SetNextWindowSize(ImVec2(340.0f, 0.0f), ImGuiCond_FirstUseEver);
+		if (ImGui::Begin("Sound Preview", &m_ShowSoundPreview))
+		{
+			ImGui::TextWrapped("%s", m_SoundPreviewPath.filename().string().c_str());
+			ImGui::Separator();
+
+			auto& audio = AudioEngine::Get();
+			if (!audio.IsBackendCompiled())
+			{
+				ImGui::TextColored(ImVec4(1.0f, 0.65f, 0.2f, 1.0f),
+					"Audio backend not compiled (BLU_HAS_MINIAUDIO).");
+			}
+			else if (m_SoundPreviewHandle == 0)
+			{
+				ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Failed to load sound.");
+				if (ImGui::Button("Retry"))
+					OpenSoundPreview(m_SoundPreviewPath);
+			}
+			else
+			{
+				const float btnW = 70.0f;
+				if (ImGui::Button("Play",  ImVec2(btnW, 0))) audio.Play(m_SoundPreviewHandle);
+				ImGui::SameLine();
+				if (ImGui::Button("Pause", ImVec2(btnW, 0))) audio.Pause(m_SoundPreviewHandle);
+				ImGui::SameLine();
+				if (ImGui::Button("Stop",  ImVec2(btnW, 0))) audio.Stop(m_SoundPreviewHandle);
+
+				const char* status = audio.IsPlaying(m_SoundPreviewHandle) ? "Playing"
+				                   : audio.IsPaused(m_SoundPreviewHandle)  ? "Paused"
+				                   : "Stopped";
+				ImGui::TextDisabled("Status: %s", status);
+				ImGui::Spacing();
+
+				if (ImGui::SliderFloat("Volume", &m_SoundPreviewVolume, 0.0f, 1.0f, "%.2f"))
+					audio.SetVolume(m_SoundPreviewHandle, m_SoundPreviewVolume);
+				if (ImGui::SliderFloat("Pitch", &m_SoundPreviewPitch, 0.25f, 3.0f, "%.2fx"))
+					audio.SetPitch(m_SoundPreviewHandle, m_SoundPreviewPitch);
+				if (ImGui::Checkbox("Loop", &m_SoundPreviewLoop))
+					audio.SetLooping(m_SoundPreviewHandle, m_SoundPreviewLoop);
+			}
+		}
+		ImGui::End();
+
+		// Closed via the title-bar X → stop and free the sound.
+		if (!m_ShowSoundPreview && m_SoundPreviewHandle != 0)
+		{
+			AudioEngine::Get().Stop(m_SoundPreviewHandle);
+			AudioEngine::Get().UnloadSound(m_SoundPreviewHandle);
+			m_SoundPreviewHandle = 0;
+		}
+	}
+
 	void BluEditorLayer::SaveSelectedAsPrefab()
 	{
 		if (!m_ActiveScene || !m_SceneHierarchyPanel)
@@ -312,6 +390,7 @@ namespace Blu
 		// Panel-driven mutations (create/delete/rename/add-component) flag the scene dirty.
 		m_SceneHierarchyPanel->SetSceneModifiedCallback([this]() { m_SceneDirty = true; });
 		m_ContentBrowserPanel->SetSaveAllCallback([this]() { SaveCurrentScene(); });
+		m_ContentBrowserPanel->SetOpenSoundEditorCallback([this](const std::filesystem::path& path) { OpenSoundPreview(path); });
 		m_ContentBrowserPanel->SetImportModelCallback([this](const std::filesystem::path& path)
 		{
 			QueueStaticCollisionPrompt(ImportModelEntity(m_ActiveScene, path));
@@ -2263,6 +2342,7 @@ namespace Blu
 
 		DrawStaticCollisionImportPrompt();
 		DrawDeleteEntityConfirmation();
+		DrawSoundPreview();
 
 		// ---- Settings / Preferences ----
 		if (m_ShowSettings)

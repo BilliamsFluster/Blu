@@ -138,6 +138,66 @@ namespace Blu
         dl->AddText(textPos, IM_COL32(255, 255, 255, 255), info.Badge);
     }
 
+    static bool IsAudioExtension(const std::string& ext)
+    {
+        return ext == ".wav" || ext == ".mp3" || ext == ".ogg" || ext == ".flac";
+    }
+    static bool IsShaderExtension(const std::string& ext)
+    {
+        return ext == ".hlsl" || ext == ".glsl" || ext == ".vert" ||
+               ext == ".frag" || ext == ".comp" || ext == ".vs" || ext == ".fs";
+    }
+    static bool IsFontExtension(const std::string& ext)
+    {
+        return ext == ".ttf" || ext == ".otf" || ext == ".ttc";
+    }
+
+    // ── Procedural thumbnails (ImDrawList vector art — no PNG assets needed) ──────
+    // Audio: a red waveform on a dark plate, the way Unreal/Unity show sound assets.
+    static void DrawSoundThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(30, 24, 26, 255), 6.f);
+        const float w = mx.x - mn.x, h = mx.y - mn.y;
+        const float cy = (mn.y + mx.y) * 0.5f;
+        const ImU32 col = IM_COL32(255, 95, 95, 255);
+        static const float amp[] = { 0.15f,0.42f,0.7f,0.55f,0.88f,0.5f,0.96f,0.62f,
+                                     0.78f,0.34f,0.6f,0.26f,0.5f,0.32f,0.18f };
+        const int n = (int)(sizeof(amp) / sizeof(amp[0]));
+        const float pad = w * 0.12f;
+        const float usableW = w - pad * 2.f;
+        const float step = usableW / n;
+        const float barW = step * 0.55f;
+        for (int i = 0; i < n; ++i)
+        {
+            const float x = mn.x + pad + step * (i + 0.5f);
+            const float a = amp[i] * (h * 0.40f);
+            dl->AddRectFilled(ImVec2(x - barW * 0.5f, cy - a),
+                              ImVec2(x + barW * 0.5f, cy + a), col, barW * 0.5f);
+        }
+    }
+    // Shader: a purple "material ball" with a specular highlight.
+    static void DrawShaderThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(24, 20, 32, 255), 6.f);
+        const ImVec2 c = { (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f };
+        const float side = (mx.x - mn.x) < (mx.y - mn.y) ? (mx.x - mn.x) : (mx.y - mn.y);
+        const float r = side * 0.30f;
+        dl->AddCircleFilled({ c.x, c.y + r * 0.18f }, r, IM_COL32(95, 55, 150, 255), 40);     // shaded base
+        dl->AddCircleFilled({ c.x, c.y - r * 0.05f }, r * 0.92f, IM_COL32(155, 95, 225, 255), 40); // lit body
+        dl->AddCircleFilled({ c.x - r * 0.34f, c.y - r * 0.36f }, r * 0.24f, IM_COL32(240, 225, 255, 235), 24); // highlight
+    }
+    // Font: a large "Aa" specimen on a neutral plate.
+    static void DrawFontThumbnail(ImDrawList* dl, ImVec2 mn, ImVec2 mx)
+    {
+        dl->AddRectFilled(mn, mx, IM_COL32(32, 32, 36, 255), 6.f);
+        const char* txt = "Aa";
+        ImFont* font = ImGui::GetFont();
+        const float fontSz = (mx.y - mn.y) * 0.5f;
+        const ImVec2 ts = font->CalcTextSizeA(fontSz, FLT_MAX, 0.f, txt);
+        const ImVec2 pos = { (mn.x + mx.x) * 0.5f - ts.x * 0.5f, (mn.y + mx.y) * 0.5f - ts.y * 0.5f };
+        dl->AddText(font, fontSz, pos, IM_COL32(232, 232, 238, 255), txt);
+    }
+
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(s_AssetsDirectory)
     {
@@ -488,6 +548,7 @@ namespace Blu
             ImVec4 tint = { 1.f, 1.f, 1.f, 1.f };
             ExtInfo extInfo = { {1,1,1,1}, "" };
             bool drawBadge = false;
+            int  procIcon  = 0; // 0=none, 1=sound, 2=shader, 3=font (drawn with ImDrawList)
 
             if (entry.is_directory())
             {
@@ -526,15 +587,27 @@ namespace Blu
                         drawBadge = true;
                     }
                 }
+                else if (IsAudioExtension(extLower))  { procIcon = 1; drawBadge = false; }
+                else if (IsShaderExtension(extLower)) { procIcon = 2; drawBadge = false; }
+                else if (IsFontExtension(extLower))   { procIcon = 3; drawBadge = false; }
             }
 
-            ImGui::Image(iconID, iconSize, uv0, uv1, tint);
+            // Reserve the cell with a Dummy for procedural icons (so the hit-rect is set),
+            // otherwise draw the icon/preview texture.
+            if (procIcon != 0)
+                ImGui::Dummy(iconSize);
+            else
+                ImGui::Image(iconID, iconSize, uv0, uv1, tint);
             ImVec2 iconMin = ImGui::GetItemRectMin();
             ImVec2 iconMax = ImGui::GetItemRectMax();
+            ImDrawList* cellDL = ImGui::GetWindowDrawList();
+            if      (procIcon == 1) DrawSoundThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 2) DrawShaderThumbnail(cellDL, iconMin, iconMax);
+            else if (procIcon == 3) DrawFontThumbnail(cellDL, iconMin, iconMax);
 
             // Badge overlay for files
             if (drawBadge)
-                DrawExtensionBadge(ImGui::GetWindowDrawList(), iconMin, iconMax, extInfo);
+                DrawExtensionBadge(cellDL, iconMin, iconMax, extInfo);
 
             // Selection highlight / invisible button overlay
             ImGui::SetCursorPos({ ImGui::GetCursorPos().x, ImGui::GetCursorPos().y - iconSize.y });
@@ -556,6 +629,12 @@ namespace Blu
                     m_CurrentDirectory    = path;
                     m_NavigationHistory   = GetDirectoryPath(m_CurrentDirectory);
                     m_SelectedFilename    = "";
+                }
+                else if (!entry.is_directory() && ImGui::IsMouseDoubleClicked(0))
+                {
+                    // Double-click a sound file → open the Sound Preview window.
+                    if (IsAudioExtension(extLower) && m_OpenSoundEditorCallback)
+                        m_OpenSoundEditorCallback(path);
                 }
                 if (ImGui::IsMouseClicked(1))
                 {
