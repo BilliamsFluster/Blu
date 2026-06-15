@@ -391,6 +391,19 @@ namespace Blu
 			out << YAML::Key << "AttQuadratic"   << YAML::Value << sc.AttQuadratic;
 			out << YAML::EndMap;
 		}
+		if (entity.HasComponent<FogVolumeComponent>())
+		{
+			out << YAML::Key << "FogVolumeComponent";
+			out << YAML::BeginMap;
+			auto& fv = entity.GetComponent<FogVolumeComponent>();
+			out << YAML::Key << "Shape"   << YAML::Value << (int)fv.VolumeShape;
+			out << YAML::Key << "Extents" << YAML::Value << fv.Extents;
+			out << YAML::Key << "Radius"  << YAML::Value << fv.Radius;
+			out << YAML::Key << "Color"   << YAML::Value << fv.Color;
+			out << YAML::Key << "Density" << YAML::Value << fv.Density;
+			out << YAML::Key << "Falloff" << YAML::Value << fv.Falloff;
+			out << YAML::EndMap;
+		}
 
 
 
@@ -1382,6 +1395,17 @@ namespace Blu
 					if (dirLightComponent["Diffuse"])   dl.Diffuse   = dirLightComponent["Diffuse"].as<glm::vec3>();
 					if (dirLightComponent["Specular"])  dl.Specular  = dirLightComponent["Specular"].as<glm::vec3>();
 					if (dirLightComponent["Intensity"]) dl.Intensity = dirLightComponent["Intensity"].as<float>();
+				}
+				auto fogVolumeComponent = entity["FogVolumeComponent"];
+				if (fogVolumeComponent)
+				{
+					auto& fv = deserializedEntity.AddComponent<FogVolumeComponent>();
+					if (fogVolumeComponent["Shape"])   fv.VolumeShape = (FogVolumeComponent::Shape)fogVolumeComponent["Shape"].as<int>();
+					if (fogVolumeComponent["Extents"]) fv.Extents     = fogVolumeComponent["Extents"].as<glm::vec3>();
+					if (fogVolumeComponent["Radius"])  fv.Radius      = fogVolumeComponent["Radius"].as<float>();
+					if (fogVolumeComponent["Color"])   fv.Color       = fogVolumeComponent["Color"].as<glm::vec3>();
+					if (fogVolumeComponent["Density"]) fv.Density     = fogVolumeComponent["Density"].as<float>();
+					if (fogVolumeComponent["Falloff"]) fv.Falloff     = fogVolumeComponent["Falloff"].as<float>();
 				}
 				auto terrainComponent = entity["TerrainComponent"];
 				auto meshComponent = entity["MeshComponent"];

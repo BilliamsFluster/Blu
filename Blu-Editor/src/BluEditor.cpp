@@ -27,11 +27,13 @@ namespace Blu
 			bool enableFog = false;
 			bool playMode = false;
 			bool deferred = false;
+			bool postfx = false;
 			for (const auto& a : args)
 			{
 				if (a == "--fog")  enableFog = true;
 				if (a == "--play") playMode = true; // capture the running game (FP camera + HUD), not the editor view
 				if (a == "--deferred") deferred = true; // force the deferred render path (default is forward)
+				if (a == "--postfx") postfx = true; // force-enable the post-process stack (bloom/SSAO/fog volumes)
 			}
 			if (deferred)
 				RenderSettings::SetPath(RenderPath::Deferred);
@@ -45,7 +47,7 @@ namespace Blu
 						try { w = (uint32_t)std::stoul(args[i + 3]); h = (uint32_t)std::stoul(args[i + 4]); }
 						catch (...) {}
 					}
-					PushLayer(std::make_shared<ScreenshotLayer>(args[i + 1], args[i + 2], w, h, enableFog, playMode));
+					PushLayer(std::make_shared<ScreenshotLayer>(args[i + 1], args[i + 2], w, h, enableFog, playMode, postfx));
 					return;
 				}
 			}

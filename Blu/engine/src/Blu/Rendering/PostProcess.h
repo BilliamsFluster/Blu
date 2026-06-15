@@ -1,11 +1,22 @@
 #pragma once
 #include "Blu/Core/Core.h"
 #include <glm/glm.hpp>
+#include <vector>
 
 namespace Blu
 {
     class FrameBuffer;
     class Shader;
+
+    // One localized fog region, packed for the fog-volume composite pass. Scene fills these
+    // each frame from FogVolumeComponent + the entity transform; the renderer uploads them to
+    // PostProcess_FogVolume.hlsl. Layout matches the HLSL FogVolume struct (3 x float4).
+    struct FogVolumeGPU
+    {
+        glm::vec3 Position = glm::vec3(0.0f); int   Shape   = 0;    // 0 = box, 1 = sphere
+        glm::vec3 Extents  = glm::vec3(5.0f); float Density = 0.25f;// box half-extents; sphere radius in .x
+        glm::vec3 Color    = glm::vec3(0.6f); float Falloff = 1.0f;
+    };
 
     class PostProcess
     {
@@ -63,5 +74,14 @@ namespace Blu
         float     GodRayIntensity = 0.9f;   // strength of the additive shafts
         glm::vec2 GodRaySunUV     = { 0.5f, 0.5f };
         bool      GodRaySunVisible = false; // sun in front of camera & roughly on-screen
+
+        // Localized fog volumes — composited after SSAO, before tonemap. Set by Scene each
+        // frame from FogVolumeComponent. When FogVolumes is empty the pass is skipped entirely
+        // (byte-identical to a scene with no volumes). FogInvViewProj/FogCameraPos let the
+        // shader reconstruct world position from the depth buffer.
+        bool                      EnableFogVolumes = false;
+        glm::mat4                 FogInvViewProj   = glm::mat4(1.0f);
+        glm::vec3                 FogCameraPos     = glm::vec3(0.0f);
+        std::vector<FogVolumeGPU> FogVolumes;
     };
 }

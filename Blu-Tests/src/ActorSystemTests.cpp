@@ -719,6 +719,55 @@ namespace
 		Require(Blu::IsJoltConfigurationCompatible(), "Blu and Jolt were compiled with incompatible configuration defines");
 	}
 
+	// CPU mirror of the analytic ray-segment overlap in PostProcess_FogVolume.hlsl. Validates the
+	// fog-integration math headlessly — the shader uses the identical algorithm, so getting these
+	// geometric cases right is the high-confidence check that localized fog accumulates correctly.
+	static float FogBoxOverlap(glm::vec3 ro, glm::vec3 rd, float segLen, glm::vec3 center, glm::vec3 halfExt)
+	{
+		glm::vec3 inv = 1.0f / rd;
+		glm::vec3 t0  = (center - halfExt - ro) * inv;
+		glm::vec3 t1  = (center + halfExt - ro) * inv;
+		glm::vec3 tlo = glm::min(t0, t1);
+		glm::vec3 thi = glm::max(t0, t1);
+		float tEnter = std::fmax(std::fmax(std::fmax(tlo.x, tlo.y), tlo.z), 0.0f);
+		float tExit  = std::fmin(std::fmin(std::fmin(thi.x, thi.y), thi.z), segLen);
+		return std::fmax(0.0f, tExit - tEnter);
+	}
+	static float FogSphereOverlap(glm::vec3 ro, glm::vec3 rd, float segLen, glm::vec3 center, float radius)
+	{
+		glm::vec3 oc = ro - center;
+		float b = glm::dot(oc, rd);
+		float c = glm::dot(oc, oc) - radius * radius;
+		float disc = b * b - c;
+		if (disc < 0.0f) return 0.0f;
+		float s = std::sqrt(disc);
+		float tEnter = std::fmax(-b - s, 0.0f);
+		float tExit  = std::fmin(-b + s, segLen);
+		return std::fmax(0.0f, tExit - tEnter);
+	}
+
+	void TestFogVolumeRayMath()
+	{
+		auto approx = [](float a, float b) { return std::fabs(a - b) < 1e-3f; };
+		const glm::vec3 ro(0.0f), rd(1.0f, 0.0f, 0.0f);
+
+		// Box centered at x=10, half-extents 2 → spans [8,12]. Full ray passes through: overlap 4.
+		Require(approx(FogBoxOverlap(ro, rd, 100.0f, glm::vec3(10, 0, 0), glm::vec3(2)), 4.0f), "box full overlap should be 4");
+		// Surface before the box (segLen=8) → ray ends at the entry plane → overlap 0.
+		Require(approx(FogBoxOverlap(ro, rd, 8.0f, glm::vec3(10, 0, 0), glm::vec3(2)), 0.0f), "box overlap clipped to segLen should be 0");
+		// Surface inside the box (segLen=10) → covers [8,10] → overlap 2.
+		Require(approx(FogBoxOverlap(ro, rd, 10.0f, glm::vec3(10, 0, 0), glm::vec3(2)), 2.0f), "box partial overlap should be 2");
+		// Ray offset in Y beyond the box → miss → overlap 0.
+		Require(approx(FogBoxOverlap(glm::vec3(0, 10, 0), rd, 100.0f, glm::vec3(10, 0, 0), glm::vec3(2)), 0.0f), "box miss should be 0");
+
+		// Sphere centered at x=10 radius 3 → spans [7,13]. Full ray: overlap 6.
+		Require(approx(FogSphereOverlap(ro, rd, 100.0f, glm::vec3(10, 0, 0), 3.0f), 6.0f), "sphere full overlap should be 6");
+		// Surface inside the sphere (segLen=10) → covers [7,10] → overlap 3.
+		Require(approx(FogSphereOverlap(ro, rd, 10.0f, glm::vec3(10, 0, 0), 3.0f), 3.0f), "sphere partial overlap should be 3");
+		// Ray offset in Y beyond the radius → miss → overlap 0.
+		Require(approx(FogSphereOverlap(glm::vec3(0, 10, 0), rd, 100.0f, glm::vec3(10, 0, 0), 3.0f), 0.0f), "sphere miss should be 0");
+	}
+
 	// Verifies the project layer that backs the editor's "--project" launch: a .bluproj round-trips,
 	// loading it re-points the project:// and cache:// virtual mounts at the project (so assets and
 	// the asset registry become project-scoped), derived paths resolve, and a failed load is inert.
@@ -816,6 +865,7 @@ int main()
 		TestAuthoredGameplaySliceAssets();
 		TestJoltConfigurationCompatibility();
 		TestProjectManagerLoadAndMounts();
+		TestFogVolumeRayMath();
 	}
 	catch (const std::exception& error)
 	{

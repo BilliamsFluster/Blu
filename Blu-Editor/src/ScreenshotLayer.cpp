@@ -24,11 +24,11 @@
 namespace Blu
 {
     ScreenshotLayer::ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height,
-                                     bool enableFog, bool playMode)
+                                     bool enableFog, bool playMode, bool enablePostFX)
         : Layer("ScreenshotLayer"),
           m_ScenePath(std::move(scenePath)), m_OutputPath(std::move(outputPath)),
           m_Width(width ? width : 1280), m_Height(height ? height : 720),
-          m_EnableFog(enableFog), m_PlayMode(playMode)
+          m_EnableFog(enableFog), m_PlayMode(playMode), m_EnablePostFX(enablePostFX)
     {
         if (m_PlayMode)
             m_WarmupFrames = 40; // let physics settle, actors spawn, the FP camera/HUD come up
@@ -64,6 +64,11 @@ namespace Blu
             fog.AerialColor   = { 0.70f, 0.80f, 0.92f };
             fog.AerialStrength = 0.85f;
         }
+
+        // Force the post-process stack on so screen-space effects (fog volumes, bloom, SSAO)
+        // are exercised even though scenes ship with post-process disabled.
+        if (m_EnablePostFX)
+            m_Scene->SetUsePostProcess(true);
 
         if (m_PlayMode)
         {

@@ -467,6 +467,24 @@ namespace Blu
 		DirectionalLightComponent(const DirectionalLightComponent&) = default;
 	};
 
+	// A localized fog region. Composited screen-space in the post-process pass by
+	// integrating density along the view ray through the box/sphere (see
+	// PostProcess_FogVolume.hlsl). Box is treated axis-aligned (rotation ignored for now);
+	// sphere uses Radius. Costs nothing when no FogVolumeComponent exists in the scene.
+	struct FogVolumeComponent
+	{
+		enum class Shape { Box = 0, Sphere = 1 };
+		Shape     VolumeShape = Shape::Box;
+		glm::vec3 Extents     = glm::vec3(5.0f);               // box half-extents (world units)
+		float     Radius      = 5.0f;                          // sphere radius (world units)
+		glm::vec3 Color       = glm::vec3(0.60f, 0.65f, 0.72f);
+		float     Density     = 0.25f;                         // fog accumulated per world unit through the volume
+		float     Falloff     = 1.0f;                          // 0..1 edge softness (fraction of extent that fades in)
+
+		FogVolumeComponent() = default;
+		FogVolumeComponent(const FogVolumeComponent&) = default;
+	};
+
 	// ─── Spot Light ───────────────────────────────────────────────────────────
 	// Position comes from TransformComponent::Translation.
 	// InnerConeAngle / OuterConeAngle in degrees; shader pre-computes cos values.
@@ -651,7 +669,7 @@ namespace Blu
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
 		ActorComponent, Rigidbody2DComponent,
-		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
+		PointLightComponent, DirectionalLightComponent, SpotLightComponent, FogVolumeComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
 		TerrainComponent, SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
 		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent,
 		MeshCollider3DComponent, CharacterControllerComponent,

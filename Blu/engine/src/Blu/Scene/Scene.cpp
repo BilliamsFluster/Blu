@@ -1838,6 +1838,30 @@ namespace Blu
 			m_PostProcess->GodRaySunUV = uv;
 			m_PostProcess->GodRaySunVisible = vis;
 		}
+
+		// Localized fog volumes — gather for the post-process composite (cheap when none exist).
+		if (m_PostProcess)
+		{
+			m_PostProcess->FogVolumes.clear();
+			auto fogView = m_Registry.view<TransformComponent, FogVolumeComponent>();
+			for (auto e : fogView)
+			{
+				auto&& [tc, fv] = fogView.get<TransformComponent, FogVolumeComponent>(e);
+				FogVolumeGPU g;
+				g.Position = tc.Translation;
+				g.Shape    = (int)fv.VolumeShape;
+				g.Extents  = (fv.VolumeShape == FogVolumeComponent::Shape::Sphere)
+				             ? glm::vec3(fv.Radius)
+				             : fv.Extents;
+				g.Density  = fv.Density;
+				g.Color    = fv.Color;
+				g.Falloff  = fv.Falloff;
+				m_PostProcess->FogVolumes.push_back(g);
+			}
+			m_PostProcess->EnableFogVolumes = !m_PostProcess->FogVolumes.empty();
+			m_PostProcess->FogInvViewProj   = glm::inverse(Renderer3D::GetViewProjectionMatrix());
+			m_PostProcess->FogCameraPos     = camera.GetPosition();
+		}
 		{
 			glm::vec3 camPos = camera.GetPosition();
 			auto view = m_Registry.view<TransformComponent, MeshComponent>();
@@ -1925,6 +1949,30 @@ namespace Blu
 			}
 			m_PostProcess->GodRaySunUV = uv;
 			m_PostProcess->GodRaySunVisible = vis;
+		}
+
+		// Localized fog volumes — gather for the post-process composite (cheap when none exist).
+		if (m_PostProcess)
+		{
+			m_PostProcess->FogVolumes.clear();
+			auto fogView = m_Registry.view<TransformComponent, FogVolumeComponent>();
+			for (auto e : fogView)
+			{
+				auto&& [tc, fv] = fogView.get<TransformComponent, FogVolumeComponent>(e);
+				FogVolumeGPU g;
+				g.Position = tc.Translation;
+				g.Shape    = (int)fv.VolumeShape;
+				g.Extents  = (fv.VolumeShape == FogVolumeComponent::Shape::Sphere)
+				             ? glm::vec3(fv.Radius)
+				             : fv.Extents;
+				g.Density  = fv.Density;
+				g.Color    = fv.Color;
+				g.Falloff  = fv.Falloff;
+				m_PostProcess->FogVolumes.push_back(g);
+			}
+			m_PostProcess->EnableFogVolumes = !m_PostProcess->FogVolumes.empty();
+			m_PostProcess->FogInvViewProj   = glm::inverse(Renderer3D::GetViewProjectionMatrix());
+			m_PostProcess->FogCameraPos     = glm::vec3(cameraTransform[3]);
 		}
 		{
 			glm::vec3 camPos = glm::vec3(cameraTransform[3]);

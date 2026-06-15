@@ -925,6 +925,7 @@ namespace Blu
 				AddComponentSearchResult<PointLightComponent>(entity, "Camera/Lighting", "Point Light", "", [](auto&) {});
 				AddComponentSearchResult<DirectionalLightComponent>(entity, "Camera/Lighting", "Directional Light", "", [](auto&) {});
 				AddComponentSearchResult<SpotLightComponent>(entity, "Camera/Lighting", "Spot Light", "", [](auto&) {});
+				AddComponentSearchResult<FogVolumeComponent>(entity, "Camera/Lighting", "Fog Volume", "", [](auto&) {});
 			}
 			if (cmpCategory("Rendering"))
 			{
@@ -1386,6 +1387,24 @@ namespace Blu
 			});
 
 		// ── Spot Light ────────────────────────────────────────────────────────
+		DrawComponent<FogVolumeComponent>("Fog Volume", entity, [](auto& F)
+			{
+				const char* shapes[] = { "Box", "Sphere" };
+				int shape = (int)F.VolumeShape;
+				ImGui::SetNextItemWidth(-1.0f);
+				if (ImGui::Combo("Shape", &shape, shapes, 2))
+					F.VolumeShape = (FogVolumeComponent::Shape)shape;
+
+				if (F.VolumeShape == FogVolumeComponent::Shape::Box)
+					DrawVec3Control("Extents", F.Extents);
+				else
+					ImGui::DragFloat("Radius", &F.Radius, 0.1f, 0.1f, 500.0f, "%.2f");
+
+				ImGui::ColorEdit3("Color",   glm::value_ptr(F.Color));
+				ImGui::DragFloat("Density", &F.Density, 0.005f, 0.0f, 5.0f, "%.3f");
+				ImGui::DragFloat("Falloff", &F.Falloff, 0.01f, 0.0f, 1.0f, "%.2f");
+			});
+
 		DrawComponent<SpotLightComponent>("Spot Light", entity, [](auto& L)
 			{
 				DrawVec3Control("Direction", L.Direction);
