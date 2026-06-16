@@ -39,6 +39,17 @@ namespace Blu
         // Flush any pending uniform data to the GPU (no-op for OpenGL)
         virtual void Flush()  const {}
 
+        // Re-read this shader's source file and recompile in place. Returns false if unsupported
+        // (e.g. source-string shaders). A failed recompile keeps the previously-working shader, so
+        // it's safe to call after an in-editor edit even if the new source has errors.
+        virtual bool Reload() { return false; }
+
+        // Live shader editing: every shader created via Create(filepath) is tracked by its source
+        // file. ReloadFile recompiles all tracked shaders whose source matches `filepath` (matched by
+        // file name) and returns how many were reloaded — the hook the in-editor HLSL editor calls on
+        // save so changes take effect without restarting.
+        static int ReloadFile(const std::string& filepath);
+
         // Compute dispatch (no-op base — only implemented by D3D11).
         // Call Bind() first to set up the compute shader and cbuffers.
         virtual void DispatchCompute(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) {}

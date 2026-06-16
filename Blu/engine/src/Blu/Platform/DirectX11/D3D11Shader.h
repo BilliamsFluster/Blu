@@ -44,6 +44,7 @@ namespace Blu
         void Bind()   const override;
         void UnBind() const override;
         void Flush()  const override { UploadDirtyCBuffers(); }
+        bool Reload() override; // re-read m_Filepath + recompile (keeps old shader on failure)
 
         const std::string& GetName()      const override { return m_Name; }
         uint32_t           GetProgramID()       override { return 0; } // N/A for DX11
@@ -70,6 +71,7 @@ namespace Blu
         void DispatchCompute(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) override;
 
     private:
+        void LoadFromFile(); // (re)read m_Filepath, split #type sections, compile
         void Compile(const std::string& vertexSrc, const std::string& pixelSrc,
                      const std::string& geometrySrc = {},
                      const std::string& hullSrc = {},

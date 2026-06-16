@@ -76,7 +76,12 @@ namespace Blu
         : m_Filepath(filepath)
     {
         m_Name = NameFromPath(filepath);
-        auto src = SplitShaderSource(ReadFile(filepath));
+        LoadFromFile();
+    }
+
+    void D3D11Shader::LoadFromFile()
+    {
+        auto src = SplitShaderSource(ReadFile(m_Filepath));
 
         bool hasCS = src.count("compute") > 0;
         if (hasCS)
@@ -85,14 +90,28 @@ namespace Blu
             return;
         }
 
-        BLU_CORE_ASSERT(src.count("vertex") && (src.count("pixel") || src.count("fragment")),
-            "HLSL shader must have #type vertex and #type pixel (#type compute for compute-only)");
+        // Soft failure (not an assert): a malformed source — e.g. a mid-edit save from the in-editor
+        // shader editor — logs and bails, leaving the previously-compiled shader objects intact.
+        if (!(src.count("vertex") && (src.count("pixel") || src.count("fragment"))))
+        {
+            BLU_CORE_ERROR("HLSL shader '{0}' must have #type vertex and #type pixel (#type compute "
+                "for compute-only); keeping previous shader", m_Name);
+            return;
+        }
         std::string& psSrc = src.count("pixel") ? src["pixel"] : src["fragment"];
         std::string gsSrc, hsSrc, dsSrc;
         if (src.count("geometry")) gsSrc = src["geometry"];
         if (src.count("hull"))     hsSrc = src["hull"];
         if (src.count("domain"))   dsSrc = src["domain"];
         Compile(src["vertex"], psSrc, gsSrc, hsSrc, dsSrc);
+    }
+
+    bool D3D11Shader::Reload()
+    {
+        if (m_Filepath.empty())
+            return false;
+        LoadFromFile();
+        return true;
     }
 
     D3D11Shader::D3D11Shader(const std::string& name,

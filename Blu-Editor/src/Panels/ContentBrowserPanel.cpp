@@ -837,6 +837,8 @@ namespace Blu
                         m_OpenSoundEditorCallback(path);
                     else if (IsModelExtension(extLower) && m_OpenMeshEditorCallback)
                         m_OpenMeshEditorCallback(path);
+                    else if (IsShaderExtension(extLower) && m_OpenShaderEditorCallback)
+                        m_OpenShaderEditorCallback(path);
                 }
                 if (ImGui::IsMouseClicked(1))
                 {

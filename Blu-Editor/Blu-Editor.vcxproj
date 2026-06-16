@@ -150,6 +150,7 @@
     <ClCompile Include="src\Panels\MeshEditorPanel.cpp" />
     <ClCompile Include="src\Panels\ProfilerPanel.cpp" />
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp" />
+    <ClCompile Include="src\Panels\ShaderEditorPanel.cpp" />
     <ClCompile Include="src\ScreenshotLayer.cpp" />
   </ItemGroup>
   <ItemGroup>
