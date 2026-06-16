@@ -2360,6 +2360,14 @@ namespace Blu
 			m_PostProcess->Submit();
 		}
 	}
+	bool Scene::RaycastWorld(const glm::vec3& origin, const glm::vec3& direction,
+		glm::vec3& outPosition, glm::vec3& outNormal, float& outDistance) const
+	{
+		if (!m_Physics3DWorld || !m_Physics3DWorld->IsValid())
+			return false;
+		return m_Physics3DWorld->CastRay(origin, direction, outPosition, outNormal, outDistance);
+	}
+
 	void Scene::UpdateDecalLifetimes(float deltaTime)
 	{
 		std::vector<entt::entity> expired;

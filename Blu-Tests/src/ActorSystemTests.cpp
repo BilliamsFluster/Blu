@@ -21,6 +21,8 @@
 #include "Blu/Utils/FileSystemService.h"
 #include "Blu/Project/Project.h"
 #include "Blu/Debug/PerfStats.h"
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -817,6 +819,29 @@ namespace
 		Require(countDecals() == 1, "permanent decal should persist across a long tick");
 	}
 
+	// Validates the surface-alignment math for Phase-2 bullet-hole decals. A decal's local +Y is its
+	// projection (stamp) axis. On a world hit PlayerCharacter stores Rotation = eulerAngles(rotation(
+	// +Y, surfaceNormal)); the decal gather rebuilds world = translate * toMat4(quat(Rotation)) * scale.
+	// Round-tripping that pipeline must carry local +Y onto the surface normal for every wall/floor
+	// orientation — otherwise bullet holes float at wrong angles instead of lying flat on the surface.
+	void TestBulletHoleDecalOrientation()
+	{
+		auto alignmentWith = [](const glm::vec3& nIn) {
+			glm::vec3 n     = glm::normalize(nIn);
+			glm::quat q     = glm::rotation(glm::vec3(0.0f, 1.0f, 0.0f), n); // PlayerCharacter::UpdateProjectiles
+			glm::vec3 euler = glm::eulerAngles(q);                           // stored in TransformComponent.Rotation
+			glm::mat4 world = glm::toMat4(glm::quat(euler));                 // Scene decal-gather reconstruction
+			glm::vec3 mapped = glm::normalize(glm::vec3(world * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+			return glm::dot(mapped, n); // 1.0 == perfectly aligned
+		};
+		Require(alignmentWith(glm::vec3(0, 0, -1))        > 0.999f, "decal +Y should align to a -Z wall normal");
+		Require(alignmentWith(glm::vec3(0, 0,  1))        > 0.999f, "decal +Y should align to a +Z wall normal");
+		Require(alignmentWith(glm::vec3(1, 0,  0))        > 0.999f, "decal +Y should align to a +X wall normal");
+		Require(alignmentWith(glm::vec3(0, 1,  0))        > 0.999f, "decal +Y should align to a floor (+Y) normal");
+		Require(alignmentWith(glm::vec3(0, -1, 0))        > 0.999f, "decal +Y should align to a ceiling (-Y) normal");
+		Require(alignmentWith(glm::vec3(0.3f, 0.8f, -0.5f)) > 0.999f, "decal +Y should align to an angled normal");
+	}
+
 	// CPU mirror of the analytic ray-segment overlap in PostProcess_FogVolume.hlsl. Validates the
 	// fog-integration math headlessly — the shader uses the identical algorithm, so getting these
 	// geometric cases right is the high-confidence check that localized fog accumulates correctly.
@@ -1010,6 +1035,7 @@ int main()
 		TestFogVolumeRayMath();
 		TestDecalProjection();
 		TestDecalLifetime();
+		TestBulletHoleDecalOrientation();
 		TestAnimatorBlend();
 		TestPerfStatsMemory();
 	}

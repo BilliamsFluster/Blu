@@ -4,6 +4,8 @@
 #include "Blu/Core/Core.h"
 #include "Blu/Core/Log.h"
 
+#include "Jolt/Physics/Body/BodyLock.h"
+
 #include <thread>
 #include <cstdarg>
 #include <cstdio>
@@ -342,6 +344,43 @@ namespace Blu
             static_cast<float>(position.GetX()),
             static_cast<float>(position.GetY()),
             static_cast<float>(position.GetZ()));
+        return true;
+    }
+
+    bool Physics3DWorld::CastRay(const glm::vec3& origin, const glm::vec3& direction,
+        glm::vec3& outHitPosition, glm::vec3& outHitNormal, float& outDistance) const
+    {
+        if (!m_PhysicsSystem || glm::dot(direction, direction) <= 0.000001f)
+            return false;
+
+        JPH::RRayCast ray(
+            JPH::RVec3(origin.x, origin.y, origin.z),
+            JPH::Vec3(direction.x, direction.y, direction.z));
+
+        JPH::RayCastResult hit;
+        auto bpFilter    = m_PhysicsSystem->GetDefaultBroadPhaseLayerFilter(Physics3DLayers::MOVING);
+        auto layerFilter = m_PhysicsSystem->GetDefaultLayerFilter(Physics3DLayers::MOVING);
+        JPH::BodyFilter bodyFilter;
+
+        if (!m_PhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit, bpFilter, layerFilter, bodyFilter))
+            return false;
+
+        JPH::RVec3 position = ray.GetPointOnRay(hit.mFraction);
+        outHitPosition = glm::vec3(
+            static_cast<float>(position.GetX()),
+            static_cast<float>(position.GetY()),
+            static_cast<float>(position.GetZ()));
+        outDistance = hit.mFraction * glm::length(direction);
+
+        // Default to facing back along the ray, then refine with the body's true surface normal.
+        outHitNormal = -glm::normalize(direction);
+        JPH::BodyLockRead lock(m_PhysicsSystem->GetBodyLockInterface(), hit.mBodyID);
+        if (lock.Succeeded())
+        {
+            JPH::Vec3 n = lock.GetBody().GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, position);
+            if (n.LengthSq() > 1.0e-6f)
+                outHitNormal = glm::vec3(n.GetX(), n.GetY(), n.GetZ());
+        }
         return true;
     }
 

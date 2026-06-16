@@ -150,6 +150,14 @@ namespace Blu
 		void OnPhysics3DStop();
 		void OnRuntimeStop();
 
+		// Cast a ray segment against the live 3D physics world (valid only during Play).
+		// `direction`'s length is the ray length; outDistance is along the ray in world units,
+		// outNormal is the world-space surface normal. Returns false if nothing was hit (or no
+		// physics world). glm-only signature so gameplay code needn't pull in Jolt headers.
+		// Used by projectiles to stop at walls/floors and orient bullet-hole decals.
+		bool RaycastWorld(const glm::vec3& origin, const glm::vec3& direction,
+		                  glm::vec3& outPosition, glm::vec3& outNormal, float& outDistance) const;
+
 		void UpdateActiveCameraComponent(Timestep deltaTime);
 
 		void DestroyEntity(Entity entity);
