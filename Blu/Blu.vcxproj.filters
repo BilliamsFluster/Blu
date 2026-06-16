@@ -1422,6 +1422,9 @@
     <ClInclude Include="engine\src\Blu\Core\InputMap.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\src\Blu\Core\JobSystem.h">
+      <Filter>src\Blu\Core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h">
       <Filter>src\Blu\Core</Filter>
     </ClInclude>
@@ -1794,6 +1797,9 @@
       <Filter>src\Blu\Core</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\InputMap.cpp">
+      <Filter>src\Blu\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\src\Blu\Core\JobSystem.cpp">
       <Filter>src\Blu\Core</Filter>
     </ClCompile>
     <ClCompile Include="engine\src\Blu\Core\Layer.cpp">

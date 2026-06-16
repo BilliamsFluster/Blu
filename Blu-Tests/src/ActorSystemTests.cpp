@@ -3,6 +3,7 @@
 #include "Blu/Core/Log.h"
 #include "Blu/Core/FrameArena.h"
 #include "Blu/Core/GenerationalHandle.h"
+#include "Blu/Core/JobSystem.h"
 #include "Blu/Audio/AudioEngine.h"
 #include "Blu/Physics/Physics3DDiagnostics.h"
 #include "Blu/Scene/Component.h"
@@ -24,6 +25,7 @@
 #include "Blu/Debug/PerfStats.h"
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <atomic>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -37,6 +39,67 @@ namespace
 	{
 		if (!condition)
 			throw std::runtime_error(message);
+	}
+
+	// Exercises the Blu job system: submit/wait, parallel-for reduce parity, the main-thread dispatch
+	// queue (continuations run on the main thread, never a worker), nested parallel-for (proves
+	// help-on-wait doesn't deadlock), per-lane scratch arenas, and clean shutdown.
+	void TestJobSystem()
+	{
+		auto& jobs = Blu::JobSystem::Get();
+		jobs.Initialize(4);
+		Require(jobs.WorkerCount() == 4, "job system should start 4 workers");
+		Require(!jobs.OnWorkerThread(), "the main thread must not report as a worker");
+
+		// Submit: 1000 independent increments run exactly once each.
+		std::atomic<int> counter{ 0 };
+		std::vector<Blu::JobHandle> handles;
+		for (int i = 0; i < 1000; ++i)
+			handles.push_back(jobs.Submit([&counter]() { counter.fetch_add(1, std::memory_order_relaxed); }, "inc"));
+		for (auto& h : handles) jobs.Wait(h);
+		Require(counter.load() == 1000, "all submitted jobs should run exactly once");
+
+		// ParallelFor reduce must equal the serial sum over [0,N).
+		const uint32_t N = 1u << 20;
+		std::atomic<uint64_t> parallelSum{ 0 };
+		jobs.Wait(jobs.ParallelFor(N, 4096, [&](uint32_t b, uint32_t e) {
+			uint64_t local = 0; for (uint32_t i = b; i < e; ++i) local += i;
+			parallelSum.fetch_add(local, std::memory_order_relaxed);
+		}, "sum"));
+		uint64_t serialSum = 0; for (uint32_t i = 0; i < N; ++i) serialSum += i;
+		Require(parallelSum.load() == serialSum, "ParallelFor reduce must match the serial sum");
+
+		// Main-thread dispatch queue: workers enqueue continuations that must run on the MAIN thread.
+		std::atomic<int> mainRan{ 0 };
+		std::atomic<bool> ranOnWorker{ false };
+		std::vector<Blu::JobHandle> enq;
+		for (int i = 0; i < 16; ++i)
+			enq.push_back(jobs.Submit([&]() {
+				jobs.EnqueueMainThread([&]() {
+					if (jobs.OnWorkerThread()) ranOnWorker.store(true);
+					mainRan.fetch_add(1, std::memory_order_relaxed);
+				});
+			}, "enqueue"));
+		for (auto& h : enq) jobs.Wait(h);
+		jobs.DrainMainThreadQueue();
+		Require(mainRan.load() == 16, "all main-thread continuations should run on drain");
+		Require(!ranOnWorker.load(), "main-thread continuations must NOT run on a worker thread");
+
+		// Nested ParallelFor inside a Submit must complete (help-on-wait, no self-deadlock).
+		std::atomic<uint64_t> nested{ 0 };
+		jobs.Wait(jobs.Submit([&]() {
+			jobs.Wait(jobs.ParallelFor(10000, 256, [&](uint32_t b, uint32_t e) {
+				nested.fetch_add(e - b, std::memory_order_relaxed);
+			}, "nested"));
+		}, "outer"));
+		Require(nested.load() == 10000, "nested ParallelFor must complete without deadlock");
+
+		// Per-lane scratch arena is allocated for the main lane.
+		jobs.ResetWorkerArenas();
+		Require(jobs.WorkerArena().GetCapacity() > 0, "main-lane scratch arena should be allocated");
+
+		jobs.Shutdown();
+		Require(jobs.WorkerCount() == 0, "shutdown should join all workers");
 	}
 
 	class LifecycleActor final : public Blu::AActor
@@ -1190,6 +1253,7 @@ int main()
 	Blu::Log::Init();
 	try
 	{
+		TestJobSystem();
 		TestActorLifecycleAndDeferredDestroy();
 		TestMissingClassDoesNotCreateActor();
 		TestGameModeRegistration();

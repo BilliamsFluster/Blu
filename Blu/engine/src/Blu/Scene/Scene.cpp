@@ -1,5 +1,6 @@
 #include "Blupch.h"
 #include "Scene.h"
+#include "Blu/Core/JobSystem.h"
 #include "Blu/Physics/Physics3D.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Rendering/Renderer3D.h"
@@ -2403,22 +2404,26 @@ namespace Blu
 		GpuParticleSystem::Get().OnUpdate(dt); // advance instanced particle sim once per frame
 		Renderer3D::ClearDynamicLights();      // reset transient lights; actor ticks re-add this frame
 
-		// Animate skeletal meshes
+		// Animate skeletal meshes. Each entity's bone-matrix solve is independent and writes only its
+		// own AnimatorComponent (no registry-structure change, no shared state), so the per-entity work
+		// is dispatched across the job system. Render submission stays single-threaded (DX11).
 		{
 			auto animView = m_Registry.view<AnimatorComponent, MeshComponent>();
-			for (auto e : animView)
+			std::vector<entt::entity> animEntities(animView.begin(), animView.end());
+
+			auto animateOne = [&](entt::entity e)
 			{
 				auto [anim, mesh] = animView.get<AnimatorComponent, MeshComponent>(e);
 				if (!anim.SkelData && mesh.ModelAsset)
 					anim.SkelData = mesh.ModelAsset->SkelData;
-				if (!anim.SkelData || !anim.SkelData->Skel) continue;
+				if (!anim.SkelData || !anim.SkelData->Skel) return;
 
 				// No clip to play → show the rest/bind pose (not identity, which collapses
 				// the mesh). Covers clip-less rigs and meshes before their clip is assigned.
 				if (anim.SkelData->Clips.empty())
 				{
 					Animator::ComputeBindPose(*anim.SkelData->Skel, anim.FinalBoneMatrices);
-					continue;
+					return;
 				}
 
 				const int clipCount = (int)anim.SkelData->Clips.size();
@@ -2445,6 +2450,19 @@ namespace Blu
 					Animator::Update(animDt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
 					                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
 				}
+			};
+
+			JobSystem& jobs = JobSystem::Get();
+			if (animEntities.size() >= 8 && jobs.WorkerCount() > 0)
+			{
+				jobs.Wait(jobs.ParallelFor((uint32_t)animEntities.size(), 8,
+					[&](uint32_t begin, uint32_t end) {
+						for (uint32_t i = begin; i < end; ++i) animateOne(animEntities[i]);
+					}, "Animation"));
+			}
+			else
+			{
+				for (entt::entity e : animEntities) animateOne(e);
 			}
 		}
 

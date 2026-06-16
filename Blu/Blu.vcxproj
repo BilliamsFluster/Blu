@@ -590,6 +590,7 @@
     <ClInclude Include="engine\src\Blu\Core\GenerationalHandle.h" />
     <ClInclude Include="engine\src\Blu\Core\Input.h" />
     <ClInclude Include="engine\src\Blu\Core\InputMap.h" />
+    <ClInclude Include="engine\src\Blu\Core\JobSystem.h" />
     <ClInclude Include="engine\src\Blu\Core\KeyCodes.h" />
     <ClInclude Include="engine\src\Blu\Core\Layer.h" />
     <ClInclude Include="engine\src\Blu\Core\LayerStack.h" />
@@ -725,6 +726,7 @@
     <ClCompile Include="engine\src\Blu\Audio\AudioEngine.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Application.cpp" />
     <ClCompile Include="engine\src\Blu\Core\InputMap.cpp" />
+    <ClCompile Include="engine\src\Blu\Core\JobSystem.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Layer.cpp" />
     <ClCompile Include="engine\src\Blu\Core\LayerStack.cpp" />
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />

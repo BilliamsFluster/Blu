@@ -10,6 +10,7 @@
 #include "Blu/Rendering/Renderer.h"
 #include "Blu/Rendering/RendererAPI.h"
 #include "Blu/Rendering/AssetManager.h"
+#include "Blu/Core/JobSystem.h"
 #include "Blu/Core/Timestep.h"
 #include <GLFW/glfw3.h>
 #include "Blu/Events/WindowEvent.h"
@@ -46,6 +47,9 @@ namespace Blu
 		// Initialize the renderer and push the ImGui layer
 		Renderer::Init();
 		AssetManager::Get().Initialize();
+		// Engine job system (parallel update + async asset work). Sized hardware_concurrency()-1 so
+		// it coexists with Jolt's pool; started after the device exists, joined before teardown.
+		JobSystem::Get().Initialize();
 		PushOverlay(m_ImGuiLayer);
 		CheckGraphicsError();
 		
@@ -55,6 +59,8 @@ namespace Blu
 	
 	Application::~Application()
 	{
+		// Join workers before any GPU/asset teardown so no background task touches dead resources.
+		JobSystem::Get().Shutdown();
 		AssetManager::Get().Shutdown();
 		Renderer::Shutdown();
 	}
@@ -98,6 +104,9 @@ namespace Blu
 			{
 				BLU_PROFILE_SCOPE("RunLoop");
 
+				// Reset per-lane scratch arenas at the top of the frame (job workers + main thread).
+				JobSystem::Get().ResetWorkerArenas();
+
 				// Recalculate deltaTime every frame inside the loop.
 				// Previously this was done once before the loop, so every frame
 				// received the same stale timestep (whatever the startup time was).
@@ -129,6 +138,9 @@ namespace Blu
 
 				// End ImGui layer
 				m_ImGuiLayer->End();
+
+				// Drain GPU-affinity continuations workers queued this frame (DX11-safe upload point).
+				JobSystem::Get().DrainMainThreadQueue();
 
 				// Advance JustPressed state for next frame
 				InputMap::Get().OnFrameEnd();
