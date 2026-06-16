@@ -2905,7 +2905,7 @@ namespace Blu
 						pp->SSAOSamples = 16;
 						pp->SSAOStrength = 1.0f;
 						pp->EnableGodRays = true;
-						pp->GodRayIntensity = 0.9f;
+						pp->GodRayIntensity = 0.6f;
 					}
 					const char* previewModes[] = { "Full", "Tonemap Only", "Bloom Only", "FXAA Only", "SSAO Only", "Bypass" };
 					int preview = (int)pp->Preview;

@@ -79,11 +79,12 @@ namespace Blu
         // the sun to screen UV and sets GodRaySunVisible; the composite shader marches toward it
         // only when the sun is actually on-screen — so this is a no-op (zero cost, no visual
         // change) whenever you're not looking toward the sun. Toggle/intensity exposed in the
-        // editor Rendering panel.
+        // editor Rendering panel. GodRaySunFade [0..1] smoothly eases the shafts in/out as the
+        // sun nears a screen edge or goes behind the camera (no hard brightness pop).
         bool      EnableGodRays   = true;
-        float     GodRayIntensity = 0.9f;   // strength of the additive shafts
+        float     GodRayIntensity = 0.6f;   // strength of the additive shafts
         glm::vec2 GodRaySunUV     = { 0.5f, 0.5f };
-        bool      GodRaySunVisible = false; // sun in front of camera & roughly on-screen
+        float     GodRaySunFade   = 0.0f;   // 1 when the sun is well on-screen, 0 at edges/behind camera
 
         // Localized fog volumes — composited after SSAO, before tonemap. Set by Scene each
         // frame from FogVolumeComponent. When FogVolumes is empty the pass is skipped entirely

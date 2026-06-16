@@ -1826,20 +1826,26 @@ namespace Blu
 		Renderer3D::SetFog(m_Fog);
 
 		// God rays: project the sun (directional light) to screen for the post-process pass.
+		// A smooth fade [0..1] ramps to 0 as the sun nears a screen edge or goes behind the
+		// camera, so the shaft brightness eases in/out instead of popping when the sun leaves view.
 		if (m_PostProcess && !dirLights.empty())
 		{
 			glm::vec3 toSun = -glm::normalize(dirLights[0].Direction);
 			glm::vec4 clip = Renderer3D::GetViewProjectionMatrix() * glm::vec4(toSun * 100000.0f, 1.0f);
-			bool vis = clip.w > 0.0001f;
+			float fade = 0.0f;
 			glm::vec2 uv(0.5f);
-			if (vis)
+			if (clip.w > 0.0001f)
 			{
 				uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
 				uv.y = 1.0f - uv.y;
-				vis = uv.x > -0.25f && uv.x < 1.25f && uv.y > -0.25f && uv.y < 1.25f;
+				// Full strength while the sun sits in [0.1,0.9] of the screen, ramping to 0 by the
+				// [-0.25,1.25] bounds (smoothstep with reversed edges = a decreasing ramp).
+				float edgeX = glm::smoothstep(-0.25f, 0.1f, uv.x) * glm::smoothstep(1.25f, 0.9f, uv.x);
+				float edgeY = glm::smoothstep(-0.25f, 0.1f, uv.y) * glm::smoothstep(1.25f, 0.9f, uv.y);
+				fade = edgeX * edgeY;
 			}
 			m_PostProcess->GodRaySunUV = uv;
-			m_PostProcess->GodRaySunVisible = vis;
+			m_PostProcess->GodRaySunFade = fade;
 		}
 
 		// Localized fog volumes — gather for the post-process composite (cheap when none exist).
@@ -1956,20 +1962,26 @@ namespace Blu
 		Renderer3D::SetFog(m_Fog);
 
 		// God rays: project the sun (directional light) to screen for the post-process pass.
+		// A smooth fade [0..1] ramps to 0 as the sun nears a screen edge or goes behind the
+		// camera, so the shaft brightness eases in/out instead of popping when the sun leaves view.
 		if (m_PostProcess && !dirLights.empty())
 		{
 			glm::vec3 toSun = -glm::normalize(dirLights[0].Direction);
 			glm::vec4 clip = Renderer3D::GetViewProjectionMatrix() * glm::vec4(toSun * 100000.0f, 1.0f);
-			bool vis = clip.w > 0.0001f;
+			float fade = 0.0f;
 			glm::vec2 uv(0.5f);
-			if (vis)
+			if (clip.w > 0.0001f)
 			{
 				uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
 				uv.y = 1.0f - uv.y;
-				vis = uv.x > -0.25f && uv.x < 1.25f && uv.y > -0.25f && uv.y < 1.25f;
+				// Full strength while the sun sits in [0.1,0.9] of the screen, ramping to 0 by the
+				// [-0.25,1.25] bounds (smoothstep with reversed edges = a decreasing ramp).
+				float edgeX = glm::smoothstep(-0.25f, 0.1f, uv.x) * glm::smoothstep(1.25f, 0.9f, uv.x);
+				float edgeY = glm::smoothstep(-0.25f, 0.1f, uv.y) * glm::smoothstep(1.25f, 0.9f, uv.y);
+				fade = edgeX * edgeY;
 			}
 			m_PostProcess->GodRaySunUV = uv;
-			m_PostProcess->GodRaySunVisible = vis;
+			m_PostProcess->GodRaySunFade = fade;
 		}
 
 		// Localized fog volumes — gather for the post-process composite (cheap when none exist).
@@ -2097,7 +2109,7 @@ namespace Blu
 	    glm::vec3 up = glm::abs(lightDir.y) < 0.99f
 	                       ? glm::vec3(0.0f, 1.0f, 0.0f)
 	                       : glm::vec3(1.0f, 0.0f, 0.0f);
-	    glm::mat4 lightView = glm::lookAt(center - lightDir * 100.0f, center, up);
+	    glm::mat4 lightView = glm::lookAt(center - lightDir * 500.0f, center, up);
 
 	    // AABB of cascade corners in light space
 	    glm::vec3 lsMin( FLT_MAX), lsMax(-FLT_MAX);
@@ -2108,8 +2120,10 @@ namespace Blu
 	        lsMax = glm::max(lsMax, lc);
 	    }
 
-	    // Extra Z padding to capture shadow casters behind the visible slice
-	    lsMin.z -= 50.0f;
+	    // Extra Z padding to capture shadow casters behind the visible slice — generous so casters
+	    // outside the camera frustum still cast into view as the camera rotates (avoids shadows
+	    // clipping/popping at cascade edges).
+	    lsMin.z -= 200.0f;
 
 	    // Snap XY to texel-sized increments to suppress shimmering as the camera moves
 	    float worldUnitsPerTexel = (lsMax.x - lsMin.x) / static_cast<float>(kCSMSize);
