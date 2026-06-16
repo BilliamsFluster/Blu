@@ -723,12 +723,16 @@ namespace Blu
             std::string extLower = extStr;
             for (char& c : extLower) c = (char)std::tolower((unsigned char)c);
 
-            // Search filter
+            // Search filter — case-insensitive substring match on the file name. The query buffer
+            // must be lowercased too (it previously matched the raw buffer against a lowercased name,
+            // so any capital letter the user typed silently matched nothing).
             if (s_Filter[0] != '\0')
             {
                 std::string nameLower = filenameStr;
                 for (char& c : nameLower) c = (char)std::tolower((unsigned char)c);
-                if (nameLower.find(s_Filter) == std::string::npos) { ImGui::NextColumn(); continue; }
+                std::string queryLower = s_Filter;
+                for (char& c : queryLower) c = (char)std::tolower((unsigned char)c);
+                if (nameLower.find(queryLower) == std::string::npos) { ImGui::NextColumn(); continue; }
             }
 
 
