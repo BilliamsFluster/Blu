@@ -102,6 +102,35 @@ namespace
 		Require(jobs.WorkerCount() == 0, "shutdown should join all workers");
 	}
 
+	// Exercises the async texture-decode streaming primitive (B2): the decode runs on a job worker and
+	// its completion fires on the MAIN thread (DrainMainThreadQueue) — the DX11-safe split. Decoding a
+	// missing file must still complete and report failure (so callers can fall back to a placeholder).
+	void TestAsyncTextureDecode()
+	{
+		auto& jobs = Blu::JobSystem::Get();
+		jobs.Initialize(2);
+
+		std::atomic<bool> completionRan{ false };
+		std::atomic<bool> reportedOk{ true };
+		std::atomic<bool> ranOnWorker{ false };
+		Blu::JobHandle handle = Blu::AssetManager::Get().DecodeTextureAsync(
+			"definitely/missing/texture.png",
+			[&](const Blu::DecodedImage& image)
+			{
+				if (jobs.OnWorkerThread()) ranOnWorker.store(true);
+				reportedOk.store(image.Ok);
+				completionRan.store(true);
+			});
+
+		jobs.Wait(handle);             // run the CPU decode on a worker
+		jobs.DrainMainThreadQueue();   // run the completion on the main thread
+		Require(completionRan.load(), "async decode completion must run");
+		Require(!ranOnWorker.load(), "decode completion must run on the MAIN thread, not a worker");
+		Require(!reportedOk.load(), "decoding a missing file must report failure (Ok == false)");
+
+		jobs.Shutdown();
+	}
+
 	// Exercises the per-frame CPU profiler: scoped timers and explicit Add() accumulate into named
 	// buckets, BeginFrame() snapshots the accumulation into a stable last-frame view and clears.
 	void TestFrameProfiler()
@@ -1420,6 +1449,7 @@ int main()
 	{
 		TestJobSystem();
 		TestFrameProfiler();
+		TestAsyncTextureDecode();
 		TestActorLifecycleAndDeferredDestroy();
 		TestMissingClassDoesNotCreateActor();
 		TestGameModeRegistration();

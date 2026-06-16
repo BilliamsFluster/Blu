@@ -1,7 +1,10 @@
 #pragma once
 #include "Blu/Core/Core.h"
+#include "Blu/Core/JobSystem.h"
 #include "Asset.h"
 #include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <list>
 #include <string>
 #include <type_traits>
@@ -20,6 +23,16 @@ namespace Blu
 		std::string VirtualPath;
 		std::string SourcePath;
 		std::vector<AssetHandle> Dependencies;
+	};
+
+	// CPU-decoded image (tightly-packed RGBA8), produced OFF the main thread for async texture
+	// streaming. The GPU texture is created on the main thread from this (Texture2D::Create + SetData).
+	struct DecodedImage
+	{
+		int Width  = 0;
+		int Height = 0;
+		std::vector<uint8_t> Pixels; // Width*Height*4 bytes, RGBA8
+		bool Ok = false;
 	};
 
 	// Snapshot of the resident-asset cache, surfaced in the editor profiler/diagnostics panel.
@@ -104,6 +117,14 @@ namespace Blu
 		void EvictToBudget();
 		// True when the asset's payload is currently held in the cache (referenced or LRU-retained).
 		bool IsResident(AssetHandle handle) const { return m_Assets.find(handle) != m_Assets.end(); }
+
+		// Async texture streaming (B2): decode an image file on a job-system worker (stb_image, which
+		// is thread-safe), then invoke onComplete on the MAIN thread (next DrainMainThreadQueue) with
+		// the decoded pixels — the DX11-safe split, since the caller creates the GPU texture inside
+		// onComplete (e.g. Texture2D::Create(w,h) + SetData). Returns the decode JobHandle. Existing
+		// synchronous Texture2D::Create callers are untouched; this is opt-in streaming.
+		JobHandle DecodeTextureAsync(const std::string& virtualPath,
+		                             std::function<void(const DecodedImage&)> onComplete);
 		const std::vector<std::string>& GetDiagnostics() const { return m_Diagnostics; }
 		const std::unordered_map<AssetHandle, Shared<Asset>>& GetAllAssets() const { return m_Assets; }
 		const std::unordered_map<std::string, AssetHandle>& GetPathIndex() const { return m_PathIndex; }

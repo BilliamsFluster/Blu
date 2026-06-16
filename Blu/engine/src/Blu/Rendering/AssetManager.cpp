@@ -6,8 +6,10 @@
 #include "Mesh.h"
 #include "ModelLoader.h"
 #include "Blu/Core/Log.h"
+#include "Blu/Core/JobSystem.h"
 #include "Blu/Utils/FileSystemService.h"
 #include "yaml-cpp/yaml.h"
+#include "stb_image.h"
 #include <algorithm>
 #include <filesystem>
 #include <sstream>
@@ -394,6 +396,37 @@ namespace Blu
 		}
 		SaveRegistry();
 		return true;
+	}
+
+	JobHandle AssetManager::DecodeTextureAsync(const std::string& virtualPath,
+		std::function<void(const DecodedImage&)> onComplete)
+	{
+		auto& fileSystem = FileSystemService::Get();
+		const std::filesystem::path resolved = fileSystem.IsVirtualPath(virtualPath)
+			? fileSystem.Resolve(virtualPath) : std::filesystem::path(virtualPath);
+		const std::string path = resolved.string();
+
+		// Shared so the worker fills it and the main-thread continuation reads it.
+		auto image = std::make_shared<DecodedImage>();
+		auto callback = std::make_shared<std::function<void(const DecodedImage&)>>(std::move(onComplete));
+
+		return JobSystem::Get().Submit([image, callback, path]()
+		{
+			// CPU decode on a worker thread (stb_image is thread-safe; we never touch the global
+			// flip flag here so we can't race the synchronous texture path).
+			int w = 0, h = 0, channels = 0;
+			unsigned char* pixels = stbi_load(path.c_str(), &w, &h, &channels, 4);
+			if (pixels)
+			{
+				image->Width = w;
+				image->Height = h;
+				image->Pixels.assign(pixels, pixels + (size_t)w * (size_t)h * 4);
+				image->Ok = true;
+				stbi_image_free(pixels);
+			}
+			// Hand the decoded pixels to the main thread, where the GPU texture is created safely.
+			JobSystem::Get().EnqueueMainThread([image, callback]() { (*callback)(*image); });
+		}, "DecodeTexture");
 	}
 
 	bool AssetManager::DeleteAsset(AssetHandle handle, bool force)
