@@ -70,6 +70,10 @@ namespace Blu
 
         bool Reload() override;
 
+        // Resident-size estimate for the AssetManager memory budget. A material is small (scalar
+        // params + texture handles); the referenced textures are separate assets with their own size.
+        size_t GetMemoryUsage() const override { return sizeof(PBRProperties) + 5 * sizeof(AssetHandle) + 256; }
+
     private:
         PBRProperties m_Properties;
 

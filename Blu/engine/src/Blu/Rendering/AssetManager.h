@@ -1,6 +1,8 @@
 #pragma once
 #include "Blu/Core/Core.h"
 #include "Asset.h"
+#include <cstddef>
+#include <list>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -18,6 +20,16 @@ namespace Blu
 		std::string VirtualPath;
 		std::string SourcePath;
 		std::vector<AssetHandle> Dependencies;
+	};
+
+	// Snapshot of the resident-asset cache, surfaced in the editor profiler/diagnostics panel.
+	struct AssetCacheStats
+	{
+		size_t ResidentCount   = 0; // assets currently held in the cache
+		size_t ReferencedCount = 0; // of those, how many have ReferenceCount > 0 (pinned)
+		size_t ResidentBytes   = 0; // sum of GetMemoryUsage() across resident assets
+		size_t BudgetBytes     = 0; // 0 == unlimited
+		size_t Evictions       = 0; // cumulative evictions since startup
 	};
 
 	class AssetManager
@@ -69,6 +81,17 @@ namespace Blu
 
 		uint32_t GetReferenceCount(AssetHandle handle) const;
 		size_t GetLoadedAssetCount() const { return m_Assets.size(); }
+
+		// Memory-budget cache control. Released assets (ReferenceCount == 0) are retained in an LRU
+		// instead of freed immediately — so reloading a recently-used asset is a cache hit, not a
+		// disk hit. When the resident byte total exceeds the budget, the least-recently-released
+		// unreferenced assets are evicted oldest-first. Budget 0 == unlimited (never evict).
+		void SetMemoryBudget(size_t budgetBytes);
+		size_t GetMemoryBudget() const { return m_MemoryBudgetBytes; }
+		AssetCacheStats GetCacheStats() const;
+		void EvictToBudget();
+		// True when the asset's payload is currently held in the cache (referenced or LRU-retained).
+		bool IsResident(AssetHandle handle) const { return m_Assets.find(handle) != m_Assets.end(); }
 		const std::vector<std::string>& GetDiagnostics() const { return m_Diagnostics; }
 		const std::unordered_map<AssetHandle, Shared<Asset>>& GetAllAssets() const { return m_Assets; }
 		const std::unordered_map<std::string, AssetHandle>& GetPathIndex() const { return m_PathIndex; }
@@ -84,11 +107,25 @@ namespace Blu
 		std::string NormalizeAssetPath(const std::string& filepath) const;
 		static AssetType InferAssetType(const std::string& filepath);
 
+		// LRU bookkeeping for unreferenced (ReferenceCount == 0) resident assets.
+		void TrackResident(const Shared<Asset>& asset);     // on first insert into m_Assets
+		void MarkReferenced(AssetHandle handle);            // ReferenceCount 0 -> >0: pin (remove from LRU)
+		void MarkUnreferenced(AssetHandle handle);          // ReferenceCount -> 0: push to LRU front
+		void DropResident(AssetHandle handle);              // erase from cache + accounting
+
 		std::unordered_map<AssetHandle, Shared<Asset>> m_Assets;
 		std::unordered_map<AssetHandle, AssetMetadata> m_Metadata;
 		std::unordered_map<std::string, AssetHandle> m_PathIndex;
 		std::vector<std::string> m_Diagnostics;
 		std::string m_RegistryPath = "cache://AssetRegistry.yaml";
 		bool m_Initialized = false;
+
+		// Memory budget + LRU of unreferenced handles (front = most-recently released, back = oldest).
+		size_t m_MemoryBudgetBytes = 0; // 0 == unlimited
+		size_t m_ResidentBytes = 0;
+		size_t m_Evictions = 0;
+		std::unordered_map<AssetHandle, size_t> m_AssetBytes;                 // snapshot at insert
+		std::list<AssetHandle> m_LruUnreferenced;                            // eviction order
+		std::unordered_map<AssetHandle, std::list<AssetHandle>::iterator> m_LruPos;
 	};
 }

@@ -37,6 +37,10 @@ namespace Blu
 		m_Assets.clear();
 		m_Metadata.clear();
 		m_PathIndex.clear();
+		m_AssetBytes.clear();
+		m_LruUnreferenced.clear();
+		m_LruPos.clear();
+		m_ResidentBytes = 0;
 		m_Initialized = false;
 		if (Log::GetCoreLogger())
 			BLU_CORE_INFO("AssetManager shutdown");
@@ -48,6 +52,12 @@ namespace Blu
 		m_Metadata.clear();
 		m_PathIndex.clear();
 		m_Diagnostics.clear();
+		m_AssetBytes.clear();
+		m_LruUnreferenced.clear();
+		m_LruPos.clear();
+		m_ResidentBytes = 0;
+		m_Evictions = 0;
+		m_MemoryBudgetBytes = 0;
 		m_Initialized = false;
 	}
 
@@ -140,7 +150,10 @@ namespace Blu
 		auto loaded = m_Assets.find(handle);
 		if (loaded != m_Assets.end())
 		{
+			const uint32_t before = loaded->second->ReferenceCount;
 			++loaded->second->ReferenceCount;
+			if (before == 0)
+				MarkReferenced(handle); // was an LRU candidate; pin it again
 			return loaded->second;
 		}
 
@@ -184,6 +197,7 @@ namespace Blu
 		asset->IsLoaded = true;
 		asset->ReferenceCount = 1;
 		m_Assets[handle] = asset;
+		TrackResident(asset); // record bytes; referenced (count==1) so not an eviction candidate yet
 		return asset;
 	}
 
@@ -232,7 +246,91 @@ namespace Blu
 		if (loaded->second->ReferenceCount > 0)
 			--loaded->second->ReferenceCount;
 		if (loaded->second->ReferenceCount == 0)
-			m_Assets.erase(loaded);
+		{
+			// Retain in the LRU (a recent reload is then a cache hit, not a disk hit) and only free
+			// under memory pressure. Budget 0 (unlimited) keeps everything resident as before.
+			MarkUnreferenced(handle);
+			EvictToBudget();
+		}
+	}
+
+	// ── Resident-cache LRU + memory budget ───────────────────────────────────────
+	void AssetManager::TrackResident(const Shared<Asset>& asset)
+	{
+		if (!asset)
+			return;
+		const size_t bytes = asset->GetMemoryUsage();
+		m_AssetBytes[asset->Handle] = bytes;
+		m_ResidentBytes += bytes;
+	}
+
+	void AssetManager::MarkReferenced(AssetHandle handle)
+	{
+		auto pos = m_LruPos.find(handle);
+		if (pos != m_LruPos.end())
+		{
+			m_LruUnreferenced.erase(pos->second);
+			m_LruPos.erase(pos);
+		}
+	}
+
+	void AssetManager::MarkUnreferenced(AssetHandle handle)
+	{
+		if (m_LruPos.find(handle) != m_LruPos.end())
+			return; // already an eviction candidate
+		m_LruUnreferenced.push_front(handle);
+		m_LruPos[handle] = m_LruUnreferenced.begin();
+	}
+
+	void AssetManager::DropResident(AssetHandle handle)
+	{
+		auto bytes = m_AssetBytes.find(handle);
+		if (bytes != m_AssetBytes.end())
+		{
+			m_ResidentBytes -= std::min(m_ResidentBytes, bytes->second);
+			m_AssetBytes.erase(bytes);
+		}
+		auto pos = m_LruPos.find(handle);
+		if (pos != m_LruPos.end())
+		{
+			m_LruUnreferenced.erase(pos->second);
+			m_LruPos.erase(pos);
+		}
+		m_Assets.erase(handle);
+	}
+
+	void AssetManager::SetMemoryBudget(size_t budgetBytes)
+	{
+		m_MemoryBudgetBytes = budgetBytes;
+		EvictToBudget();
+	}
+
+	void AssetManager::EvictToBudget()
+	{
+		if (m_MemoryBudgetBytes == 0)
+			return; // unlimited
+		// Evict least-recently-released (back of the list) unreferenced assets until within budget.
+		while (m_ResidentBytes > m_MemoryBudgetBytes && !m_LruUnreferenced.empty())
+		{
+			const AssetHandle oldest = m_LruUnreferenced.back();
+			DropResident(oldest);
+			++m_Evictions;
+		}
+	}
+
+	AssetCacheStats AssetManager::GetCacheStats() const
+	{
+		AssetCacheStats stats;
+		stats.ResidentCount = m_Assets.size();
+		for (const auto& [handle, asset] : m_Assets)
+		{
+			if (asset && asset->ReferenceCount > 0)
+				++stats.ReferencedCount;
+		}
+		stats.ResidentBytes = m_ResidentBytes;
+		stats.BudgetBytes   = m_MemoryBudgetBytes;
+		stats.Evictions     = m_Evictions;
+		return stats;
 	}
 
 	const AssetMetadata* AssetManager::FindMetadata(AssetHandle handle) const

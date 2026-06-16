@@ -301,7 +301,11 @@ namespace
 		Require(assets.GetReferenceCount(source) == 2, "asset cache reference count was incorrect");
 		assets.Release(source);
 		assets.Release(source);
-		Require(assets.GetLoadedAssetCount() == 0, "asset cache did not release its final reference");
+		// Retain-after-release: the final release drops the reference count to 0, but the payload stays
+		// resident (LRU) under the default unlimited budget so a quick reload is a cache hit rather than
+		// a disk read. (Byte-budget eviction is covered by TestAssetLRUEviction with sized assets.)
+		Require(assets.GetReferenceCount(source) == 0, "final release should drop the reference count to 0");
+		Require(assets.IsResident(source), "released asset is retained in the cache (LRU) for fast reload");
 		Require(assets.Load(Blu::AssetHandle(999999)) == nullptr, "stale asset handle loaded unexpectedly");
 		Require(!assets.GetDiagnostics().empty(), "stale asset handle did not emit a diagnostic");
 
@@ -640,6 +644,99 @@ namespace
 		fileSystem.Reset();
 		std::error_code cleanupError;
 		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
+	// Validates AssetManager dedup + the retain-after-release cache: one path imports to one stable
+	// handle, two loads share the asset (refcount 2), and after the last release the payload is
+	// RETAINED (LRU) under an unlimited budget so reloading is a cache hit (same pointer, no disk read).
+	void TestAssetDedup()
+	{
+		const std::filesystem::path dir = std::filesystem::temp_directory_path() /
+			("BluTestsAssetDedup-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fs = Blu::FileSystemService::Get(); fs.Reset();
+		Require(fs.Mount("project", dir), "project mount failed");
+		Require(fs.Mount("cache", dir / "cache"), "cache mount failed");
+		auto& assets = Blu::AssetManager::Get(); assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml"); assets.Initialize();
+		assets.SetMemoryBudget(0); // unlimited: released assets stay resident
+
+		Blu::MaterialAsset mat("project://assets/shared.blumat");
+		mat.GetProperties().Metallic = 0.5f;
+		Require(mat.SaveToFile("project://assets/shared.blumat"), "save .blumat failed");
+
+		Blu::AssetHandle h1 = assets.Import("project://assets/shared.blumat");
+		Blu::AssetHandle h2 = assets.Import("project://assets/shared.blumat");
+		Require((uint64_t)h1 != 0 && h1 == h2, "the same path must import to the same handle");
+
+		auto a1 = assets.Load(h1);
+		auto a2 = assets.Load(h1);
+		Require(a1 && a1.get() == a2.get(), "two loads of one handle must share the asset");
+		Require(assets.GetReferenceCount(h1) == 2, "two loads -> reference count 2");
+
+		assets.Release(h1);
+		Require(assets.GetReferenceCount(h1) == 1, "one release -> reference count 1");
+		assets.Release(h1);
+		Require(assets.GetReferenceCount(h1) == 0, "two releases -> reference count 0");
+		Require(assets.IsResident(h1), "released asset must be retained under an unlimited budget");
+
+		auto a3 = assets.Load(h1);
+		Require(a3.get() == a1.get(), "reload after release must return the SAME cached asset (no disk reload)");
+
+		assets.Reset(); fs.Reset();
+		std::error_code ec; std::filesystem::remove_all(dir, ec);
+	}
+
+	// Validates the LRU memory budget: released (unreferenced) assets are evicted oldest-first when
+	// the resident byte total exceeds the budget, the most-recently-released survive, and a still-
+	// referenced asset is never evicted even under a 1-byte budget.
+	void TestAssetLRUEviction()
+	{
+		const std::filesystem::path dir = std::filesystem::temp_directory_path() /
+			("BluTestsAssetLRU-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fs = Blu::FileSystemService::Get(); fs.Reset();
+		Require(fs.Mount("project", dir), "project mount failed");
+		Require(fs.Mount("cache", dir / "cache"), "cache mount failed");
+		auto& assets = Blu::AssetManager::Get(); assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml"); assets.Initialize();
+		assets.SetMemoryBudget(0);
+
+		std::vector<Blu::AssetHandle> handles;
+		for (int i = 0; i < 5; ++i)
+		{
+			std::string p = "project://assets/m" + std::to_string(i) + ".blumat";
+			Blu::MaterialAsset m(p);
+			Require(m.SaveToFile(p), "save .blumat failed");
+			Blu::AssetHandle h = assets.Import(p);
+			assets.Load(h); // reference count 1
+			handles.push_back(h);
+		}
+		// Release in order 0..4 → handle 4 is most-recently-released (kept), handle 0 oldest (evicted first).
+		for (auto h : handles) assets.Release(h);
+
+		Blu::AssetCacheStats full = assets.GetCacheStats();
+		Require(full.ResidentCount == 5, "all 5 retained before eviction");
+		Require(full.ResidentBytes > 0, "resident bytes must be accounted");
+		const size_t perAsset = full.ResidentBytes / 5;
+		Require(perAsset > 0, "per-asset byte estimate must be > 0");
+
+		// Budget that fits ~2 assets.
+		assets.SetMemoryBudget(perAsset * 2 + perAsset / 2);
+		Blu::AssetCacheStats after = assets.GetCacheStats();
+		Require(after.ResidentCount == 2, "eviction must trim the cache to fit the budget (2 of 5)");
+		Require(after.ResidentBytes <= assets.GetMemoryBudget(), "resident bytes must be within budget");
+		Require(after.Evictions == 3, "the 3 oldest assets must be evicted");
+		Require(assets.IsResident(handles[4]) && assets.IsResident(handles[3]), "newest releases survive");
+		Require(!assets.IsResident(handles[0]) && !assets.IsResident(handles[1]), "oldest releases are evicted");
+
+		// A still-referenced asset must never be evicted, even under a 1-byte budget.
+		auto pinned = assets.Load(handles[4]); // reference count 1, re-pinned
+		assets.SetMemoryBudget(1);
+		Require(assets.IsResident(handles[4]), "referenced asset must survive a tiny budget");
+		Require(assets.GetCacheStats().ReferencedCount == 1, "exactly one pinned asset remains");
+
+		assets.SetMemoryBudget(0);
+		assets.Reset(); fs.Reset();
+		std::error_code ec; std::filesystem::remove_all(dir, ec);
 	}
 
 	// Validates that MaterialAsset (.blumat) is now a LOSSLESS mirror of the concrete runtime
@@ -1266,6 +1363,8 @@ int main()
 		TestLifetimeUtilities();
 		TestMaterialResolver();
 		TestMaterialAssetPersistence();
+		TestAssetDedup();
+		TestAssetLRUEviction();
 		TestMaterialAssetFullFidelity();
 		TestMeshComponentMaterialHandle();
 		TestMaterialGraphCompiler();

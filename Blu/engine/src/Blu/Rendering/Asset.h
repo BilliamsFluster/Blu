@@ -30,5 +30,9 @@ namespace Blu
         uint32_t    ReferenceCount = 0;
 
         virtual bool Reload() { return false; }
+
+        // Approximate resident size in bytes, used by the AssetManager LRU/memory budget.
+        // Default 0 (record-only assets); concrete assets that own CPU/GPU memory override it.
+        virtual size_t GetMemoryUsage() const { return 0; }
     };
 }
