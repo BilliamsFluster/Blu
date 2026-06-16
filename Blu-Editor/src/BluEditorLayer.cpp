@@ -380,6 +380,7 @@ namespace Blu
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
 		m_ProfilerPanel = std::make_shared<ProfilerPanel>();
+		m_MeshEditorPanel = std::make_shared<MeshEditorPanel>();
 		m_MaterialGraphPanel = std::make_shared<MaterialGraphPanel>();
 		m_SceneHierarchyPanel->SetOpenActorEditorCallback([this](Entity entity)
 		{
@@ -399,6 +400,10 @@ namespace Blu
 		m_SceneHierarchyPanel->SetSceneModifiedCallback([this]() { m_SceneDirty = true; });
 		m_ContentBrowserPanel->SetSaveAllCallback([this]() { SaveCurrentScene(); });
 		m_ContentBrowserPanel->SetOpenSoundEditorCallback([this](const std::filesystem::path& path) { OpenSoundPreview(path); });
+		m_ContentBrowserPanel->SetOpenMeshEditorCallback([this](const std::filesystem::path& path)
+		{
+			if (m_MeshEditorPanel) { m_MeshEditorPanel->Open(path); m_ShowMeshEditor = true; }
+		});
 		m_ContentBrowserPanel->SetImportModelCallback([this](const std::filesystem::path& path)
 		{
 			QueueStaticCollisionPrompt(ImportModelEntity(m_ActiveScene, path));
@@ -1989,6 +1994,7 @@ namespace Blu
 			ImGui::MenuItem("Details",         nullptr, &m_ShowDetails);
 			ImGui::MenuItem("Content Browser", nullptr, &m_ShowContentBrowser);
 			ImGui::MenuItem("Profiler",        nullptr, &m_ShowProfiler);
+			ImGui::MenuItem("Static Mesh",     nullptr, &m_ShowMeshEditor);
 			ImGui::MenuItem("Output Log",      nullptr, &m_ShowOutputLog);
 			ImGui::MenuItem("Rendering",       nullptr, &m_ShowRendering);
 			ImGui::MenuItem("Diagnostics",     nullptr, &m_ShowDiagnostics);
@@ -2468,6 +2474,9 @@ namespace Blu
 
 		if (m_ShowProfiler && m_ProfilerPanel)
 			m_ProfilerPanel->OnImGuiRender(&m_ShowProfiler);
+
+		if (m_ShowMeshEditor && m_MeshEditorPanel)
+			m_MeshEditorPanel->OnImGuiRender(&m_ShowMeshEditor);
 
 		if (m_ShowActorEditor)
 			DrawActorEditor();

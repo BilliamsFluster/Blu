@@ -832,9 +832,11 @@ namespace Blu
                 }
                 else if (!entry.is_directory() && ImGui::IsMouseDoubleClicked(0))
                 {
-                    // Double-click a sound file → open the Sound Preview window.
+                    // Double-click a sound file → Sound Preview; a model → the Static Mesh editor.
                     if (IsAudioExtension(extLower) && m_OpenSoundEditorCallback)
                         m_OpenSoundEditorCallback(path);
+                    else if (IsModelExtension(extLower) && m_OpenMeshEditorCallback)
+                        m_OpenMeshEditorCallback(path);
                 }
                 if (ImGui::IsMouseClicked(1))
                 {
@@ -945,6 +947,11 @@ namespace Blu
                     if (ImGui::MenuItem("Refresh Prefab Thumbnail"))
                         AssetPreviewService::Get().Invalidate(s_RightClickedItemPath);
                     ImGui::Separator();
+                }
+                if (extLower != ".bluprefab" && ImGui::MenuItem("Mesh Properties"))
+                {
+                    if (m_OpenMeshEditorCallback)
+                        m_OpenMeshEditorCallback(s_RightClickedItemPath);
                 }
                 if (ImGui::MenuItem("Reimport / Reload"))
                 {
