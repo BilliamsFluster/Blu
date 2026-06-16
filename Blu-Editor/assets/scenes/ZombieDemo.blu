@@ -3,254 +3,108 @@ Scene: assets/scenes/ZombieDemo.blu
 GameMode: Azure::ZombieGameMode
 RenderSettings:
   UseShadows: true
-  UsePostProcess: false
+  UsePostProcess: true
   UseSkybox: true
   UseTimeOfDay: true
-  Sky_Turbidity: 2.20000005
-  Sky_SkyExposure: 0.0250000004
-  Sky_GroundColor: [0.0599999987, 0.0700000003, 0.0900000036]
-  Sky_SunColor: [1, 0.850000024, 0.660000026]
-  Sky_SunSize: 0.999499977
-  Sky_SunStrength: 10
-  Sky_CloudColor: [0.800000012, 0.819999993, 0.870000005]
-  Sky_CloudCoverage: 0.550000012
-  Sky_CloudDensity: 0.550000012
-  Sky_CloudSoftness: 0.600000024
+  Sky_Turbidity: 2.6
+  Sky_SkyExposure: 0.03
+  Sky_GroundColor: [0.06, 0.07, 0.09]
+  Sky_SunColor: [1, 0.82, 0.62]
+  Sky_SunSize: 0.9995
+  Sky_SunStrength: 7
+  Sky_CloudColor: [0.8, 0.82, 0.87]
+  Sky_CloudCoverage: 0.6
+  Sky_CloudDensity: 0.55
+  Sky_CloudSoftness: 0.6
   Sky_CloudHeight: 600
   Sky_CloudScale: 900
-  Sky_CloudWindDirection: [1, 0.349999994]
-  Sky_CloudScrollSpeed: 0.0199999996
+  Sky_CloudWindDirection: [1, 0.35]
+  Sky_CloudScrollSpeed: 0.02
   Sky_CloudShadowing: 0.5
-  Sky_CloudHorizonFade: 0.219999999
+  Sky_CloudHorizonFade: 0.22
   PP_EnableBloom: true
   PP_BloomThreshold: 1
-  PP_BloomStrength: 0.0500000007
+  PP_BloomStrength: 0.05
   PP_EnableFXAA: true
   PP_PreviewMode: 0
   PP_EnableSSAO: true
   PP_SSAORadius: 0.5
-  PP_SSAOBias: 0.0250000004
+  PP_SSAOBias: 0.025
   PP_SSAOPower: 1.5
   PP_SSAOSamples: 16
   PP_SSAOStrength: 1
-  ToD_NormalizedTime: 0.5
+  ToD_NormalizedTime: 0.34
   ToD_AutoAdvance: false
   ToD_DayDuration: 120
   ToD_SunAzimuth: 45
-  ToD_SunMaxStrength: 10
-  ToD_SunNoonTurbidity: 2.20000005
+  ToD_SunMaxStrength: 8
+  ToD_SunNoonTurbidity: 2.6
   ToD_SunHazeTurbidity: 4.5
   Fog_Enabled: true
-  Fog_Color: [0.0700000003, 0.0799999982, 0.119999997]
-  Fog_Density: 0.0240000002
+  Fog_Color: [0.07, 0.08, 0.12]
+  Fog_Density: 0.012
   Fog_HeightStart: 0
-  Fog_HeightDensity: 0.0500000007
-  Fog_AerialColor: [0.550000012, 0.720000029, 0.899999976]
+  Fog_HeightDensity: 0.04
+  Fog_AerialColor: [0.55, 0.72, 0.9]
   Fog_AerialStrength: 0.5
 Entities:
-  - Entity: 2000000000000000051
+  - Entity: 2000000000000000001
     TagComponent:
-      Tag: Fill_BehindPlayer
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.5, 0.600000024, 0.899999976]
-      Specular: [0.5, 0.600000024, 0.899999976]
-      Intensity: 1.5
-      Range: 9
-      AttConstant: 1
-      AttLinear: 0.100000001
-      AttQuadratic: 0.0399999991
+      Tag: Sun
+    DirectionalLightComponent:
+      Direction: [0.3, -1, 0.2]
+      Ambient: [0.2, 0.2, 0.2]
+      Diffuse: [1, 0.72, 0.47]
+      Specular: [0.4, 0.4, 0.4]
+      Intensity: 4.9
     TransformComponent:
-      Translation: [0, 2.5, 6]
-      Rotation: [0, 0, 0]
+      Translation: [0, 0, 0]
+      Rotation: [-0.785398, 0.523599, 0]
       Scale: [1, 1, 1]
-  - Entity: 2000000000000000050
+  - Entity: 2000000000000000002
     TagComponent:
-      Tag: Beacon_Far
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [1, 0.600000024, 0.300000012]
-      Specular: [1, 0.600000024, 0.300000012]
-      Intensity: 8
-      Range: 16
-      AttConstant: 1
-      AttLinear: 0.0700000003
-      AttQuadratic: 0.0170000009
-    TransformComponent:
-      Translation: [0, 2.20000005, -18]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000049
-    TagComponent:
-      Tag: Accent_RedR
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [1, 0.300000012, 0.25]
-      Specular: [1, 0.300000012, 0.25]
-      Intensity: 6
-      Range: 13
-      AttConstant: 1
-      AttLinear: 0.0900000036
-      AttQuadratic: 0.0320000015
-    TransformComponent:
-      Translation: [9, 1.39999998, -12]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000048
-    TagComponent:
-      Tag: Accent_BlueL
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.25, 0.400000006, 1]
-      Specular: [0.25, 0.400000006, 1]
-      Intensity: 6
-      Range: 13
-      AttConstant: 1
-      AttLinear: 0.0900000036
-      AttQuadratic: 0.0320000015
-    TransformComponent:
-      Translation: [-9, 1.39999998, -12]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000047
-    TagComponent:
-      Tag: Glow_ZombieC
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.300000012, 1, 0.400000006]
-      Specular: [0.300000012, 1, 0.400000006]
-      Intensity: 4
-      Range: 8
-      AttConstant: 1
-      AttLinear: 0.140000001
-      AttQuadratic: 0.0700000003
-    TransformComponent:
-      Translation: [0, 0.899999976, -14]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000046
-    TagComponent:
-      Tag: Glow_ZombieB
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.300000012, 1, 0.400000006]
-      Specular: [0.300000012, 1, 0.400000006]
-      Intensity: 4
-      Range: 8
-      AttConstant: 1
-      AttLinear: 0.140000001
-      AttQuadratic: 0.0700000003
-    TransformComponent:
-      Translation: [4, 0.899999976, -10]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000045
-    TagComponent:
-      Tag: Glow_ZombieA
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.300000012, 1, 0.400000006]
-      Specular: [0.300000012, 1, 0.400000006]
-      Intensity: 4
-      Range: 8
-      AttConstant: 1
-      AttLinear: 0.140000001
-      AttQuadratic: 0.0700000003
-    TransformComponent:
-      Translation: [-4, 0.899999976, -8]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000044
-    TagComponent:
-      Tag: Accent_Amber
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [1, 0.699999988, 0.300000012]
-      Specular: [1, 0.699999988, 0.300000012]
-      Intensity: 6
-      Range: 11
-      AttConstant: 1
-      AttLinear: 0.100000001
-      AttQuadratic: 0.0399999991
-    TransformComponent:
-      Translation: [0, 0.699999988, -1]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000043
-    TagComponent:
-      Tag: Accent_Magenta
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [1, 0.300000012, 0.800000012]
-      Specular: [1, 0.300000012, 0.800000012]
-      Intensity: 6
-      Range: 10
-      AttConstant: 1
-      AttLinear: 0.119999997
-      AttQuadratic: 0.0500000007
-    TransformComponent:
-      Translation: [3, 0.600000024, 1]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000042
-    TagComponent:
-      Tag: Accent_Cyan
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.200000003, 0.699999988, 1]
-      Specular: [0.200000003, 0.699999988, 1]
-      Intensity: 6
-      Range: 10
-      AttConstant: 1
-      AttLinear: 0.119999997
-      AttQuadratic: 0.0500000007
-    TransformComponent:
-      Translation: [-3, 0.600000024, 2]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000041
-    TagComponent:
-      Tag: Lamp_PillarB
-    PointLightComponent:
-      Ambient: [0.0199999996, 0.0149999997, 0.00999999978]
-      Diffuse: [1, 0.550000012, 0.200000003]
-      Specular: [1, 0.600000024, 0.25]
-      Intensity: 8
-      Range: 13
-      AttConstant: 1
-      AttLinear: 0.0900000036
-      AttQuadratic: 0.0320000015
-    TransformComponent:
-      Translation: [6, 3.29999995, -5]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000040
-    TagComponent:
-      Tag: Lamp_PillarA
-    PointLightComponent:
-      Ambient: [0.0199999996, 0.0149999997, 0.00999999978]
-      Diffuse: [1, 0.550000012, 0.200000003]
-      Specular: [1, 0.600000024, 0.25]
-      Intensity: 8
-      Range: 13
-      AttConstant: 1
-      AttLinear: 0.0900000036
-      AttQuadratic: 0.0320000015
-    TransformComponent:
-      Translation: [-6, 3.29999995, -3]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000010
-    TagComponent:
-      Tag: GameplayHUD
+      Tag: Ground
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 0
+      PBR_AlbedoColor: [0.18, 0.33, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 0.85
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    UIRootComponent:
-      DocumentPath: assets/ui/GameplayHUD.bluui
-      Visible: true
-      Scale: 1
+    TerrainComponent:
+      GridWidth: 200
+      GridHeight: 200
+      CellSize: 2.5
+      HeightScale: 0
+      HeightmapPath: ""
+      ProceduralAmplitude: 5
+      ProceduralFrequency: 0.02
+      ProceduralFlatRadius: 60
+    Rigidbody3DComponent:
+      BodyType: 0
+      GravityScale: 1
+      LinearDamping: 0.05
+      AngularDamping: 0.05
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [250, 0.5, 250]
+      Offset: [0, -0.5, 0]
+      Friction: 0.8
+      Restitution: 0
+      Density: 1000
   - Entity: 2000000000000000004
     TagComponent:
       Tag: PlayerCamera
@@ -261,7 +115,7 @@ Entities:
         OrthographicNear: -1
         OrthographicSize: 10
         PerspectiveFar: 1000
-        PerspectiveNear: 0.00999999978
+        PerspectiveNear: 0.01
         PerspectiveFOV: 70
       Primary: true
       FixedAspectRatio: false
@@ -279,8 +133,8 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CapsuleCollider3DComponent:
-      Radius: 0.300000012
-      HalfHeight: 0.959999979
+      Radius: 0.3
+      HalfHeight: 0.96
       Offset: [0, 0, 0]
       Friction: 0.5
       Restitution: 0
@@ -288,7 +142,7 @@ Entities:
     CharacterControllerComponent:
       MoveSpeed: 5
       JumpImpulse: 7
-      StepHeight: 0.349999994
+      StepHeight: 0.35
       SlopeLimit: 45
     PlayerStatsComponent:
       Health: 100
@@ -297,209 +151,17 @@ Entities:
       MaxStamina: 100
       StaminaRegenRate: 20
       SprintStaminaDrain: 25
-  - Entity: 2000000000000000020
+  - Entity: 2000000000000000010
     TagComponent:
-      Tag: Zombie_A
-    ActorComponent:
-      ClassID: Azure::ZombieTestActor
-    TransformComponent:
-      Translation: [-4, 1, -8]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    VisualOffsetComponent:
-      Translation: [0, 0.850000024, 0]
-      Rotation: [0, 0, 0]
-      Scale: [0.600000024, 1.70000005, 0.600000024]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 1
-      PBR_AlbedoColor: [0.349999994, 0.560000002, 0.300000012]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0
-      PBR_Roughness: 0.699999988
-      PBR_AO: 1
-      PBR_EmissiveColor: [0.0500000007, 0.150000006, 0.0500000007]
-      PBR_EmissiveStrength: 0.150000006
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-    CapsuleCollider3DComponent:
-      Radius: 0.300000012
-      HalfHeight: 0.550000012
-      Offset: [0, 0, 0]
-      Friction: 0.5
-      Restitution: 0
-      Density: 1000
-    CharacterControllerComponent:
-      MoveSpeed: 2.4000001
-      JumpImpulse: 0
-      StepHeight: 0.349999994
-      SlopeLimit: 45
-  - Entity: 2000000000000000021
-    TagComponent:
-      Tag: Zombie_B
-    ActorComponent:
-      ClassID: Azure::ZombieTestActor
-    TransformComponent:
-      Translation: [4, 1.00953531, -10]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    VisualOffsetComponent:
-      Translation: [0, 0.850000024, 0]
-      Rotation: [0, 0, 0]
-      Scale: [0.600000024, 1.70000005, 0.600000024]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 1
-      PBR_AlbedoColor: [0.349999994, 0.560000002, 0.300000012]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0
-      PBR_Roughness: 0.699999988
-      PBR_AO: 1
-      PBR_EmissiveColor: [0.0500000007, 0.150000006, 0.0500000007]
-      PBR_EmissiveStrength: 0.150000006
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-    CapsuleCollider3DComponent:
-      Radius: 0.300000012
-      HalfHeight: 0.550000012
-      Offset: [0, 0, 0]
-      Friction: 0.5
-      Restitution: 0
-      Density: 1000
-    CharacterControllerComponent:
-      MoveSpeed: 2.4000001
-      JumpImpulse: 0
-      StepHeight: 0.349999994
-      SlopeLimit: 45
-  - Entity: 2000000000000000022
-    TagComponent:
-      Tag: Zombie_C
-    ActorComponent:
-      ClassID: Azure::ZombieTestActor
-    TransformComponent:
-      Translation: [0, 1, -14]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    VisualOffsetComponent:
-      Translation: [0, 0.850000024, 0]
-      Rotation: [0, 0, 0]
-      Scale: [0.600000024, 1.70000005, 0.600000024]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 1
-      PBR_AlbedoColor: [0.349999994, 0.560000002, 0.300000012]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0
-      PBR_Roughness: 0.699999988
-      PBR_AO: 1
-      PBR_EmissiveColor: [0.0500000007, 0.150000006, 0.0500000007]
-      PBR_EmissiveStrength: 0.150000006
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-    CapsuleCollider3DComponent:
-      Radius: 0.300000012
-      HalfHeight: 0.550000012
-      Offset: [0, 0, 0]
-      Friction: 0.5
-      Restitution: 0
-      Density: 1000
-    CharacterControllerComponent:
-      MoveSpeed: 2.4000001
-      JumpImpulse: 0
-      StepHeight: 0.349999994
-      SlopeLimit: 45
-  - Entity: 2000000000000000030
-    TagComponent:
-      Tag: Pillar_A
-    TransformComponent:
-      Translation: [-6, 1.5, -3]
-      Rotation: [0, 0, 0]
-      Scale: [1, 3, 1]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 1
-      PBR_AlbedoColor: [0.400000006, 0.400000006, 0.430000007]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0.100000001
-      PBR_Roughness: 0.800000012
-      PBR_AO: 1
-      PBR_EmissiveColor: [0, 0, 0]
-      PBR_EmissiveStrength: 0
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-  - Entity: 2000000000000000031
-    TagComponent:
-      Tag: Pillar_B
-    TransformComponent:
-      Translation: [6, 1.5, -5]
-      Rotation: [0, 0, 0]
-      Scale: [1, 3, 1]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 1
-      PBR_AlbedoColor: [0.400000006, 0.400000006, 0.430000007]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0.100000001
-      PBR_Roughness: 0.800000012
-      PBR_AO: 1
-      PBR_EmissiveColor: [0, 0, 0]
-      PBR_EmissiveStrength: 0
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-  - Entity: 2000000000000000002
-    TagComponent:
-      Tag: Ground
+      Tag: GameplayHUD
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 0
-      PBR_AlbedoColor: [0.180000007, 0.330000013, 0.140000001]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0
-      PBR_Roughness: 0.949999988
-      PBR_AO: 0.850000024
-      PBR_EmissiveColor: [0, 0, 0]
-      PBR_EmissiveStrength: 0
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-    TerrainComponent:
-      GridWidth: 80
-      GridHeight: 80
-      CellSize: 0.5
-      HeightScale: 0
-      HeightmapPath: ""
-      ProceduralAmplitude: 6
-      ProceduralFrequency: 0.119999997
-      ProceduralFlatRadius: 15
-    Rigidbody3DComponent:
-      BodyType: 0
-      GravityScale: 1
-      LinearDamping: 0.0500000007
-      AngularDamping: 0.0500000007
-      FixedRotationX: false
-      FixedRotationY: false
-      FixedRotationZ: false
-    BoxCollider3DComponent:
-      HalfExtents: [20, 0.5, 20]
-      Offset: [0, -0.5, 0]
-      Friction: 0.800000012
-      Restitution: 0
-      Density: 1000
+    UIRootComponent:
+      DocumentPath: assets/ui/GameplayHUD.bluui
+      Visible: true
+      Scale: 1
   - Entity: 2000000000000000060
     TagComponent:
       Tag: Environment
@@ -509,16 +171,5099 @@ Entities:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 2000000000000000001
+  - Entity: 3000000000000000001
     TagComponent:
-      Tag: Sun
-    DirectionalLightComponent:
-      Direction: [3.09086197e-08, -1, 3.09086197e-08]
-      Ambient: [0.200000003, 0.200000003, 0.200000003]
-      Diffuse: [1, 0.720000029, 0.469999999]
-      Specular: [0.400000006, 0.400000006, 0.400000006]
-      Intensity: 4.9000001
+      Tag: House_0_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.52, 0.42]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
     TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [-0.785398185, 0.52359879, 0]
+      Translation: [-60, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000002
+    TagComponent:
+      Tag: House_0_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 4.75, -60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000003
+    TagComponent:
+      Tag: LampPost_0
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-54.6, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000004
+    TagComponent:
+      Tag: Lamp_0
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-54.6, 4.2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000005
+    TagComponent:
+      Tag: House_1_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.47, 0.38]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 2, -36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000006
+    TagComponent:
+      Tag: House_1_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 4.75, -36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000007
+    TagComponent:
+      Tag: House_2_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.68, 0.58, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000008
+    TagComponent:
+      Tag: House_2_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 4.75, -12]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000009
+    TagComponent:
+      Tag: LampPost_2
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-54.6, 2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000010
+    TagComponent:
+      Tag: Lamp_2
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-54.6, 4.2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000011
+    TagComponent:
+      Tag: House_3_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.45, 0.4]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 2, 12]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000012
+    TagComponent:
+      Tag: House_3_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 4.75, 12]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000013
+    TagComponent:
+      Tag: House_4_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.52, 0.42]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000014
+    TagComponent:
+      Tag: House_4_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 4.75, 36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000015
+    TagComponent:
+      Tag: LampPost_4
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-54.6, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000016
+    TagComponent:
+      Tag: Lamp_4
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-54.6, 4.2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000017
+    TagComponent:
+      Tag: House_5_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.47, 0.38]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 2, 60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000018
+    TagComponent:
+      Tag: House_5_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-60, 4.75, 60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000019
+    TagComponent:
+      Tag: House_6_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.68, 0.58, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000020
+    TagComponent:
+      Tag: House_6_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 4.75, -60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000021
+    TagComponent:
+      Tag: LampPost_6
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-30.6, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000022
+    TagComponent:
+      Tag: Lamp_6
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-30.6, 4.2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000023
+    TagComponent:
+      Tag: House_7_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.45, 0.4]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 2, -36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000024
+    TagComponent:
+      Tag: House_7_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 4.75, -36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000025
+    TagComponent:
+      Tag: House_8_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.52, 0.42]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000026
+    TagComponent:
+      Tag: House_8_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 4.75, -12]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000027
+    TagComponent:
+      Tag: LampPost_8
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-30.6, 2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000028
+    TagComponent:
+      Tag: Lamp_8
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-30.6, 4.2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000029
+    TagComponent:
+      Tag: House_9_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.47, 0.38]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 2, 12]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000030
+    TagComponent:
+      Tag: House_9_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 4.75, 12]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000031
+    TagComponent:
+      Tag: House_10_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.68, 0.58, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000032
+    TagComponent:
+      Tag: House_10_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 4.75, 36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000033
+    TagComponent:
+      Tag: LampPost_10
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-30.6, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000034
+    TagComponent:
+      Tag: Lamp_10
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-30.6, 4.2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000035
+    TagComponent:
+      Tag: House_11_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.45, 0.4]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 2, 60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000036
+    TagComponent:
+      Tag: House_11_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-36, 4.75, 60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000037
+    TagComponent:
+      Tag: House_12_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.52, 0.42]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-12, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000038
+    TagComponent:
+      Tag: House_12_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-12, 4.75, -60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000039
+    TagComponent:
+      Tag: LampPost_12
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-6.6, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000040
+    TagComponent:
+      Tag: Lamp_12
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-6.6, 4.2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000041
+    TagComponent:
+      Tag: House_13_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.47, 0.38]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-12, 2, -36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000042
+    TagComponent:
+      Tag: House_13_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-12, 4.75, -36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000043
+    TagComponent:
+      Tag: House_14_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.68, 0.58, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-12, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000044
+    TagComponent:
+      Tag: House_14_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-12, 4.75, 36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000045
+    TagComponent:
+      Tag: LampPost_14
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-6.6, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000046
+    TagComponent:
+      Tag: Lamp_14
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [-6.6, 4.2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000047
+    TagComponent:
+      Tag: House_15_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.45, 0.4]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-12, 2, 60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000048
+    TagComponent:
+      Tag: House_15_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-12, 4.75, 60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000049
+    TagComponent:
+      Tag: House_16_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.52, 0.42]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [12, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000050
+    TagComponent:
+      Tag: House_16_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [12, 4.75, -60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000051
+    TagComponent:
+      Tag: LampPost_16
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [17.4, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000052
+    TagComponent:
+      Tag: Lamp_16
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [17.4, 4.2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000053
+    TagComponent:
+      Tag: House_17_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.47, 0.38]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [12, 2, -36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000054
+    TagComponent:
+      Tag: House_17_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [12, 4.75, -36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000055
+    TagComponent:
+      Tag: House_18_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.68, 0.58, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [12, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000056
+    TagComponent:
+      Tag: House_18_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [12, 4.75, 36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000057
+    TagComponent:
+      Tag: LampPost_18
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [17.4, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000058
+    TagComponent:
+      Tag: Lamp_18
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [17.4, 4.2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000059
+    TagComponent:
+      Tag: House_19_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.45, 0.4]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [12, 2, 60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000060
+    TagComponent:
+      Tag: House_19_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [12, 4.75, 60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000061
+    TagComponent:
+      Tag: House_20_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.52, 0.42]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000062
+    TagComponent:
+      Tag: House_20_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 4.75, -60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000063
+    TagComponent:
+      Tag: LampPost_20
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [41.4, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000064
+    TagComponent:
+      Tag: Lamp_20
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [41.4, 4.2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000065
+    TagComponent:
+      Tag: House_21_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.47, 0.38]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 2, -36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000066
+    TagComponent:
+      Tag: House_21_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 4.75, -36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000067
+    TagComponent:
+      Tag: House_22_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.68, 0.58, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000068
+    TagComponent:
+      Tag: House_22_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 4.75, -12]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000069
+    TagComponent:
+      Tag: LampPost_22
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [41.4, 2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000070
+    TagComponent:
+      Tag: Lamp_22
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [41.4, 4.2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000071
+    TagComponent:
+      Tag: House_23_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.45, 0.4]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 2, 12]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000072
+    TagComponent:
+      Tag: House_23_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 4.75, 12]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000073
+    TagComponent:
+      Tag: House_24_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.52, 0.42]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000074
+    TagComponent:
+      Tag: House_24_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 4.75, 36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000075
+    TagComponent:
+      Tag: LampPost_24
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [41.4, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000076
+    TagComponent:
+      Tag: Lamp_24
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [41.4, 4.2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000077
+    TagComponent:
+      Tag: House_25_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.47, 0.38]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 2, 60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000078
+    TagComponent:
+      Tag: House_25_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [36, 4.75, 60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000079
+    TagComponent:
+      Tag: House_26_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.68, 0.58, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000080
+    TagComponent:
+      Tag: House_26_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 4.75, -60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000081
+    TagComponent:
+      Tag: LampPost_26
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [65.4, 2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000082
+    TagComponent:
+      Tag: Lamp_26
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [65.4, 4.2, -60]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000083
+    TagComponent:
+      Tag: House_27_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.45, 0.4]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 2, -36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000084
+    TagComponent:
+      Tag: House_27_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 4.75, -36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000085
+    TagComponent:
+      Tag: House_28_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.52, 0.42]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000086
+    TagComponent:
+      Tag: House_28_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 4.75, -12]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000087
+    TagComponent:
+      Tag: LampPost_28
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [65.4, 2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000088
+    TagComponent:
+      Tag: Lamp_28
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [65.4, 4.2, -12]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000089
+    TagComponent:
+      Tag: House_29_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.55, 0.47, 0.38]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 2, 12]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000090
+    TagComponent:
+      Tag: House_29_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.2, 0.22, 0.28]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 4.75, 12]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000091
+    TagComponent:
+      Tag: House_30_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.68, 0.58, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000092
+    TagComponent:
+      Tag: House_30_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.42, 0.12, 0.1]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 4.75, 36]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000093
+    TagComponent:
+      Tag: LampPost_30
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.1, 0.1, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.6
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [65.4, 2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [0.3, 4, 0.3]
+  - Entity: 3000000000000000094
+    TagComponent:
+      Tag: Lamp_30
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.62, 0.28]
+      Specular: [1, 0.62, 0.28]
+      Intensity: 7
+      Range: 14
+      AttConstant: 1
+      AttLinear: 0.09
+      AttQuadratic: 0.032
+    TransformComponent:
+      Translation: [65.4, 4.2, 36]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000095
+    TagComponent:
+      Tag: House_31_Body
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.45, 0.4]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 2, 60]
+      Rotation: [0, 0, 0]
+      Scale: [6, 4, 6]
+  - Entity: 3000000000000000096
+    TagComponent:
+      Tag: House_31_Roof
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.18, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.8
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [60, 4.75, 60]
+      Rotation: [0, 0, 0]
+      Scale: [7, 1.5, 7]
+  - Entity: 3000000000000000097
+    TagComponent:
+      Tag: TreeTrunk_0
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [78, 1.6, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000098
+    TagComponent:
+      Tag: TreeCanopy_0
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [78, 4.4, 0]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000099
+    TagComponent:
+      Tag: TreeTrunk_1
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-59.3004, 1.6, 54.3244]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000100
+    TagComponent:
+      Tag: TreeCanopy_1
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-59.3004, 4.4, 54.3244]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000101
+    TagComponent:
+      Tag: TreeTrunk_2
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [7.24214, 1.6, -82.5266]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000102
+    TagComponent:
+      Tag: TreeCanopy_2
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [7.24214, 4.4, -82.5266]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000103
+    TagComponent:
+      Tag: TreeTrunk_3
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [51.8796, 1.6, 67.6664]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000104
+    TagComponent:
+      Tag: TreeCanopy_3
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [51.8796, 4.4, 67.6664]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000105
+    TagComponent:
+      Tag: TreeTrunk_4
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-86.3473, 1.6, -15.2725]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000106
+    TagComponent:
+      Tag: TreeCanopy_4
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-86.3473, 4.4, -15.2725]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000107
+    TagComponent:
+      Tag: TreeTrunk_5
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [76.0295, 1.6, -48.3655]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000108
+    TagComponent:
+      Tag: TreeCanopy_5
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [76.0295, 4.4, -48.3655]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000109
+    TagComponent:
+      Tag: TreeTrunk_6
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-24.0198, 1.6, 89.3593]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000110
+    TagComponent:
+      Tag: TreeCanopy_6
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-24.0198, 4.4, 89.3593]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000111
+    TagComponent:
+      Tag: TreeTrunk_7
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-43.7665, 1.6, -84.265]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000112
+    TagComponent:
+      Tag: TreeCanopy_7
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-43.7665, 4.4, -84.265]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000113
+    TagComponent:
+      Tag: TreeTrunk_8
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [91.4673, 1.6, 33.401]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000114
+    TagComponent:
+      Tag: TreeCanopy_8
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [91.4673, 4.4, 33.401]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000115
+    TagComponent:
+      Tag: TreeTrunk_9
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-92.2457, 1.6, 38.0808]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000116
+    TagComponent:
+      Tag: TreeCanopy_9
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-92.2457, 4.4, 38.0808]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000117
+    TagComponent:
+      Tag: TreeTrunk_10
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [43.322, 1.6, -92.5844]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000118
+    TagComponent:
+      Tag: TreeCanopy_10
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [43.322, 4.4, -92.5844]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000119
+    TagComponent:
+      Tag: TreeTrunk_11
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [31.3208, 1.6, 99.8432]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000120
+    TagComponent:
+      Tag: TreeCanopy_11
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [31.3208, 4.4, 99.8432]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000121
+    TagComponent:
+      Tag: TreeTrunk_12
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-92.6338, 1.6, -53.6784]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000122
+    TagComponent:
+      Tag: TreeCanopy_12
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-92.6338, 4.4, -53.6784]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000123
+    TagComponent:
+      Tag: TreeTrunk_13
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [106.93, 1.6, -23.5129]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000124
+    TagComponent:
+      Tag: TreeCanopy_13
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [106.93, 4.4, -23.5129]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000125
+    TagComponent:
+      Tag: TreeTrunk_14
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-64.3564, 1.6, 91.5492]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000126
+    TagComponent:
+      Tag: TreeCanopy_14
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-64.3564, 4.4, 91.5492]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000127
+    TagComponent:
+      Tag: TreeTrunk_15
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-14.6979, 1.6, -113.379]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000128
+    TagComponent:
+      Tag: TreeCanopy_15
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-14.6979, 4.4, -113.379]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000129
+    TagComponent:
+      Tag: TreeTrunk_16
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [89.2767, 1.6, 75.2346]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000130
+    TagComponent:
+      Tag: TreeCanopy_16
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [89.2767, 4.4, 75.2346]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000131
+    TagComponent:
+      Tag: TreeTrunk_17
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-119.07, 1.6, 4.93046]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000132
+    TagComponent:
+      Tag: TreeCanopy_17
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-119.07, 4.4, 4.93046]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000133
+    TagComponent:
+      Tag: TreeTrunk_18
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [86.1842, 1.6, -85.7748]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000134
+    TagComponent:
+      Tag: TreeCanopy_18
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [86.1842, 4.4, -85.7748]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000135
+    TagComponent:
+      Tag: TreeTrunk_19
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-5.72086, 1.6, 123.884]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000136
+    TagComponent:
+      Tag: TreeCanopy_19
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-5.72086, 4.4, 123.884]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000137
+    TagComponent:
+      Tag: TreeTrunk_20
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-81.0159, 1.6, -97.0714]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000138
+    TagComponent:
+      Tag: TreeCanopy_20
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-81.0159, 4.4, -97.0714]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000139
+    TagComponent:
+      Tag: TreeTrunk_21
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [127.71, 1.6, 17.1743]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000140
+    TagComponent:
+      Tag: TreeCanopy_21
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [127.71, 4.4, 17.1743]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000141
+    TagComponent:
+      Tag: TreeTrunk_22
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-107.758, 1.6, 74.9866]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000142
+    TagComponent:
+      Tag: TreeCanopy_22
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-107.758, 4.4, 74.9866]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000143
+    TagComponent:
+      Tag: TreeTrunk_23
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [29.3357, 1.6, -130.445]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000144
+    TagComponent:
+      Tag: TreeCanopy_23
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [29.3357, 4.4, -130.445]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000145
+    TagComponent:
+      Tag: TreeTrunk_24
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [67.6879, 1.6, 118.103]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000146
+    TagComponent:
+      Tag: TreeCanopy_24
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [67.6879, 4.4, 118.103]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000147
+    TagComponent:
+      Tag: TreeTrunk_25
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-131.996, 1.6, -42.0986]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000148
+    TagComponent:
+      Tag: TreeCanopy_25
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-131.996, 4.4, -42.0986]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000149
+    TagComponent:
+      Tag: TreeTrunk_26
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [127.965, 1.6, -59.1362]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000150
+    TagComponent:
+      Tag: TreeCanopy_26
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [127.965, 4.4, -59.1362]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000151
+    TagComponent:
+      Tag: TreeTrunk_27
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-55.346, 1.6, 132.279]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000152
+    TagComponent:
+      Tag: TreeCanopy_27
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-55.346, 4.4, 132.279]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000153
+    TagComponent:
+      Tag: TreeTrunk_28
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-49.363, 1.6, -137.203]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000154
+    TagComponent:
+      Tag: TreeCanopy_28
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-49.363, 4.4, -137.203]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000155
+    TagComponent:
+      Tag: TreeTrunk_29
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [131.222, 1.6, 68.9509]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000156
+    TagComponent:
+      Tag: TreeCanopy_29
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [131.222, 4.4, 68.9509]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000157
+    TagComponent:
+      Tag: TreeTrunk_30
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-145.676, 1.6, 38.4149]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000158
+    TagComponent:
+      Tag: TreeCanopy_30
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-145.676, 4.4, 38.4149]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000159
+    TagComponent:
+      Tag: TreeTrunk_31
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [82.7775, 1.6, -128.766]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000160
+    TagComponent:
+      Tag: TreeCanopy_31
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [82.7775, 4.4, -128.766]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000161
+    TagComponent:
+      Tag: TreeTrunk_32
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [26.3538, 1.6, 153.251]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000162
+    TagComponent:
+      Tag: TreeCanopy_32
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [26.3538, 4.4, 153.251]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000163
+    TagComponent:
+      Tag: TreeTrunk_33
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-124.867, 1.6, -96.6827]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000164
+    TagComponent:
+      Tag: TreeCanopy_33
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-124.867, 4.4, -96.6827]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000165
+    TagComponent:
+      Tag: TreeTrunk_34
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [159.795, 1.6, -13.2563]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000166
+    TagComponent:
+      Tag: TreeCanopy_34
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [159.795, 4.4, -13.2563]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000167
+    TagComponent:
+      Tag: TreeTrunk_35
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-110.517, 1.6, 119.493]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000168
+    TagComponent:
+      Tag: TreeCanopy_35
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-110.517, 4.4, 119.493]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000169
+    TagComponent:
+      Tag: TreeTrunk_36
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [0.786624, 1.6, -165.186]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000170
+    TagComponent:
+      Tag: TreeCanopy_36
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [0.786624, 4.4, -165.186]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000171
+    TagComponent:
+      Tag: TreeTrunk_37
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [112.629, 1.6, 124.127]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000172
+    TagComponent:
+      Tag: TreeCanopy_37
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [112.629, 4.4, 124.127]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000173
+    TagComponent:
+      Tag: TreeTrunk_38
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-169.308, 1.6, -15.6704]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000174
+    TagComponent:
+      Tag: TreeCanopy_38
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-169.308, 4.4, -15.6704]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000175
+    TagComponent:
+      Tag: TreeTrunk_39
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [137.356, 1.6, -104.276]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000176
+    TagComponent:
+      Tag: TreeCanopy_39
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [137.356, 4.4, -104.276]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000177
+    TagComponent:
+      Tag: TreeTrunk_40
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-31.2775, 1.6, 172.055]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000178
+    TagComponent:
+      Tag: TreeCanopy_40
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-31.2775, 4.4, 172.055]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000179
+    TagComponent:
+      Tag: TreeTrunk_41
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-94.4492, 1.6, -150.045]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000180
+    TagComponent:
+      Tag: TreeCanopy_41
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-94.4492, 4.4, -150.045]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000181
+    TagComponent:
+      Tag: TreeTrunk_42
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [173.334, 1.6, 47.4784]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000182
+    TagComponent:
+      Tag: TreeCanopy_42
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [173.334, 4.4, 47.4784]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000183
+    TagComponent:
+      Tag: TreeTrunk_43
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-162.036, 1.6, 83.1829]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000184
+    TagComponent:
+      Tag: TreeCanopy_43
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-162.036, 4.4, 83.1829]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000185
+    TagComponent:
+      Tag: TreeTrunk_44
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [64.1324, 1.6, -173.062]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000186
+    TagComponent:
+      Tag: TreeCanopy_44
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [64.1324, 4.4, -173.062]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000187
+    TagComponent:
+      Tag: TreeTrunk_45
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [70.5263, 1.6, 173.174]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000188
+    TagComponent:
+      Tag: TreeCanopy_45
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [70.5263, 4.4, 173.174]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000189
+    TagComponent:
+      Tag: TreeTrunk_46
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-171.17, 1.6, -81.0896]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000190
+    TagComponent:
+      Tag: TreeCanopy_46
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-171.17, 4.4, -81.0896]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000191
+    TagComponent:
+      Tag: TreeTrunk_47
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [183.305, 1.6, -56.5453]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000192
+    TagComponent:
+      Tag: TreeCanopy_47
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [183.305, 4.4, -56.5453]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000193
+    TagComponent:
+      Tag: TreeTrunk_48
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-98.1912, 1.6, 167.605]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000194
+    TagComponent:
+      Tag: TreeCanopy_48
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-98.1912, 4.4, 167.605]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000195
+    TagComponent:
+      Tag: TreeTrunk_49
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-41.3222, 1.6, -192.282]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000196
+    TagComponent:
+      Tag: TreeCanopy_49
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-41.3222, 4.4, -192.282]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000197
+    TagComponent:
+      Tag: TreeTrunk_50
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [162.329, 1.6, 115.272]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000198
+    TagComponent:
+      Tag: TreeCanopy_50
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [162.329, 4.4, 115.272]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000199
+    TagComponent:
+      Tag: TreeTrunk_51
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-199.965, 1.6, 24.9546]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000200
+    TagComponent:
+      Tag: TreeCanopy_51
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-199.965, 4.4, 24.9546]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000201
+    TagComponent:
+      Tag: TreeTrunk_52
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [132.16, 1.6, -155.32]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000202
+    TagComponent:
+      Tag: TreeCanopy_52
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [132.16, 4.4, -155.32]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000203
+    TagComponent:
+      Tag: TreeTrunk_53
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [7.5557, 1.6, 206.221]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000204
+    TagComponent:
+      Tag: TreeCanopy_53
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [7.5557, 4.4, 206.221]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000205
+    TagComponent:
+      Tag: TreeTrunk_54
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-146.572, 1.6, -148.681]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000206
+    TagComponent:
+      Tag: TreeCanopy_54
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-146.572, 4.4, -148.681]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000207
+    TagComponent:
+      Tag: TreeTrunk_55
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [210.929, 1.6, 10.7474]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000208
+    TagComponent:
+      Tag: TreeCanopy_55
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [210.929, 4.4, 10.7474]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000209
+    TagComponent:
+      Tag: TreeTrunk_56
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-164.659, 1.6, 136.1]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000210
+    TagComponent:
+      Tag: TreeCanopy_56
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-164.659, 4.4, 136.1]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000211
+    TagComponent:
+      Tag: TreeTrunk_57
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [29.814, 1.6, -213.98]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000212
+    TagComponent:
+      Tag: TreeCanopy_57
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [29.814, 4.4, -213.98]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000213
+    TagComponent:
+      Tag: TreeTrunk_58
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [123.932, 1.6, 179.915]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000214
+    TagComponent:
+      Tag: TreeCanopy_58
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [123.932, 4.4, 179.915]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000215
+    TagComponent:
+      Tag: TreeTrunk_59
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-215.275, 1.6, -49.4911]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000216
+    TagComponent:
+      Tag: TreeCanopy_59
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-215.275, 4.4, -49.4911]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000217
+    TagComponent:
+      Tag: TreeTrunk_60
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [194.274, 1.6, -110.118]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000218
+    TagComponent:
+      Tag: TreeCanopy_60
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [194.274, 4.4, -110.118]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000219
+    TagComponent:
+      Tag: TreeTrunk_61
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-69.6146, 1.6, 214.732]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000220
+    TagComponent:
+      Tag: TreeCanopy_61
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-69.6146, 4.4, 214.732]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000221
+    TagComponent:
+      Tag: TreeTrunk_62
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-94.7239, 1.6, -207.564]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000222
+    TagComponent:
+      Tag: TreeCanopy_62
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-94.7239, 4.4, -207.564]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000223
+    TagComponent:
+      Tag: TreeTrunk_63
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.32, 0.22, 0.12]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [212.284, 1.6, 90.0106]
+      Rotation: [0, 0, 0]
+      Scale: [0.7, 3.2, 0.7]
+  - Entity: 3000000000000000224
+    TagComponent:
+      Tag: TreeCanopy_63
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.12, 0.34, 0.14]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.02, 0.06, 0.02]
+      PBR_EmissiveStrength: 0.05
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [212.284, 4.4, 90.0106]
+      Rotation: [0, 0, 0]
+      Scale: [3.2, 3, 3.2]
+  - Entity: 3000000000000000225
+    TagComponent:
+      Tag: Rock_0
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [35.1033, 0.6, 19.177]
+      Rotation: [0, 0, 0]
+      Scale: [1.5, 1.2, 1.35]
+  - Entity: 3000000000000000226
+    TagComponent:
+      Tag: Rock_1
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-13.1777, 1, 56.4832]
+      Rotation: [0, 0, 0]
+      Scale: [2.5, 2, 2.25]
+  - Entity: 3000000000000000227
+    TagComponent:
+      Tag: Rock_2
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-75.9343, 1.4, 3.16013]
+      Rotation: [0, 0, 0]
+      Scale: [3.5, 2.8, 3.15]
+  - Entity: 3000000000000000228
+    TagComponent:
+      Tag: Rock_3
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-28.8893, 0.6, -89.4506]
+      Rotation: [0, 0, 0]
+      Scale: [1.5, 1.2, 1.35]
+  - Entity: 3000000000000000229
+    TagComponent:
+      Tag: Rock_4
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [93.4878, 1, -61.6768]
+      Rotation: [0, 0, 0]
+      Scale: [2.5, 2, 2.25]
+  - Entity: 3000000000000000230
+    TagComponent:
+      Tag: Rock_5
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [98.0073, 1.4, 85.4083]
+      Rotation: [0, 0, 0]
+      Scale: [3.5, 2.8, 3.15]
+  - Entity: 3000000000000000231
+    TagComponent:
+      Tag: Rock_6
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-63.8438, 0.6, 133.521]
+      Rotation: [0, 0, 0]
+      Scale: [1.5, 1.2, 1.35]
+  - Entity: 3000000000000000232
+    TagComponent:
+      Tag: Rock_7
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-163.458, 1, -28.9382]
+      Rotation: [0, 0, 0]
+      Scale: [2.5, 2, 2.25]
+  - Entity: 3000000000000000233
+    TagComponent:
+      Tag: Rock_8
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [-17.5589, 1.4, -183.16]
+      Rotation: [0, 0, 0]
+      Scale: [3.5, 2.8, 3.15]
+  - Entity: 3000000000000000234
+    TagComponent:
+      Tag: Rock_9
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.3, 0.3, 0.32]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.05
+      PBR_Roughness: 0.85
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TransformComponent:
+      Translation: [188.594, 0.6, -72.3623]
+      Rotation: [0, 0, 0]
+      Scale: [1.5, 1.2, 1.35]
+  - Entity: 3000000000000000235
+    TagComponent:
+      Tag: Zombie_0
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [-18, 1, -24]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.85, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.6, 1.7, 0.6]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.35, 0.56, 0.3]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.7
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.05, 0.15, 0.05]
+      PBR_EmissiveStrength: 0.15
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.3
+      HalfHeight: 0.55
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4
+      JumpImpulse: 0
+      StepHeight: 0.35
+      SlopeLimit: 45
+  - Entity: 3000000000000000236
+    TagComponent:
+      Tag: Zombie_1
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [16, 1, -28]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.85, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.6, 1.7, 0.6]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.35, 0.56, 0.3]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.7
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.05, 0.15, 0.05]
+      PBR_EmissiveStrength: 0.15
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.3
+      HalfHeight: 0.55
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4
+      JumpImpulse: 0
+      StepHeight: 0.35
+      SlopeLimit: 45
+  - Entity: 3000000000000000237
+    TagComponent:
+      Tag: Zombie_2
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [0, 1, -34]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.85, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.6, 1.7, 0.6]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.35, 0.56, 0.3]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.7
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.05, 0.15, 0.05]
+      PBR_EmissiveStrength: 0.15
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.3
+      HalfHeight: 0.55
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4
+      JumpImpulse: 0
+      StepHeight: 0.35
+      SlopeLimit: 45
+  - Entity: 3000000000000000238
+    TagComponent:
+      Tag: Zombie_3
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [-26, 1, 6]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.85, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.6, 1.7, 0.6]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.35, 0.56, 0.3]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.7
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.05, 0.15, 0.05]
+      PBR_EmissiveStrength: 0.15
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.3
+      HalfHeight: 0.55
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4
+      JumpImpulse: 0
+      StepHeight: 0.35
+      SlopeLimit: 45
+  - Entity: 3000000000000000239
+    TagComponent:
+      Tag: Zombie_4
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [24, 1, 10]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.85, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.6, 1.7, 0.6]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.35, 0.56, 0.3]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.7
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.05, 0.15, 0.05]
+      PBR_EmissiveStrength: 0.15
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.3
+      HalfHeight: 0.55
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4
+      JumpImpulse: 0
+      StepHeight: 0.35
+      SlopeLimit: 45
+  - Entity: 3000000000000000240
+    TagComponent:
+      Tag: Zombie_5
+    ActorComponent:
+      ClassID: Azure::ZombieTestActor
+    TransformComponent:
+      Translation: [8, 1, 30]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    VisualOffsetComponent:
+      Translation: [0, 0.85, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.6, 1.7, 0.6]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.35, 0.56, 0.3]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.7
+      PBR_AO: 1
+      PBR_EmissiveColor: [0.05, 0.15, 0.05]
+      PBR_EmissiveStrength: 0.15
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    CapsuleCollider3DComponent:
+      Radius: 0.3
+      HalfHeight: 0.55
+      Offset: [0, 0, 0]
+      Friction: 0.5
+      Restitution: 0
+      Density: 1000
+    CharacterControllerComponent:
+      MoveSpeed: 2.4
+      JumpImpulse: 0
+      StepHeight: 0.35
+      SlopeLimit: 45
+  - Entity: 3000000000000000241
+    TagComponent:
+      Tag: FogHollow_A
+    FogVolumeComponent:
+      Shape: 0
+      Extents: [30, 8, 30]
+      Radius: 5
+      Color: [0.5, 0.6, 0.7]
+      Density: 0.4
+      Falloff: 1
+    TransformComponent:
+      Translation: [-70, 3, -60]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 3000000000000000242
+    TagComponent:
+      Tag: FogHollow_B
+    FogVolumeComponent:
+      Shape: 0
+      Extents: [36, 9, 36]
+      Radius: 5
+      Color: [0.55, 0.55, 0.62]
+      Density: 0.35
+      Falloff: 1
+    TransformComponent:
+      Translation: [90, 3, 70]
+      Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
