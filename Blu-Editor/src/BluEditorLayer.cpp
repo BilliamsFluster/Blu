@@ -2904,6 +2904,8 @@ namespace Blu
 						pp->SSAOPower = 1.5f;
 						pp->SSAOSamples = 16;
 						pp->SSAOStrength = 1.0f;
+						pp->EnableGodRays = true;
+						pp->GodRayIntensity = 0.9f;
 					}
 					const char* previewModes[] = { "Full", "Tonemap Only", "Bloom Only", "FXAA Only", "SSAO Only", "Bypass" };
 					int preview = (int)pp->Preview;
@@ -2913,6 +2915,10 @@ namespace Blu
 					ImGui::DragFloat("Threshold",  &pp->BloomThreshold, 0.05f, 0.0f, 10.0f);
 					ImGui::DragFloat("Strength",   &pp->BloomStrength,  0.005f, 0.0f, 2.0f);
 					ImGui::Checkbox("FXAA", &pp->EnableFXAA);
+
+					ImGui::Checkbox("God Rays", &pp->EnableGodRays);
+					if (pp->EnableGodRays)
+						ImGui::DragFloat("Ray Intensity", &pp->GodRayIntensity, 0.02f, 0.0f, 3.0f);
 
 					ImGui::Separator();
 					ImGui::Checkbox("SSAO", &pp->EnableSSAO);
