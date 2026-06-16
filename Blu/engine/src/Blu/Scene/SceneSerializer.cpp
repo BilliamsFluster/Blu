@@ -409,9 +409,10 @@ namespace Blu
 			out << YAML::Key << "DecalComponent";
 			out << YAML::BeginMap;
 			auto& dec = entity.GetComponent<DecalComponent>();
-			out << YAML::Key << "Color"   << YAML::Value << dec.Color;
-			out << YAML::Key << "Opacity" << YAML::Value << dec.Opacity;
-			out << YAML::Key << "Falloff" << YAML::Value << dec.Falloff;
+			out << YAML::Key << "Color"    << YAML::Value << dec.Color;
+			out << YAML::Key << "Opacity"  << YAML::Value << dec.Opacity;
+			out << YAML::Key << "Falloff"  << YAML::Value << dec.Falloff;
+			out << YAML::Key << "Lifetime" << YAML::Value << dec.Lifetime;
 			out << YAML::EndMap;
 		}
 
@@ -1423,8 +1424,9 @@ namespace Blu
 				{
 					auto& dec = deserializedEntity.AddComponent<DecalComponent>();
 					if (decalComponent["Color"])   dec.Color   = decalComponent["Color"].as<glm::vec3>();
-					if (decalComponent["Opacity"]) dec.Opacity = decalComponent["Opacity"].as<float>();
-					if (decalComponent["Falloff"]) dec.Falloff = decalComponent["Falloff"].as<float>();
+					if (decalComponent["Opacity"])  dec.Opacity  = decalComponent["Opacity"].as<float>();
+					if (decalComponent["Falloff"])  dec.Falloff  = decalComponent["Falloff"].as<float>();
+					if (decalComponent["Lifetime"]) dec.Lifetime = decalComponent["Lifetime"].as<float>();
 				}
 				auto terrainComponent = entity["TerrainComponent"];
 				auto meshComponent = entity["MeshComponent"];

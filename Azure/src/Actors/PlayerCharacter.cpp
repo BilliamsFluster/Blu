@@ -356,6 +356,20 @@ namespace Azure
 					// Impact spark burst + a brief warm flash light at the hit point.
 					Blu::GpuParticleSystem::Get().Emit(t.Translation, 16, glm::vec3(0.0f, 1.5f, 0.0f), 4.0f, 0.5f, 0.09f, 0.0f);
 					Blu::Renderer3D::AddDynamicLight(t.Translation, glm::vec3(1.0f, 0.65f, 0.25f), 6.0f, 4.5f);
+					// Fading blood decal at the impact point (aged out by Scene::UpdateDecalLifetimes).
+					{
+						Blu::Entity decal = scene->CreateEntity("BloodDecal");
+						auto& dt2 = decal.HasComponent<Blu::TransformComponent>()
+							? decal.GetComponent<Blu::TransformComponent>()
+							: decal.AddComponent<Blu::TransformComponent>();
+						dt2.Translation = t.Translation;
+						dt2.Scale       = glm::vec3(0.9f, 0.9f, 0.9f);
+						auto& dcl    = decal.AddComponent<Blu::DecalComponent>();
+						dcl.Color    = glm::vec3(0.42f, 0.03f, 0.02f);
+						dcl.Opacity  = 0.9f;
+						dcl.Falloff  = 0.5f;
+						dcl.Lifetime = 8.0f;
+					}
 					if (HasComponent<Blu::AmmoComponent>())
 						GetComponent<Blu::AmmoComponent>().HitFlash = 0.15f; // flash the hitmarker
 					if (m_ImpactSound != Blu::kInvalidSound)

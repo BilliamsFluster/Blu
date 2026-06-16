@@ -7,6 +7,7 @@
 #include "Blu/Physics/Physics3DDiagnostics.h"
 #include "Blu/Scene/Component.h"
 #include "Blu/Scene/Scene.h"
+#include "Blu/Scene/Entity.h"
 #include "Blu/Scene/SceneSerializer.h"
 #include "Blu/Rendering/AssetManager.h"
 #include "Blu/Rendering/StaticMeshAsset.h"
@@ -776,6 +777,46 @@ namespace
 		Require(DecalAlpha(inv, glm::vec3(2.5f, 0, 0), 0.85f, 0.55f) == 0.0f, "point outside scaled decal box -> 0");
 	}
 
+	// Validates Scene::UpdateDecalLifetimes — the per-frame ager that retires the transient blood /
+	// bullet-hole decals actors spawn on impact. Transient decals (Lifetime >= 0) count down and are
+	// destroyed once expired; editor-placed permanent decals (Lifetime < 0) must never age out.
+	void TestDecalLifetime()
+	{
+		auto scene = std::make_shared<Blu::Scene>();
+
+		Blu::Entity transient = scene->CreateEntity("Transient");
+		transient.AddComponent<Blu::DecalComponent>().Lifetime = 1.0f;
+		Blu::Entity permanent = scene->CreateEntity("Permanent");
+		permanent.AddComponent<Blu::DecalComponent>().Lifetime = -1.0f;
+
+		auto countDecals = [&]() {
+			int n = 0;
+			auto view = scene->GetAllEntitiesWith<Blu::DecalComponent>();
+			for (auto e : view) { (void)e; ++n; }
+			return n;
+		};
+		Require(countDecals() == 2, "expected 2 decals before aging");
+
+		scene->UpdateDecalLifetimes(0.6f); // transient 1.0 -> 0.4 (still alive)
+		Require(countDecals() == 2, "transient decal should survive while Lifetime > 0");
+
+		scene->UpdateDecalLifetimes(0.6f); // transient 0.4 -> -0.2 (expired, destroyed)
+		Require(countDecals() == 1, "expired transient decal should be destroyed");
+
+		// The survivor must be the permanent (Lifetime < 0) decal.
+		auto view = scene->GetAllEntitiesWith<Blu::DecalComponent>();
+		for (auto e : view)
+		{
+			Blu::Entity ent{ e, scene.get() };
+			Require(ent.GetComponent<Blu::DecalComponent>().Lifetime < 0.0f,
+				"permanent decal (Lifetime < 0) must never age out");
+		}
+
+		// A permanent decal stays put no matter how long the level runs.
+		scene->UpdateDecalLifetimes(100.0f);
+		Require(countDecals() == 1, "permanent decal should persist across a long tick");
+	}
+
 	// CPU mirror of the analytic ray-segment overlap in PostProcess_FogVolume.hlsl. Validates the
 	// fog-integration math headlessly — the shader uses the identical algorithm, so getting these
 	// geometric cases right is the high-confidence check that localized fog accumulates correctly.
@@ -968,6 +1009,7 @@ int main()
 		TestProjectManagerLoadAndMounts();
 		TestFogVolumeRayMath();
 		TestDecalProjection();
+		TestDecalLifetime();
 		TestAnimatorBlend();
 		TestPerfStatsMemory();
 	}

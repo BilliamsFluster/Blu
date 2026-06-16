@@ -1394,6 +1394,8 @@ namespace Blu
 				ImGui::ColorEdit3("Color",   glm::value_ptr(D.Color));
 				ImGui::DragFloat("Opacity", &D.Opacity, 0.01f, 0.0f, 1.0f, "%.2f");
 				ImGui::DragFloat("Falloff", &D.Falloff, 0.01f, 0.0f, 1.0f, "%.2f");
+				ImGui::DragFloat("Lifetime", &D.Lifetime, 0.1f, -1.0f, 60.0f, "%.1f s");
+				ImGui::TextDisabled("Lifetime < 0 = permanent");
 			});
 
 		DrawComponent<FogVolumeComponent>("Fog Volume", entity, [](auto& F)

@@ -491,9 +491,13 @@ namespace Blu
 	// post-process pass (PostProcess_Decals.hlsl) by reconstructing world position from depth.
 	struct DecalComponent
 	{
-		glm::vec3 Color   = glm::vec3(0.35f, 0.03f, 0.03f); // blood-ish default
-		float     Opacity = 0.85f;                          // 0..1 overall strength
-		float     Falloff = 0.55f;                          // 0..1 soft edge (fraction of radius that fades)
+		glm::vec3 Color    = glm::vec3(0.35f, 0.03f, 0.03f); // blood-ish default
+		float     Opacity  = 0.85f;                          // 0..1 overall strength
+		float     Falloff  = 0.55f;                          // 0..1 soft edge (fraction of radius that fades)
+		// Seconds remaining for transient/runtime decals (bullet holes, blood). < 0 = permanent
+		// (editor-placed). The Scene ages these down (Scene::UpdateDecalLifetimes) and fades the
+		// opacity over the last ~1.5s, destroying the entity at 0.
+		float     Lifetime = -1.0f;
 
 		DecalComponent() = default;
 		DecalComponent(const DecalComponent&) = default;

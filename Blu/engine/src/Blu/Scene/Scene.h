@@ -153,6 +153,7 @@ namespace Blu
 		void UpdateActiveCameraComponent(Timestep deltaTime);
 
 		void DestroyEntity(Entity entity);
+		void UpdateDecalLifetimes(float deltaTime); // age transient impact decals; destroy expired
 		void OnUpdateEditor(Timestep deltaTime, class EditorCamera& camera);
 		void OnUpdateRuntime(Timestep deltaTime);
 		void OnUpdatePaused(Timestep deltaTime);

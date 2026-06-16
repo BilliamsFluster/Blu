@@ -1880,10 +1880,12 @@ namespace Blu
 				glm::mat4 world = glm::translate(glm::mat4(1.0f), tc.Translation)
 				                * glm::toMat4(glm::quat(tc.Rotation))
 				                * glm::scale(glm::mat4(1.0f), tc.Scale);
+				// Transient decals fade out over their last ~1.5s; permanent decals (Lifetime < 0) stay.
+				float lifeFade = (dec.Lifetime < 0.0f) ? 1.0f : glm::clamp(dec.Lifetime / 1.5f, 0.0f, 1.0f);
 				DecalGPU g;
 				g.InvWorld = glm::inverse(world);
 				g.Color    = dec.Color;
-				g.Opacity  = dec.Opacity;
+				g.Opacity  = dec.Opacity * lifeFade;
 				g.Falloff  = dec.Falloff;
 				m_PostProcess->Decals.push_back(g);
 			}
@@ -2016,10 +2018,12 @@ namespace Blu
 				glm::mat4 world = glm::translate(glm::mat4(1.0f), tc.Translation)
 				                * glm::toMat4(glm::quat(tc.Rotation))
 				                * glm::scale(glm::mat4(1.0f), tc.Scale);
+				// Transient decals fade out over their last ~1.5s; permanent decals (Lifetime < 0) stay.
+				float lifeFade = (dec.Lifetime < 0.0f) ? 1.0f : glm::clamp(dec.Lifetime / 1.5f, 0.0f, 1.0f);
 				DecalGPU g;
 				g.InvWorld = glm::inverse(world);
 				g.Color    = dec.Color;
-				g.Opacity  = dec.Opacity;
+				g.Opacity  = dec.Opacity * lifeFade;
 				g.Falloff  = dec.Falloff;
 				m_PostProcess->Decals.push_back(g);
 			}
@@ -2356,6 +2360,23 @@ namespace Blu
 			m_PostProcess->Submit();
 		}
 	}
+	void Scene::UpdateDecalLifetimes(float deltaTime)
+	{
+		std::vector<entt::entity> expired;
+		auto view = m_Registry.view<DecalComponent>();
+		for (auto e : view)
+		{
+			auto& dec = view.get<DecalComponent>(e);
+			if (dec.Lifetime < 0.0f) // permanent (editor-placed) — never ages out
+				continue;
+			dec.Lifetime -= deltaTime;
+			if (dec.Lifetime <= 0.0f)
+				expired.push_back(e);
+		}
+		for (auto e : expired)
+			DestroyEntity(Entity{ e, this });
+	}
+
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
 		m_ElapsedTime += (float)deltaTime;
@@ -2412,6 +2433,8 @@ namespace Blu
 		m_ActorSystem->Tick(dt);
 		if (m_GameMode)
 			m_GameMode->Tick(dt);
+
+		UpdateDecalLifetimes(dt); // age + remove transient impact decals spawned by actors this frame
 
 		{
 			const int32_t velocityIterations = 6;
