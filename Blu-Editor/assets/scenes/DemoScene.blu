@@ -1,46 +1,52 @@
-Scene: assets\scenes\DemoScene.blu
+SceneVersion: 1
+Scene: assets/scenes/DemoScene.blu
+RenderSettings:
+  UseShadows: false
+  UsePostProcess: false
+  UseSkybox: false
+  UseTimeOfDay: false
+  Sky_Turbidity: 2.5
+  Sky_SkyExposure: 0.0250000004
+  Sky_GroundColor: [0.219999999, 0.180000007, 0.140000001]
+  Sky_SunColor: [1, 0.949999988, 0.800000012]
+  Sky_SunSize: 0.999499977
+  Sky_SunStrength: 3
+  Sky_CloudColor: [0.920000017, 0.930000007, 0.970000029]
+  Sky_CloudCoverage: 0.449999988
+  Sky_CloudDensity: 0
+  Sky_CloudSoftness: 0.349999994
+  Sky_CloudHeight: 600
+  Sky_CloudScale: 900
+  Sky_CloudWindDirection: [1, 0.349999994]
+  Sky_CloudScrollSpeed: 0.0149999997
+  Sky_CloudShadowing: 0.649999976
+  Sky_CloudHorizonFade: 0.219999999
+  PP_EnableBloom: true
+  PP_BloomThreshold: 1
+  PP_BloomStrength: 0.0500000007
+  PP_EnableFXAA: true
+  PP_PreviewMode: 0
+  PP_EnableSSAO: true
+  PP_SSAORadius: 0.5
+  PP_SSAOBias: 0.0250000004
+  PP_SSAOPower: 2
+  PP_SSAOSamples: 16
+  PP_SSAOStrength: 1
+  ToD_NormalizedTime: 0.5
+  ToD_AutoAdvance: false
+  ToD_DayDuration: 600
+  ToD_SunAzimuth: 45
+  ToD_SunMaxStrength: 5
+  ToD_SunNoonTurbidity: 2
+  ToD_SunHazeTurbidity: 3.5
+  Fog_Enabled: false
+  Fog_Color: [0.5, 0.550000012, 0.620000005]
+  Fog_Density: 0
+  Fog_HeightStart: 0
+  Fog_HeightDensity: 0
+  Fog_AerialColor: [0.550000012, 0.730000019, 0.899999976]
+  Fog_AerialStrength: 0
 Entities:
-  - Entity: 12343434567890
-    TagComponent:
-      Tag: Camera
-    CameraComponent:
-      Camera:
-        ProjectionType: 0
-        OrthographicFar: 1
-        OrthographicNear: -1
-        OrthographicSize: 10
-        PerspectiveFar: 1000
-        PerspectiveNear: 0.00999999978
-        PerspectiveFOV: 45
-      Primary: true
-      FixedAspectRatio: false
-    TransformComponent:
-      Translation: [0, -0.200000003, 11.1000004]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 1234567890
-    TagComponent:
-      Tag: Cube 2
-    ScriptComponent:
-      Name: Azure.BoxPawn
-      ScriptFields:
-        Speed: 0.100000001
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 0, 0, 1]
-    Rigidbody2DComponent:
-      BodyType: 1
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
   - Entity: 1234567556890
     TagComponent:
       Tag: Cube 1
@@ -60,3 +66,40 @@ Entities:
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
+  - Entity: 1234567890
+    TagComponent:
+      Tag: Cube 2
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 0, 0, 1]
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 12343434567890
+    TagComponent:
+      Tag: Camera
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 45
+      Primary: true
+      FixedAspectRatio: false
+    TransformComponent:
+      Translation: [0, -0.200000003, 11.1000004]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]

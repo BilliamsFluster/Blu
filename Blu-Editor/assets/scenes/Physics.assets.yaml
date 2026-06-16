@@ -1,0 +1,106 @@
+Scene: assets/scenes/Physics.blu
+Summary:
+  Referenced: 11
+  Missing: 11
+  External: 0
+  Imported: 0
+Assets:
+  - Type: Texture
+    Path: assets/textures/Ground.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Ground.png
+    SourceEntity: 1273781723573688431
+    SourceTag: WallLeft
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/clouds_2.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/clouds_2.png
+    SourceEntity: 11425581211492664981
+    SourceTag: Clouds2
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/clouds_1.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/clouds_1.png
+    SourceEntity: 10122208013910117312
+    SourceTag: Clouds1
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/plant.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/plant.png
+    SourceEntity: 10816776463111091516
+    SourceTag: Plant
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_3.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_3.png
+    SourceEntity: 8914014460895932578
+    SourceTag: Ground3
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_2.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_2.png
+    SourceEntity: 11845927707545961069
+    SourceTag: Ground2
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_1.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_1.png
+    SourceEntity: 9114750310479479275
+    SourceTag: Ground1
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/sky.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/sky.png
+    SourceEntity: 15331168643400094970
+    SourceTag: Sky
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Ground.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Ground.png
+    SourceEntity: 16854878493202120524
+    SourceTag: Sprite
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/rocks.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/rocks.png
+    SourceEntity: 1752785468348932022
+    SourceTag: Rocks
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
+  - Type: Texture
+    Path: assets/textures/Ground.png
+    ResolvedPath: D:/GraphicsProgramming/GameEngine/Blu/assets/textures/Ground.png
+    SourceEntity: 6637580216032356728
+    SourceTag: WallRight
+    SourceComponent: SpriteRendererComponent.Material.Albedo
+    Exists: false
+    External: false
+    Imported: false
