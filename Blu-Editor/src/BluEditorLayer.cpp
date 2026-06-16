@@ -751,6 +751,10 @@ namespace Blu
 		// level victory → menu). No-op outside Play — only the runtime UI queues loads.
 		ProcessPendingSceneLoad();
 
+		// Keep the cursor in the right mode across menu↔level transitions: captured for FP
+		// gameplay (scene has a controllable pawn), free for menus (so the UI is clickable).
+		SyncGameCursor();
+
 		// ---- Deferred entity pick --------------------------------------------------
 		// OnMouseButtonPressed only sets m_PendingEntityPick. We do the actual
 		// ReadPixel here, after the scene has rendered to m_FrameBuffer this frame,
@@ -1715,16 +1719,37 @@ namespace Blu
 			m_SceneMissing = false;
 			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 
-			// Capture mouse for game input — hide cursor and lock it to the window
+			// Capture the mouse for FP look — but only if this scene has a controllable pawn.
+			// Menu scenes (no CharacterControllerComponent) keep the cursor free so the PLAY
+			// button is clickable. SyncGameCursor() is also called each frame so a runtime
+			// menu->level transition captures the cursor once the level loads.
 			m_F8Prev = false;
-			GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+			SyncGameCursor();
 		}
 		else
 		{
 			m_SceneMissing = true;
 		}
+	}
+
+	bool BluEditorLayer::SceneWantsCursorCapture()
+	{
+		if (m_SceneState != SceneState::Play || !m_ActiveScene)
+			return false;
+		auto view = m_ActiveScene->GetAllEntitiesWith<CharacterControllerComponent>();
+		return view.begin() != view.end();
+	}
+
+	void BluEditorLayer::SyncGameCursor()
+	{
+		const bool capture = SceneWantsCursorCapture();
+		if (capture == m_GameCursorCaptured)
+			return; // unchanged — avoid per-frame GLFW/ImGui churn
+		m_GameCursorCaptured = capture;
+		GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+		glfwSetInputMode(win, GLFW_CURSOR, capture ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+		if (capture) ImGui::GetIO().ConfigFlags |=  ImGuiConfigFlags_NoMouse;
+		else         ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
 	}
 
 	void BluEditorLayer::OnScenePause()
@@ -1755,10 +1780,7 @@ namespace Blu
 			m_PlayButtonHit = false;
 			m_SceneState = SceneState::Edit;
 
-			// Release mouse back to the editor
-			GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+			SyncGameCursor(); // back in Edit -> release the cursor to the editor
 		}
 			
 
@@ -1772,9 +1794,7 @@ namespace Blu
 		m_ActiveScene->SetPlayerInputEnabled(false);
 		m_ActiveScene->BeginEject(&m_EditorCamera);
 
-		GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+		SyncGameCursor(); // ejected (state != Play) -> release the cursor
 	}
 
 	void BluEditorLayer::OnSceneRepossess()
@@ -1782,11 +1802,9 @@ namespace Blu
 		if (m_SceneState != SceneState::Eject) return;
 		m_ActiveScene->EndEject();
 		m_SceneState = SceneState::Play;
-
-		GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
 		m_ActiveScene->SetPlayerInputEnabled(true);
+
+		SyncGameCursor(); // re-possessed a pawn -> recapture the cursor
 	}
 
 	void BluEditorLayer::OnScenePlayNewWindow()

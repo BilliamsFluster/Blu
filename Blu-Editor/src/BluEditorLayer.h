@@ -42,6 +42,8 @@ namespace Blu
 		void UIDrawTitlebar(float& outTitlebarHeight);
 		void DrawStatusBar();   // bottom Unreal-style bar: perf readout + Trace toggle
 		void ToggleTrace();     // start/stop a profiling capture from the status bar
+		bool SceneWantsCursorCapture(); // true while playing a scene with a controllable pawn
+		void SyncGameCursor();  // lock the cursor for gameplay, free it for menus (change-detected)
 		void ResetEditorLayout();
 		void LoadEditorSettings();
 		void SaveEditorSettings();
@@ -178,6 +180,9 @@ namespace Blu
 		// ---- Trace capture (status-bar button) ------------------------
 		bool        m_Tracing = false;
 		std::string m_TraceFilePath;
+
+		// True while the OS cursor is captured for FP gameplay (menus keep it free).
+		bool        m_GameCursorCaptured = false;
 
 		static constexpr int kPerfSamples = 128;
 		float m_FrameTimePlot[kPerfSamples]{};
