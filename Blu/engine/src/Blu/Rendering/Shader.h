@@ -1,5 +1,6 @@
 #pragma once
 #include "Blu/Core/Core.h"
+#include <cstdint>
 #include <unordered_map>
 #include <glm/glm.hpp>
 
@@ -25,6 +26,16 @@ namespace Blu
 		virtual void SetUniformFloat4(const std::string& name, const glm::vec4& color) = 0;
 		virtual void SetUniformMat3(const std::string & name, const glm::mat3 & matrix) = 0;
 		virtual void SetUniformMat4(const std::string& name, const glm::mat4& matrix) = 0;
+
+		// Fast-path uniform writes: resolve a uniform's handle ONCE via GetUniformHandle, then write
+		// by handle every draw to skip the per-call std::string hash + unordered_map lookup (the
+		// dominant per-draw CPU cost, especially in Debug builds). GetUniformHandle returns < 0 for an
+		// unknown uniform or a backend that doesn't implement it; the handle setters no-op on < 0, so
+		// callers fall back to the string overloads. Default impls keep non-DX11 backends working.
+		virtual int32_t GetUniformHandle(const std::string& name) { return -1; }
+		virtual void SetUniformMat4(int32_t handle, const glm::mat4& matrix) {}
+		virtual void SetUniformMat3(int32_t handle, const glm::mat3& matrix) {}
+		virtual void SetUniformInt (int32_t handle, int value) {}
 		
 		virtual void SetUniformPointLight(const std::string& name, const struct PointLightComponent& light) = 0;
 		virtual void SetUniformDirectionalLight(const std::string& name, const struct DirectionalLightComponent& light) = 0;

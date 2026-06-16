@@ -231,15 +231,34 @@ namespace Blu
         return mc.MaterialInstance ? *mc.MaterialInstance : s_DefaultMaterial;
     }
 
-    // Issue a single draw call. The pipeline state AND the material (uniforms + textures) must
-    // already be bound by the caller — material binding is hoisted out of the per-draw path and
-    // done only on a material change (draw calls are sorted to group identical materials), so only
-    // the per-object uniforms below are uploaded every draw.
-    static void IssueDrawCall(Shader& sh, const MeshDrawCall& dc)
+    // Per-object uniform handles, resolved ONCE per shader per FlushDrawCalls (not per draw) so the
+    // per-draw path skips the std::string hash + unordered_map lookup that dominated CPU time
+    // (especially in Debug). Falls back to the string overloads when a backend returns < 0.
+    struct PerObjectUniformHandles { int32_t Model = -1, Normal = -1, EntityID = -1; };
+    static PerObjectUniformHandles ResolvePerObjectHandles(Shader& sh)
     {
-        sh.SetUniformMat4("u_Model", dc.Transform);
-        sh.SetUniformMat3("u_NormalMatrix", dc.NormalMatrix);
-        sh.SetUniformInt("u_EntityID", dc.EntityID);
+        return { sh.GetUniformHandle("u_Model"),
+                 sh.GetUniformHandle("u_NormalMatrix"),
+                 sh.GetUniformHandle("u_EntityID") };
+    }
+
+    // Issue a single draw call. The pipeline state AND the material (uniforms + textures) must already
+    // be bound by the caller — material binding is hoisted to material-change only. Per-object uniforms
+    // are written via cached handles (resolved once per frame in the caller).
+    static void IssueDrawCall(Shader& sh, const PerObjectUniformHandles& h, const MeshDrawCall& dc)
+    {
+        if (h.Model >= 0)
+        {
+            sh.SetUniformMat4(h.Model, dc.Transform);
+            sh.SetUniformMat3(h.Normal, dc.NormalMatrix);
+            sh.SetUniformInt(h.EntityID, dc.EntityID);
+        }
+        else // backend without handle support (e.g. OpenGL) — string fallback
+        {
+            sh.SetUniformMat4("u_Model", dc.Transform);
+            sh.SetUniformMat3("u_NormalMatrix", dc.NormalMatrix);
+            sh.SetUniformInt("u_EntityID", dc.EntityID);
+        }
         sh.Flush();
         dc.VAO->Bind();
         RenderCommand::DrawIndexed(dc.VAO, dc.IndexCount);
@@ -397,6 +416,7 @@ namespace Blu
                 geometryShader->Bind();
                 geometryShader->SetUniformMat4("u_ViewProjectionMatrix", s_Data3D->ViewProjectionMatrix);
                 const MaterialRenderContext geometryContext { RenderPath::Deferred, false, false };
+                const PerObjectUniformHandles geoHandles = ResolvePerObjectHandles(*geometryShader);
                 const Material* lastGeometryMaterial = nullptr;
                 for (const auto& dc : s_OpaqueDrawCalls)
                 {
@@ -406,7 +426,7 @@ namespace Blu
                         dc.Mat->Bind(*geometryShader); // material uniforms + textures, once per group
                         lastGeometryMaterial = dc.Mat;
                     }
-                    IssueDrawCall(*geometryShader, dc);
+                    IssueDrawCall(*geometryShader, geoHandles, dc);
                 }
                 geometryShader->UnBind();
 
@@ -457,6 +477,7 @@ namespace Blu
         if (!usedDeferred && s_Data3D->HasShadowMap && s_Data3D->CSMInstance)
             s_Data3D->CSMInstance->BindTexture(5);
 
+        const PerObjectUniformHandles fwdHandles = ResolvePerObjectHandles(sh);
         const Material* lastMat = nullptr;
         if (!usedDeferred)
         {
@@ -468,7 +489,7 @@ namespace Blu
                     dc.Mat->Bind(sh); // material uniforms + textures, once per material group
                     lastMat = dc.Mat;
                 }
-                IssueDrawCall(sh, dc);
+                IssueDrawCall(sh, fwdHandles, dc);
             }
         }
 
@@ -486,7 +507,7 @@ namespace Blu
                 dc.Mat->Bind(sh); // material uniforms + textures, once per material group
                 lastMat = dc.Mat;
             }
-            IssueDrawCall(sh, dc);
+            IssueDrawCall(sh, fwdHandles, dc);
         }
 
         s_OpaqueDrawCalls.clear();

@@ -214,6 +214,14 @@ namespace Blu
     {
         auto* dev = D3D11Context::Get()->GetDevice();
 
+        // Reset reflection + handle state so a reload/recompile rebuilds cleanly (the reflection
+        // passes below APPEND, so without this a hot-reload would duplicate cbuffers / stale offsets).
+        m_CBuffers.clear();
+        m_UniformMap.clear();
+        m_CBufferNameMap.clear();
+        m_HandleCache.clear();
+        m_HandleByName.clear();
+
         // Vertex
         if (!CompileStage(vertexSrc, "vs_5_0", m_VSBlob.GetAddressOf())) return;
         dev->CreateVertexShader(m_VSBlob->GetBufferPointer(),
@@ -258,6 +266,11 @@ namespace Blu
     void D3D11Shader::CompileCompute(const std::string& src)
     {
         auto* dev = D3D11Context::Get()->GetDevice();
+        m_CBuffers.clear();
+        m_UniformMap.clear();
+        m_CBufferNameMap.clear();
+        m_HandleCache.clear();
+        m_HandleByName.clear();
 
         if (!CompileStage(src, "cs_5_0", m_CSBlob.GetAddressOf())) return;
         dev->CreateComputeShader(m_CSBlob->GetBufferPointer(),
@@ -438,12 +451,56 @@ namespace Blu
             // Silently ignore unknowns (shader may not use every uniform)
             return;
         }
-        const UniformInfo& info = it->second;
+        WriteToShadowInfo(it->second, data, size);
+    }
+
+    void D3D11Shader::WriteToShadowInfo(const UniformInfo& info, const void* data, uint32_t size)
+    {
         auto& cb = m_CBuffers[info.cbufferIndex];
-        BLU_CORE_ASSERT(info.byteOffset + size <= cb.shadow.size(),
-            "Uniform '{0}' overflows constant buffer", name);
+        if (info.byteOffset + size > cb.shadow.size())
+            return;
         memcpy(cb.shadow.data() + info.byteOffset, data, size);
         cb.dirty = true;
+    }
+
+    // Resolve (and cache) a uniform handle. Called a handful of times per frame (not per draw), so
+    // the one string lookup here is amortized; the per-draw setters below skip it entirely.
+    int32_t D3D11Shader::GetUniformHandle(const std::string& name)
+    {
+        auto cached = m_HandleByName.find(name);
+        if (cached != m_HandleByName.end())
+            return cached->second;
+        int32_t handle = -1;
+        auto it = m_UniformMap.find(name);
+        if (it != m_UniformMap.end())
+        {
+            handle = (int32_t)m_HandleCache.size();
+            m_HandleCache.push_back(it->second);
+        }
+        m_HandleByName[name] = handle; // cache misses (-1) too, so repeats don't re-query
+        return handle;
+    }
+
+    void D3D11Shader::SetUniformMat4(int32_t handle, const glm::mat4& m)
+    {
+        if (handle < 0 || handle >= (int32_t)m_HandleCache.size()) return;
+        WriteToShadowInfo(m_HandleCache[handle], glm::value_ptr(m), 64);
+    }
+
+    void D3D11Shader::SetUniformInt(int32_t handle, int v)
+    {
+        if (handle < 0 || handle >= (int32_t)m_HandleCache.size()) return;
+        WriteToShadowInfo(m_HandleCache[handle], &v, 4);
+    }
+
+    void D3D11Shader::SetUniformMat3(int32_t handle, const glm::mat3& m)
+    {
+        if (handle < 0 || handle >= (int32_t)m_HandleCache.size()) return;
+        float padded[12] = {}; // float3x3 → 3 columns padded to float4 (48 bytes), matching the string path
+        for (int c = 0; c < 3; c++)
+            for (int r = 0; r < 3; r++)
+                padded[c * 4 + r] = m[c][r];
+        WriteToShadowInfo(m_HandleCache[handle], padded, 48);
     }
 
     void D3D11Shader::SetUniformInt      (const std::string& name, int v)                { WriteToShadow(name, &v, 4); }

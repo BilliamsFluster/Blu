@@ -60,6 +60,12 @@ namespace Blu
         void SetUniformMat4     (const std::string& name, const glm::mat4& matrix)  override;
         void SetUniformVec3Array(const std::string& name, const glm::vec3* values, uint32_t n) override;
 
+        // Handle-based fast path (resolve once, write by handle per draw).
+        int32_t GetUniformHandle(const std::string& name) override;
+        void SetUniformMat4     (int32_t handle, const glm::mat4& matrix) override;
+        void SetUniformMat3     (int32_t handle, const glm::mat3& matrix) override;
+        void SetUniformInt      (int32_t handle, int value) override;
+
         // Not used by 3D/2D renderers — no-op stubs
         void SetUniformPointLight      (const std::string&, const struct PointLightComponent&)   override {}
         void SetUniformDirectionalLight(const std::string&, const struct DirectionalLightComponent&) override {}
@@ -86,6 +92,7 @@ namespace Blu
         void ReflectConstantBuffers(ID3DBlob* blob);
 
         void WriteToShadow(const std::string& name, const void* data, uint32_t size);
+        void WriteToShadowInfo(const UniformInfo& info, const void* data, uint32_t size); // handle path
         void BindConstantBuffers()  const; // called from Bind(): maps all buffer slots once
         void UploadDirtyCBuffers()  const; // called from Flush(): only UpdateSubresource dirty ones
 
@@ -109,5 +116,11 @@ namespace Blu
         std::vector<D3D11CBuffer>                    m_CBuffers;
         std::unordered_map<std::string, UniformInfo> m_UniformMap;
         std::unordered_map<std::string, uint32_t>    m_CBufferNameMap;  // cbuffer name → slot index
+
+        // Handle cache for the fast-path setters: GetUniformHandle returns an index into
+        // m_HandleCache (deduped via m_HandleByName). Cleared when the shader (re)compiles, since
+        // uniform offsets can change. -1 stored for unknown names so repeats don't re-query the map.
+        std::vector<UniformInfo>                     m_HandleCache;
+        std::unordered_map<std::string, int32_t>     m_HandleByName;
     };
 }
