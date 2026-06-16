@@ -130,6 +130,7 @@ namespace Blu
 		Shared<class Material> MaterialInstance;
 		Shared<Model> ModelAsset;       // resolved runtime cache (rendered)
 		AssetHandle ModelHandle = AssetHandle(0); // stable source reference; resolves ModelAsset
+		AssetHandle MaterialHandle = AssetHandle(0); // stable .blumat reference; resolves MaterialInstance (else inline PBR_*)
 		std::string FilePath;           // deprecated fallback / human-readable source path
 		PrimitiveType Primitive = PrimitiveType::None;
 

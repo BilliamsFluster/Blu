@@ -363,6 +363,101 @@ namespace
 		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
+	// Validates the handle-based material load path (#17): a MeshComponent that references a .blumat by
+	// MaterialHandle resolves it to the concrete Material at load time (handle -> LoadMaterial ->
+	// ToMaterial), while a MeshComponent with no handle still loads its inline PBR_* values (the legacy
+	// fallback). Meshes use a source path + Primitive::None so no GPU geometry is built headlessly.
+	void TestMeshComponentMaterialHandle()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsMaterialHandle-" + std::to_string((uint64_t)Blu::UUID()));
+		const std::filesystem::path scenePath = testDirectory / "MaterialHandle.blu";
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+		Require(fileSystem.Write("project://assets/meshA.obj", "o a\n"), "mesh A source write failed");
+		Require(fileSystem.Write("project://assets/meshB.obj", "o b\n"), "mesh B source write failed");
+
+		auto& assets = Blu::AssetManager::Get();
+		assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml");
+		assets.Initialize();
+
+		// Author a distinctive .blumat and register it for a stable handle.
+		Blu::MaterialAsset blumat("project://assets/handle.blumat");
+		blumat.GetProperties().AlbedoColor = glm::vec4(0.2f, 0.6f, 0.9f, 1.0f);
+		blumat.GetProperties().Metallic    = 0.77f;
+		blumat.GetProperties().Roughness   = 0.13f;
+		blumat.SetBlendMode(Blu::BlendMode::Masked);
+		blumat.SetShadingModel(Blu::ShadingModel::Unlit);
+		blumat.SetTwoSided(true);
+		blumat.SetAlphaCutoff(0.4f);
+		Require(blumat.SaveToFile("project://assets/handle.blumat"), "blumat save failed");
+		const Blu::AssetHandle materialHandle = assets.Import("project://assets/handle.blumat");
+		Require((uint64_t)materialHandle != 0, "material import did not yield a handle");
+
+		// Entity A references the material by handle (no inline material). Entity B uses an inline
+		// material with no handle — the legacy fallback path.
+		auto scene = std::make_shared<Blu::Scene>();
+		Blu::Entity handleMesh = scene->CreateEntity("HandleMesh");
+		auto& mcA = handleMesh.AddComponent<Blu::MeshComponent>();
+		mcA.FilePath = "project://assets/meshA.obj";
+		mcA.MaterialHandle = materialHandle;
+
+		Blu::Entity inlineMesh = scene->CreateEntity("InlineMesh");
+		auto& mcB = inlineMesh.AddComponent<Blu::MeshComponent>();
+		mcB.FilePath = "project://assets/meshB.obj";
+		mcB.MaterialInstance = Blu::Material::Create();
+		mcB.MaterialInstance->Metallic  = 0.05f;
+		mcB.MaterialInstance->Roughness = 0.95f;
+
+		Blu::SceneSerializer serializer(scene);
+		serializer.Serialize(scenePath.string());
+
+		std::ifstream serialized(scenePath);
+		std::stringstream text; text << serialized.rdbuf();
+		Require(text.str().find("MaterialHandle:") != std::string::npos, "scene did not persist a MaterialHandle");
+
+		// Reload: the handle mesh must come back with the .blumat's material, the inline mesh with its own.
+		auto reloaded = std::make_shared<Blu::Scene>();
+		Blu::SceneSerializer reloadedSerializer(reloaded);
+		Require(reloadedSerializer.Deserialize(scenePath.string()), "material-handle scene did not deserialize");
+
+		auto approx = [](float a, float b) { return std::fabs(a - b) < 0.001f; };
+		bool sawHandleMesh = false, sawInlineMesh = false;
+		auto view = reloaded->GetAllEntitiesWith<Blu::MeshComponent>();
+		for (auto e : view)
+		{
+			auto& mc = view.get<Blu::MeshComponent>(e);
+			Require(mc.MaterialInstance != nullptr, "deserialized mesh has no material");
+			if ((uint64_t)mc.MaterialHandle != 0)
+			{
+				sawHandleMesh = true;
+				Require((uint64_t)mc.MaterialHandle == (uint64_t)materialHandle, "material handle did not round-trip");
+				// Values must come from the .blumat via ToMaterial, not inline defaults.
+				Require(approx(mc.MaterialInstance->Metallic, 0.77f),  "handle material lost metallic");
+				Require(approx(mc.MaterialInstance->Roughness, 0.13f), "handle material lost roughness");
+				Require(mc.MaterialInstance->Blend == Blu::BlendMode::Masked,     "handle material lost blend mode");
+				Require(mc.MaterialInstance->Shading == Blu::ShadingModel::Unlit, "handle material lost shading model");
+				Require(mc.MaterialInstance->TwoSided, "handle material lost two-sided flag");
+			}
+			else
+			{
+				sawInlineMesh = true;
+				Require(approx(mc.MaterialInstance->Metallic, 0.05f),  "inline-fallback material lost metallic");
+				Require(approx(mc.MaterialInstance->Roughness, 0.95f), "inline-fallback material lost roughness");
+			}
+		}
+		Require(sawHandleMesh, "handle-based mesh was not found after reload");
+		Require(sawInlineMesh, "inline-fallback mesh was not found after reload");
+
+		assets.Reset();
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestAssetHandleMigrationAcrossComponents()
 	{
 		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
@@ -1078,6 +1173,7 @@ int main()
 		TestMaterialResolver();
 		TestMaterialAssetPersistence();
 		TestMaterialAssetFullFidelity();
+		TestMeshComponentMaterialHandle();
 		TestMaterialGraphCompiler();
 		TestSceneRenderPipelinePlan();
 		TestSharedLightBufferPacking();
