@@ -231,16 +231,30 @@ namespace Blu
         return mc.MaterialInstance ? *mc.MaterialInstance : s_DefaultMaterial;
     }
 
-    // Issue a single draw call with the correct pipeline state already bound
+    // Issue a single draw call. The pipeline state AND the material (uniforms + textures) must
+    // already be bound by the caller — material binding is hoisted out of the per-draw path and
+    // done only on a material change (draw calls are sorted to group identical materials), so only
+    // the per-object uniforms below are uploaded every draw.
     static void IssueDrawCall(Shader& sh, const MeshDrawCall& dc)
     {
         sh.SetUniformMat4("u_Model", dc.Transform);
         sh.SetUniformMat3("u_NormalMatrix", dc.NormalMatrix);
         sh.SetUniformInt("u_EntityID", dc.EntityID);
-        dc.Mat->Bind(sh);
         sh.Flush();
         dc.VAO->Bind();
         RenderCommand::DrawIndexed(dc.VAO, dc.IndexCount);
+    }
+
+    // Coarse pipeline bucket for sort grouping: identical buckets share one BindPipelineForMaterial.
+    // (Opaque draws only ever produce 0/1; 2/3 are the transparent list.)
+    static uint32_t MaterialPipelineClass(const Material& m)
+    {
+        switch (m.Blend)
+        {
+        case BlendMode::Transparent: return 2;
+        case BlendMode::Additive:    return 3;
+        default:                     return m.TwoSided ? 1u : 0u; // Opaque / Masked
+        }
     }
 
 
@@ -360,8 +374,15 @@ namespace Blu
         iblGPU.IBLMipLevels = IBLSystem::GetPrefilterMips();
         iblGPU._pad        = 0.0f;
 
+        // Sort opaques by (pipeline bucket, material, depth): group identical pipelines and
+        // materials so BindPipelineForMaterial + Material::Bind are issued once per group instead of
+        // per draw, while keeping front-to-back order WITHIN a material to preserve early-Z benefit.
         std::sort(s_OpaqueDrawCalls.begin(), s_OpaqueDrawCalls.end(),
             [](const MeshDrawCall& a, const MeshDrawCall& b) {
+                const uint32_t pa = MaterialPipelineClass(*a.Mat);
+                const uint32_t pb = MaterialPipelineClass(*b.Mat);
+                if (pa != pb)       return pa < pb;
+                if (a.Mat != b.Mat) return a.Mat < b.Mat;
                 return a.DistToCamera < b.DistToCamera;
             });
 
@@ -382,6 +403,7 @@ namespace Blu
                     if (dc.Mat != lastGeometryMaterial)
                     {
                         BindPipelineForMaterial(*dc.Mat, geometryContext);
+                        dc.Mat->Bind(*geometryShader); // material uniforms + textures, once per group
                         lastGeometryMaterial = dc.Mat;
                     }
                     IssueDrawCall(*geometryShader, dc);
@@ -443,6 +465,7 @@ namespace Blu
                 if (dc.Mat != lastMat)
                 {
                     BindPipelineForMaterial(*dc.Mat);
+                    dc.Mat->Bind(sh); // material uniforms + textures, once per material group
                     lastMat = dc.Mat;
                 }
                 IssueDrawCall(sh, dc);
@@ -460,6 +483,7 @@ namespace Blu
             if (dc.Mat != lastMat)
             {
                 BindPipelineForMaterial(*dc.Mat);
+                dc.Mat->Bind(sh); // material uniforms + textures, once per material group
                 lastMat = dc.Mat;
             }
             IssueDrawCall(sh, dc);
