@@ -183,6 +183,12 @@ namespace Blu
 
         bool CastRay(const glm::vec3& origin, const glm::vec3& direction, glm::vec3& outHitPosition) const;
 
+        // Segment cast that also reports the world-space surface normal and hit distance.
+        // `direction`'s length is the ray length; outDistance is along the ray in world units.
+        // Used for placing surface-aligned impact decals (bullet holes on walls/floors).
+        bool CastRay(const glm::vec3& origin, const glm::vec3& direction,
+                     glm::vec3& outHitPosition, glm::vec3& outHitNormal, float& outDistance) const;
+
         bool IsValid() const { return m_PhysicsSystem != nullptr; }
 
         JPH::PhysicsSystem*       GetPhysicsSystem()  const { return m_PhysicsSystem; }

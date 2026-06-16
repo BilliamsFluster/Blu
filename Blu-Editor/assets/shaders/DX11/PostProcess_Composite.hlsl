@@ -10,7 +10,7 @@ cbuffer CompositeParams : register(b0)
     float  u_InvH;            // 1 / viewport height
     float  u_SSAOStrength;    // 0 = off, 1 = full AO darkening
     float  u_GodRayIntensity; // strength of additive light shafts
-    float  u_GodRayVisible;   // 1 = sun on-screen, render god rays
+    float  u_GodRaySunFade;   // smooth fade [0..1] as the sun nears a screen edge / goes behind camera
     float  u_SunU;            // sun screen position (UV)
     float  u_SunV;
     float2 _pad;
@@ -102,7 +102,7 @@ float4 main(PS_IN IN) : SV_Target
 
     // God rays: march toward the sun's screen position accumulating bright (sky/sun)
     // samples with decay — screen-space light shafts. Added to HDR before tonemapping.
-    if (u_GodRayVisible > 0.5 && u_GodRayIntensity > 0.0)
+    if (u_GodRaySunFade > 0.0 && u_GodRayIntensity > 0.0)
     {
         float2 sun   = float2(u_SunU, u_SunV);
         const int GR_SAMPLES = 24;
@@ -120,7 +120,7 @@ float4 main(PS_IN IN) : SV_Target
             shafts += s * bright * illum;
             illum  *= 0.97;
         }
-        hdr += shafts * (u_GodRayIntensity / float(GR_SAMPLES));
+        hdr += shafts * (u_GodRayIntensity / float(GR_SAMPLES)) * u_GodRaySunFade;
     }
 
     // SSAO — multiply into scene before tonemapping (dims indirect light)

@@ -26,6 +26,25 @@ namespace Blu
         static void ComputeBindPose(const Skeleton& skeleton,
                                     std::vector<glm::mat4>& finalBoneMatrices);
 
+        // Per-bone linear blend of two pose matrix sets (out = lerp(a, b, t)). t is clamped to
+        // [0,1]. Matrix-level lerp (not slerp) — fast and visually fine for short crossfades.
+        static void BlendClips(float t,
+                               const std::vector<glm::mat4>& a,
+                               const std::vector<glm::mat4>& b,
+                               std::vector<glm::mat4>& out);
+
+        // Crossfade: advance both clips (fromTime/toTime by deltaTime), advance blendElapsed,
+        // and write the blended pose. Returns true once blendElapsed >= blendDuration, at which
+        // point the caller should make `toClip` the sole active clip. See AnimatorComponent::PlayClip.
+        static bool UpdateWithBlending(float deltaTime,
+                                       float& fromTime, float& toTime,
+                                       float& blendElapsed, float blendDuration,
+                                       bool loop, float speedScale,
+                                       const AnimationClip& fromClip,
+                                       const AnimationClip& toClip,
+                                       const Skeleton& skeleton,
+                                       std::vector<glm::mat4>& finalBoneMatrices);
+
     private:
         static void ComputeNodeTransforms(const BoneNode& node,
                                           const glm::mat4& parentTransform,

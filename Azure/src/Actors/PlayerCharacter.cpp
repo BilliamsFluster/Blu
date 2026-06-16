@@ -339,6 +339,7 @@ namespace Azure
 		for (auto e : projectiles)
 		{
 			auto&& [t, proj] = projectiles.get<Blu::TransformComponent, Blu::ProjectileComponent>(e);
+			const glm::vec3 prevPos = t.Translation;
 			t.Translation += proj.Velocity * dt;
 			proj.Life -= dt;
 
@@ -356,11 +357,63 @@ namespace Azure
 					// Impact spark burst + a brief warm flash light at the hit point.
 					Blu::GpuParticleSystem::Get().Emit(t.Translation, 16, glm::vec3(0.0f, 1.5f, 0.0f), 4.0f, 0.5f, 0.09f, 0.0f);
 					Blu::Renderer3D::AddDynamicLight(t.Translation, glm::vec3(1.0f, 0.65f, 0.25f), 6.0f, 4.5f);
+					// Fading blood decal at the impact point (aged out by Scene::UpdateDecalLifetimes).
+					{
+						Blu::Entity decal = scene->CreateEntity("BloodDecal");
+						auto& dt2 = decal.HasComponent<Blu::TransformComponent>()
+							? decal.GetComponent<Blu::TransformComponent>()
+							: decal.AddComponent<Blu::TransformComponent>();
+						dt2.Translation = t.Translation;
+						dt2.Scale       = glm::vec3(0.9f, 0.9f, 0.9f);
+						auto& dcl    = decal.AddComponent<Blu::DecalComponent>();
+						dcl.Color    = glm::vec3(0.42f, 0.03f, 0.02f);
+						dcl.Opacity  = 0.9f;
+						dcl.Falloff  = 0.5f;
+						dcl.Lifetime = 8.0f;
+					}
 					if (HasComponent<Blu::AmmoComponent>())
 						GetComponent<Blu::AmmoComponent>().HitFlash = 0.15f; // flash the hitmarker
 					if (m_ImpactSound != Blu::kInvalidSound)
 						Blu::AudioEngine::Get().Play(m_ImpactSound);
 					break;
+				}
+			}
+
+			// World-geometry collision: a bullet that missed every zombie sweeps its travel this
+			// frame against the physics world; on a wall/floor hit it stops and punches a
+			// surface-aligned bullet-hole decal (oriented so the stamp axis follows the normal).
+			if (!hit)
+			{
+				const glm::vec3 seg    = t.Translation - prevPos;
+				const float     segLen = glm::length(seg);
+				if (segLen > 1.0e-4f)
+				{
+					glm::vec3 hitPos(0.0f), hitNormal(0.0f, 1.0f, 0.0f);
+					float hitDist = 0.0f;
+					if (scene->RaycastWorld(prevPos, seg, hitPos, hitNormal, hitDist) && hitDist <= segLen)
+					{
+						hit = true;
+						// Bullet hole: dark scorch disc lying flat on the surface. local +Y is the
+						// decal's projection axis, so rotate +Y onto the surface normal.
+						glm::quat orient = glm::rotation(glm::vec3(0.0f, 1.0f, 0.0f),
+						                                 glm::normalize(hitNormal));
+						Blu::Entity decal = scene->CreateEntity("BulletHole");
+						auto& bt = decal.HasComponent<Blu::TransformComponent>()
+							? decal.GetComponent<Blu::TransformComponent>()
+							: decal.AddComponent<Blu::TransformComponent>();
+						bt.Translation = hitPos + glm::normalize(hitNormal) * 0.02f; // lift off z-fight
+						bt.Rotation    = glm::eulerAngles(orient);
+						bt.Scale       = glm::vec3(0.35f, 0.35f, 0.35f);
+						auto& bd    = decal.AddComponent<Blu::DecalComponent>();
+						bd.Color    = glm::vec3(0.05f, 0.045f, 0.04f);
+						bd.Opacity  = 0.95f;
+						bd.Falloff  = 0.65f;
+						bd.Lifetime = 20.0f; // long-lived but aged out so holes don't accumulate forever
+						// Debris spark + 3D impact thud at the wall.
+						Blu::GpuParticleSystem::Get().Emit(hitPos, 12, glm::normalize(hitNormal) * 2.5f, 3.5f, 0.4f, 0.06f, 0.0f);
+						if (m_ImpactSound != Blu::kInvalidSound)
+							Blu::AudioEngine::Get().Play(m_ImpactSound);
+					}
 				}
 			}
 

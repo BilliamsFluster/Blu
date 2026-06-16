@@ -1,15 +1,62 @@
-Scene: assets\scenes\Physics.blu
+SceneVersion: 1
+Scene: assets/scenes/Physics.blu
+RenderSettings:
+  UseShadows: false
+  UsePostProcess: false
+  UseSkybox: false
+  UseTimeOfDay: false
+  Sky_Turbidity: 2.5
+  Sky_SkyExposure: 0.0250000004
+  Sky_GroundColor: [0.219999999, 0.180000007, 0.140000001]
+  Sky_SunColor: [1, 0.949999988, 0.800000012]
+  Sky_SunSize: 0.999499977
+  Sky_SunStrength: 3
+  Sky_CloudColor: [0.920000017, 0.930000007, 0.970000029]
+  Sky_CloudCoverage: 0.449999988
+  Sky_CloudDensity: 0
+  Sky_CloudSoftness: 0.349999994
+  Sky_CloudHeight: 600
+  Sky_CloudScale: 900
+  Sky_CloudWindDirection: [1, 0.349999994]
+  Sky_CloudScrollSpeed: 0.0149999997
+  Sky_CloudShadowing: 0.649999976
+  Sky_CloudHorizonFade: 0.219999999
+  PP_EnableBloom: true
+  PP_BloomThreshold: 1
+  PP_BloomStrength: 0.0500000007
+  PP_EnableFXAA: true
+  PP_PreviewMode: 0
+  PP_EnableSSAO: true
+  PP_SSAORadius: 0.5
+  PP_SSAOBias: 0.0250000004
+  PP_SSAOPower: 2
+  PP_SSAOSamples: 16
+  PP_SSAOStrength: 1
+  ToD_NormalizedTime: 0.5
+  ToD_AutoAdvance: false
+  ToD_DayDuration: 600
+  ToD_SunAzimuth: 45
+  ToD_SunMaxStrength: 5
+  ToD_SunNoonTurbidity: 2
+  ToD_SunHazeTurbidity: 3.5
+  Fog_Enabled: false
+  Fog_Color: [0.5, 0.550000012, 0.620000005]
+  Fog_Density: 0
+  Fog_HeightStart: 0
+  Fog_HeightDensity: 0
+  Fog_AerialColor: [0.550000012, 0.730000019, 0.899999976]
+  Fog_AerialStrength: 0
 Entities:
-  - Entity: 6637580216032356728
+  - Entity: 1273781723573688431
     TagComponent:
-      Tag: WallRight
+      Tag: WallLeft
     TransformComponent:
-      Translation: [31.5397205, 11.985796, 0]
+      Translation: [-41.9425316, 11.985796, 0]
       Rotation: [0, 0, 1.57079637]
-      Scale: [72.7880402, 0.999976873, 1]
+      Scale: [72.7871475, 0.9999699, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Ground.png
+      AlbedoPath: assets/textures/Ground.png
     Rigidbody2DComponent:
       BodyType: 0
       FixedRotation: false
@@ -20,88 +67,79 @@ Entities:
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
-  - Entity: 1752785468348932022
+  - Entity: 11425581211492664981
     TagComponent:
-      Tag: Rocks
+      Tag: Clouds2
     TransformComponent:
-      Translation: [-3.81469727e-06, -1.90734863e-06, -38.9529114]
+      Translation: [0, 0, -3]
+      Rotation: [0, 0, 0]
+      Scale: [100, 100, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      AlbedoPath: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/clouds_2.png
+  - Entity: 10122208013910117312
+    TagComponent:
+      Tag: Clouds1
+    TransformComponent:
+      Translation: [0, 0, -4]
+      Rotation: [0, 0, 0]
+      Scale: [100, 100, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      AlbedoPath: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/clouds_1.png
+  - Entity: 10816776463111091516
+    TagComponent:
+      Tag: Plant
+    TransformComponent:
+      Translation: [0, 0, -5]
+      Rotation: [0, 0, 0]
+      Scale: [100, 100, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      AlbedoPath: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/plant.png
+  - Entity: 8914014460895932578
+    TagComponent:
+      Tag: Ground3
+    TransformComponent:
+      Translation: [0, 0, -6]
       Rotation: [0, 0, 0]
       Scale: [200, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\rocks.png
-  - Entity: 4777953925013219778
+      AlbedoPath: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_3.png
+  - Entity: 11845927707545961069
     TagComponent:
-      Tag: BoxPawn
-    ScriptComponent:
-      Name: Azure.BoxPawn
-      ScriptFields:
-        Speed: 0.100000001
+      Tag: Ground2
     TransformComponent:
-      Translation: [10.3910198, -2.20000005, 0]
+      Translation: [0, 0, -7]
       Rotation: [0, 0, 0]
-      Scale: [0.999995053, 0.999995053, 1]
-    SpriteRendererComponent:
-      Color: [1, 0, 0, 1]
-    Rigidbody2DComponent:
-      BodyType: 1
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 10
-      Friction: 1
-      Restitution: 0.100000001
-      RestitutionThreshold: 1
-  - Entity: 693401015653648987
-    TagComponent:
-      Tag: Camera
-    ScriptComponent:
-      Name: Azure.Camera
-      ScriptFields:
-        DistanceFromPlayer: 38
-    CameraComponent:
-      Camera:
-        ProjectionType: 0
-        OrthographicFar: 1
-        OrthographicNear: -1
-        OrthographicSize: 10
-        PerspectiveFar: 1000
-        PerspectiveNear: 0.00999999978
-        PerspectiveFOV: 45
-      Primary: true
-      FixedAspectRatio: false
-    TransformComponent:
-      Translation: [2.17086744, -10.085, 5]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 16854878493202120524
-    TagComponent:
-      Tag: Sprite
-    TransformComponent:
-      Translation: [-5.47344685, -18.1933575, 0]
-      Rotation: [0, 0, 0]
-      Scale: [72.7910004, 1, 1]
+      Scale: [200, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Ground.png
-    Rigidbody2DComponent:
-      BodyType: 0
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [1, 1]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.100000001
-      RestitutionThreshold: 0.5
+      AlbedoPath: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_2.png
+  - Entity: 9114750310479479275
+    TagComponent:
+      Tag: Ground1
+    TransformComponent:
+      Translation: [0, 0, -8]
+      Rotation: [0, 0, 0]
+      Scale: [200, 100, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      AlbedoPath: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/ground_1.png
+  - Entity: 15331168643400094970
+    TagComponent:
+      Tag: Sky
+    TransformComponent:
+      Translation: [120.192818, -52.9235802, -77.1795654]
+      Rotation: [0, 0, 0]
+      Scale: [100, 100, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      AlbedoPath: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/sky.png
   - Entity: 9126341988753611511
     TagComponent:
       Tag: Circle
-    ScriptComponent:
-      Name: Azure.BoxPawn2
-      ScriptFields:
-        Speed: 0.5
     TransformComponent:
       Translation: [5.77253819, -2.02463818, 10.7125063]
       Rotation: [0, 0, 0.751203597]
@@ -121,86 +159,83 @@ Entities:
       Friction: 0.5
       Restitution: 0.100000001
       RestitutionThreshold: 0.5
-  - Entity: 15331168643400094970
+  - Entity: 16854878493202120524
     TagComponent:
-      Tag: Sky
+      Tag: Sprite
     TransformComponent:
-      Translation: [120.192818, -52.9235802, -77.1795654]
+      Translation: [-5.47344685, -18.1933575, 0]
       Rotation: [0, 0, 0]
-      Scale: [100, 100, 1]
+      Scale: [72.7910004, 1, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\sky.png
-  - Entity: 9114750310479479275
+      AlbedoPath: assets/textures/Ground.png
+    Rigidbody2DComponent:
+      BodyType: 0
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.100000001
+      RestitutionThreshold: 0.5
+  - Entity: 693401015653648987
     TagComponent:
-      Tag: Ground1
+      Tag: Camera
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 45
+      Primary: true
+      FixedAspectRatio: false
     TransformComponent:
-      Translation: [0, 0, -8]
+      Translation: [2.17086744, -10.085, 5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 4777953925013219778
+    TagComponent:
+      Tag: BoxPawn
+    TransformComponent:
+      Translation: [10.3910198, -2.20000005, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.999995053, 0.999995053, 1]
+    SpriteRendererComponent:
+      Color: [1, 0, 0, 1]
+    Rigidbody2DComponent:
+      BodyType: 1
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [1, 1]
+      Density: 10
+      Friction: 1
+      Restitution: 0.100000001
+      RestitutionThreshold: 1
+  - Entity: 1752785468348932022
+    TagComponent:
+      Tag: Rocks
+    TransformComponent:
+      Translation: [-3.81469727e-06, -1.90734863e-06, -38.9529114]
       Rotation: [0, 0, 0]
       Scale: [200, 100, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_1.png
-  - Entity: 11845927707545961069
+      AlbedoPath: assets/textures/Free-Horizontal-Game-Backgrounds/PNG/game_background_3/layers/rocks.png
+  - Entity: 6637580216032356728
     TagComponent:
-      Tag: Ground2
+      Tag: WallRight
     TransformComponent:
-      Translation: [0, 0, -7]
-      Rotation: [0, 0, 0]
-      Scale: [200, 100, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_2.png
-  - Entity: 8914014460895932578
-    TagComponent:
-      Tag: Ground3
-    TransformComponent:
-      Translation: [0, 0, -6]
-      Rotation: [0, 0, 0]
-      Scale: [200, 100, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\ground_3.png
-  - Entity: 10816776463111091516
-    TagComponent:
-      Tag: Plant
-    TransformComponent:
-      Translation: [0, 0, -5]
-      Rotation: [0, 0, 0]
-      Scale: [100, 100, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\plant.png
-  - Entity: 10122208013910117312
-    TagComponent:
-      Tag: Clouds1
-    TransformComponent:
-      Translation: [0, 0, -4]
-      Rotation: [0, 0, 0]
-      Scale: [100, 100, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\clouds_1.png
-  - Entity: 11425581211492664981
-    TagComponent:
-      Tag: Clouds2
-    TransformComponent:
-      Translation: [0, 0, -3]
-      Rotation: [0, 0, 0]
-      Scale: [100, 100, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Free-Horizontal-Game-Backgrounds\PNG\game_background_3\layers\clouds_2.png
-  - Entity: 1273781723573688431
-    TagComponent:
-      Tag: WallLeft
-    TransformComponent:
-      Translation: [-41.9425316, 11.985796, 0]
+      Translation: [31.5397205, 11.985796, 0]
       Rotation: [0, 0, 1.57079637]
-      Scale: [72.7871475, 0.9999699, 1]
+      Scale: [72.7880402, 0.999976873, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      AlbedoPath: assets\textures\Ground.png
+      AlbedoPath: assets/textures/Ground.png
     Rigidbody2DComponent:
       BodyType: 0
       FixedRotation: false

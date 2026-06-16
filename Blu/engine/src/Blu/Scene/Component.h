@@ -130,6 +130,7 @@ namespace Blu
 		Shared<class Material> MaterialInstance;
 		Shared<Model> ModelAsset;       // resolved runtime cache (rendered)
 		AssetHandle ModelHandle = AssetHandle(0); // stable source reference; resolves ModelAsset
+		AssetHandle MaterialHandle = AssetHandle(0); // stable .blumat reference; resolves MaterialInstance (else inline PBR_*)
 		std::string FilePath;           // deprecated fallback / human-readable source path
 		PrimitiveType Primitive = PrimitiveType::None;
 
@@ -467,6 +468,42 @@ namespace Blu
 		DirectionalLightComponent(const DirectionalLightComponent&) = default;
 	};
 
+	// A localized fog region. Composited screen-space in the post-process pass by
+	// integrating density along the view ray through the box/sphere (see
+	// PostProcess_FogVolume.hlsl). Box is treated axis-aligned (rotation ignored for now);
+	// sphere uses Radius. Costs nothing when no FogVolumeComponent exists in the scene.
+	struct FogVolumeComponent
+	{
+		enum class Shape { Box = 0, Sphere = 1 };
+		Shape     VolumeShape = Shape::Box;
+		glm::vec3 Extents     = glm::vec3(5.0f);               // box half-extents (world units)
+		float     Radius      = 5.0f;                          // sphere radius (world units)
+		glm::vec3 Color       = glm::vec3(0.60f, 0.65f, 0.72f);
+		float     Density     = 0.25f;                         // fog accumulated per world unit through the volume
+		float     Falloff     = 1.0f;                          // 0..1 edge softness (fraction of extent that fades in)
+
+		FogVolumeComponent() = default;
+		FogVolumeComponent(const FogVolumeComponent&) = default;
+	};
+
+	// A projected decal (bullet hole, scorch, blood splat). The entity's TransformComponent
+	// defines an oriented box; surface pixels whose world position falls inside the box receive
+	// a radial (circular) decal in the box's local XZ plane. Composited screen-space in the
+	// post-process pass (PostProcess_Decals.hlsl) by reconstructing world position from depth.
+	struct DecalComponent
+	{
+		glm::vec3 Color    = glm::vec3(0.35f, 0.03f, 0.03f); // blood-ish default
+		float     Opacity  = 0.85f;                          // 0..1 overall strength
+		float     Falloff  = 0.55f;                          // 0..1 soft edge (fraction of radius that fades)
+		// Seconds remaining for transient/runtime decals (bullet holes, blood). < 0 = permanent
+		// (editor-placed). The Scene ages these down (Scene::UpdateDecalLifetimes) and fades the
+		// opacity over the last ~1.5s, destroying the entity at 0.
+		float     Lifetime = -1.0f;
+
+		DecalComponent() = default;
+		DecalComponent(const DecalComponent&) = default;
+	};
+
 	// ─── Spot Light ───────────────────────────────────────────────────────────
 	// Position comes from TransformComponent::Translation.
 	// InnerConeAngle / OuterConeAngle in degrees; shader pre-computes cos values.
@@ -531,6 +568,14 @@ namespace Blu
 		bool                       Loop             = true;
 		float                      SpeedScale       = 1.0f;
 
+		// Crossfade state (Phase 10a). When NewClipIndex >= 0 the animator blends from
+		// CurrentClipIndex (advanced via PrevClipTime) to NewClipIndex (advanced via CurrentTime)
+		// over BlendDuration seconds, then makes NewClipIndex the active clip. Use PlayClip().
+		int                        NewClipIndex     = -1;     // -1 = not transitioning
+		float                      PrevClipTime     = 0.0f;   // ticks, the outgoing clip
+		float                      BlendDuration    = 0.2f;   // seconds (also a per-animator default)
+		float                      BlendElapsed     = 0.0f;   // seconds into the current blend
+
 		// Output: filled each frame by Animator::Update — uploaded to BoneData cbuffer
 		std::vector<glm::mat4>     FinalBoneMatrices;
 
@@ -539,6 +584,26 @@ namespace Blu
 			FinalBoneMatrices.assign(Animator::kMaxBones, glm::mat4(1.0f));
 		}
 		AnimatorComponent(const AnimatorComponent&) = default;
+
+		// Start a crossfade to clip `index` over `blend` seconds. No-op if already playing or
+		// transitioning to it; snaps instantly when blend <= 0. Call from gameplay on state changes.
+		void PlayClip(int index, float blend = 0.2f)
+		{
+			if (index < 0) return;
+			if ((NewClipIndex < 0 && index == CurrentClipIndex) || index == NewClipIndex)
+				return;
+			if (blend <= 0.0f)
+			{
+				CurrentClipIndex = index; CurrentTime = 0.0f;
+				NewClipIndex = -1; BlendElapsed = 0.0f;
+				return;
+			}
+			PrevClipTime  = CurrentTime; // outgoing clip continues from here
+			CurrentTime   = 0.0f;        // incoming clip starts at 0
+			NewClipIndex  = index;
+			BlendDuration = blend;
+			BlendElapsed  = 0.0f;
+		}
 
 		const std::string& CurrentClipName() const
 		{
@@ -651,7 +716,7 @@ namespace Blu
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
 		ActorComponent, Rigidbody2DComponent,
-		PointLightComponent, DirectionalLightComponent, SpotLightComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
+		PointLightComponent, DirectionalLightComponent, SpotLightComponent, FogVolumeComponent, DecalComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
 		TerrainComponent, SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
 		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent,
 		MeshCollider3DComponent, CharacterControllerComponent,

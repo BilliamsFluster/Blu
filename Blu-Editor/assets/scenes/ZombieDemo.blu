@@ -48,121 +48,262 @@ RenderSettings:
   Fog_AerialColor: [0.550000012, 0.720000029, 0.899999976]
   Fog_AerialStrength: 0.5
 Entities:
-  - Entity: 2000000000000000001
+  - Entity: 2000000000000000051
     TagComponent:
-      Tag: Sun
-    DirectionalLightComponent:
-      Direction: [3.09086197e-08, -1, 3.09086197e-08]
-      Ambient: [0.200000003, 0.200000003, 0.200000003]
-      Diffuse: [1, 0.720000029, 0.469999999]
-      Specular: [0.400000006, 0.400000006, 0.400000006]
-      Intensity: 4.9000001
+      Tag: Fill_BehindPlayer
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.5, 0.600000024, 0.899999976]
+      Specular: [0.5, 0.600000024, 0.899999976]
+      Intensity: 1.5
+      Range: 9
+      AttConstant: 1
+      AttLinear: 0.100000001
+      AttQuadratic: 0.0399999991
+    TransformComponent:
+      Translation: [0, 2.5, 6]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000050
+    TagComponent:
+      Tag: Beacon_Far
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.600000024, 0.300000012]
+      Specular: [1, 0.600000024, 0.300000012]
+      Intensity: 8
+      Range: 16
+      AttConstant: 1
+      AttLinear: 0.0700000003
+      AttQuadratic: 0.0170000009
+    TransformComponent:
+      Translation: [0, 2.20000005, -18]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000049
+    TagComponent:
+      Tag: Accent_RedR
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.300000012, 0.25]
+      Specular: [1, 0.300000012, 0.25]
+      Intensity: 6
+      Range: 13
+      AttConstant: 1
+      AttLinear: 0.0900000036
+      AttQuadratic: 0.0320000015
+    TransformComponent:
+      Translation: [9, 1.39999998, -12]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000048
+    TagComponent:
+      Tag: Accent_BlueL
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.25, 0.400000006, 1]
+      Specular: [0.25, 0.400000006, 1]
+      Intensity: 6
+      Range: 13
+      AttConstant: 1
+      AttLinear: 0.0900000036
+      AttQuadratic: 0.0320000015
+    TransformComponent:
+      Translation: [-9, 1.39999998, -12]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000047
+    TagComponent:
+      Tag: Glow_ZombieC
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.300000012, 1, 0.400000006]
+      Specular: [0.300000012, 1, 0.400000006]
+      Intensity: 4
+      Range: 8
+      AttConstant: 1
+      AttLinear: 0.140000001
+      AttQuadratic: 0.0700000003
+    TransformComponent:
+      Translation: [0, 0.899999976, -14]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000046
+    TagComponent:
+      Tag: Glow_ZombieB
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.300000012, 1, 0.400000006]
+      Specular: [0.300000012, 1, 0.400000006]
+      Intensity: 4
+      Range: 8
+      AttConstant: 1
+      AttLinear: 0.140000001
+      AttQuadratic: 0.0700000003
+    TransformComponent:
+      Translation: [4, 0.899999976, -10]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000045
+    TagComponent:
+      Tag: Glow_ZombieA
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.300000012, 1, 0.400000006]
+      Specular: [0.300000012, 1, 0.400000006]
+      Intensity: 4
+      Range: 8
+      AttConstant: 1
+      AttLinear: 0.140000001
+      AttQuadratic: 0.0700000003
+    TransformComponent:
+      Translation: [-4, 0.899999976, -8]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000044
+    TagComponent:
+      Tag: Accent_Amber
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.699999988, 0.300000012]
+      Specular: [1, 0.699999988, 0.300000012]
+      Intensity: 6
+      Range: 11
+      AttConstant: 1
+      AttLinear: 0.100000001
+      AttQuadratic: 0.0399999991
+    TransformComponent:
+      Translation: [0, 0.699999988, -1]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000043
+    TagComponent:
+      Tag: Accent_Magenta
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [1, 0.300000012, 0.800000012]
+      Specular: [1, 0.300000012, 0.800000012]
+      Intensity: 6
+      Range: 10
+      AttConstant: 1
+      AttLinear: 0.119999997
+      AttQuadratic: 0.0500000007
+    TransformComponent:
+      Translation: [3, 0.600000024, 1]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000042
+    TagComponent:
+      Tag: Accent_Cyan
+    PointLightComponent:
+      Ambient: [0, 0, 0]
+      Diffuse: [0.200000003, 0.699999988, 1]
+      Specular: [0.200000003, 0.699999988, 1]
+      Intensity: 6
+      Range: 10
+      AttConstant: 1
+      AttLinear: 0.119999997
+      AttQuadratic: 0.0500000007
+    TransformComponent:
+      Translation: [-3, 0.600000024, 2]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000041
+    TagComponent:
+      Tag: Lamp_PillarB
+    PointLightComponent:
+      Ambient: [0.0199999996, 0.0149999997, 0.00999999978]
+      Diffuse: [1, 0.550000012, 0.200000003]
+      Specular: [1, 0.600000024, 0.25]
+      Intensity: 8
+      Range: 13
+      AttConstant: 1
+      AttLinear: 0.0900000036
+      AttQuadratic: 0.0320000015
+    TransformComponent:
+      Translation: [6, 3.29999995, -5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000040
+    TagComponent:
+      Tag: Lamp_PillarA
+    PointLightComponent:
+      Ambient: [0.0199999996, 0.0149999997, 0.00999999978]
+      Diffuse: [1, 0.550000012, 0.200000003]
+      Specular: [1, 0.600000024, 0.25]
+      Intensity: 8
+      Range: 13
+      AttConstant: 1
+      AttLinear: 0.0900000036
+      AttQuadratic: 0.0320000015
+    TransformComponent:
+      Translation: [-6, 3.29999995, -3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000010
+    TagComponent:
+      Tag: GameplayHUD
     TransformComponent:
       Translation: [0, 0, 0]
-      Rotation: [-0.785398185, 0.52359879, 0]
+      Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 2000000000000000060
+    UIRootComponent:
+      DocumentPath: assets/ui/GameplayHUD.bluui
+      Visible: true
+      Scale: 1
+  - Entity: 2000000000000000004
     TagComponent:
-      Tag: Environment
+      Tag: PlayerCamera
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        OrthographicFar: 1
+        OrthographicNear: -1
+        OrthographicSize: 10
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        PerspectiveFOV: 70
+      Primary: true
+      FixedAspectRatio: false
+    TransformComponent:
+      Translation: [0, 2.5, 8]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000003
+    TagComponent:
+      Tag: PlayerCharacter
     ActorComponent:
-      ClassID: Azure::EnvironmentActor
+      ClassID: Azure::PlayerCharacter
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [0, 1, 8]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 2000000000000000002
-    TagComponent:
-      Tag: Ground
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 0
-      PBR_AlbedoColor: [0.180000007, 0.330000013, 0.140000001]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0
-      PBR_Roughness: 0.949999988
-      PBR_AO: 0.850000024
-      PBR_EmissiveColor: [0, 0, 0]
-      PBR_EmissiveStrength: 0
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-    TerrainComponent:
-      GridWidth: 80
-      GridHeight: 80
-      CellSize: 0.5
-      HeightScale: 0
-      HeightmapPath: ""
-      ProceduralAmplitude: 6
-      ProceduralFrequency: 0.119999997
-      ProceduralFlatRadius: 15
-    Rigidbody3DComponent:
-      BodyType: 0
-      GravityScale: 1
-      LinearDamping: 0.0500000007
-      AngularDamping: 0.0500000007
-      FixedRotationX: false
-      FixedRotationY: false
-      FixedRotationZ: false
-    BoxCollider3DComponent:
-      HalfExtents: [20, 0.5, 20]
-      Offset: [0, -0.5, 0]
-      Friction: 0.800000012
+    CapsuleCollider3DComponent:
+      Radius: 0.300000012
+      HalfHeight: 0.959999979
+      Offset: [0, 0, 0]
+      Friction: 0.5
       Restitution: 0
       Density: 1000
-  - Entity: 2000000000000000031
+    CharacterControllerComponent:
+      MoveSpeed: 5
+      JumpImpulse: 7
+      StepHeight: 0.349999994
+      SlopeLimit: 45
+    PlayerStatsComponent:
+      Health: 100
+      MaxHealth: 100
+      Stamina: 100
+      MaxStamina: 100
+      StaminaRegenRate: 20
+      SprintStaminaDrain: 25
+  - Entity: 2000000000000000020
     TagComponent:
-      Tag: Pillar_B
-    TransformComponent:
-      Translation: [6, 1.5, -5]
-      Rotation: [0, 0, 0]
-      Scale: [1, 3, 1]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 1
-      PBR_AlbedoColor: [0.400000006, 0.400000006, 0.430000007]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0.100000001
-      PBR_Roughness: 0.800000012
-      PBR_AO: 1
-      PBR_EmissiveColor: [0, 0, 0]
-      PBR_EmissiveStrength: 0
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-  - Entity: 2000000000000000030
-    TagComponent:
-      Tag: Pillar_A
-    TransformComponent:
-      Translation: [-6, 1.5, -3]
-      Rotation: [0, 0, 0]
-      Scale: [1, 3, 1]
-    MeshComponent:
-      FilePath: ""
-      PrimitiveType: 1
-      PBR_AlbedoColor: [0.400000006, 0.400000006, 0.430000007]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0.100000001
-      PBR_Roughness: 0.800000012
-      PBR_AO: 1
-      PBR_EmissiveColor: [0, 0, 0]
-      PBR_EmissiveStrength: 0
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-  - Entity: 2000000000000000022
-    TagComponent:
-      Tag: Zombie_C
+      Tag: Zombie_A
     ActorComponent:
       ClassID: Azure::ZombieTestActor
     TransformComponent:
-      Translation: [0, 1, -14]
+      Translation: [-4, 1, -8]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     VisualOffsetComponent:
@@ -234,13 +375,13 @@ Entities:
       JumpImpulse: 0
       StepHeight: 0.349999994
       SlopeLimit: 45
-  - Entity: 2000000000000000020
+  - Entity: 2000000000000000022
     TagComponent:
-      Tag: Zombie_A
+      Tag: Zombie_C
     ActorComponent:
       ClassID: Azure::ZombieTestActor
     TransformComponent:
-      Translation: [-4, 1, -8]
+      Translation: [0, 1, -14]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     VisualOffsetComponent:
@@ -273,252 +414,111 @@ Entities:
       JumpImpulse: 0
       StepHeight: 0.349999994
       SlopeLimit: 45
-  - Entity: 2000000000000000003
+  - Entity: 2000000000000000030
     TagComponent:
-      Tag: PlayerCharacter
-    ActorComponent:
-      ClassID: Azure::PlayerCharacter
+      Tag: Pillar_A
     TransformComponent:
-      Translation: [0, 1, 8]
+      Translation: [-6, 1.5, -3]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    CapsuleCollider3DComponent:
-      Radius: 0.300000012
-      HalfHeight: 0.959999979
-      Offset: [0, 0, 0]
-      Friction: 0.5
-      Restitution: 0
-      Density: 1000
-    CharacterControllerComponent:
-      MoveSpeed: 5
-      JumpImpulse: 7
-      StepHeight: 0.349999994
-      SlopeLimit: 45
-    PlayerStatsComponent:
-      Health: 100
-      MaxHealth: 100
-      Stamina: 100
-      MaxStamina: 100
-      StaminaRegenRate: 20
-      SprintStaminaDrain: 25
-  - Entity: 2000000000000000004
+      Scale: [1, 3, 1]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.400000006, 0.400000006, 0.430000007]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.100000001
+      PBR_Roughness: 0.800000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+  - Entity: 2000000000000000031
     TagComponent:
-      Tag: PlayerCamera
-    CameraComponent:
-      Camera:
-        ProjectionType: 0
-        OrthographicFar: 1
-        OrthographicNear: -1
-        OrthographicSize: 10
-        PerspectiveFar: 1000
-        PerspectiveNear: 0.00999999978
-        PerspectiveFOV: 70
-      Primary: true
-      FixedAspectRatio: false
+      Tag: Pillar_B
     TransformComponent:
-      Translation: [0, 2.5, 8]
+      Translation: [6, 1.5, -5]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000010
+      Scale: [1, 3, 1]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.400000006, 0.400000006, 0.430000007]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0.100000001
+      PBR_Roughness: 0.800000012
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+  - Entity: 2000000000000000002
     TagComponent:
-      Tag: GameplayHUD
+      Tag: Ground
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    UIRootComponent:
-      DocumentPath: assets/ui/GameplayHUD.bluui
-      Visible: true
-      Scale: 1
-  - Entity: 2000000000000000040
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 0
+      PBR_AlbedoColor: [0.180000007, 0.330000013, 0.140000001]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.949999988
+      PBR_AO: 0.850000024
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+    TerrainComponent:
+      GridWidth: 80
+      GridHeight: 80
+      CellSize: 0.5
+      HeightScale: 0
+      HeightmapPath: ""
+      ProceduralAmplitude: 6
+      ProceduralFrequency: 0.119999997
+      ProceduralFlatRadius: 15
+    Rigidbody3DComponent:
+      BodyType: 0
+      GravityScale: 1
+      LinearDamping: 0.0500000007
+      AngularDamping: 0.0500000007
+      FixedRotationX: false
+      FixedRotationY: false
+      FixedRotationZ: false
+    BoxCollider3DComponent:
+      HalfExtents: [20, 0.5, 20]
+      Offset: [0, -0.5, 0]
+      Friction: 0.800000012
+      Restitution: 0
+      Density: 1000
+  - Entity: 2000000000000000060
     TagComponent:
-      Tag: Lamp_PillarA
-    PointLightComponent:
-      Ambient: [0.0199999996, 0.0149999997, 0.00999999978]
-      Diffuse: [1, 0.550000012, 0.200000003]
-      Specular: [1, 0.600000024, 0.25]
-      Intensity: 8
-      Range: 13
-      AttConstant: 1
-      AttLinear: 0.0900000036
-      AttQuadratic: 0.0320000015
+      Tag: Environment
+    ActorComponent:
+      ClassID: Azure::EnvironmentActor
     TransformComponent:
-      Translation: [-6, 3.29999995, -3]
+      Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 2000000000000000041
+  - Entity: 2000000000000000001
     TagComponent:
-      Tag: Lamp_PillarB
-    PointLightComponent:
-      Ambient: [0.0199999996, 0.0149999997, 0.00999999978]
-      Diffuse: [1, 0.550000012, 0.200000003]
-      Specular: [1, 0.600000024, 0.25]
-      Intensity: 8
-      Range: 13
-      AttConstant: 1
-      AttLinear: 0.0900000036
-      AttQuadratic: 0.0320000015
+      Tag: Sun
+    DirectionalLightComponent:
+      Direction: [3.09086197e-08, -1, 3.09086197e-08]
+      Ambient: [0.200000003, 0.200000003, 0.200000003]
+      Diffuse: [1, 0.720000029, 0.469999999]
+      Specular: [0.400000006, 0.400000006, 0.400000006]
+      Intensity: 4.9000001
     TransformComponent:
-      Translation: [6, 3.29999995, -5]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000042
-    TagComponent:
-      Tag: Accent_Cyan
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.200000003, 0.699999988, 1]
-      Specular: [0.200000003, 0.699999988, 1]
-      Intensity: 6
-      Range: 10
-      AttConstant: 1
-      AttLinear: 0.119999997
-      AttQuadratic: 0.0500000007
-    TransformComponent:
-      Translation: [-3, 0.600000024, 2]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000043
-    TagComponent:
-      Tag: Accent_Magenta
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [1, 0.300000012, 0.800000012]
-      Specular: [1, 0.300000012, 0.800000012]
-      Intensity: 6
-      Range: 10
-      AttConstant: 1
-      AttLinear: 0.119999997
-      AttQuadratic: 0.0500000007
-    TransformComponent:
-      Translation: [3, 0.600000024, 1]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000044
-    TagComponent:
-      Tag: Accent_Amber
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [1, 0.699999988, 0.300000012]
-      Specular: [1, 0.699999988, 0.300000012]
-      Intensity: 6
-      Range: 11
-      AttConstant: 1
-      AttLinear: 0.100000001
-      AttQuadratic: 0.0399999991
-    TransformComponent:
-      Translation: [0, 0.699999988, -1]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000045
-    TagComponent:
-      Tag: Glow_ZombieA
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.300000012, 1, 0.400000006]
-      Specular: [0.300000012, 1, 0.400000006]
-      Intensity: 4
-      Range: 8
-      AttConstant: 1
-      AttLinear: 0.140000001
-      AttQuadratic: 0.0700000003
-    TransformComponent:
-      Translation: [-4, 0.899999976, -8]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000046
-    TagComponent:
-      Tag: Glow_ZombieB
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.300000012, 1, 0.400000006]
-      Specular: [0.300000012, 1, 0.400000006]
-      Intensity: 4
-      Range: 8
-      AttConstant: 1
-      AttLinear: 0.140000001
-      AttQuadratic: 0.0700000003
-    TransformComponent:
-      Translation: [4, 0.899999976, -10]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000047
-    TagComponent:
-      Tag: Glow_ZombieC
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.300000012, 1, 0.400000006]
-      Specular: [0.300000012, 1, 0.400000006]
-      Intensity: 4
-      Range: 8
-      AttConstant: 1
-      AttLinear: 0.140000001
-      AttQuadratic: 0.0700000003
-    TransformComponent:
-      Translation: [0, 0.899999976, -14]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000048
-    TagComponent:
-      Tag: Accent_BlueL
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.25, 0.400000006, 1]
-      Specular: [0.25, 0.400000006, 1]
-      Intensity: 6
-      Range: 13
-      AttConstant: 1
-      AttLinear: 0.0900000036
-      AttQuadratic: 0.0320000015
-    TransformComponent:
-      Translation: [-9, 1.39999998, -12]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000049
-    TagComponent:
-      Tag: Accent_RedR
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [1, 0.300000012, 0.25]
-      Specular: [1, 0.300000012, 0.25]
-      Intensity: 6
-      Range: 13
-      AttConstant: 1
-      AttLinear: 0.0900000036
-      AttQuadratic: 0.0320000015
-    TransformComponent:
-      Translation: [9, 1.39999998, -12]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000050
-    TagComponent:
-      Tag: Beacon_Far
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [1, 0.600000024, 0.300000012]
-      Specular: [1, 0.600000024, 0.300000012]
-      Intensity: 8
-      Range: 16
-      AttConstant: 1
-      AttLinear: 0.0700000003
-      AttQuadratic: 0.0170000009
-    TransformComponent:
-      Translation: [0, 2.20000005, -18]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Entity: 2000000000000000051
-    TagComponent:
-      Tag: Fill_BehindPlayer
-    PointLightComponent:
-      Ambient: [0, 0, 0]
-      Diffuse: [0.5, 0.600000024, 0.899999976]
-      Specular: [0.5, 0.600000024, 0.899999976]
-      Intensity: 1.5
-      Range: 9
-      AttConstant: 1
-      AttLinear: 0.100000001
-      AttQuadratic: 0.0399999991
-    TransformComponent:
-      Translation: [0, 2.5, 6]
-      Rotation: [0, 0, 0]
+      Translation: [0, 0, 0]
+      Rotation: [-0.785398185, 0.52359879, 0]
       Scale: [1, 1, 1]

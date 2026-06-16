@@ -20,7 +20,7 @@ namespace Blu
     {
     public:
         ScreenshotLayer(std::string scenePath, std::string outputPath, uint32_t width, uint32_t height,
-                        bool enableFog = false, bool playMode = false);
+                        bool enableFog = false, bool playMode = false, bool enablePostFX = false);
 
         void OnAttach() override;
         void OnUpdate(Blu::Timestep deltaTime) override;
@@ -32,6 +32,7 @@ namespace Blu
         uint32_t    m_Height;
         bool        m_EnableFog;
         bool        m_PlayMode;   // run the runtime (actors/HUD/FP camera) instead of the editor camera
+        bool        m_EnablePostFX; // force-enable the post-process stack (bloom/SSAO/fog volumes/etc.)
 
         Shared<Scene>       m_Scene;
         Shared<FrameBuffer> m_FrameBuffer;

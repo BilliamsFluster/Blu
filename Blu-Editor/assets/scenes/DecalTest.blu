@@ -1,0 +1,120 @@
+SceneVersion: 1
+Scene: assets/scenes/DecalTest.blu
+RenderSettings:
+  UseShadows: true
+  UsePostProcess: true
+  UseSkybox: true
+  UseTimeOfDay: false
+  Sky_Turbidity: 3.0
+  Sky_SkyExposure: 0.0149999997
+  Sky_GroundColor: [0.3, 0.29, 0.27]
+  Sky_SunColor: [1.0, 0.95, 0.88]
+  Sky_SunSize: 0.999499977
+  Sky_SunStrength: 4.0
+  PP_EnableBloom: true
+  PP_BloomThreshold: 1
+  PP_BloomStrength: 0.0500000007
+  PP_EnableFXAA: true
+  PP_PreviewMode: 0
+  PP_EnableSSAO: true
+  PP_SSAORadius: 0.5
+  PP_SSAOBias: 0.0250000004
+  PP_SSAOPower: 1.5
+  PP_SSAOSamples: 16
+  PP_SSAOStrength: 1
+  Fog_Enabled: false
+  Fog_Color: [0.55, 0.58, 0.65]
+  Fog_Density: 0.00999999978
+  Fog_HeightStart: 0
+  Fog_HeightDensity: 0.00999999978
+  Fog_AerialColor: [0.7, 0.78, 0.9]
+  Fog_AerialStrength: 0.1
+Entities:
+  - Entity: 5000000000000000003
+    TagComponent:
+      Tag: Sun
+    DirectionalLightComponent:
+      Direction: [0.3, -0.55, 0.78]
+      Ambient: [0.06, 0.06, 0.07]
+      Diffuse: [1.0, 0.96, 0.9]
+      Specular: [0.5, 0.5, 0.5]
+      Intensity: 2.2
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 5000000000000000010
+    TagComponent:
+      Tag: BackWall
+    TransformComponent:
+      Translation: [0, 4, -6]
+      Rotation: [0, 0, 0]
+      Scale: [24, 10, 0.5]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.62, 0.6, 0.56]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.9
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+  - Entity: 5000000000000000001
+    TagComponent:
+      Tag: Floor
+    TransformComponent:
+      Translation: [0, -0.200000003, 0]
+      Rotation: [0, 0, 0]
+      Scale: [40, 0.4, 40]
+    MeshComponent:
+      FilePath: ""
+      PrimitiveType: 1
+      PBR_AlbedoColor: [0.5, 0.49, 0.45]
+      PBR_AlbedoAlpha: 1
+      PBR_Metallic: 0
+      PBR_Roughness: 0.95
+      PBR_AO: 1
+      PBR_EmissiveColor: [0, 0, 0]
+      PBR_EmissiveStrength: 0
+      Mat_BlendMode: 0
+      Mat_ShadingModel: 0
+      Mat_TwoSided: false
+      Mat_AlphaCutoff: 0.5
+  - Entity: 5000000000000000020
+    TagComponent:
+      Tag: WallBlood
+    DecalComponent:
+      Color: [0.45, 0.02, 0.02]
+      Opacity: 0.9
+      Falloff: 0.5
+    TransformComponent:
+      Translation: [-3.5, 3.0, -5.7]
+      Rotation: [1.5708, 0, 0]
+      Scale: [4, 1.2, 4]
+  - Entity: 5000000000000000021
+    TagComponent:
+      Tag: WallScorch
+    DecalComponent:
+      Color: [0.04, 0.04, 0.05]
+      Opacity: 0.85
+      Falloff: 0.4
+    TransformComponent:
+      Translation: [3.5, 3.5, -5.7]
+      Rotation: [1.5708, 0, 0]
+      Scale: [3, 1.2, 3]
+  - Entity: 5000000000000000022
+    TagComponent:
+      Tag: FloorBlood
+    DecalComponent:
+      Color: [0.4, 0.03, 0.02]
+      Opacity: 0.9
+      Falloff: 0.55
+    TransformComponent:
+      Translation: [0, -0.2, 7]
+      Rotation: [0, 0, 0]
+      Scale: [5, 0.8, 5]

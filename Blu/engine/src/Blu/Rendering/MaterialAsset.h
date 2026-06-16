@@ -39,6 +39,26 @@ namespace Blu
         AssetHandle GetAOTexture() const { return m_AOTexture; }
         AssetHandle GetEmissiveTexture() const { return m_EmissiveTexture; }
 
+        // Material metadata (blend/shading/two-sided/alpha-cutoff). Storing these makes a
+        // MaterialAsset a LOSSLESS mirror of a concrete Material, not just its scalar PBR subset —
+        // required so a .blumat can reproduce the exact runtime material the renderer binds.
+        void         SetBlendMode(BlendMode blend)       { m_Blend = blend; }
+        void         SetShadingModel(ShadingModel model) { m_Shading = model; }
+        void         SetTwoSided(bool twoSided)          { m_TwoSided = twoSided; }
+        void         SetAlphaCutoff(float cutoff)        { m_AlphaCutoff = cutoff; }
+        BlendMode    GetBlendMode() const                { return m_Blend; }
+        ShadingModel GetShadingModel() const             { return m_Shading; }
+        bool         GetTwoSided() const                 { return m_TwoSided; }
+        float        GetAlphaCutoff() const              { return m_AlphaCutoff; }
+
+        // Lossless conversion to/from the concrete runtime Material the renderer binds. Scalar PBR
+        // plus blend/shading/two-sided/alpha-cutoff round-trip EXACTLY. ToMaterial resolves texture
+        // handles to GPU textures via the AssetManager (best-effort; a zero/missing handle leaves
+        // the slot empty). FromMaterial captures scalars + metadata; deriving texture *handles* from
+        // a Material's raw Texture2D pointers is deferred (needs an AssetManager reverse lookup).
+        static MaterialAsset FromMaterial(const Material& material);
+        Shared<Material> ToMaterial() const;
+
         void UploadUniforms(const Shared<Shader>& shader) const;
         void BindTextures(const Shared<Shader>& shader) const;
 
@@ -52,6 +72,12 @@ namespace Blu
 
     private:
         PBRProperties m_Properties;
+
+        // Render-state metadata (mirrors the concrete Material fields outside PBRProperties).
+        BlendMode    m_Blend       = BlendMode::Opaque;
+        ShadingModel m_Shading     = ShadingModel::PBR;
+        bool         m_TwoSided    = false;
+        float        m_AlphaCutoff = 0.5f;
 
         // Texture asset handles
         AssetHandle m_AlbedoTexture;

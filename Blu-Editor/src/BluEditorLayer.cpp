@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <chrono>
+#include <ctime>
 #include "Blu/Events/MouseEvent.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -30,6 +31,8 @@
 #include "Blu/Audio/AudioEngine.h"
 #include "Blu/Scene/SceneManager.h"
 #include "Blu/UI/RuntimeUI.h"
+#include "Blu/Project/Project.h"
+#include "Blu/Debug/PerfStats.h"
 #include "FreeFlyCamera.h"
 #include "AssetPreviewService.h"
 #include "AzureGameModule.h"
@@ -38,6 +41,10 @@
 // D3D11Context.h already pulls in <d3d11.h> — include it last so Windows headers
 // don't stomp on the glad/GLFW type definitions established above.
 #include "Blu/Platform/DirectX11/D3D11Context.h"
+#ifdef _WIN32
+#include <shellapi.h> // ShellExecuteW — reveal the written trace in Explorer
+#pragma comment(lib, "Shell32.lib")
+#endif
 #include "Blu/Platform/Windows/WindowsWindow.h"
 
 // stb_image is compiled into the engine (ExternalDependencies/stb_image/stb_image.cpp).
@@ -463,9 +470,51 @@ namespace Blu
 		m_ActorPreviewCamera = EditorCamera(35.0f, 1.0f, 0.1f, 5000.0f);
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 		m_OperationMode = 0; // local operation
+		// Unreal-style bottom status bar (perf readout + Trace toggle). The dockspace reserves
+		// the strip; we just supply the content.
+		if (auto imguiLayer = Application::Get().GetImGuiLayer())
+			imguiLayer->SetStatusBarCallback([this]() { DrawStatusBar(); });
 		LoadEditorSettings();
 		// Intentionally not auto-loading the last scene to avoid startup crashes from corrupted scene files.
 		// Use File > Open or drag a .blu file to load a scene.
+		//
+		// Exception: when launched with "--project <path>", open that project's StartupScene so the
+		// editor lands directly in the project (Unreal-hub style). The project:// / cache:// mounts
+		// were already re-pointed in CreateApplication() before the AssetManager initialized, so the
+		// scene's asset handles resolve against the project.
+		if (ProjectManager::Get().HasActiveProject())
+		{
+			const std::filesystem::path startupScene = ProjectManager::Get().GetStartupScenePath();
+			if (!startupScene.empty() && std::filesystem::exists(startupScene))
+			{
+				BLU_CORE_INFO("Editor: opening project startup scene '{0}'", startupScene.generic_string());
+				// OpenScene -> SceneSerializer::Deserialize -> YAML::Load, which throws on a
+				// corrupt scene file. At startup an unhandled throw would crash the editor before
+				// it ever opens, leaving no way to recover — so fall back to a clean empty scene
+				// (the same state as launching with no project) and let the user fix it from there.
+				try
+				{
+					OpenScene(startupScene);
+				}
+				catch (const std::exception& e)
+				{
+					BLU_CORE_ERROR("Editor: failed to open project startup scene '{0}': {1}",
+						startupScene.generic_string(), e.what());
+					m_ActiveScene = std::make_shared<Scene>();
+					m_EditorScene = m_ActiveScene;
+					m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
+					m_CameraEntity.AddComponent<CameraComponent>();
+					m_CameraEntity.GetComponent<CameraComponent>().Primary = true;
+					m_CameraEntity.AddComponent<ActorComponent>().ClassID = "Blu::CameraController";
+					m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+					m_SceneDirty = false;
+				}
+			}
+			else if (!startupScene.empty())
+			{
+				BLU_CORE_WARN("Editor: project startup scene '{0}' not found.", startupScene.generic_string());
+			}
+		}
 
 		// ---- GPU timer setup ----
 		if (RendererAPI::GetAPI() == RendererAPI::API::Direct3D)
@@ -701,6 +750,10 @@ namespace Blu
 		// Honour any runtime scene transition requested this frame (menu PLAY → level,
 		// level victory → menu). No-op outside Play — only the runtime UI queues loads.
 		ProcessPendingSceneLoad();
+
+		// Keep the cursor in the right mode across menu↔level transitions: captured for FP
+		// gameplay (scene has a controllable pawn), free for menus (so the UI is clickable).
+		SyncGameCursor();
 
 		// ---- Deferred entity pick --------------------------------------------------
 		// OnMouseButtonPressed only sets m_PendingEntityPick. We do the actual
@@ -1666,16 +1719,37 @@ namespace Blu
 			m_SceneMissing = false;
 			Helpers::SceneHelpers::SetHelperActiveScene(m_ActiveScene);
 
-			// Capture mouse for game input — hide cursor and lock it to the window
+			// Capture the mouse for FP look — but only if this scene has a controllable pawn.
+			// Menu scenes (no CharacterControllerComponent) keep the cursor free so the PLAY
+			// button is clickable. SyncGameCursor() is also called each frame so a runtime
+			// menu->level transition captures the cursor once the level loads.
 			m_F8Prev = false;
-			GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+			SyncGameCursor();
 		}
 		else
 		{
 			m_SceneMissing = true;
 		}
+	}
+
+	bool BluEditorLayer::SceneWantsCursorCapture()
+	{
+		if (m_SceneState != SceneState::Play || !m_ActiveScene)
+			return false;
+		auto view = m_ActiveScene->GetAllEntitiesWith<CharacterControllerComponent>();
+		return view.begin() != view.end();
+	}
+
+	void BluEditorLayer::SyncGameCursor()
+	{
+		const bool capture = SceneWantsCursorCapture();
+		if (capture == m_GameCursorCaptured)
+			return; // unchanged — avoid per-frame GLFW/ImGui churn
+		m_GameCursorCaptured = capture;
+		GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+		glfwSetInputMode(win, GLFW_CURSOR, capture ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+		if (capture) ImGui::GetIO().ConfigFlags |=  ImGuiConfigFlags_NoMouse;
+		else         ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
 	}
 
 	void BluEditorLayer::OnScenePause()
@@ -1706,10 +1780,7 @@ namespace Blu
 			m_PlayButtonHit = false;
 			m_SceneState = SceneState::Edit;
 
-			// Release mouse back to the editor
-			GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+			SyncGameCursor(); // back in Edit -> release the cursor to the editor
 		}
 			
 
@@ -1723,9 +1794,7 @@ namespace Blu
 		m_ActiveScene->SetPlayerInputEnabled(false);
 		m_ActiveScene->BeginEject(&m_EditorCamera);
 
-		GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+		SyncGameCursor(); // ejected (state != Play) -> release the cursor
 	}
 
 	void BluEditorLayer::OnSceneRepossess()
@@ -1733,11 +1802,9 @@ namespace Blu
 		if (m_SceneState != SceneState::Eject) return;
 		m_ActiveScene->EndEject();
 		m_SceneState = SceneState::Play;
-
-		GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
 		m_ActiveScene->SetPlayerInputEnabled(true);
+
+		SyncGameCursor(); // re-possessed a pawn -> recapture the cursor
 	}
 
 	void BluEditorLayer::OnScenePlayNewWindow()
@@ -1800,6 +1867,68 @@ namespace Blu
 	ImVec2 operator*(const ImVec2& lhs, const float& rhs)
 	{
 		return ImVec2(lhs.x * rhs, lhs.y * rhs);
+	}
+
+	void BluEditorLayer::DrawStatusBar()
+	{
+		ImGuiIO& io = ImGui::GetIO();
+
+		// Left: live perf readout.
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("FPS %.0f", io.Framerate);
+		ImGui::SameLine(0.0f, 16.0f); ImGui::Text("%.2f ms", io.Framerate > 0.0f ? 1000.0f / io.Framerate : 0.0f);
+		if (m_GpuTimeMs > 0.0f) { ImGui::SameLine(0.0f, 16.0f); ImGui::Text("GPU %.2f ms", m_GpuTimeMs); }
+		Blu::Perf::MemoryInfo mem = Blu::Perf::QueryProcessMemory();
+		ImGui::SameLine(0.0f, 16.0f); ImGui::Text("Mem %.0f MB", Blu::Perf::BytesToMiB(mem.WorkingSetBytes));
+
+		// Right: Unreal-style Trace toggle.
+		const char* label = m_Tracing ? "Stop Trace" : "Start Trace";
+		const float btnW = ImGui::CalcTextSize(label).x + ImGui::GetStyle().FramePadding.x * 2.0f + 8.0f;
+		const float recW = m_Tracing ? ImGui::CalcTextSize("REC ").x + 8.0f : 0.0f;
+		ImGui::SameLine(ImGui::GetWindowWidth() - btnW - recW - 14.0f);
+		if (m_Tracing)
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.30f, 1.0f), "REC");
+			ImGui::SameLine(0.0f, 8.0f);
+			ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.72f, 0.22f, 0.20f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.85f, 0.28f, 0.25f, 1.0f));
+		}
+		const bool clicked = ImGui::Button(label);
+		if (m_Tracing)
+			ImGui::PopStyleColor(2);
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip(m_Tracing
+				? "Stop the capture and reveal the .json (open it in chrome://tracing or ui.perfetto.dev)"
+				: "Start a profiling capture (writes a chrome-tracing .json to Blu-Editor/traces)");
+		if (clicked)
+			ToggleTrace();
+	}
+
+	void BluEditorLayer::ToggleTrace()
+	{
+		if (!m_Tracing)
+		{
+			std::error_code ec;
+			std::filesystem::create_directories("Blu-Editor/traces", ec);
+			m_TraceFilePath = "Blu-Editor/traces/BluTrace-" + std::to_string((long long)std::time(nullptr)) + ".json";
+			::Blu::Instrumentor::Get().BeginSession("BluTrace", m_TraceFilePath); // guarded: closes any live session first
+			m_Tracing = true;
+			BLU_CORE_INFO("Trace: capturing -> {0}", m_TraceFilePath);
+		}
+		else
+		{
+			::Blu::Instrumentor::Get().EndSession();
+			m_Tracing = false;
+			BLU_CORE_INFO("Trace: wrote {0}", m_TraceFilePath);
+#ifdef _WIN32
+			std::error_code ec;
+			if (!m_TraceFilePath.empty() && std::filesystem::exists(m_TraceFilePath, ec))
+			{
+				std::wstring args = L"/select,\"" + std::filesystem::absolute(m_TraceFilePath).wstring() + L"\"";
+				ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
+			}
+#endif
+		}
 	}
 
 	void BluEditorLayer::UIDrawTitlebar(float& outTitlebarHeight)
@@ -2618,6 +2747,11 @@ namespace Blu
 			else
 				ImGui::TextDisabled("GPU Time    --");
 
+			Blu::Perf::MemoryInfo mem = Blu::Perf::QueryProcessMemory();
+			ImGui::Text("Memory      %.1f MB (peak %.1f)",
+			            Blu::Perf::BytesToMiB(mem.WorkingSetBytes), Blu::Perf::BytesToMiB(mem.PeakWorkingSetBytes));
+			ImGui::Text("Private     %.1f MB", Blu::Perf::BytesToMiB(mem.PrivateBytes));
+
 			ImGui::Spacing();
 
 			// Frame-time graph
@@ -2770,6 +2904,8 @@ namespace Blu
 						pp->SSAOPower = 1.5f;
 						pp->SSAOSamples = 16;
 						pp->SSAOStrength = 1.0f;
+						pp->EnableGodRays = true;
+						pp->GodRayIntensity = 0.6f;
 					}
 					const char* previewModes[] = { "Full", "Tonemap Only", "Bloom Only", "FXAA Only", "SSAO Only", "Bypass" };
 					int preview = (int)pp->Preview;
@@ -2779,6 +2915,10 @@ namespace Blu
 					ImGui::DragFloat("Threshold",  &pp->BloomThreshold, 0.05f, 0.0f, 10.0f);
 					ImGui::DragFloat("Strength",   &pp->BloomStrength,  0.005f, 0.0f, 2.0f);
 					ImGui::Checkbox("FXAA", &pp->EnableFXAA);
+
+					ImGui::Checkbox("God Rays", &pp->EnableGodRays);
+					if (pp->EnableGodRays)
+						ImGui::DragFloat("Ray Intensity", &pp->GodRayIntensity, 0.02f, 0.0f, 3.0f);
 
 					ImGui::Separator();
 					ImGui::Checkbox("SSAO", &pp->EnableSSAO);

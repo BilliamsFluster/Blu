@@ -9,32 +9,32 @@ UI:
       Color: [0.03, 0.05, 0.09, 0.55]
     - Type: Text
       Name: Title
-      Position: [360.0, 170.0]
-      Size: [560.0, 44.0]
-      FontSize: 44.0
+      Position: [250.0, 150.0]
+      Size: [780.0, 60.0]
+      FontSize: 60.0
       Text: "BLU ZOMBIE SURVIVAL"
       ForegroundColor: [0.92, 0.96, 1.0, 1.0]
     - Type: Text
       Name: Subtitle
       Position: [470.0, 250.0]
-      Size: [360.0, 22.0]
-      FontSize: 18.0
+      Size: [400.0, 30.0]
+      FontSize: 28.0
       Text: "SURVIVE THE WAVES"
       ForegroundColor: [0.70, 0.82, 0.92, 1.0]
     # PLAY button — clicking loads the gameplay level
     - Type: Button
       Name: PlayButton
-      Position: [540.0, 380.0]
-      Size: [200.0, 64.0]
-      FontSize: 32.0
+      Position: [510.0, 370.0]
+      Size: [260.0, 84.0]
+      FontSize: 48.0
       Text: "PLAY"
       ActionId: "load:assets/scenes/ZombieDemo.blu"
       Color: [0.16, 0.46, 0.22, 0.95]
       ForegroundColor: [1.0, 1.0, 1.0, 1.0]
     - Type: Text
       Name: Hint
-      Position: [505.0, 470.0]
-      Size: [300.0, 20.0]
-      FontSize: 14.0
+      Position: [470.0, 490.0]
+      Size: [360.0, 28.0]
+      FontSize: 22.0
       Text: "CLICK PLAY TO BEGIN"
       ForegroundColor: [0.62, 0.72, 0.82, 1.0]

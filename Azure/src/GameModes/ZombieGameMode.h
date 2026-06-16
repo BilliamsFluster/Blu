@@ -20,6 +20,7 @@ namespace Azure
 		void OnActorKilled(Blu::AActor* victim, Blu::AActor* killer) override;
 		void OnPlayerDeath(Blu::AActor* player) override;
 		void Tick(float dt) override;
+		void PopulateHUD(Blu::SceneDiagnostics& diagnostics) const override;
 
 		bool IsGameOver() const { return PlayerLives <= 0; }
 		bool IsVictory()  const { return CurrentWave > TotalWaves; }

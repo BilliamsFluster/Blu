@@ -1,5 +1,5 @@
 SceneVersion: 1
-Scene: assets/scenes/SkinnedShadowTest.blu
+Scene: assets/scenes/FogVolumeTest.blu
 RenderSettings:
   UseShadows: true
   UsePostProcess: true
@@ -12,14 +12,14 @@ RenderSettings:
   Sky_SunSize: 0.999499977
   Sky_SunStrength: 8
   Sky_CloudColor: [0.920000017, 0.930000007, 0.970000029]
-  Sky_CloudCoverage: 0.379999995
-  Sky_CloudDensity: 0.449999988
-  Sky_CloudSoftness: 0.550000012
+  Sky_CloudCoverage: 0.449999988
+  Sky_CloudDensity: 0
+  Sky_CloudSoftness: 0.349999994
   Sky_CloudHeight: 600
   Sky_CloudScale: 900
   Sky_CloudWindDirection: [1, 0.349999994]
   Sky_CloudScrollSpeed: 0.0149999997
-  Sky_CloudShadowing: 0.449999988
+  Sky_CloudShadowing: 0.649999976
   Sky_CloudHorizonFade: 0.219999999
   PP_EnableBloom: true
   PP_BloomThreshold: 1
@@ -34,11 +34,11 @@ RenderSettings:
   PP_SSAOStrength: 1
   ToD_NormalizedTime: 0.5
   ToD_AutoAdvance: false
-  ToD_DayDuration: 120
+  ToD_DayDuration: 600
   ToD_SunAzimuth: 45
-  ToD_SunMaxStrength: 10
-  ToD_SunNoonTurbidity: 2.20000005
-  ToD_SunHazeTurbidity: 4.5
+  ToD_SunMaxStrength: 5
+  ToD_SunNoonTurbidity: 2
+  ToD_SunHazeTurbidity: 3.5
   Fog_Enabled: false
   Fog_Color: [0.550000012, 0.579999983, 0.649999976]
   Fog_Density: 0.0149999997
@@ -47,6 +47,34 @@ RenderSettings:
   Fog_AerialColor: [0.699999988, 0.779999971, 0.899999976]
   Fog_AerialStrength: 0.100000001
 Entities:
+  - Entity: 2000000000000000006
+    TagComponent:
+      Tag: FogSphere
+    FogVolumeComponent:
+      Shape: 1
+      Extents: [2, 2, 2]
+      Radius: 2.20000005
+      Color: [0.720000029, 0.620000005, 0.560000002]
+      Density: 0.300000012
+      Falloff: 1
+    TransformComponent:
+      Translation: [5, 1, -2]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2000000000000000005
+    TagComponent:
+      Tag: GroundFogBox
+    FogVolumeComponent:
+      Shape: 0
+      Extents: [3.5, 1, 3.5]
+      Radius: 5
+      Color: [0.600000024, 0.660000026, 0.74000001]
+      Density: 0.150000006
+      Falloff: 1
+    TransformComponent:
+      Translation: [-3.5, 0.600000024, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
   - Entity: 2000000000000000001
     TagComponent:
       Tag: Floor
@@ -68,35 +96,6 @@ Entities:
       Mat_ShadingModel: 0
       Mat_TwoSided: false
       Mat_AlphaCutoff: 0.5
-  - Entity: 2000000000000000002
-    TagComponent:
-      Tag: ShamanSkinned
-    TransformComponent:
-      Translation: [-1.5, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [0.000500000024, 0.000500000024, 0.000500000024]
-    MeshComponent:
-      FilePath: assets/imports/models/Shaman/Shaman.fbx
-      ModelHandle: 16982092437666260877
-      PrimitiveType: 1
-      PBR_AlbedoColor: [0.600000024, 0.5, 0.419999987]
-      PBR_AlbedoAlpha: 1
-      PBR_Metallic: 0
-      PBR_Roughness: 0.699999988
-      PBR_AO: 1
-      PBR_EmissiveColor: [0, 0, 0]
-      PBR_EmissiveStrength: 0
-      Mat_BlendMode: 0
-      Mat_ShadingModel: 0
-      Mat_TwoSided: false
-      Mat_AlphaCutoff: 0.5
-    AnimatorComponent:
-      CurrentClipIndex: 0
-      CurrentTime: 0
-      Playing: true
-      Loop: true
-      SpeedScale: 1
-      BlendDuration: 0.200000003
   - Entity: 2000000000000000004
     TagComponent:
       Tag: StaticPillar
@@ -107,7 +106,7 @@ Entities:
     MeshComponent:
       FilePath: ""
       PrimitiveType: 1
-      PBR_AlbedoColor: [0.300000012, 0.550000012, 0.850000024]
+      PBR_AlbedoColor: [0.850000024, 0.300000012, 0.300000012]
       PBR_AlbedoAlpha: 1
       PBR_Metallic: 0
       PBR_Roughness: 0.600000024

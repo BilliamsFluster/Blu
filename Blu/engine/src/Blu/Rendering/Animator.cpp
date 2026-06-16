@@ -43,6 +43,37 @@ namespace Blu
                               0.0f, kEmptyClip, skeleton, finalBoneMatrices);
     }
 
+    void Animator::BlendClips(float t,
+                              const std::vector<glm::mat4>& a,
+                              const std::vector<glm::mat4>& b,
+                              std::vector<glm::mat4>& out)
+    {
+        t = glm::clamp(t, 0.0f, 1.0f);
+        const size_t n = std::min(a.size(), b.size());
+        out.assign(n, glm::mat4(1.0f));
+        for (size_t i = 0; i < n; ++i)
+            out[i] = a[i] * (1.0f - t) + b[i] * t;
+    }
+
+    bool Animator::UpdateWithBlending(float deltaTime,
+                                      float& fromTime, float& toTime,
+                                      float& blendElapsed, float blendDuration,
+                                      bool loop, float speedScale,
+                                      const AnimationClip& fromClip,
+                                      const AnimationClip& toClip,
+                                      const Skeleton& skeleton,
+                                      std::vector<glm::mat4>& finalBoneMatrices)
+    {
+        std::vector<glm::mat4> poseFrom, poseTo;
+        Update(deltaTime, fromTime, loop, speedScale, fromClip, skeleton, poseFrom);
+        Update(deltaTime, toTime,   loop, speedScale, toClip,   skeleton, poseTo);
+
+        blendElapsed += deltaTime;
+        const float t = blendDuration > 0.0f ? glm::clamp(blendElapsed / blendDuration, 0.0f, 1.0f) : 1.0f;
+        BlendClips(t, poseFrom, poseTo, finalBoneMatrices);
+        return blendElapsed >= blendDuration;
+    }
+
     void Animator::ComputeNodeTransforms(const BoneNode& node,
                                          const glm::mat4& parentTransform,
                                          float animTimeTicks,

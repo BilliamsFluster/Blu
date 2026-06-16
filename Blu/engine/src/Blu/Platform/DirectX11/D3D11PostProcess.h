@@ -41,10 +41,16 @@ namespace Blu
         Shared<Shader> m_CompositeShader;      // ACES tonemap + bloom + FXAA + SSAO
         Shared<Shader> m_SSAOShader;
         Shared<Shader> m_SSAOBlurShader;
+        Shared<Shader> m_FogVolumeShader;      // localized fog composite
+        Shared<Shader> m_DecalShader;          // projected decal composite
 
         // ── SSAO ─────────────────────────────────────────────────────────────────
         Shared<FrameBuffer> m_SSAOFB;
         Shared<FrameBuffer> m_SSAOBlurFB;
+
+        // ── Fog volumes ───────────────────────────────────────────────────────────
+        Shared<FrameBuffer> m_FogVolumeFB;     // RGBA16F, holds scene color with fog applied
+        Shared<FrameBuffer> m_DecalFB;         // RGBA16F, holds scene color with decals applied
         glm::vec4           m_SSAOKernel[32];  // tangent-space hemisphere samples
 
         // ── Geometry ─────────────────────────────────────────────────────────────

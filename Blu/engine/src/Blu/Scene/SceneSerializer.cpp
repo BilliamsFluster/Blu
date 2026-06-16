@@ -9,6 +9,7 @@
 #include "Blu/Rendering/Texture.h"
 #include "Blu/Rendering/ModelLoader.h"
 #include "Blu/Rendering/AssetManager.h"
+#include "Blu/Rendering/MaterialAsset.h"
 #include "Blu/Rendering/Skybox.h"
 #include "Blu/Rendering/TimeOfDay.h"
 #include "Blu/Rendering/Renderer3D.h"
@@ -391,6 +392,30 @@ namespace Blu
 			out << YAML::Key << "AttQuadratic"   << YAML::Value << sc.AttQuadratic;
 			out << YAML::EndMap;
 		}
+		if (entity.HasComponent<FogVolumeComponent>())
+		{
+			out << YAML::Key << "FogVolumeComponent";
+			out << YAML::BeginMap;
+			auto& fv = entity.GetComponent<FogVolumeComponent>();
+			out << YAML::Key << "Shape"   << YAML::Value << (int)fv.VolumeShape;
+			out << YAML::Key << "Extents" << YAML::Value << fv.Extents;
+			out << YAML::Key << "Radius"  << YAML::Value << fv.Radius;
+			out << YAML::Key << "Color"   << YAML::Value << fv.Color;
+			out << YAML::Key << "Density" << YAML::Value << fv.Density;
+			out << YAML::Key << "Falloff" << YAML::Value << fv.Falloff;
+			out << YAML::EndMap;
+		}
+		if (entity.HasComponent<DecalComponent>())
+		{
+			out << YAML::Key << "DecalComponent";
+			out << YAML::BeginMap;
+			auto& dec = entity.GetComponent<DecalComponent>();
+			out << YAML::Key << "Color"    << YAML::Value << dec.Color;
+			out << YAML::Key << "Opacity"  << YAML::Value << dec.Opacity;
+			out << YAML::Key << "Falloff"  << YAML::Value << dec.Falloff;
+			out << YAML::Key << "Lifetime" << YAML::Value << dec.Lifetime;
+			out << YAML::EndMap;
+		}
 
 
 
@@ -482,6 +507,11 @@ namespace Blu
 			if ((uint64_t)mc.ModelHandle != 0)
 				out << YAML::Key << "ModelHandle" << YAML::Value << (uint64_t)mc.ModelHandle;
 			out << YAML::Key << "PrimitiveType" << YAML::Value << static_cast<int>(mc.Primitive);
+				// Stable .blumat reference (optional). When set, the loader resolves it to the
+				// material via AssetManager::LoadMaterial; the inline PBR_* keys below are still
+				// written as a graceful fallback should the .blumat be missing on load.
+				if ((uint64_t)mc.MaterialHandle != 0)
+					out << YAML::Key << "MaterialHandle" << YAML::Value << (uint64_t)mc.MaterialHandle;
 
 			if (mc.MaterialInstance)
 			{
@@ -572,6 +602,7 @@ namespace Blu
 			out << YAML::Key << "Playing" << YAML::Value << animator.Playing;
 			out << YAML::Key << "Loop" << YAML::Value << animator.Loop;
 			out << YAML::Key << "SpeedScale" << YAML::Value << animator.SpeedScale;
+			out << YAML::Key << "BlendDuration" << YAML::Value << animator.BlendDuration;
 			out << YAML::EndMap;
 		}
 		if (entity.HasComponent<AudioSourceComponent>())
@@ -1383,6 +1414,26 @@ namespace Blu
 					if (dirLightComponent["Specular"])  dl.Specular  = dirLightComponent["Specular"].as<glm::vec3>();
 					if (dirLightComponent["Intensity"]) dl.Intensity = dirLightComponent["Intensity"].as<float>();
 				}
+				auto fogVolumeComponent = entity["FogVolumeComponent"];
+				if (fogVolumeComponent)
+				{
+					auto& fv = deserializedEntity.AddComponent<FogVolumeComponent>();
+					if (fogVolumeComponent["Shape"])   fv.VolumeShape = (FogVolumeComponent::Shape)fogVolumeComponent["Shape"].as<int>();
+					if (fogVolumeComponent["Extents"]) fv.Extents     = fogVolumeComponent["Extents"].as<glm::vec3>();
+					if (fogVolumeComponent["Radius"])  fv.Radius      = fogVolumeComponent["Radius"].as<float>();
+					if (fogVolumeComponent["Color"])   fv.Color       = fogVolumeComponent["Color"].as<glm::vec3>();
+					if (fogVolumeComponent["Density"]) fv.Density     = fogVolumeComponent["Density"].as<float>();
+					if (fogVolumeComponent["Falloff"]) fv.Falloff     = fogVolumeComponent["Falloff"].as<float>();
+				}
+				auto decalComponent = entity["DecalComponent"];
+				if (decalComponent)
+				{
+					auto& dec = deserializedEntity.AddComponent<DecalComponent>();
+					if (decalComponent["Color"])   dec.Color   = decalComponent["Color"].as<glm::vec3>();
+					if (decalComponent["Opacity"])  dec.Opacity  = decalComponent["Opacity"].as<float>();
+					if (decalComponent["Falloff"])  dec.Falloff  = decalComponent["Falloff"].as<float>();
+					if (decalComponent["Lifetime"]) dec.Lifetime = decalComponent["Lifetime"].as<float>();
+				}
 				auto terrainComponent = entity["TerrainComponent"];
 				auto meshComponent = entity["MeshComponent"];
 				if (meshComponent)
@@ -1430,34 +1481,60 @@ namespace Blu
 					if (!mc.MaterialInstance)
 						mc.MaterialInstance = Material::Create();
 
-					// PBR properties
-					if (meshComponent["PBR_AlbedoColor"])
+					// Handle-based material: a stored .blumat handle takes precedence. Load the
+					// material asset and build the concrete Material the renderer binds. The inline
+					// PBR_* keys below are the legacy fallback, used only when no handle is present
+					// or it fails to resolve (e.g. the .blumat was deleted) — mirrors the ModelHandle
+					// forward-compat pattern above.
+					bool materialFromHandle = false;
+					if (meshComponent["MaterialHandle"])
 					{
-						glm::vec3 rgb = meshComponent["PBR_AlbedoColor"].as<glm::vec3>();
-						float alpha = meshComponent["PBR_AlbedoAlpha"] ? meshComponent["PBR_AlbedoAlpha"].as<float>() : 1.0f;
-						mc.MaterialInstance->AlbedoColor = glm::vec4(rgb, alpha);
+						mc.MaterialHandle = AssetHandle(meshComponent["MaterialHandle"].as<uint64_t>(0));
+						if ((uint64_t)mc.MaterialHandle != 0)
+						{
+							if (auto matAsset = AssetManager::Get().LoadMaterial(mc.MaterialHandle))
+							{
+								mc.MaterialInstance = matAsset->ToMaterial();
+								materialFromHandle = true;
+							}
+							else
+							{
+								BLU_CORE_WARN("MeshComponent references material handle {} but it could not be loaded; falling back to inline PBR data", (uint64_t)mc.MaterialHandle);
+							}
+						}
 					}
-					if (meshComponent["PBR_Metallic"])         mc.MaterialInstance->Metallic         = meshComponent["PBR_Metallic"].as<float>();
-					if (meshComponent["PBR_Roughness"])        mc.MaterialInstance->Roughness        = meshComponent["PBR_Roughness"].as<float>();
-					if (meshComponent["PBR_AO"])               mc.MaterialInstance->AO               = meshComponent["PBR_AO"].as<float>();
-					if (meshComponent["PBR_EmissiveColor"])    mc.MaterialInstance->EmissiveColor    = meshComponent["PBR_EmissiveColor"].as<glm::vec3>();
-					if (meshComponent["PBR_EmissiveStrength"]) mc.MaterialInstance->EmissiveStrength = meshComponent["PBR_EmissiveStrength"].as<float>();
-					if (meshComponent["Mat_BlendMode"])        mc.MaterialInstance->Blend            = static_cast<BlendMode>(meshComponent["Mat_BlendMode"].as<int>());
-					if (meshComponent["Mat_ShadingModel"])     mc.MaterialInstance->Shading          = static_cast<ShadingModel>(meshComponent["Mat_ShadingModel"].as<int>());
-					if (meshComponent["Mat_TwoSided"])         mc.MaterialInstance->TwoSided         = meshComponent["Mat_TwoSided"].as<bool>();
-					if (meshComponent["Mat_AlphaCutoff"])      mc.MaterialInstance->AlphaCutoff      = meshComponent["Mat_AlphaCutoff"].as<float>();
 
-					// Textures
-					auto loadTex = [&](const char* key, Shared<Texture2D>& tex)
+					// PBR properties (inline fallback — skipped when the material came from a handle)
+					if (!materialFromHandle)
 					{
-						if (meshComponent[key])
-							tex = LoadSceneTexture(meshComponent[key].as<std::string>(), sceneFilePath, key);
-					};
-					loadTex("Tex_Albedo",  mc.MaterialInstance->AlbedoMap);
-					loadTex("Tex_Normal",  mc.MaterialInstance->NormalMap);
-					loadTex("Tex_MetallicRoughness", mc.MaterialInstance->MetallicRoughnessMap);
-					loadTex("Tex_AO",      mc.MaterialInstance->AOMap);
-					loadTex("Tex_Emissive", mc.MaterialInstance->EmissiveMap);
+						if (meshComponent["PBR_AlbedoColor"])
+						{
+							glm::vec3 rgb = meshComponent["PBR_AlbedoColor"].as<glm::vec3>();
+							float alpha = meshComponent["PBR_AlbedoAlpha"] ? meshComponent["PBR_AlbedoAlpha"].as<float>() : 1.0f;
+							mc.MaterialInstance->AlbedoColor = glm::vec4(rgb, alpha);
+						}
+						if (meshComponent["PBR_Metallic"])         mc.MaterialInstance->Metallic         = meshComponent["PBR_Metallic"].as<float>();
+						if (meshComponent["PBR_Roughness"])        mc.MaterialInstance->Roughness        = meshComponent["PBR_Roughness"].as<float>();
+						if (meshComponent["PBR_AO"])               mc.MaterialInstance->AO               = meshComponent["PBR_AO"].as<float>();
+						if (meshComponent["PBR_EmissiveColor"])    mc.MaterialInstance->EmissiveColor    = meshComponent["PBR_EmissiveColor"].as<glm::vec3>();
+						if (meshComponent["PBR_EmissiveStrength"]) mc.MaterialInstance->EmissiveStrength = meshComponent["PBR_EmissiveStrength"].as<float>();
+						if (meshComponent["Mat_BlendMode"])        mc.MaterialInstance->Blend            = static_cast<BlendMode>(meshComponent["Mat_BlendMode"].as<int>());
+						if (meshComponent["Mat_ShadingModel"])     mc.MaterialInstance->Shading          = static_cast<ShadingModel>(meshComponent["Mat_ShadingModel"].as<int>());
+						if (meshComponent["Mat_TwoSided"])         mc.MaterialInstance->TwoSided         = meshComponent["Mat_TwoSided"].as<bool>();
+						if (meshComponent["Mat_AlphaCutoff"])      mc.MaterialInstance->AlphaCutoff      = meshComponent["Mat_AlphaCutoff"].as<float>();
+
+						// Textures
+						auto loadTex = [&](const char* key, Shared<Texture2D>& tex)
+						{
+							if (meshComponent[key])
+								tex = LoadSceneTexture(meshComponent[key].as<std::string>(), sceneFilePath, key);
+						};
+						loadTex("Tex_Albedo",  mc.MaterialInstance->AlbedoMap);
+						loadTex("Tex_Normal",  mc.MaterialInstance->NormalMap);
+						loadTex("Tex_MetallicRoughness", mc.MaterialInstance->MetallicRoughnessMap);
+						loadTex("Tex_AO",      mc.MaterialInstance->AOMap);
+						loadTex("Tex_Emissive", mc.MaterialInstance->EmissiveMap);
+					}
 				}
 
 				if (terrainComponent)
@@ -1562,6 +1639,7 @@ namespace Blu
 					if (animatorComponent["Playing"])          animator.Playing          = animatorComponent["Playing"].as<bool>();
 					if (animatorComponent["Loop"])             animator.Loop             = animatorComponent["Loop"].as<bool>();
 					if (animatorComponent["SpeedScale"])       animator.SpeedScale       = animatorComponent["SpeedScale"].as<float>();
+					if (animatorComponent["BlendDuration"])    animator.BlendDuration    = animatorComponent["BlendDuration"].as<float>();
 				}
 
 				auto spotLightComponent = entity["SpotLightComponent"];

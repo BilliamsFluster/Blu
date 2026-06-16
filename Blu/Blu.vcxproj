@@ -83,7 +83,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/FS /MTd %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FS /bigobj /MTd %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -109,7 +109,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/MT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/bigobj /MT %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -136,7 +136,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/MT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/bigobj /MT %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -600,6 +600,7 @@
     <ClInclude Include="engine\src\Blu\Core\UUID.h" />
     <ClInclude Include="engine\src\Blu\Core\Window.h" />
     <ClInclude Include="engine\src\Blu\Debug\Instrumentor.h" />
+    <ClInclude Include="engine\src\Blu\Debug\PerfStats.h" />
     <ClInclude Include="engine\src\Blu\Events\Event.h" />
     <ClInclude Include="engine\src\Blu\Events\EventDispatcher.h" />
     <ClInclude Include="engine\src\Blu\Events\EventHandler.h" />
@@ -648,6 +649,7 @@
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="engine\src\Blu\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="engine\src\Blu\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="engine\src\Blu\Project\Project.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Animation.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Animator.h" />
     <ClInclude Include="engine\src\Blu\Rendering\Asset.h" />
@@ -728,6 +730,7 @@
     <ClCompile Include="engine\src\Blu\Core\Log.cpp" />
     <ClCompile Include="engine\src\Blu\Core\OrthographicCameraController.cpp" />
     <ClCompile Include="engine\src\Blu\Core\UUID.cpp" />
+    <ClCompile Include="engine\src\Blu\Debug\PerfStats.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventDispatcher.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventHandler.cpp" />
     <ClCompile Include="engine\src\Blu\Events\EventManager.cpp" />
@@ -769,6 +772,7 @@
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsPlatformUtils.cpp" />
     <ClCompile Include="engine\src\Blu\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="engine\src\Blu\Project\ProjectManager.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Animation.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Animator.cpp" />
     <ClCompile Include="engine\src\Blu\Rendering\Asset.cpp" />

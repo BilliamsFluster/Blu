@@ -582,9 +582,9 @@ namespace Blu
                                      const std::vector<glm::mat4>& boneMatrices,
                                      int entityID)
     {
-        const SceneRenderPipelinePlan plan =
-            BuildSceneRenderPipelinePlan(RenderSettings::GetPath(), RendererAPI::GetAPI());
-        if (plan.UsesDeferred() && s_Data3D->Deferred)
+        // Lightweight deferred check — avoid allocating a full pipeline plan (Stages vector) for
+        // every skinned mesh every frame; here we only need the effective-path decision.
+        if (SceneRenderUsesDeferred(RenderSettings::GetPath(), RendererAPI::GetAPI()) && s_Data3D->Deferred)
         {
             s_DeferredSkinnedDrawCalls.push_back({ transform, &mc, boneMatrices, entityID });
             return;

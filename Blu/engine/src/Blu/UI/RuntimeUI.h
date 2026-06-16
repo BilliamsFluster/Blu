@@ -32,7 +32,10 @@ namespace Blu
 		InteractPrompt,
 		AmmoText,      // "<mag> / <reserve>" or "RELOADING"
 		Reticle,       // centered crosshair (drawn, no text)
-		Hitmarker      // centered hit "X", shown while HitmarkerTimer > 0
+		Hitmarker,     // centered hit "X", shown while HitmarkerTimer > 0
+		Wave,          // "Wave <n> / <total>" — from the game mode (HasWaveHUD)
+		Score,         // "Score: <kills>"
+		Lives          // "Lives: <n>"
 	};
 
 	struct UIWidget

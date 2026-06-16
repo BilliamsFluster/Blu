@@ -192,6 +192,35 @@ You can play it two ways:
 
 ---
 
+## Projects (`--project`)
+
+Blu has the beginnings of a project system. A **project** is a folder with its own assets and
+scenes plus a small **`.bluproj`** manifest at its root:
+
+```yaml
+Project:
+  Name: MyGame
+  AssetsDirectory: assets
+  StartupScene: assets/scenes/Main.blu
+```
+
+Launch the editor against one with:
+
+```sh
+Blu-Editor.exe --project path/to/MyGame
+```
+
+(you can pass the folder or the `.bluproj` file directly). On launch the editor re-points its
+`project://` and `cache://` virtual mounts at that folder — so asset resolution and the asset
+registry become project-scoped — and opens the project's `StartupScene`. Without `--project`,
+the editor behaves exactly as it always has.
+
+> This is the foundation for a future launcher/hub. Two things are still bundled rather than
+> project-scoped today: the Content Browser still shows the editor's built-in `assets/` folder,
+> and gameplay modules are compiled into the editor (see [Building your own game](#building-your-own-game)).
+
+---
+
 ## Building your own game
 
 You don't edit the engine to make a game — you build a small gameplay module against it, the
@@ -262,10 +291,12 @@ Blu is under active development and honest about where it is:
   a GPU particle system, mesh LOD generation, and routing all material rendering through the
   handle-based `.blumat` path. These are scaffolded in places but not finished.
 
-A natural next step under consideration is an **Unreal-style project hub/launcher** — pick or
-create a project, each opening the editor against its own assets and gameplay module. The
-groundwork is already here (the engine / gameplay-lib / runtime split, the `FileSystemService`
-mounts, and `Game.config`), so it's an extension rather than a rewrite.
+A natural next step is an **Unreal-style project hub/launcher** — pick or create a project, each
+opening the editor against its own assets and gameplay module. The groundwork is already here
+(the engine / gameplay-lib / runtime split, the `FileSystemService` mounts, and `Game.config`),
+so it's an extension rather than a rewrite. The first piece exists today: see
+[Projects (`--project`)](#projects---project). Still to come: a project-scoped Content Browser
+root and a visual launcher window.
 
 ---
 

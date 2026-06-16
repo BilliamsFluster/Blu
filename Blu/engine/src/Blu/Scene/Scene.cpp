@@ -617,6 +617,9 @@ namespace Blu
 	{
 		SceneDiagnostics diagnostics;
 		diagnostics.PlayerInputEnabled = m_PlayerInputEnabled;
+		// Let the active game mode surface its HUD stats (wave/score/lives) — engine stays generic.
+		if (m_GameMode)
+			m_GameMode->PopulateHUD(diagnostics);
 		diagnostics.EjectCameraActive = m_EjectCamera != nullptr;
 		diagnostics.UIRootCount = m_LastRuntimeUIRootCount;
 		diagnostics.RuntimeUIWidgetCount = m_LastRuntimeUIWidgetCount;
@@ -1823,20 +1826,75 @@ namespace Blu
 		Renderer3D::SetFog(m_Fog);
 
 		// God rays: project the sun (directional light) to screen for the post-process pass.
+		// A smooth fade [0..1] ramps to 0 as the sun nears a screen edge or goes behind the
+		// camera, so the shaft brightness eases in/out instead of popping when the sun leaves view.
 		if (m_PostProcess && !dirLights.empty())
 		{
 			glm::vec3 toSun = -glm::normalize(dirLights[0].Direction);
 			glm::vec4 clip = Renderer3D::GetViewProjectionMatrix() * glm::vec4(toSun * 100000.0f, 1.0f);
-			bool vis = clip.w > 0.0001f;
+			float fade = 0.0f;
 			glm::vec2 uv(0.5f);
-			if (vis)
+			if (clip.w > 0.0001f)
 			{
 				uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
 				uv.y = 1.0f - uv.y;
-				vis = uv.x > -0.25f && uv.x < 1.25f && uv.y > -0.25f && uv.y < 1.25f;
+				// Full strength while the sun sits in [0.1,0.9] of the screen, ramping to 0 by the
+				// [-0.25,1.25] bounds (smoothstep with reversed edges = a decreasing ramp).
+				float edgeX = glm::smoothstep(-0.25f, 0.1f, uv.x) * glm::smoothstep(1.25f, 0.9f, uv.x);
+				float edgeY = glm::smoothstep(-0.25f, 0.1f, uv.y) * glm::smoothstep(1.25f, 0.9f, uv.y);
+				fade = edgeX * edgeY;
 			}
 			m_PostProcess->GodRaySunUV = uv;
-			m_PostProcess->GodRaySunVisible = vis;
+			m_PostProcess->GodRaySunFade = fade;
+		}
+
+		// Localized fog volumes — gather for the post-process composite (cheap when none exist).
+		if (m_PostProcess)
+		{
+			m_PostProcess->FogVolumes.clear();
+			auto fogView = m_Registry.view<TransformComponent, FogVolumeComponent>();
+			for (auto e : fogView)
+			{
+				auto&& [tc, fv] = fogView.get<TransformComponent, FogVolumeComponent>(e);
+				FogVolumeGPU g;
+				g.Position = tc.Translation;
+				g.Shape    = (int)fv.VolumeShape;
+				g.Extents  = (fv.VolumeShape == FogVolumeComponent::Shape::Sphere)
+				             ? glm::vec3(fv.Radius)
+				             : fv.Extents;
+				g.Density  = fv.Density;
+				g.Color    = fv.Color;
+				g.Falloff  = fv.Falloff;
+				m_PostProcess->FogVolumes.push_back(g);
+			}
+			m_PostProcess->EnableFogVolumes = !m_PostProcess->FogVolumes.empty();
+			m_PostProcess->FogInvViewProj   = glm::inverse(Renderer3D::GetViewProjectionMatrix());
+			m_PostProcess->FogCameraPos     = camera.GetPosition();
+
+			// Projected decals — gather oriented boxes (entity transform) for the decal pass.
+			m_PostProcess->Decals.clear();
+			std::vector<glm::vec3> decalPositions;
+			auto decalView = m_Registry.view<TransformComponent, DecalComponent>();
+			for (auto e : decalView)
+			{
+				auto&& [tc, dec] = decalView.get<TransformComponent, DecalComponent>(e);
+				glm::mat4 world = glm::translate(glm::mat4(1.0f), tc.Translation)
+				                * glm::toMat4(glm::quat(tc.Rotation))
+				                * glm::scale(glm::mat4(1.0f), tc.Scale);
+				// Transient decals fade out over their last ~1.5s; permanent decals (Lifetime < 0) stay.
+				float lifeFade = (dec.Lifetime < 0.0f) ? 1.0f : glm::clamp(dec.Lifetime / 1.5f, 0.0f, 1.0f);
+				DecalGPU g;
+				g.InvWorld = glm::inverse(world);
+				g.Color    = dec.Color;
+				g.Opacity  = dec.Opacity * lifeFade;
+				g.Falloff  = dec.Falloff;
+				m_PostProcess->Decals.push_back(g);
+				decalPositions.push_back(tc.Translation);
+			}
+			// The decal pass renders at most kMaxDecals; when more exist keep those nearest the
+			// camera so impacts around the player always show (not an arbitrary ECS-order subset).
+			SelectNearestDecals(m_PostProcess->Decals, decalPositions, m_PostProcess->FogCameraPos, kMaxDecals);
+			m_PostProcess->EnableDecals = !m_PostProcess->Decals.empty();
 		}
 		{
 			glm::vec3 camPos = camera.GetPosition();
@@ -1911,20 +1969,75 @@ namespace Blu
 		Renderer3D::SetFog(m_Fog);
 
 		// God rays: project the sun (directional light) to screen for the post-process pass.
+		// A smooth fade [0..1] ramps to 0 as the sun nears a screen edge or goes behind the
+		// camera, so the shaft brightness eases in/out instead of popping when the sun leaves view.
 		if (m_PostProcess && !dirLights.empty())
 		{
 			glm::vec3 toSun = -glm::normalize(dirLights[0].Direction);
 			glm::vec4 clip = Renderer3D::GetViewProjectionMatrix() * glm::vec4(toSun * 100000.0f, 1.0f);
-			bool vis = clip.w > 0.0001f;
+			float fade = 0.0f;
 			glm::vec2 uv(0.5f);
-			if (vis)
+			if (clip.w > 0.0001f)
 			{
 				uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
 				uv.y = 1.0f - uv.y;
-				vis = uv.x > -0.25f && uv.x < 1.25f && uv.y > -0.25f && uv.y < 1.25f;
+				// Full strength while the sun sits in [0.1,0.9] of the screen, ramping to 0 by the
+				// [-0.25,1.25] bounds (smoothstep with reversed edges = a decreasing ramp).
+				float edgeX = glm::smoothstep(-0.25f, 0.1f, uv.x) * glm::smoothstep(1.25f, 0.9f, uv.x);
+				float edgeY = glm::smoothstep(-0.25f, 0.1f, uv.y) * glm::smoothstep(1.25f, 0.9f, uv.y);
+				fade = edgeX * edgeY;
 			}
 			m_PostProcess->GodRaySunUV = uv;
-			m_PostProcess->GodRaySunVisible = vis;
+			m_PostProcess->GodRaySunFade = fade;
+		}
+
+		// Localized fog volumes — gather for the post-process composite (cheap when none exist).
+		if (m_PostProcess)
+		{
+			m_PostProcess->FogVolumes.clear();
+			auto fogView = m_Registry.view<TransformComponent, FogVolumeComponent>();
+			for (auto e : fogView)
+			{
+				auto&& [tc, fv] = fogView.get<TransformComponent, FogVolumeComponent>(e);
+				FogVolumeGPU g;
+				g.Position = tc.Translation;
+				g.Shape    = (int)fv.VolumeShape;
+				g.Extents  = (fv.VolumeShape == FogVolumeComponent::Shape::Sphere)
+				             ? glm::vec3(fv.Radius)
+				             : fv.Extents;
+				g.Density  = fv.Density;
+				g.Color    = fv.Color;
+				g.Falloff  = fv.Falloff;
+				m_PostProcess->FogVolumes.push_back(g);
+			}
+			m_PostProcess->EnableFogVolumes = !m_PostProcess->FogVolumes.empty();
+			m_PostProcess->FogInvViewProj   = glm::inverse(Renderer3D::GetViewProjectionMatrix());
+			m_PostProcess->FogCameraPos     = glm::vec3(cameraTransform[3]);
+
+			// Projected decals — gather oriented boxes (entity transform) for the decal pass.
+			m_PostProcess->Decals.clear();
+			std::vector<glm::vec3> decalPositions;
+			auto decalView = m_Registry.view<TransformComponent, DecalComponent>();
+			for (auto e : decalView)
+			{
+				auto&& [tc, dec] = decalView.get<TransformComponent, DecalComponent>(e);
+				glm::mat4 world = glm::translate(glm::mat4(1.0f), tc.Translation)
+				                * glm::toMat4(glm::quat(tc.Rotation))
+				                * glm::scale(glm::mat4(1.0f), tc.Scale);
+				// Transient decals fade out over their last ~1.5s; permanent decals (Lifetime < 0) stay.
+				float lifeFade = (dec.Lifetime < 0.0f) ? 1.0f : glm::clamp(dec.Lifetime / 1.5f, 0.0f, 1.0f);
+				DecalGPU g;
+				g.InvWorld = glm::inverse(world);
+				g.Color    = dec.Color;
+				g.Opacity  = dec.Opacity * lifeFade;
+				g.Falloff  = dec.Falloff;
+				m_PostProcess->Decals.push_back(g);
+				decalPositions.push_back(tc.Translation);
+			}
+			// The decal pass renders at most kMaxDecals; when more exist keep those nearest the
+			// camera so impacts around the player always show (not an arbitrary ECS-order subset).
+			SelectNearestDecals(m_PostProcess->Decals, decalPositions, m_PostProcess->FogCameraPos, kMaxDecals);
+			m_PostProcess->EnableDecals = !m_PostProcess->Decals.empty();
 		}
 		{
 			glm::vec3 camPos = glm::vec3(cameraTransform[3]);
@@ -2010,7 +2123,7 @@ namespace Blu
 	    glm::vec3 up = glm::abs(lightDir.y) < 0.99f
 	                       ? glm::vec3(0.0f, 1.0f, 0.0f)
 	                       : glm::vec3(1.0f, 0.0f, 0.0f);
-	    glm::mat4 lightView = glm::lookAt(center - lightDir * 100.0f, center, up);
+	    glm::mat4 lightView = glm::lookAt(center - lightDir * 500.0f, center, up);
 
 	    // AABB of cascade corners in light space
 	    glm::vec3 lsMin( FLT_MAX), lsMax(-FLT_MAX);
@@ -2021,8 +2134,10 @@ namespace Blu
 	        lsMax = glm::max(lsMax, lc);
 	    }
 
-	    // Extra Z padding to capture shadow casters behind the visible slice
-	    lsMin.z -= 50.0f;
+	    // Extra Z padding to capture shadow casters behind the visible slice — generous so casters
+	    // outside the camera frustum still cast into view as the camera rotates (avoids shadows
+	    // clipping/popping at cascade edges).
+	    lsMin.z -= 200.0f;
 
 	    // Snap XY to texel-sized increments to suppress shimmering as the camera moves
 	    float worldUnitsPerTexel = (lsMax.x - lsMin.x) / static_cast<float>(kCSMSize);
@@ -2198,10 +2313,30 @@ namespace Blu
 					continue;
 				}
 
-				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
-				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
-				Animator::Update(anim.Playing ? dt : 0.0f, anim.CurrentTime, anim.Loop, anim.SpeedScale,
-				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+				const int clipCount = (int)anim.SkelData->Clips.size();
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, clipCount - 1);
+				const float animDt = anim.Playing ? dt : 0.0f;
+				if (anim.NewClipIndex >= 0 && anim.NewClipIndex < clipCount)
+				{
+					// Crossfading: blend CurrentClipIndex (PrevClipTime) → NewClipIndex (CurrentTime).
+					bool done = Animator::UpdateWithBlending(animDt, anim.PrevClipTime, anim.CurrentTime,
+					                 anim.BlendElapsed, anim.BlendDuration, anim.Loop, anim.SpeedScale,
+					                 anim.SkelData->Clips[anim.CurrentClipIndex],
+					                 anim.SkelData->Clips[anim.NewClipIndex],
+					                 *anim.SkelData->Skel, anim.FinalBoneMatrices);
+					if (done)
+					{
+						anim.CurrentClipIndex = anim.NewClipIndex;
+						anim.NewClipIndex     = -1;
+						anim.BlendElapsed     = 0.0f;
+					}
+				}
+				else
+				{
+					const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
+					Animator::Update(animDt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+					                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+				}
 			}
 		}
 
@@ -2235,6 +2370,31 @@ namespace Blu
 			m_PostProcess->Submit();
 		}
 	}
+	bool Scene::RaycastWorld(const glm::vec3& origin, const glm::vec3& direction,
+		glm::vec3& outPosition, glm::vec3& outNormal, float& outDistance) const
+	{
+		if (!m_Physics3DWorld || !m_Physics3DWorld->IsValid())
+			return false;
+		return m_Physics3DWorld->CastRay(origin, direction, outPosition, outNormal, outDistance);
+	}
+
+	void Scene::UpdateDecalLifetimes(float deltaTime)
+	{
+		std::vector<entt::entity> expired;
+		auto view = m_Registry.view<DecalComponent>();
+		for (auto e : view)
+		{
+			auto& dec = view.get<DecalComponent>(e);
+			if (dec.Lifetime < 0.0f) // permanent (editor-placed) — never ages out
+				continue;
+			dec.Lifetime -= deltaTime;
+			if (dec.Lifetime <= 0.0f)
+				expired.push_back(e);
+		}
+		for (auto e : expired)
+			DestroyEntity(Entity{ e, this });
+	}
+
 	void Scene::OnUpdateRuntime(Timestep deltaTime)
 	{
 		m_ElapsedTime += (float)deltaTime;
@@ -2261,16 +2421,38 @@ namespace Blu
 					continue;
 				}
 
-				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, (int)anim.SkelData->Clips.size() - 1);
-				const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
-				Animator::Update(anim.Playing ? dt : 0.0f, anim.CurrentTime, anim.Loop, anim.SpeedScale,
-				                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+				const int clipCount = (int)anim.SkelData->Clips.size();
+				anim.CurrentClipIndex = std::clamp(anim.CurrentClipIndex, 0, clipCount - 1);
+				const float animDt = anim.Playing ? dt : 0.0f;
+				if (anim.NewClipIndex >= 0 && anim.NewClipIndex < clipCount)
+				{
+					// Crossfading: blend CurrentClipIndex (PrevClipTime) → NewClipIndex (CurrentTime).
+					bool done = Animator::UpdateWithBlending(animDt, anim.PrevClipTime, anim.CurrentTime,
+					                 anim.BlendElapsed, anim.BlendDuration, anim.Loop, anim.SpeedScale,
+					                 anim.SkelData->Clips[anim.CurrentClipIndex],
+					                 anim.SkelData->Clips[anim.NewClipIndex],
+					                 *anim.SkelData->Skel, anim.FinalBoneMatrices);
+					if (done)
+					{
+						anim.CurrentClipIndex = anim.NewClipIndex;
+						anim.NewClipIndex     = -1;
+						anim.BlendElapsed     = 0.0f;
+					}
+				}
+				else
+				{
+					const AnimationClip& clip = anim.SkelData->Clips[anim.CurrentClipIndex];
+					Animator::Update(animDt, anim.CurrentTime, anim.Loop, anim.SpeedScale,
+					                 clip, *anim.SkelData->Skel, anim.FinalBoneMatrices);
+				}
 			}
 		}
 
 		m_ActorSystem->Tick(dt);
 		if (m_GameMode)
 			m_GameMode->Tick(dt);
+
+		UpdateDecalLifetimes(dt); // age + remove transient impact decals spawned by actors this frame
 
 		{
 			const int32_t velocityIterations = 6;

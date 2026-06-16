@@ -1,17 +1,70 @@
-Scene: assets\scenes\test.blu
+SceneVersion: 1
+Scene: assets/scenes/test.blu
+RenderSettings:
+  UseShadows: false
+  UsePostProcess: false
+  UseSkybox: false
+  UseTimeOfDay: false
+  Sky_Turbidity: 2.5
+  Sky_SkyExposure: 0.0250000004
+  Sky_GroundColor: [0.219999999, 0.180000007, 0.140000001]
+  Sky_SunColor: [1, 0.949999988, 0.800000012]
+  Sky_SunSize: 0.999499977
+  Sky_SunStrength: 3
+  Sky_CloudColor: [0.920000017, 0.930000007, 0.970000029]
+  Sky_CloudCoverage: 0.449999988
+  Sky_CloudDensity: 0
+  Sky_CloudSoftness: 0.349999994
+  Sky_CloudHeight: 600
+  Sky_CloudScale: 900
+  Sky_CloudWindDirection: [1, 0.349999994]
+  Sky_CloudScrollSpeed: 0.0149999997
+  Sky_CloudShadowing: 0.649999976
+  Sky_CloudHorizonFade: 0.219999999
+  PP_EnableBloom: true
+  PP_BloomThreshold: 1
+  PP_BloomStrength: 0.0500000007
+  PP_EnableFXAA: true
+  PP_PreviewMode: 0
+  PP_EnableSSAO: true
+  PP_SSAORadius: 0.5
+  PP_SSAOBias: 0.0250000004
+  PP_SSAOPower: 2
+  PP_SSAOSamples: 16
+  PP_SSAOStrength: 1
+  ToD_NormalizedTime: 0.5
+  ToD_AutoAdvance: false
+  ToD_DayDuration: 600
+  ToD_SunAzimuth: 45
+  ToD_SunMaxStrength: 5
+  ToD_SunNoonTurbidity: 2
+  ToD_SunHazeTurbidity: 3.5
+  Fog_Enabled: false
+  Fog_Color: [0.5, 0.550000012, 0.620000005]
+  Fog_Density: 0
+  Fog_HeightStart: 0
+  Fog_HeightDensity: 0
+  Fog_AerialColor: [0.550000012, 0.730000019, 0.899999976]
+  Fog_AerialStrength: 0
 Entities:
-  - Entity: 7933212198778553218
+  - Entity: 2819489235980105166
     TagComponent:
-      Tag: PointLight
+      Tag: Sprite
     TransformComponent:
-      Translation: [0, 0, 1.04290628]
+      Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    CircleRendererComponent:
-      Color: [1, 1, 1, 1]
-      Radius: 0.5
-      Thickness: 1
-      Fade: 0.00499999989
+    SpriteRendererComponent:
+      Color: [0.637065649, 0.191857606, 0.191857606, 1]
+  - Entity: 9888593648937096514
+    TagComponent:
+      Tag: Sprite
+    TransformComponent:
+      Translation: [0, 2, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [0.274131298, 0, 0, 1]
   - Entity: 5334141281449826391
     TagComponent:
       Tag: Camera
@@ -30,21 +83,15 @@ Entities:
       Translation: [0, 0, 5.34565401]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: 9888593648937096514
+  - Entity: 7933212198778553218
     TagComponent:
-      Tag: Sprite
+      Tag: PointLight
     TransformComponent:
-      Translation: [0, 2, 0]
+      Translation: [0, 0, 1.04290628]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [0.274131298, 0, 0, 1]
-  - Entity: 2819489235980105166
-    TagComponent:
-      Tag: Sprite
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [0.637065649, 0.191857606, 0.191857606, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Radius: 0.5
+      Thickness: 1
+      Fade: 0.00499999989

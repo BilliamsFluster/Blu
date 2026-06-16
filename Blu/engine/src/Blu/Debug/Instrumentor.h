@@ -36,6 +36,10 @@ namespace Blu
 
         void BeginSession(const std::string& name, const std::string& filepath = "results.json")
         {
+            // A UI-driven trace can begin while the ambient session is live; close it first so
+            // the stream isn't already-open (ofstream::open on an open stream silently fails).
+            if (m_CurrentSession)
+                EndSession();
             m_OutputStream.open(filepath);
             WriteHeader();
             m_CurrentSession = new InstrumentationSession{ name };
@@ -43,12 +47,16 @@ namespace Blu
 
         void EndSession()
         {
+            if (!m_CurrentSession)
+                return; // null-safe: tolerate an extra EndSession (e.g. after a UI-stopped trace)
             WriteFooter();
             m_OutputStream.close();
             delete m_CurrentSession;
             m_CurrentSession = nullptr;
             m_ProfileCount = 0;
         }
+
+        bool IsSessionActive() const { return m_CurrentSession != nullptr; }
 
         void WriteProfile(const ProfileResult& result)
         {
@@ -123,15 +131,30 @@ namespace Blu
         bool m_Stopped;
     };
 }
-#define BLU_PROFILE 1
-#if BLU_PROFILE
-#define BLU_PROFILE_BEGIN_SESSION(name, filepath) ::Blu::Instrumentor::Get().BeginSession(name, filepath)
-#define BLU_PROFILE_END_SESSION() ::Blu::Instrumentor::Get().EndSession()
-#define BLU_PROFILE_SCOPE(name) ::Blu::InstrumentationTimer timer##__LINE__(name);
-#define BLU_PROFILE_FUNCTION() BLU_PROFILE_SCOPE(__FUNCSIG__) 
+// ── Profiler backend selection ───────────────────────────────────────────────
+// Default: the built-in chrome://tracing instrumentor above. Define BLU_USE_TRACY (and vendor
+// Tracy under ExternalDependencies/tracy + add its include dir and TracyClient.cpp to the Blu
+// project in premake5.lua) to route the SAME BLU_PROFILE_* macros to Tracy's live sampling
+// profiler instead — no call sites change. BLU_FRAME_MARK() delimits frames for the profiler UI.
+#if defined(BLU_USE_TRACY)
+    #include <tracy/Tracy.hpp>
+    #define BLU_PROFILE_BEGIN_SESSION(name, filepath)
+    #define BLU_PROFILE_END_SESSION()
+    #define BLU_PROFILE_SCOPE(name) ZoneScopedN(name)
+    #define BLU_PROFILE_FUNCTION() ZoneScoped
+    #define BLU_FRAME_MARK() FrameMark
 #else
-#define BLU_PROFILE_BEGIN_SESSION(name, filepath)
-#define BLU_PROFILE_END_SESSION()
-#define BLU_PROFILE_SCOPE(name)
-#define BLIU_PROFILE_FUNCTION()
+    #define BLU_PROFILE 1
+    #if BLU_PROFILE
+    #define BLU_PROFILE_BEGIN_SESSION(name, filepath) ::Blu::Instrumentor::Get().BeginSession(name, filepath)
+    #define BLU_PROFILE_END_SESSION() ::Blu::Instrumentor::Get().EndSession()
+    #define BLU_PROFILE_SCOPE(name) ::Blu::InstrumentationTimer timer##__LINE__(name);
+    #define BLU_PROFILE_FUNCTION() BLU_PROFILE_SCOPE(__FUNCSIG__)
+    #else
+    #define BLU_PROFILE_BEGIN_SESSION(name, filepath)
+    #define BLU_PROFILE_END_SESSION()
+    #define BLU_PROFILE_SCOPE(name)
+    #define BLU_PROFILE_FUNCTION()
+    #endif
+    #define BLU_FRAME_MARK()
 #endif

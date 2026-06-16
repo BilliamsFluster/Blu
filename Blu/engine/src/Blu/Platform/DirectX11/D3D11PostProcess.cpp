@@ -43,6 +43,10 @@ namespace Blu
         m_SSAOFB     = MakeColorFB(width, height, FrameBufferTextureFormat::RGBA8);
         m_SSAOBlurFB = MakeColorFB(width, height, FrameBufferTextureFormat::RGBA8);
 
+        // Fog-volume + decal composite targets (HDR, full res)
+        m_FogVolumeFB = MakeColorFB(width, height, FrameBufferTextureFormat::RGBA16F);
+        m_DecalFB     = MakeColorFB(width, height, FrameBufferTextureFormat::RGBA16F);
+
         // Load shaders
         auto& lib = *Renderer::GetShaderLibrary();
         lib.Load("assets/shaders/DX11/PostProcess_Blit.hlsl");
@@ -52,6 +56,8 @@ namespace Blu
         lib.Load("assets/shaders/DX11/PostProcess_Composite.hlsl");
         lib.Load("assets/shaders/DX11/SSAO.hlsl");
         lib.Load("assets/shaders/DX11/SSAOBlur.hlsl");
+        lib.Load("assets/shaders/DX11/PostProcess_FogVolume.hlsl");
+        lib.Load("assets/shaders/DX11/PostProcess_Decals.hlsl");
 
         m_DefaultShader      = lib.Get("PostProcess_Blit");
         m_BloomExtractShader = lib.Get("PostProcess_BloomExtract");
@@ -60,6 +66,8 @@ namespace Blu
         m_CompositeShader    = lib.Get("PostProcess_Composite");
         m_SSAOShader         = lib.Get("SSAO");
         m_SSAOBlurShader     = lib.Get("SSAOBlur");
+        m_FogVolumeShader    = lib.Get("PostProcess_FogVolume");
+        m_DecalShader        = lib.Get("PostProcess_Decals");
 
         // Generate hemisphere kernel in tangent space (z always positive = toward normal)
         {
@@ -498,6 +506,125 @@ namespace Blu
             }
         }
 
+        // ── Localized fog volumes: integrate density along the view ray, write fogged scene ─
+        // Runs only when the scene supplied volumes — otherwise sceneSRV is untouched and the
+        // composite is byte-identical to a scene with no fog volumes.
+        if (EnableFogVolumes && m_FogVolumeShader && !FogVolumes.empty())
+        {
+            auto* d3dScene = static_cast<D3D11FrameBuffer*>(m_SceneFB.get());
+            ID3D11ShaderResourceView* depthSRV = d3dScene->GetDepthSRV();
+            if (depthSRV && sceneSRV)
+            {
+                struct alignas(16) FogVolumeCB
+                {
+                    glm::vec3 Position; float Shape;
+                    glm::vec3 Extents;  float Density;
+                    glm::vec3 Color;    float Falloff;
+                };
+                struct alignas(16) FogParamsCB
+                {
+                    glm::mat4   InvViewProj;
+                    glm::vec3   CameraPos; float VolumeCount;
+                    FogVolumeCB Volumes[16];
+                };
+                static_assert(sizeof(FogParamsCB) == 848, "FogParamsCB layout must match PostProcess_FogVolume.hlsl");
+
+                FogParamsCB cb = {};
+                cb.InvViewProj = FogInvViewProj;
+                cb.CameraPos   = FogCameraPos;
+                const int n    = (int)std::min<size_t>(FogVolumes.size(), 16);
+                cb.VolumeCount = (float)n;
+                for (int i = 0; i < n; ++i)
+                {
+                    cb.Volumes[i].Position = FogVolumes[i].Position;
+                    cb.Volumes[i].Shape    = (float)FogVolumes[i].Shape;
+                    cb.Volumes[i].Extents  = FogVolumes[i].Extents;
+                    cb.Volumes[i].Density  = FogVolumes[i].Density;
+                    cb.Volumes[i].Color    = FogVolumes[i].Color;
+                    cb.Volumes[i].Falloff  = FogVolumes[i].Falloff;
+                }
+
+                m_FogVolumeFB->Bind();
+                D3D11_VIEWPORT vp = {}; vp.Width = fw; vp.Height = fh; vp.MaxDepth = 1.0f;
+                dc->RSSetViewports(1, &vp);
+                dc->PSSetSamplers(0, 1, m_PointSampler.GetAddressOf());
+                m_FogVolumeShader->Bind();
+                m_FogVolumeShader->SetUniformBuffer("FogParams", &cb, sizeof(cb));
+                m_FogVolumeShader->Flush();
+                ID3D11ShaderResourceView* fogSrcs[2] = { sceneSRV, depthSRV };
+                dc->PSSetShaderResources(0, 2, fogSrcs);
+                m_FullscreenQuadVAO->Bind();
+                RenderCommand::DrawIndexed(m_FullscreenQuadVAO, m_IndexCount);
+                m_FullscreenQuadVAO->UnBind();
+                m_FogVolumeShader->UnBind();
+                m_FogVolumeFB->UnBind();
+
+                ID3D11ShaderResourceView* nullSRV2[2] = {};
+                dc->PSSetShaderResources(0, 2, nullSRV2);
+
+                // Composite now samples the fogged scene instead of the raw HDR scene.
+                auto* fogD3D = static_cast<D3D11FrameBuffer*>(m_FogVolumeFB.get());
+                sceneSRV = fogD3D->GetColorAttachmentSRV(0);
+            }
+        }
+
+        // ── Projected decals: bullet holes / blood, blended onto surfaces from the depth buffer ─
+        // Same gating + chaining as the fog pass: skipped entirely (byte-identical) when no decals.
+        if (EnableDecals && m_DecalShader && !Decals.empty())
+        {
+            auto* d3dScene = static_cast<D3D11FrameBuffer*>(m_SceneFB.get());
+            ID3D11ShaderResourceView* depthSRV = d3dScene->GetDepthSRV();
+            if (depthSRV && sceneSRV)
+            {
+                struct alignas(16) DecalCB
+                {
+                    glm::mat4 InvWorld;
+                    glm::vec4 ColorOpacity;
+                    glm::vec4 FalloffPad;
+                };
+                struct alignas(16) DecalParamsCB
+                {
+                    glm::mat4 InvViewProj;
+                    glm::vec3 CameraPos; float DecalCount;
+                    DecalCB   Decals[32];
+                };
+                static_assert(sizeof(DecalParamsCB) == 3152, "DecalParamsCB layout must match PostProcess_Decals.hlsl");
+
+                DecalParamsCB cb = {};
+                cb.InvViewProj = FogInvViewProj; // scene clip->world (set each frame by Scene)
+                cb.CameraPos   = FogCameraPos;
+                const int n    = (int)std::min<size_t>(Decals.size(), 32);
+                cb.DecalCount  = (float)n;
+                for (int i = 0; i < n; ++i)
+                {
+                    cb.Decals[i].InvWorld     = Decals[i].InvWorld;
+                    cb.Decals[i].ColorOpacity = glm::vec4(Decals[i].Color, Decals[i].Opacity);
+                    cb.Decals[i].FalloffPad   = glm::vec4(Decals[i].Falloff, 0.0f, 0.0f, 0.0f);
+                }
+
+                m_DecalFB->Bind();
+                D3D11_VIEWPORT vp = {}; vp.Width = fw; vp.Height = fh; vp.MaxDepth = 1.0f;
+                dc->RSSetViewports(1, &vp);
+                dc->PSSetSamplers(0, 1, m_PointSampler.GetAddressOf());
+                m_DecalShader->Bind();
+                m_DecalShader->SetUniformBuffer("DecalParams", &cb, sizeof(cb));
+                m_DecalShader->Flush();
+                ID3D11ShaderResourceView* decalSrcs[2] = { sceneSRV, depthSRV };
+                dc->PSSetShaderResources(0, 2, decalSrcs);
+                m_FullscreenQuadVAO->Bind();
+                RenderCommand::DrawIndexed(m_FullscreenQuadVAO, m_IndexCount);
+                m_FullscreenQuadVAO->UnBind();
+                m_DecalShader->UnBind();
+                m_DecalFB->UnBind();
+
+                ID3D11ShaderResourceView* nullSRV2[2] = {};
+                dc->PSSetShaderResources(0, 2, nullSRV2);
+
+                auto* decalD3D = static_cast<D3D11FrameBuffer*>(m_DecalFB.get());
+                sceneSRV = decalD3D->GetColorAttachmentSRV(0);
+            }
+        }
+
         // ── Final composite: ACES + bloom + SSAO + FXAA → caller's framebuffer ─
         {
             auto* ctx = D3D11Context::Get();
@@ -538,9 +665,10 @@ namespace Blu
             m_CompositeShader->SetUniformFloat("u_InvH",          1.0f / fh);
             m_CompositeShader->SetUniformFloat("u_SSAOStrength",  (useSSAO && aoSRV) ? SSAOStrength : 0.0f);
             // God rays — radial light shafts from the sun's screen position (Scene-supplied).
-            const bool useGodRays = EnableGodRays && GodRaySunVisible;
-            m_CompositeShader->SetUniformFloat("u_GodRayIntensity", useGodRays ? GodRayIntensity : 0.0f);
-            m_CompositeShader->SetUniformFloat("u_GodRayVisible",   useGodRays ? 1.0f : 0.0f);
+            // GodRaySunFade [0..1] smoothly eases the shafts in/out (no hard pop at screen edges).
+            const float godRayFade = EnableGodRays ? GodRaySunFade : 0.0f;
+            m_CompositeShader->SetUniformFloat("u_GodRayIntensity", GodRayIntensity);
+            m_CompositeShader->SetUniformFloat("u_GodRaySunFade",   godRayFade);
             m_CompositeShader->SetUniformFloat("u_SunU",            GodRaySunUV.x);
             m_CompositeShader->SetUniformFloat("u_SunV",            GodRaySunUV.y);
             m_CompositeShader->Flush();
@@ -573,6 +701,8 @@ namespace Blu
 
         m_SSAOFB->Resize(width, height);
         m_SSAOBlurFB->Resize(width, height);
+        m_FogVolumeFB->Resize(width, height);
+        m_DecalFB->Resize(width, height);
     }
 }
 
