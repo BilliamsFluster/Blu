@@ -765,6 +765,48 @@ namespace
 		std::error_code ec; std::filesystem::remove_all(dir, ec);
 	}
 
+	// Validates the editor content operations: RenameAsset moves the source (+ .meta) and keeps the
+	// handle STABLE, and DeleteAsset removes the source but refuses while the asset is still referenced.
+	void TestAssetDeleteRename()
+	{
+		const std::filesystem::path dir = std::filesystem::temp_directory_path() /
+			("BluTestsAssetOps-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fs = Blu::FileSystemService::Get(); fs.Reset();
+		Require(fs.Mount("project", dir), "project mount failed");
+		Require(fs.Mount("cache", dir / "cache"), "cache mount failed");
+		auto& assets = Blu::AssetManager::Get(); assets.Reset();
+		assets.SetRegistryPath("cache://AssetRegistry.yaml"); assets.Initialize();
+		assets.SetMemoryBudget(0);
+
+		Blu::MaterialAsset m("project://assets/orig.blumat");
+		m.GetProperties().Metallic = 0.3f;
+		Require(m.SaveToFile("project://assets/orig.blumat"), "save .blumat failed");
+		Blu::AssetHandle h = assets.Import("project://assets/orig.blumat");
+		Require((uint64_t)h != 0, "import returned an invalid handle");
+		Require(fs.Exists("project://assets/orig.blumat"), "source should exist after save");
+
+		// Rename: file moves, handle stays stable, metadata path updates.
+		Require(assets.RenameAsset(h, "project://assets/renamed.blumat"), "rename failed");
+		Require(!fs.Exists("project://assets/orig.blumat"), "old source path should be gone after rename");
+		Require(fs.Exists("project://assets/renamed.blumat"), "new source path should exist after rename");
+		Require((uint64_t)assets.Import("project://assets/renamed.blumat") == (uint64_t)h, "handle must stay stable across a rename");
+		const Blu::AssetMetadata* md = assets.FindMetadata(h);
+		Require(md && md->VirtualPath.find("renamed.blumat") != std::string::npos, "metadata virtual path should update on rename");
+
+		// Delete: refused while referenced; succeeds once released.
+		auto loaded = assets.Load(h); // reference count 1
+		Require(loaded != nullptr, "load should succeed");
+		Require(!assets.DeleteAsset(h), "delete must be refused while the asset is referenced");
+		Require(assets.FindMetadata(h) != nullptr, "asset should remain registered after a refused delete");
+		assets.Release(h); // reference count 0
+		Require(assets.DeleteAsset(h), "delete should succeed once the asset is unreferenced");
+		Require(assets.FindMetadata(h) == nullptr, "metadata should be removed after delete");
+		Require(!fs.Exists("project://assets/renamed.blumat"), "source file should be removed after delete");
+
+		assets.Reset(); fs.Reset();
+		std::error_code ec; std::filesystem::remove_all(dir, ec);
+	}
+
 	// Validates that MaterialAsset (.blumat) is now a LOSSLESS mirror of the concrete runtime
 	// Material: blend/shading/two-sided/alpha-cutoff (previously dropped) survive a
 	// Material -> MaterialAsset -> .blumat YAML -> MaterialAsset -> Material round-trip alongside
@@ -1392,6 +1434,7 @@ int main()
 		TestMaterialAssetPersistence();
 		TestAssetDedup();
 		TestAssetLRUEviction();
+		TestAssetDeleteRename();
 		TestMaterialAssetFullFidelity();
 		TestMeshComponentMaterialHandle();
 		TestMaterialGraphCompiler();

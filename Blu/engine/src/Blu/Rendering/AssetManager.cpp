@@ -333,6 +333,103 @@ namespace Blu
 		return stats;
 	}
 
+	bool AssetManager::RenameAsset(AssetHandle handle, const std::string& newVirtualPath)
+	{
+		auto meta = m_Metadata.find(handle);
+		if (meta == m_Metadata.end())
+		{
+			AddDiagnostic("AssetManager: cannot rename stale asset handle " + std::to_string((uint64_t)handle));
+			return false;
+		}
+		const std::string oldVirtual = meta->second.VirtualPath;
+		const std::string newNormalized = NormalizeAssetPath(newVirtualPath);
+		if (newNormalized.empty() || newNormalized == NormalizeAssetPath(oldVirtual))
+			return false;
+		if (m_PathIndex.find(newNormalized) != m_PathIndex.end())
+		{
+			AddDiagnostic("AssetManager: rename target already exists '" + newNormalized + "'");
+			return false;
+		}
+
+		auto& fs = FileSystemService::Get();
+		auto resolve = [&fs](const std::string& v) {
+			return fs.IsVirtualPath(v) ? fs.Resolve(v) : std::filesystem::path(v);
+		};
+		std::error_code ec;
+
+		const std::filesystem::path oldResolved = resolve(oldVirtual);
+		const std::filesystem::path newResolved = resolve(newNormalized);
+		if (!oldResolved.empty() && std::filesystem::exists(oldResolved))
+		{
+			if (!newResolved.parent_path().empty())
+				std::filesystem::create_directories(newResolved.parent_path(), ec);
+			std::filesystem::rename(oldResolved, newResolved, ec);
+			if (ec)
+			{
+				AddDiagnostic("AssetManager: rename failed: " + ec.message());
+				return false;
+			}
+		}
+		// Move the .meta sidecar alongside (best-effort — a missing sidecar is fine).
+		const std::filesystem::path oldMeta = resolve(AssetMetaIO::MetaPathFor(oldVirtual));
+		const std::filesystem::path newMeta = resolve(AssetMetaIO::MetaPathFor(newNormalized));
+		if (!oldMeta.empty() && std::filesystem::exists(oldMeta))
+			std::filesystem::rename(oldMeta, newMeta, ec);
+
+		// Update the in-memory registry; the handle is unchanged so all references stay valid.
+		m_PathIndex.erase(NormalizeAssetPath(oldVirtual));
+		m_PathIndex[newNormalized] = handle;
+		meta->second.VirtualPath = newNormalized;
+		if (!meta->second.SourcePath.empty())
+			meta->second.SourcePath = newNormalized;
+		auto loaded = m_Assets.find(handle);
+		if (loaded != m_Assets.end() && loaded->second)
+			loaded->second->FilePath = newNormalized;
+		// Re-point the sidecar's recorded source path so a future reimport resolves correctly.
+		AssetMeta sidecar;
+		if (AssetMetaIO::Read(newNormalized, sidecar))
+		{
+			sidecar.SourcePath = newNormalized;
+			AssetMetaIO::Write(newNormalized, sidecar);
+		}
+		SaveRegistry();
+		return true;
+	}
+
+	bool AssetManager::DeleteAsset(AssetHandle handle, bool force)
+	{
+		auto meta = m_Metadata.find(handle);
+		if (meta == m_Metadata.end())
+		{
+			AddDiagnostic("AssetManager: cannot delete stale asset handle " + std::to_string((uint64_t)handle));
+			return false;
+		}
+		if (!force && GetReferenceCount(handle) > 0)
+		{
+			AddDiagnostic("AssetManager: refusing to delete referenced asset " + std::to_string((uint64_t)handle));
+			return false;
+		}
+
+		const std::string virtualPath = meta->second.VirtualPath;
+		auto& fs = FileSystemService::Get();
+		auto resolve = [&fs](const std::string& v) {
+			return fs.IsVirtualPath(v) ? fs.Resolve(v) : std::filesystem::path(v);
+		};
+		std::error_code ec;
+		const std::filesystem::path resolved = resolve(virtualPath);
+		if (!resolved.empty())
+			std::filesystem::remove(resolved, ec); // best-effort
+		const std::filesystem::path metaResolved = resolve(AssetMetaIO::MetaPathFor(virtualPath));
+		if (!metaResolved.empty())
+			std::filesystem::remove(metaResolved, ec);
+
+		DropResident(handle); // drop cache entry + byte accounting + LRU position
+		m_Metadata.erase(handle);
+		m_PathIndex.erase(NormalizeAssetPath(virtualPath));
+		SaveRegistry();
+		return true;
+	}
+
 	const AssetMetadata* AssetManager::FindMetadata(AssetHandle handle) const
 	{
 		auto metadata = m_Metadata.find(handle);

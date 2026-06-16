@@ -62,6 +62,14 @@ namespace Blu
 		Shared<MaterialAsset> LoadMaterial(AssetHandle handle);
 		bool Save(AssetHandle handle);
 		void Release(AssetHandle handle);
+
+		// Editor content operations (registry-synced). RenameAsset moves the source file + its .meta
+		// sidecar to a new virtual path while keeping the AssetHandle STABLE (path index, metadata, and
+		// any loaded asset's FilePath are updated). DeleteAsset removes the source + .meta and forgets
+		// the asset; it refuses while ReferenceCount > 0 unless `force` is set (so you can't delete an
+		// asset a live scene still uses by accident). Both return false on failure.
+		bool RenameAsset(AssetHandle handle, const std::string& newVirtualPath);
+		bool DeleteAsset(AssetHandle handle, bool force = false);
 		const AssetMetadata* FindMetadata(AssetHandle handle) const;
 		bool AddDependency(AssetHandle asset, AssetHandle dependency);
 		bool SaveRegistry() const;
