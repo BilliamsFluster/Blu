@@ -2,9 +2,12 @@
 #include "D3D11Shader.h"
 #include "D3D11Context.h"
 #include "Blu/Core/Log.h"
+#include "Blu/Utils/FileSystemService.h"
 
 #include <fstream>
 #include <sstream>
+#include <filesystem>
+#include <functional>
 #include <d3dcompiler.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -104,6 +107,31 @@ namespace Blu
     // Compile HLSL source using D3DCompile
     // -----------------------------------------------------------------------
     // ── Internal compile helper (lambda extracted from Compile) ──────────────
+    // Content-addressed compiled-shader cache path under cache://shadercache/. The key hashes the
+    // stage source + target + compile flags, so any source edit (or flag/format change) misses the
+    // cache and recompiles — there is no staleness window. Returns empty if no cache mount exists,
+    // in which case caching is skipped and the shader simply compiles as before.
+    static std::filesystem::path ShaderCachePathFor(const std::string& src, const char* target, UINT flags)
+    {
+        constexpr uint64_t kCacheFormatVersion = 1; // bump to invalidate every cached blob
+        auto mix = [](uint64_t h, uint64_t v) {
+            return h ^ (v + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2));
+        };
+        uint64_t h = std::hash<std::string>{}(src);
+        h = mix(h, std::hash<std::string>{}(std::string(target)));
+        h = mix(h, ((uint64_t)flags << 1) ^ kCacheFormatVersion);
+
+        auto& fs = FileSystemService::Get();
+        const std::string virtualPath = "cache://shadercache/" + std::to_string(h) + ".cso";
+        if (!fs.IsVirtualPath(virtualPath))
+            return {};
+        std::filesystem::path resolved = fs.Resolve(virtualPath);
+        // Resolve returns the input unchanged when the scheme isn't mounted — treat that as no cache.
+        if (resolved.empty() || fs.IsVirtualPath(resolved))
+            return {};
+        return resolved;
+    }
+
     bool D3D11Shader::CompileStage(const std::string& src, const char* target,
                                    ID3DBlob** outBlob)
     {
@@ -113,6 +141,22 @@ namespace Blu
 #else
         flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
+
+        // Cache hit: load the previously-compiled bytecode instead of re-running D3DCompile.
+        const std::filesystem::path cachePath = ShaderCachePathFor(src, target, flags);
+        if (!cachePath.empty())
+        {
+            std::error_code ec;
+            if (std::filesystem::exists(cachePath, ec))
+            {
+                Microsoft::WRL::ComPtr<ID3DBlob> cached;
+                if (SUCCEEDED(D3DReadFileToBlob(cachePath.wstring().c_str(), cached.GetAddressOf())))
+                {
+                    *outBlob = cached.Detach();
+                    return true;
+                }
+            }
+        }
 
         Microsoft::WRL::ComPtr<ID3DBlob> errBlob;
         HRESULT hr = D3DCompile(
@@ -130,6 +174,14 @@ namespace Blu
                     reinterpret_cast<const char*>(errBlob->GetBufferPointer()));
             BLU_CORE_ASSERT(false, "Shader compilation failed");
             return false;
+        }
+
+        // Persist the freshly compiled bytecode for next launch (best-effort).
+        if (!cachePath.empty() && *outBlob)
+        {
+            std::error_code ec;
+            std::filesystem::create_directories(cachePath.parent_path(), ec);
+            D3DWriteBlobToFile(*outBlob, cachePath.wstring().c_str(), TRUE);
         }
         return true;
     }
