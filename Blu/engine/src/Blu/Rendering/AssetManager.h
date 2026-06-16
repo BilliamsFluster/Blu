@@ -71,6 +71,10 @@ namespace Blu
 		bool RenameAsset(AssetHandle handle, const std::string& newVirtualPath);
 		bool DeleteAsset(AssetHandle handle, bool force = false);
 		const AssetMetadata* FindMetadata(AssetHandle handle) const;
+		// Returns the existing handle for an (un-normalized) virtual path WITHOUT importing/minting,
+		// or AssetHandle(0) if the path was never imported. Lets editor UI (Content Browser) decide
+		// whether a file is a managed asset before routing a rename/delete through the registry.
+		AssetHandle FindHandleForPath(const std::string& virtualPath) const;
 		bool AddDependency(AssetHandle asset, AssetHandle dependency);
 		bool SaveRegistry() const;
 

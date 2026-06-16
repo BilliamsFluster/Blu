@@ -436,6 +436,15 @@ namespace Blu
 		return metadata != m_Metadata.end() ? &metadata->second : nullptr;
 	}
 
+	AssetHandle AssetManager::FindHandleForPath(const std::string& virtualPath) const
+	{
+		const std::string normalized = NormalizeAssetPath(virtualPath);
+		if (normalized.empty())
+			return AssetHandle(0);
+		auto it = m_PathIndex.find(normalized);
+		return it != m_PathIndex.end() ? it->second : AssetHandle(0);
+	}
+
 	bool AssetManager::AddDependency(AssetHandle asset, AssetHandle dependency)
 	{
 		auto metadata = m_Metadata.find(asset);

@@ -18,6 +18,8 @@
 #include "Blu/Core/MouseCodes.h"
 #include "Blu/Core/Input.h"
 #include "Blu/Platform/OpenGL/OpenGLTexture.h"
+#include "Blu/Rendering/AssetManager.h"
+#include "Blu/Utils/FileSystemService.h"
 #include "Blu/Rendering/RendererAPI.h"
 #include "Blu/Utils/PlatformUtils.h"
 #include "Blu/Utils/AssetPath.h"
@@ -1021,7 +1023,19 @@ namespace Blu
             {
                 std::filesystem::path newPath = s_RenamingPath.parent_path() / s_RenameBuffer;
                 if (!std::filesystem::exists(newPath))
-                    std::filesystem::rename(s_RenamingPath, newPath);
+                {
+                    // Managed assets move through the AssetManager (handle stays stable; registry
+                    // + .meta updated); plain/unmanaged files just rename on disk.
+                    auto& fileSystem = FileSystemService::Get();
+                    const std::string virtualOld = fileSystem.ToVirtualPath(s_RenamingPath);
+                    const AssetHandle handle = virtualOld.empty()
+                        ? AssetHandle(0) : AssetManager::Get().FindHandleForPath(virtualOld);
+                    const std::string virtualNew = fileSystem.ToVirtualPath(newPath);
+                    if ((uint64_t)handle != 0 && !virtualNew.empty())
+                        AssetManager::Get().RenameAsset(handle, virtualNew);
+                    else
+                        std::filesystem::rename(s_RenamingPath, newPath);
+                }
                 s_RenamingPath.clear();
                 ImGui::CloseCurrentPopup();
             }
@@ -1050,7 +1064,20 @@ namespace Blu
             {
                 std::error_code ec;
                 if (std::filesystem::exists(s_PendingDeletePath))
-                    std::filesystem::remove_all(s_PendingDeletePath, ec);
+                {
+                    // A managed asset file is deleted through the AssetManager (removes source +
+                    // .meta, forgets the handle; force past the referenced-guard on explicit user
+                    // delete). Folders and unmanaged files use a plain recursive remove.
+                    auto& fileSystem = FileSystemService::Get();
+                    const std::string virtualPath = std::filesystem::is_directory(s_PendingDeletePath)
+                        ? std::string() : fileSystem.ToVirtualPath(s_PendingDeletePath);
+                    const AssetHandle handle = virtualPath.empty()
+                        ? AssetHandle(0) : AssetManager::Get().FindHandleForPath(virtualPath);
+                    if ((uint64_t)handle != 0)
+                        AssetManager::Get().DeleteAsset(handle, /*force*/ true);
+                    else
+                        std::filesystem::remove_all(s_PendingDeletePath, ec);
+                }
                 s_PendingDeletePath.clear();
                 s_RightClickedItemPath.clear();
                 ImGui::CloseCurrentPopup();
