@@ -2,6 +2,8 @@
 #include "Blu/Core/Core.h"
 #include <glm/glm.hpp>
 #include <vector>
+#include <algorithm>
+#include <cstddef>
 
 namespace Blu
 {
@@ -27,6 +29,34 @@ namespace Blu
         glm::vec3 Color    = glm::vec3(0.35f, 0.03f, 0.03f); float Opacity = 0.85f;
         float     Falloff  = 0.55f; float _pad0 = 0.0f; float _pad1 = 0.0f; float _pad2 = 0.0f;
     };
+
+    // The decal composite pass uploads at most this many decals (matches the HLSL MAX_DECALS and the
+    // D3D11 cbuffer array). Defined once here so the gather and the GPU pass agree on the cap.
+    static constexpr size_t kMaxDecals = 32;
+
+    // Trims `decals` (and the parallel `worldPositions`) in place to the `maxCount` entries nearest
+    // to `camPos` (by squared distance). No-op when already within the cap. Lets the gather honor the
+    // GPU decal cap by keeping the most relevant (closest) impacts instead of an arbitrary
+    // ECS-iteration-order subset — so bullet holes / blood around the player always render once a
+    // firefight pushes the decal count past the cap.
+    inline void SelectNearestDecals(std::vector<DecalGPU>& decals,
+                                    std::vector<glm::vec3>& worldPositions,
+                                    const glm::vec3& camPos, size_t maxCount)
+    {
+        if (decals.size() <= maxCount || decals.size() != worldPositions.size())
+            return;
+        std::vector<size_t> order(decals.size());
+        for (size_t i = 0; i < order.size(); ++i) order[i] = i;
+        auto distSq = [&](size_t i) { glm::vec3 d = worldPositions[i] - camPos; return glm::dot(d, d); };
+        std::nth_element(order.begin(), order.begin() + maxCount, order.end(),
+            [&](size_t a, size_t b) { return distSq(a) < distSq(b); });
+        order.resize(maxCount);
+        std::vector<DecalGPU>  keptDecals;    keptDecals.reserve(maxCount);
+        std::vector<glm::vec3> keptPositions; keptPositions.reserve(maxCount);
+        for (size_t i : order) { keptDecals.push_back(decals[i]); keptPositions.push_back(worldPositions[i]); }
+        decals.swap(keptDecals);
+        worldPositions.swap(keptPositions);
+    }
 
     class PostProcess
     {

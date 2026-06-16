@@ -1873,6 +1873,7 @@ namespace Blu
 
 			// Projected decals — gather oriented boxes (entity transform) for the decal pass.
 			m_PostProcess->Decals.clear();
+			std::vector<glm::vec3> decalPositions;
 			auto decalView = m_Registry.view<TransformComponent, DecalComponent>();
 			for (auto e : decalView)
 			{
@@ -1888,7 +1889,11 @@ namespace Blu
 				g.Opacity  = dec.Opacity * lifeFade;
 				g.Falloff  = dec.Falloff;
 				m_PostProcess->Decals.push_back(g);
+				decalPositions.push_back(tc.Translation);
 			}
+			// The decal pass renders at most kMaxDecals; when more exist keep those nearest the
+			// camera so impacts around the player always show (not an arbitrary ECS-order subset).
+			SelectNearestDecals(m_PostProcess->Decals, decalPositions, m_PostProcess->FogCameraPos, kMaxDecals);
 			m_PostProcess->EnableDecals = !m_PostProcess->Decals.empty();
 		}
 		{
@@ -2011,6 +2016,7 @@ namespace Blu
 
 			// Projected decals — gather oriented boxes (entity transform) for the decal pass.
 			m_PostProcess->Decals.clear();
+			std::vector<glm::vec3> decalPositions;
 			auto decalView = m_Registry.view<TransformComponent, DecalComponent>();
 			for (auto e : decalView)
 			{
@@ -2026,7 +2032,11 @@ namespace Blu
 				g.Opacity  = dec.Opacity * lifeFade;
 				g.Falloff  = dec.Falloff;
 				m_PostProcess->Decals.push_back(g);
+				decalPositions.push_back(tc.Translation);
 			}
+			// The decal pass renders at most kMaxDecals; when more exist keep those nearest the
+			// camera so impacts around the player always show (not an arbitrary ECS-order subset).
+			SelectNearestDecals(m_PostProcess->Decals, decalPositions, m_PostProcess->FogCameraPos, kMaxDecals);
 			m_PostProcess->EnableDecals = !m_PostProcess->Decals.empty();
 		}
 		{

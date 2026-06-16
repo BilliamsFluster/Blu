@@ -16,6 +16,7 @@
 #include "Blu/Rendering/MaterialGraph.h"
 #include "Blu/Rendering/LightBufferData.h"
 #include "Blu/Rendering/SceneRenderPipeline.h"
+#include "Blu/Rendering/PostProcess.h"
 #include "Blu/Rendering/Terrain.h"
 #include "Blu/UI/RuntimeUI.h"
 #include "Blu/Utils/FileSystemService.h"
@@ -991,6 +992,35 @@ namespace
 		Require(alignmentWith(glm::vec3(0.3f, 0.8f, -0.5f)) > 0.999f, "decal +Y should align to an angled normal");
 	}
 
+	// Validates SelectNearestDecals — the gather-time trim that honors the decal pass's GPU cap by
+	// keeping the decals nearest the camera (so impacts around the player always render) instead of an
+	// arbitrary ECS-iteration-order subset once a firefight pushes the count past the cap.
+	void TestDecalNearestSelection()
+	{
+		std::vector<Blu::DecalGPU> decals;
+		std::vector<glm::vec3> positions;
+		// 5 decals along +X at distances 1..5 from the origin; tag each via Opacity = distance.
+		for (int i = 1; i <= 5; ++i)
+		{
+			Blu::DecalGPU g; g.Opacity = (float)i;
+			decals.push_back(g);
+			positions.push_back(glm::vec3((float)i, 0.0f, 0.0f));
+		}
+		Blu::SelectNearestDecals(decals, positions, glm::vec3(0.0f), 3);
+		Require(decals.size() == 3, "selection should trim to maxCount");
+		Require(positions.size() == 3, "parallel position list should trim with the decals");
+		// The 3 nearest are at distance 1,2,3 (tags 1,2,3); the far ones (4,5) must be dropped.
+		float maxTag = 0.0f;
+		for (auto& d : decals) if (d.Opacity > maxTag) maxTag = d.Opacity;
+		Require(maxTag <= 3.0f + 0.001f, "selection kept a farther decal over a nearer one");
+
+		// No-op when already within the cap.
+		std::vector<Blu::DecalGPU> few(2);
+		std::vector<glm::vec3> fewPos(2, glm::vec3(0.0f));
+		Blu::SelectNearestDecals(few, fewPos, glm::vec3(0.0f), 32);
+		Require(few.size() == 2, "selection must not grow or trim when within the cap");
+	}
+
 	// CPU mirror of the analytic ray-segment overlap in PostProcess_FogVolume.hlsl. Validates the
 	// fog-integration math headlessly — the shader uses the identical algorithm, so getting these
 	// geometric cases right is the high-confidence check that localized fog accumulates correctly.
@@ -1187,6 +1217,7 @@ int main()
 		TestDecalProjection();
 		TestDecalLifetime();
 		TestBulletHoleDecalOrientation();
+		TestDecalNearestSelection();
 		TestAnimatorBlend();
 		TestPerfStatsMemory();
 	}
