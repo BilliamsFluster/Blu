@@ -43,8 +43,9 @@ namespace Blu
         m_SSAOFB     = MakeColorFB(width, height, FrameBufferTextureFormat::RGBA8);
         m_SSAOBlurFB = MakeColorFB(width, height, FrameBufferTextureFormat::RGBA8);
 
-        // Fog-volume composite target (HDR, full res) — holds scene color after fog blending
+        // Fog-volume + decal composite targets (HDR, full res)
         m_FogVolumeFB = MakeColorFB(width, height, FrameBufferTextureFormat::RGBA16F);
+        m_DecalFB     = MakeColorFB(width, height, FrameBufferTextureFormat::RGBA16F);
 
         // Load shaders
         auto& lib = *Renderer::GetShaderLibrary();
@@ -56,6 +57,7 @@ namespace Blu
         lib.Load("assets/shaders/DX11/SSAO.hlsl");
         lib.Load("assets/shaders/DX11/SSAOBlur.hlsl");
         lib.Load("assets/shaders/DX11/PostProcess_FogVolume.hlsl");
+        lib.Load("assets/shaders/DX11/PostProcess_Decals.hlsl");
 
         m_DefaultShader      = lib.Get("PostProcess_Blit");
         m_BloomExtractShader = lib.Get("PostProcess_BloomExtract");
@@ -65,6 +67,7 @@ namespace Blu
         m_SSAOShader         = lib.Get("SSAO");
         m_SSAOBlurShader     = lib.Get("SSAOBlur");
         m_FogVolumeShader    = lib.Get("PostProcess_FogVolume");
+        m_DecalShader        = lib.Get("PostProcess_Decals");
 
         // Generate hemisphere kernel in tangent space (z always positive = toward normal)
         {
@@ -565,6 +568,63 @@ namespace Blu
             }
         }
 
+        // ── Projected decals: bullet holes / blood, blended onto surfaces from the depth buffer ─
+        // Same gating + chaining as the fog pass: skipped entirely (byte-identical) when no decals.
+        if (EnableDecals && m_DecalShader && !Decals.empty())
+        {
+            auto* d3dScene = static_cast<D3D11FrameBuffer*>(m_SceneFB.get());
+            ID3D11ShaderResourceView* depthSRV = d3dScene->GetDepthSRV();
+            if (depthSRV && sceneSRV)
+            {
+                struct alignas(16) DecalCB
+                {
+                    glm::mat4 InvWorld;
+                    glm::vec4 ColorOpacity;
+                    glm::vec4 FalloffPad;
+                };
+                struct alignas(16) DecalParamsCB
+                {
+                    glm::mat4 InvViewProj;
+                    glm::vec3 CameraPos; float DecalCount;
+                    DecalCB   Decals[32];
+                };
+                static_assert(sizeof(DecalParamsCB) == 3152, "DecalParamsCB layout must match PostProcess_Decals.hlsl");
+
+                DecalParamsCB cb = {};
+                cb.InvViewProj = FogInvViewProj; // scene clip->world (set each frame by Scene)
+                cb.CameraPos   = FogCameraPos;
+                const int n    = (int)std::min<size_t>(Decals.size(), 32);
+                cb.DecalCount  = (float)n;
+                for (int i = 0; i < n; ++i)
+                {
+                    cb.Decals[i].InvWorld     = Decals[i].InvWorld;
+                    cb.Decals[i].ColorOpacity = glm::vec4(Decals[i].Color, Decals[i].Opacity);
+                    cb.Decals[i].FalloffPad   = glm::vec4(Decals[i].Falloff, 0.0f, 0.0f, 0.0f);
+                }
+
+                m_DecalFB->Bind();
+                D3D11_VIEWPORT vp = {}; vp.Width = fw; vp.Height = fh; vp.MaxDepth = 1.0f;
+                dc->RSSetViewports(1, &vp);
+                dc->PSSetSamplers(0, 1, m_PointSampler.GetAddressOf());
+                m_DecalShader->Bind();
+                m_DecalShader->SetUniformBuffer("DecalParams", &cb, sizeof(cb));
+                m_DecalShader->Flush();
+                ID3D11ShaderResourceView* decalSrcs[2] = { sceneSRV, depthSRV };
+                dc->PSSetShaderResources(0, 2, decalSrcs);
+                m_FullscreenQuadVAO->Bind();
+                RenderCommand::DrawIndexed(m_FullscreenQuadVAO, m_IndexCount);
+                m_FullscreenQuadVAO->UnBind();
+                m_DecalShader->UnBind();
+                m_DecalFB->UnBind();
+
+                ID3D11ShaderResourceView* nullSRV2[2] = {};
+                dc->PSSetShaderResources(0, 2, nullSRV2);
+
+                auto* decalD3D = static_cast<D3D11FrameBuffer*>(m_DecalFB.get());
+                sceneSRV = decalD3D->GetColorAttachmentSRV(0);
+            }
+        }
+
         // ── Final composite: ACES + bloom + SSAO + FXAA → caller's framebuffer ─
         {
             auto* ctx = D3D11Context::Get();
@@ -641,6 +701,7 @@ namespace Blu
         m_SSAOFB->Resize(width, height);
         m_SSAOBlurFB->Resize(width, height);
         m_FogVolumeFB->Resize(width, height);
+        m_DecalFB->Resize(width, height);
     }
 }
 

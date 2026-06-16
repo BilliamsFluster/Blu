@@ -744,6 +744,38 @@ namespace
 		Require(Blu::IsJoltConfigurationCompatible(), "Blu and Jolt were compiled with incompatible configuration defines");
 	}
 
+	// CPU mirror of the decal projection in PostProcess_Decals.hlsl: transform a world point into
+	// the decal's local unit box and compute the radial blend alpha. Validates the box test +
+	// radial falloff that the shader uses, headlessly.
+	static float DecalAlpha(const glm::mat4& invWorld, glm::vec3 worldPos, float opacity, float falloff)
+	{
+		glm::vec3 local = glm::vec3(invWorld * glm::vec4(worldPos, 1.0f));
+		glm::vec3 a = glm::abs(local);
+		if (a.x > 0.5f || a.y > 0.5f || a.z > 0.5f) return 0.0f;
+		auto smooth = [](float e0, float e1, float x) { float t = glm::clamp((x - e0) / (e1 - e0), 0.0f, 1.0f); return t * t * (3.0f - 2.0f * t); };
+		float r     = glm::length(glm::vec2(local.x, local.z)) * 2.0f;
+		float edge  = 1.0f - smooth(1.0f - glm::clamp(falloff, 0.0f, 1.0f), 1.0f, r);
+		float fadeY = 1.0f - smooth(0.3f, 0.5f, a.y);
+		return glm::clamp(edge * fadeY * opacity, 0.0f, 1.0f);
+	}
+
+	void TestDecalProjection()
+	{
+		auto approx = [](float a, float b) { return std::fabs(a - b) < 1e-3f; };
+		const glm::mat4 unit(1.0f); // unit box at origin
+
+		// Centre of the box: full radial weight -> alpha == opacity.
+		Require(approx(DecalAlpha(unit, glm::vec3(0, 0, 0), 0.85f, 0.55f), 0.85f), "decal centre alpha should equal opacity");
+		// Outside the box (X and Y) -> no decal.
+		Require(DecalAlpha(unit, glm::vec3(2, 0, 0), 0.85f, 0.55f) == 0.0f, "point outside decal box (x) -> 0");
+		Require(DecalAlpha(unit, glm::vec3(0, 2, 0), 0.85f, 0.55f) == 0.0f, "point above decal box (y) -> 0");
+
+		// A 4 x 1 x 4 box: InvWorld scales world XZ by 1/4 into the unit box.
+		glm::mat4 inv(1.0f); inv[0][0] = 0.25f; inv[2][2] = 0.25f;
+		Require(DecalAlpha(inv, glm::vec3(1.5f, 0, 0), 0.85f, 0.55f) > 0.0f, "point inside scaled decal box -> > 0");
+		Require(DecalAlpha(inv, glm::vec3(2.5f, 0, 0), 0.85f, 0.55f) == 0.0f, "point outside scaled decal box -> 0");
+	}
+
 	// CPU mirror of the analytic ray-segment overlap in PostProcess_FogVolume.hlsl. Validates the
 	// fog-integration math headlessly — the shader uses the identical algorithm, so getting these
 	// geometric cases right is the high-confidence check that localized fog accumulates correctly.
@@ -935,6 +967,7 @@ int main()
 		TestJoltConfigurationCompatibility();
 		TestProjectManagerLoadAndMounts();
 		TestFogVolumeRayMath();
+		TestDecalProjection();
 		TestAnimatorBlend();
 		TestPerfStatsMemory();
 	}

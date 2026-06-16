@@ -18,6 +18,16 @@ namespace Blu
         glm::vec3 Color    = glm::vec3(0.6f); float Falloff = 1.0f;
     };
 
+    // One projected decal, packed for the decal composite pass. InvWorld maps world->decal-local
+    // (unit box centred at origin); a surface pixel is decaled when its local position is inside
+    // [-0.5,0.5]^3. Layout matches the HLSL Decal struct (float4x4 + 2 x float4 = 96 bytes).
+    struct DecalGPU
+    {
+        glm::mat4 InvWorld = glm::mat4(1.0f);
+        glm::vec3 Color    = glm::vec3(0.35f, 0.03f, 0.03f); float Opacity = 0.85f;
+        float     Falloff  = 0.55f; float _pad0 = 0.0f; float _pad1 = 0.0f; float _pad2 = 0.0f;
+    };
+
     class PostProcess
     {
     public:
@@ -80,8 +90,13 @@ namespace Blu
         // (byte-identical to a scene with no volumes). FogInvViewProj/FogCameraPos let the
         // shader reconstruct world position from the depth buffer.
         bool                      EnableFogVolumes = false;
-        glm::mat4                 FogInvViewProj   = glm::mat4(1.0f);
+        glm::mat4                 FogInvViewProj   = glm::mat4(1.0f); // scene clip->world (also used by decals)
         glm::vec3                 FogCameraPos     = glm::vec3(0.0f);
         std::vector<FogVolumeGPU> FogVolumes;
+
+        // Projected decals — composited after fog volumes, before tonemap, via the same depth
+        // reconstruction (uses FogInvViewProj). Skipped entirely (byte-identical) when empty.
+        bool                  EnableDecals = false;
+        std::vector<DecalGPU> Decals;
     };
 }

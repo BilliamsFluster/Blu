@@ -485,6 +485,20 @@ namespace Blu
 		FogVolumeComponent(const FogVolumeComponent&) = default;
 	};
 
+	// A projected decal (bullet hole, scorch, blood splat). The entity's TransformComponent
+	// defines an oriented box; surface pixels whose world position falls inside the box receive
+	// a radial (circular) decal in the box's local XZ plane. Composited screen-space in the
+	// post-process pass (PostProcess_Decals.hlsl) by reconstructing world position from depth.
+	struct DecalComponent
+	{
+		glm::vec3 Color   = glm::vec3(0.35f, 0.03f, 0.03f); // blood-ish default
+		float     Opacity = 0.85f;                          // 0..1 overall strength
+		float     Falloff = 0.55f;                          // 0..1 soft edge (fraction of radius that fades)
+
+		DecalComponent() = default;
+		DecalComponent(const DecalComponent&) = default;
+	};
+
 	// ─── Spot Light ───────────────────────────────────────────────────────────
 	// Position comes from TransformComponent::Translation.
 	// InnerConeAngle / OuterConeAngle in degrees; shader pre-computes cos values.
@@ -697,7 +711,7 @@ namespace Blu
 		Components<TransformComponent, ParticleSystemComponent, SpriteRendererComponent, CircleRendererComponent,
 		CircleCollider2DComponent, BoxCollider2DComponent, CameraComponent,
 		ActorComponent, Rigidbody2DComponent,
-		PointLightComponent, DirectionalLightComponent, SpotLightComponent, FogVolumeComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
+		PointLightComponent, DirectionalLightComponent, SpotLightComponent, FogVolumeComponent, DecalComponent, MeshComponent, VisualOffsetComponent, MeshLODComponent,
 		TerrainComponent, SpringArmComponent, AudioSourceComponent, FoliageComponent, AnimatorComponent,
 		Rigidbody3DComponent, BoxCollider3DComponent, SphereCollider3DComponent, CapsuleCollider3DComponent,
 		MeshCollider3DComponent, CharacterControllerComponent,

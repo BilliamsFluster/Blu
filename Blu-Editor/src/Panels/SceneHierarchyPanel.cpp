@@ -926,6 +926,7 @@ namespace Blu
 				AddComponentSearchResult<DirectionalLightComponent>(entity, "Camera/Lighting", "Directional Light", "", [](auto&) {});
 				AddComponentSearchResult<SpotLightComponent>(entity, "Camera/Lighting", "Spot Light", "", [](auto&) {});
 				AddComponentSearchResult<FogVolumeComponent>(entity, "Camera/Lighting", "Fog Volume", "", [](auto&) {});
+				AddComponentSearchResult<DecalComponent>(entity, "Camera/Lighting", "Decal", "", [](auto&) {});
 			}
 			if (cmpCategory("Rendering"))
 			{
@@ -1387,6 +1388,14 @@ namespace Blu
 			});
 
 		// ── Spot Light ────────────────────────────────────────────────────────
+		DrawComponent<DecalComponent>("Decal", entity, [](auto& D)
+			{
+				ImGui::TextDisabled("Projection box = entity transform (Scale = size)");
+				ImGui::ColorEdit3("Color",   glm::value_ptr(D.Color));
+				ImGui::DragFloat("Opacity", &D.Opacity, 0.01f, 0.0f, 1.0f, "%.2f");
+				ImGui::DragFloat("Falloff", &D.Falloff, 0.01f, 0.0f, 1.0f, "%.2f");
+			});
+
 		DrawComponent<FogVolumeComponent>("Fog Volume", entity, [](auto& F)
 			{
 				const char* shapes[] = { "Box", "Sphere" };

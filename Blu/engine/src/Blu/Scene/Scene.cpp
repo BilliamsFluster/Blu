@@ -1864,6 +1864,24 @@ namespace Blu
 			m_PostProcess->EnableFogVolumes = !m_PostProcess->FogVolumes.empty();
 			m_PostProcess->FogInvViewProj   = glm::inverse(Renderer3D::GetViewProjectionMatrix());
 			m_PostProcess->FogCameraPos     = camera.GetPosition();
+
+			// Projected decals — gather oriented boxes (entity transform) for the decal pass.
+			m_PostProcess->Decals.clear();
+			auto decalView = m_Registry.view<TransformComponent, DecalComponent>();
+			for (auto e : decalView)
+			{
+				auto&& [tc, dec] = decalView.get<TransformComponent, DecalComponent>(e);
+				glm::mat4 world = glm::translate(glm::mat4(1.0f), tc.Translation)
+				                * glm::toMat4(glm::quat(tc.Rotation))
+				                * glm::scale(glm::mat4(1.0f), tc.Scale);
+				DecalGPU g;
+				g.InvWorld = glm::inverse(world);
+				g.Color    = dec.Color;
+				g.Opacity  = dec.Opacity;
+				g.Falloff  = dec.Falloff;
+				m_PostProcess->Decals.push_back(g);
+			}
+			m_PostProcess->EnableDecals = !m_PostProcess->Decals.empty();
 		}
 		{
 			glm::vec3 camPos = camera.GetPosition();
@@ -1976,6 +1994,24 @@ namespace Blu
 			m_PostProcess->EnableFogVolumes = !m_PostProcess->FogVolumes.empty();
 			m_PostProcess->FogInvViewProj   = glm::inverse(Renderer3D::GetViewProjectionMatrix());
 			m_PostProcess->FogCameraPos     = glm::vec3(cameraTransform[3]);
+
+			// Projected decals — gather oriented boxes (entity transform) for the decal pass.
+			m_PostProcess->Decals.clear();
+			auto decalView = m_Registry.view<TransformComponent, DecalComponent>();
+			for (auto e : decalView)
+			{
+				auto&& [tc, dec] = decalView.get<TransformComponent, DecalComponent>(e);
+				glm::mat4 world = glm::translate(glm::mat4(1.0f), tc.Translation)
+				                * glm::toMat4(glm::quat(tc.Rotation))
+				                * glm::scale(glm::mat4(1.0f), tc.Scale);
+				DecalGPU g;
+				g.InvWorld = glm::inverse(world);
+				g.Color    = dec.Color;
+				g.Opacity  = dec.Opacity;
+				g.Falloff  = dec.Falloff;
+				m_PostProcess->Decals.push_back(g);
+			}
+			m_PostProcess->EnableDecals = !m_PostProcess->Decals.empty();
 		}
 		{
 			glm::vec3 camPos = glm::vec3(cameraTransform[3]);

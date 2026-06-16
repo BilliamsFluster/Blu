@@ -196,6 +196,10 @@ project "Blu"
 			--"BLU_ENABLE_ASSERTS"
 		}
 
+		-- Scene.cpp (and other large TUs full of entt templates) exceed the COFF section
+		-- limit (error C1128); /bigobj raises it. Applies to all Blu configs on Windows.
+		buildoptions { "/bigobj" }
+
 		
 
 	filter "configurations:Debug"

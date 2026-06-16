@@ -404,6 +404,16 @@ namespace Blu
 			out << YAML::Key << "Falloff" << YAML::Value << fv.Falloff;
 			out << YAML::EndMap;
 		}
+		if (entity.HasComponent<DecalComponent>())
+		{
+			out << YAML::Key << "DecalComponent";
+			out << YAML::BeginMap;
+			auto& dec = entity.GetComponent<DecalComponent>();
+			out << YAML::Key << "Color"   << YAML::Value << dec.Color;
+			out << YAML::Key << "Opacity" << YAML::Value << dec.Opacity;
+			out << YAML::Key << "Falloff" << YAML::Value << dec.Falloff;
+			out << YAML::EndMap;
+		}
 
 
 
@@ -1407,6 +1417,14 @@ namespace Blu
 					if (fogVolumeComponent["Color"])   fv.Color       = fogVolumeComponent["Color"].as<glm::vec3>();
 					if (fogVolumeComponent["Density"]) fv.Density     = fogVolumeComponent["Density"].as<float>();
 					if (fogVolumeComponent["Falloff"]) fv.Falloff     = fogVolumeComponent["Falloff"].as<float>();
+				}
+				auto decalComponent = entity["DecalComponent"];
+				if (decalComponent)
+				{
+					auto& dec = deserializedEntity.AddComponent<DecalComponent>();
+					if (decalComponent["Color"])   dec.Color   = decalComponent["Color"].as<glm::vec3>();
+					if (decalComponent["Opacity"]) dec.Opacity = decalComponent["Opacity"].as<float>();
+					if (decalComponent["Falloff"]) dec.Falloff = decalComponent["Falloff"].as<float>();
 				}
 				auto terrainComponent = entity["TerrainComponent"];
 				auto meshComponent = entity["MeshComponent"];
