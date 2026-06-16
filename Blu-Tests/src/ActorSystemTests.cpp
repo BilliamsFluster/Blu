@@ -483,6 +483,60 @@ namespace
 		std::filesystem::remove_all(testDirectory, cleanupError);
 	}
 
+	// Validates that MaterialAsset (.blumat) is now a LOSSLESS mirror of the concrete runtime
+	// Material: blend/shading/two-sided/alpha-cutoff (previously dropped) survive a
+	// Material -> MaterialAsset -> .blumat YAML -> MaterialAsset -> Material round-trip alongside
+	// the scalar PBR values. This is the conversion spine for rendering handle-based .blumat
+	// materials, so any field it silently drops would cause a visible regression.
+	void TestMaterialAssetFullFidelity()
+	{
+		const std::filesystem::path testDirectory = std::filesystem::temp_directory_path() /
+			("BluTestsMaterialFidelity-" + std::to_string((uint64_t)Blu::UUID()));
+		auto& fileSystem = Blu::FileSystemService::Get();
+		fileSystem.Reset();
+		Require(fileSystem.Mount("project", testDirectory), "project mount failed");
+		Require(fileSystem.Mount("cache", testDirectory / "cache"), "cache mount failed");
+
+		// A concrete material with every field set to a distinctive non-default value, including
+		// the render-state metadata that the old MaterialAsset schema could not represent.
+		Blu::Material source;
+		source.AlbedoColor      = glm::vec4(0.13f, 0.42f, 0.77f, 0.66f);
+		source.Metallic         = 0.81f;
+		source.Roughness        = 0.27f;
+		source.AO               = 0.55f;
+		source.EmissiveColor    = glm::vec3(0.9f, 0.2f, 0.05f);
+		source.EmissiveStrength = 3.5f;
+		source.Blend            = Blu::BlendMode::Masked;     // non-default
+		source.Shading          = Blu::ShadingModel::Unlit;   // non-default
+		source.TwoSided         = true;                       // non-default
+		source.AlphaCutoff      = 0.33f;                      // non-default
+
+		Blu::MaterialAsset asset = Blu::MaterialAsset::FromMaterial(source);
+		Require(asset.SaveToFile("project://assets/full.blumat"), "full-fidelity material save failed");
+
+		Blu::MaterialAsset reloaded;
+		Require(reloaded.LoadFromFile("project://assets/full.blumat"), "full-fidelity material load failed");
+		Blu::Shared<Blu::Material> result = reloaded.ToMaterial();
+		Require(result != nullptr, "ToMaterial returned null");
+
+		auto approx = [](float a, float b) { return std::fabs(a - b) < 0.001f; };
+		Require(approx(result->AlbedoColor.r, 0.13f) && approx(result->AlbedoColor.a, 0.66f), "albedo (with alpha) did not round-trip");
+		Require(approx(result->Metallic, 0.81f),  "metallic did not round-trip");
+		Require(approx(result->Roughness, 0.27f), "roughness did not round-trip");
+		Require(approx(result->AO, 0.55f),         "AO did not round-trip");
+		Require(approx(result->EmissiveColor.g, 0.2f),  "emissive color did not round-trip");
+		Require(approx(result->EmissiveStrength, 3.5f), "emissive strength did not round-trip");
+		// The previously-lossy render-state metadata must now survive intact.
+		Require(result->Blend == Blu::BlendMode::Masked,    "blend mode was dropped (was lossy before this change)");
+		Require(result->Shading == Blu::ShadingModel::Unlit, "shading model was dropped");
+		Require(result->TwoSided == true,                    "two-sided flag was dropped");
+		Require(approx(result->AlphaCutoff, 0.33f),          "alpha cutoff was dropped");
+
+		fileSystem.Reset();
+		std::error_code cleanupError;
+		std::filesystem::remove_all(testDirectory, cleanupError);
+	}
+
 	void TestMaterialResolver()
 	{
 		auto& resolver = Blu::MaterialResolver::Get();
@@ -1023,6 +1077,7 @@ int main()
 		TestLifetimeUtilities();
 		TestMaterialResolver();
 		TestMaterialAssetPersistence();
+		TestMaterialAssetFullFidelity();
 		TestMaterialGraphCompiler();
 		TestSceneRenderPipelinePlan();
 		TestSharedLightBufferPacking();

@@ -24,9 +24,8 @@ namespace Blu
         shader->SetUniformFloat ("u_AO",                m_Properties.AO);
         shader->SetUniformFloat3("u_EmissiveColor",     m_Properties.EmissiveColor);
         shader->SetUniformFloat ("u_EmissiveStrength",  m_Properties.EmissiveStrength);
-        // AlphaCutoff and ShadingModel are not exposed on MaterialAsset; upload safe defaults
-        shader->SetUniformFloat ("u_AlphaCutoff",       0.0f);
-        shader->SetUniformInt   ("u_ShadingModel",      0);    // PBR
+        shader->SetUniformFloat ("u_AlphaCutoff",       m_AlphaCutoff);
+        shader->SetUniformInt   ("u_ShadingModel",      (int)m_Shading);
     }
 
     void MaterialAsset::BindTextures(const Shared<Shader>& shader) const
@@ -76,6 +75,10 @@ namespace Blu
             << m_Properties.EmissiveColor.r << m_Properties.EmissiveColor.g
             << m_Properties.EmissiveColor.b << YAML::EndSeq;
         out << YAML::Key << "EmissiveStrength" << YAML::Value << m_Properties.EmissiveStrength;
+        out << YAML::Key << "BlendMode" << YAML::Value << (int)m_Blend;
+        out << YAML::Key << "ShadingModel" << YAML::Value << (int)m_Shading;
+        out << YAML::Key << "TwoSided" << YAML::Value << m_TwoSided;
+        out << YAML::Key << "AlphaCutoff" << YAML::Value << m_AlphaCutoff;
         out << YAML::Key << "AlbedoTexture" << YAML::Value << (uint64_t)m_AlbedoTexture;
         out << YAML::Key << "NormalTexture" << YAML::Value << (uint64_t)m_NormalTexture;
         out << YAML::Key << "MetallicRoughnessTexture" << YAML::Value << (uint64_t)m_MetallicRoughnessTexture;
@@ -114,6 +117,11 @@ namespace Blu
             m_Properties.Roughness = node["Roughness"].as<float>(m_Properties.Roughness);
             m_Properties.AO = node["AO"].as<float>(m_Properties.AO);
             m_Properties.EmissiveStrength = node["EmissiveStrength"].as<float>(m_Properties.EmissiveStrength);
+            // Render-state metadata (defaults preserve back-compat with older .blumat files).
+            m_Blend       = static_cast<BlendMode>(node["BlendMode"].as<int>((int)m_Blend));
+            m_Shading     = static_cast<ShadingModel>(node["ShadingModel"].as<int>((int)m_Shading));
+            m_TwoSided    = node["TwoSided"].as<bool>(m_TwoSided);
+            m_AlphaCutoff = node["AlphaCutoff"].as<float>(m_AlphaCutoff);
             m_AlbedoTexture = AssetHandle(node["AlbedoTexture"].as<uint64_t>(0));
             m_NormalTexture = AssetHandle(node["NormalTexture"].as<uint64_t>(0));
             m_MetallicRoughnessTexture = AssetHandle(node["MetallicRoughnessTexture"].as<uint64_t>(0));
@@ -127,6 +135,55 @@ namespace Blu
         {
             return false;
         }
+    }
+
+    MaterialAsset MaterialAsset::FromMaterial(const Material& material)
+    {
+        MaterialAsset asset;
+        asset.m_Properties.AlbedoColor      = material.AlbedoColor;
+        asset.m_Properties.Metallic         = material.Metallic;
+        asset.m_Properties.Roughness        = material.Roughness;
+        asset.m_Properties.AO               = material.AO;
+        asset.m_Properties.EmissiveColor    = material.EmissiveColor;
+        asset.m_Properties.EmissiveStrength = material.EmissiveStrength;
+        asset.m_Blend       = material.Blend;
+        asset.m_Shading     = material.Shading;
+        asset.m_TwoSided    = material.TwoSided;
+        asset.m_AlphaCutoff = material.AlphaCutoff;
+        // Capturing texture *handles* from the Material's raw Texture2D pointers needs an
+        // AssetManager reverse lookup (deferred); scalar + metadata capture is exact.
+        return asset;
+    }
+
+    Shared<Material> MaterialAsset::ToMaterial() const
+    {
+        Shared<Material> material = Material::Create();
+        material->AlbedoColor       = m_Properties.AlbedoColor;
+        material->Metallic          = m_Properties.Metallic;
+        material->Roughness         = m_Properties.Roughness;
+        material->AO                = m_Properties.AO;
+        material->EmissiveColor     = m_Properties.EmissiveColor;
+        material->EmissiveStrength  = m_Properties.EmissiveStrength;
+        material->Blend             = m_Blend;
+        material->Shading           = m_Shading;
+        material->TwoSided          = m_TwoSided;
+        material->AlphaCutoff       = m_AlphaCutoff;
+
+        // Resolve referenced texture assets to GPU textures (best-effort: a zero or unresolved
+        // handle simply leaves the slot empty, matching an untextured material).
+        auto& assetManager = AssetManager::Get();
+        auto resolve = [&](AssetHandle handle) -> Shared<Texture2D>
+        {
+            if (!handle) return nullptr;
+            auto texAsset = assetManager.GetAssetAs<TextureAsset>(handle);
+            return texAsset ? texAsset->GetTexture() : nullptr;
+        };
+        material->AlbedoMap            = resolve(m_AlbedoTexture);
+        material->NormalMap            = resolve(m_NormalTexture);
+        material->MetallicRoughnessMap = resolve(m_MetallicRoughnessTexture);
+        material->AOMap                = resolve(m_AOTexture);
+        material->EmissiveMap          = resolve(m_EmissiveTexture);
+        return material;
     }
 
     bool MaterialAsset::Reload()
