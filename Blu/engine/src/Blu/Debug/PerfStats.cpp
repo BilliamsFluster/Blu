@@ -25,4 +25,37 @@ namespace Blu::Perf
 #endif
 		return info;
 	}
+
+	FrameProfiler& FrameProfiler::Get()
+	{
+		static FrameProfiler s_Instance;
+		return s_Instance;
+	}
+
+	void FrameProfiler::Add(const std::string& name, double milliseconds)
+	{
+		for (CpuSample& sample : m_Current)
+		{
+			if (sample.Name == name)
+			{
+				sample.Milliseconds += milliseconds;
+				return;
+			}
+		}
+		m_Current.push_back({ name, milliseconds });
+	}
+
+	void FrameProfiler::BeginFrame()
+	{
+		m_LastFrame = m_Current; // stable snapshot the editor reads for the previous frame
+		m_Current.clear();
+	}
+
+	double FrameProfiler::LastFrameTotalMs() const
+	{
+		double total = 0.0;
+		for (const CpuSample& sample : m_LastFrame)
+			total += sample.Milliseconds;
+		return total;
+	}
 }

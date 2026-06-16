@@ -379,6 +379,7 @@ namespace Blu
 		m_ActiveScene = std::make_shared<Scene>();
 		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
 		m_ContentBrowserPanel = std::make_shared<ContentBrowserPanel>();
+		m_ProfilerPanel = std::make_shared<ProfilerPanel>();
 		m_MaterialGraphPanel = std::make_shared<MaterialGraphPanel>();
 		m_SceneHierarchyPanel->SetOpenActorEditorCallback([this](Entity entity)
 		{
@@ -1987,6 +1988,7 @@ namespace Blu
 			ImGui::MenuItem("Outliner",        nullptr, &m_ShowOutliner);
 			ImGui::MenuItem("Details",         nullptr, &m_ShowDetails);
 			ImGui::MenuItem("Content Browser", nullptr, &m_ShowContentBrowser);
+			ImGui::MenuItem("Profiler",        nullptr, &m_ShowProfiler);
 			ImGui::MenuItem("Output Log",      nullptr, &m_ShowOutputLog);
 			ImGui::MenuItem("Rendering",       nullptr, &m_ShowRendering);
 			ImGui::MenuItem("Diagnostics",     nullptr, &m_ShowDiagnostics);
@@ -2463,6 +2465,9 @@ namespace Blu
 
 		if (m_ShowContentBrowser)
 			m_ContentBrowserPanel->OnImGuiRender();
+
+		if (m_ShowProfiler && m_ProfilerPanel)
+			m_ProfilerPanel->OnImGuiRender(&m_ShowProfiler);
 
 		if (m_ShowActorEditor)
 			DrawActorEditor();

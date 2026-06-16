@@ -1,6 +1,7 @@
 #include <Blu.h>
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
+#include "Panels/ProfilerPanel.h"
 #include "Panels/MaterialGraphPanel.h"
 #include "Blu/Rendering/EditorCamera.h"
 #include "Blu/Rendering/Terrain.h"
@@ -148,6 +149,7 @@ namespace Blu
 		glm::vec2 m_ViewportBounds[2];
 		Shared<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Shared<ContentBrowserPanel> m_ContentBrowserPanel;
+		Shared<ProfilerPanel> m_ProfilerPanel;
 		Shared<MaterialGraphPanel> m_MaterialGraphPanel;
 		EditorCamera m_ActorPreviewCamera;
 		glm::vec2 m_ViewportOffset;
@@ -207,6 +209,7 @@ namespace Blu
 		bool m_ShowOutliner       = true;
 		bool m_ShowDetails        = true;
 		bool m_ShowContentBrowser = true;
+		bool m_ShowProfiler = false;
 		bool m_ShowOutputLog      = true;
 		bool m_ShowRendering      = true;
 		bool m_ShowRenderPath     = true;

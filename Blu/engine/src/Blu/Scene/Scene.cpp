@@ -1,6 +1,7 @@
 #include "Blupch.h"
 #include "Scene.h"
 #include "Blu/Core/JobSystem.h"
+#include "Blu/Debug/PerfStats.h"
 #include "Blu/Physics/Physics3D.h"
 #include "Blu/Rendering/Renderer2D.h"
 #include "Blu/Rendering/Renderer3D.h"
@@ -2408,6 +2409,7 @@ namespace Blu
 		// own AnimatorComponent (no registry-structure change, no shared state), so the per-entity work
 		// is dispatched across the job system. Render submission stays single-threaded (DX11).
 		{
+			BLU_PERF_SCOPE("Animation");
 			auto animView = m_Registry.view<AnimatorComponent, MeshComponent>();
 			std::vector<entt::entity> animEntities(animView.begin(), animView.end());
 
@@ -2466,9 +2468,12 @@ namespace Blu
 			}
 		}
 
-		m_ActorSystem->Tick(dt);
-		if (m_GameMode)
-			m_GameMode->Tick(dt);
+		{
+			BLU_PERF_SCOPE("ActorTick");
+			m_ActorSystem->Tick(dt);
+			if (m_GameMode)
+				m_GameMode->Tick(dt);
+		}
 
 		UpdateDecalLifetimes(dt); // age + remove transient impact decals spawned by actors this frame
 
@@ -2584,7 +2589,10 @@ namespace Blu
 				}
 			}
 
-			m_Physics3DWorld->Step(deltaTime);
+			{
+				BLU_PERF_SCOPE("Physics3D");
+				m_Physics3DWorld->Step(deltaTime);
+			}
 
 			auto view3D = m_Registry.view<TransformComponent, Rigidbody3DComponent>();
 			for (auto e : view3D)
@@ -2636,7 +2644,7 @@ namespace Blu
 				m_PostProcess->Begin();
 
 			Render2DPass(*mainCamera, cameraTransform, deltaTime, true);
-			Render3DPass(*mainCamera, cameraTransform);
+			{ BLU_PERF_SCOPE("Render3D"); Render3DPass(*mainCamera, cameraTransform); }
 
 			if (m_UsePostProcess && m_PostProcess)
 				m_PostProcess->Submit();
@@ -2679,7 +2687,7 @@ namespace Blu
 				m_PostProcess->Begin();
 
 			Render2DPass(*mainCamera, cameraTransform, deltaTime, false);
-			Render3DPass(*mainCamera, cameraTransform);
+			{ BLU_PERF_SCOPE("Render3D"); Render3DPass(*mainCamera, cameraTransform); }
 
 			if (m_UsePostProcess && m_PostProcess)
 				m_PostProcess->Submit();

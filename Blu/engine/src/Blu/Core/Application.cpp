@@ -12,6 +12,7 @@
 #include "Blu/Rendering/AssetManager.h"
 #include "Blu/Core/JobSystem.h"
 #include "Blu/Core/Timestep.h"
+#include "Blu/Debug/PerfStats.h"
 #include <GLFW/glfw3.h>
 #include "Blu/Events/WindowEvent.h"
 
@@ -104,8 +105,9 @@ namespace Blu
 			{
 				BLU_PROFILE_SCOPE("RunLoop");
 
-				// Reset per-lane scratch arenas at the top of the frame (job workers + main thread).
+				// Reset per-lane scratch arenas + roll the per-frame CPU profiler at the top of the frame.
 				JobSystem::Get().ResetWorkerArenas();
+				Perf::FrameProfiler::Get().BeginFrame();
 
 				// Recalculate deltaTime every frame inside the loop.
 				// Previously this was done once before the loop, so every frame

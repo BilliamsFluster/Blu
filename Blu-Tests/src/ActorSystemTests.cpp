@@ -102,6 +102,32 @@ namespace
 		Require(jobs.WorkerCount() == 0, "shutdown should join all workers");
 	}
 
+	// Exercises the per-frame CPU profiler: scoped timers and explicit Add() accumulate into named
+	// buckets, BeginFrame() snapshots the accumulation into a stable last-frame view and clears.
+	void TestFrameProfiler()
+	{
+		auto& prof = Blu::Perf::FrameProfiler::Get();
+		prof.BeginFrame(); // start clean
+
+		{ Blu::Perf::ScopedCpuTimer t("ScopeA"); volatile int spin = 0; for (int i = 0; i < 1000; ++i) spin += i; }
+		prof.Add("BucketB", 2.5);
+		prof.Add("BucketB", 1.5); // same name accumulates
+
+		prof.BeginFrame(); // snapshot the frame we just recorded
+		double bMs = -1.0; bool sawScopeA = false;
+		for (const auto& s : prof.LastFrame())
+		{
+			if (s.Name == "BucketB") bMs = s.Milliseconds;
+			if (s.Name == "ScopeA")  sawScopeA = true;
+		}
+		Require(sawScopeA, "scoped timer should record a sample");
+		Require(std::fabs(bMs - 4.0) < 1e-6, "same-name samples must accumulate (2.5 + 1.5 = 4.0)");
+		Require(prof.LastFrameTotalMs() >= 4.0, "frame total should include all buckets");
+
+		prof.BeginFrame(); // an empty frame snapshots to empty
+		Require(prof.LastFrameTotalMs() == 0.0, "an empty frame should report zero total");
+	}
+
 	class LifecycleActor final : public Blu::AActor
 	{
 	public:
@@ -1351,6 +1377,7 @@ int main()
 	try
 	{
 		TestJobSystem();
+		TestFrameProfiler();
 		TestActorLifecycleAndDeferredDestroy();
 		TestMissingClassDoesNotCreateActor();
 		TestGameModeRegistration();
